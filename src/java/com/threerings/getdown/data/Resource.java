@@ -1,5 +1,5 @@
 //
-// $Id: Resource.java,v 1.10 2004/07/14 13:44:49 mdb Exp $
+// $Id$
 
 package com.threerings.getdown.data;
 
@@ -72,67 +72,7 @@ public class Resource
     public String computeDigest (MessageDigest md, ProgressObserver obs)
         throws IOException
     {
-        md.reset();
-        byte[] buffer = new byte[DIGEST_BUFFER_SIZE];
-        int read;
-
-        // if this is a jar file, we need to compute the digest in a
-        // timestamp and file order agnostic manner to properly correlate
-        // jardiff patched jars with their unpatched originals
-        if (_local.getPath().endsWith(".jar")) {
-            JarFile jar = new JarFile(_local);
-            try {
-                SortableArrayList entries = new SortableArrayList();
-                CollectionUtil.addAll(entries, jar.entries());
-                entries.sort(ENTRY_COMP);
-
-                int eidx = 0;
-                for (Iterator iter = entries.iterator(); iter.hasNext(); ) {
-                    JarEntry entry = (JarEntry)iter.next();
-
-                    // skip metadata; we just want the goods
-                    if (entry.getName().startsWith("META-INF")) {
-                        updateProgress(obs, eidx, entries.size());
-                        continue;
-                    }
-
-                    // add this file's data to the MD5 hash
-                    InputStream in = null;
-                    try {
-                        in = jar.getInputStream(entry);
-                        while ((read = in.read(buffer)) != -1) {
-                            md.update(buffer, 0, read);
-                        }
-                    } finally {
-                        StreamUtil.close(in);
-                    }
-                    updateProgress(obs, eidx, entries.size());
-                }
-
-            } finally {
-                try {
-                    jar.close();
-                } catch (IOException ioe) {
-                    Log.warning("Error closing jar [path=" + _local +
-                                ", error=" + ioe + "].");
-                }
-            }
-
-        } else {
-            long totalSize = _local.length(), position = 0L;
-            FileInputStream fin = null;
-            try {
-                fin = new FileInputStream(_local);
-                while ((read = fin.read(buffer)) != -1) {
-                    md.update(buffer, 0, read);
-                    position += read;
-                    updateProgress(obs, position, totalSize);
-                }
-            } finally {
-                StreamUtil.close(fin);
-            }
-        }
-        return StringUtil.hexlate(md.digest());
+        return computeDigest(_local, md, obs);
     }
 
     /**
@@ -215,8 +155,79 @@ public class Resource
         return _path;
     }
 
+    /**
+     * Computes the MD5 hash of the supplied file.
+     */
+    public static String computeDigest (
+        File target, MessageDigest md, ProgressObserver obs)
+        throws IOException
+    {
+        md.reset();
+        byte[] buffer = new byte[DIGEST_BUFFER_SIZE];
+        int read;
+
+        // if this is a jar file, we need to compute the digest in a
+        // timestamp and file order agnostic manner to properly correlate
+        // jardiff patched jars with their unpatched originals
+        if (target.getPath().endsWith(".jar")) {
+            JarFile jar = new JarFile(target);
+            try {
+                SortableArrayList entries = new SortableArrayList();
+                CollectionUtil.addAll(entries, jar.entries());
+                entries.sort(ENTRY_COMP);
+
+                int eidx = 0;
+                for (Iterator iter = entries.iterator(); iter.hasNext(); ) {
+                    JarEntry entry = (JarEntry)iter.next();
+
+                    // skip metadata; we just want the goods
+                    if (entry.getName().startsWith("META-INF")) {
+                        updateProgress(obs, eidx, entries.size());
+                        continue;
+                    }
+
+                    // add this file's data to the MD5 hash
+                    InputStream in = null;
+                    try {
+                        in = jar.getInputStream(entry);
+                        while ((read = in.read(buffer)) != -1) {
+                            md.update(buffer, 0, read);
+                        }
+                    } finally {
+                        StreamUtil.close(in);
+                    }
+                    updateProgress(obs, eidx, entries.size());
+                }
+
+            } finally {
+                try {
+                    jar.close();
+                } catch (IOException ioe) {
+                    Log.warning("Error closing jar [path=" + target +
+                                ", error=" + ioe + "].");
+                }
+            }
+
+        } else {
+            long totalSize = target.length(), position = 0L;
+            FileInputStream fin = null;
+            try {
+                fin = new FileInputStream(target);
+                while ((read = fin.read(buffer)) != -1) {
+                    md.update(buffer, 0, read);
+                    position += read;
+                    updateProgress(obs, position, totalSize);
+                }
+            } finally {
+                StreamUtil.close(fin);
+            }
+        }
+        return StringUtil.hexlate(md.digest());
+    }
+
     /** Helper function to simplify the process of reporting progress. */
-    protected void updateProgress (ProgressObserver obs, long pos, long total)
+    protected static void updateProgress (
+        ProgressObserver obs, long pos, long total)
     {
         if (obs != null) {
             obs.progress((int)(100 * pos / total));
