@@ -1,5 +1,5 @@
 //
-// $Id: Differ.java,v 1.1 2004/07/13 10:41:52 mdb Exp $
+// $Id: Differ.java,v 1.2 2004/07/13 15:52:18 ray Exp $
 
 package com.threerings.getdown.tools;
 
@@ -16,7 +16,6 @@ import java.util.zip.ZipEntry;
 import com.sun.javaws.jardiff.JarDiff;
 
 import com.samskivert.io.StreamUtil;
-import com.samskivert.util.CollectionUtil;
 
 import com.threerings.getdown.data.Application;
 import com.threerings.getdown.data.Resource;
@@ -66,16 +65,16 @@ public class Differ
 
         Application oapp = createApplication(ovdir);
         ArrayList orsrcs = new ArrayList();
-        CollectionUtil.addAll(orsrcs, oapp.getCodeResources().iterator());
-        CollectionUtil.addAll(orsrcs, oapp.getResources().iterator());
+        orsrcs.addAll(oapp.getCodeResources());
+        orsrcs.addAll(oapp.getResources());
         if (verbose) {
             System.out.println(orsrcs.size() + " old resources.");
         }
 
         Application napp = createApplication(nvdir);
         ArrayList nrsrcs = new ArrayList();
-        CollectionUtil.addAll(nrsrcs, napp.getCodeResources().iterator());
-        CollectionUtil.addAll(nrsrcs, napp.getResources().iterator());
+        nrsrcs.addAll(napp.getCodeResources());
+        nrsrcs.addAll(napp.getResources());
         if (verbose) {
             System.out.println(nrsrcs.size() + " new resources.");
         }
