@@ -12,6 +12,7 @@
 ./dasho.rpt
 
 -ClassPath:
+/System/Library/Frameworks/JavaVM.framework/Classes/classes.jar
 /usr/local/jdk1.4/jre/lib/rt.jar
 dist/classes
 lib/jRegistryKey.jar
