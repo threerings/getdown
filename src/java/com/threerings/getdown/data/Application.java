@@ -1,8 +1,9 @@
 //
-// $Id: Application.java,v 1.14 2004/07/20 07:35:56 mdb Exp $
+// $Id: Application.java,v 1.15 2004/07/26 17:52:32 mdb Exp $
 
 package com.threerings.getdown.data;
 
+import java.awt.Color;
 import java.awt.Rectangle;
 
 import java.io.BufferedReader;
@@ -57,8 +58,17 @@ public class Application
         /** The dimensions of the progress bar. */
         public Rectangle progress;
 
+        /** The color of the progress text. */
+        public Color progressText;
+
+        /** The color of the progress bar. */
+        public Color progressBar;
+
         /** The dimensions of the status display. */
         public Rectangle status;
+
+        /** The color of the status text. */
+        public Color statusText;
 
         /** The path (relative to the appdir) to the background image. */
         public String background;
@@ -265,7 +275,13 @@ public class Application
         ui.name = (String)cdata.get("ui.name");
         ui.progress = parseRect(
             "ui.progress", (String)cdata.get("ui.progress"));
+        ui.progressText = parseColor(
+            "ui.progress_text", (String)cdata.get("ui.progress_text"));
+        ui.progressBar = parseColor(
+            "ui.progress_bar", (String)cdata.get("ui.progress_bar"));
         ui.status = parseRect("ui.progress", (String)cdata.get("ui.status"));
+        ui.statusText = parseColor(
+            "ui.status_text", (String)cdata.get("ui.status_text"));
         ui.background = (String)cdata.get("ui.background");
         return ui;
     }
@@ -422,6 +438,7 @@ public class Application
             // have also changed
             String olddig = (_digest == null) ? "" : _digest.getMetaDigest();
             try {
+                status.updateStatus("m.checking");
                 downloadControlFile(Digest.DIGEST_FILE);
                 _digest = new Digest(_appdir);
                 if (!olddig.equals(_digest.getMetaDigest())) {
@@ -641,6 +658,20 @@ public class Application
             }
         }
         return null;
+    }
+
+    /** Used to parse color specifications from the config file. */
+    protected Color parseColor (String name, String value)
+    {
+        if (!StringUtil.blank(value)) {
+            try {
+                return new Color(Integer.parseInt(value, 16));
+            } catch (Exception e) {
+                Log.warning("Ignoring invalid '" + name + "' config '" +
+                            value + "'.");
+            }
+        }
+        return Color.white;
     }
 
     protected File _appdir;

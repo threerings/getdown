@@ -1,5 +1,5 @@
 //
-// $Id: Getdown.java,v 1.15 2004/07/20 01:27:32 mdb Exp $
+// $Id: Getdown.java,v 1.16 2004/07/26 17:52:32 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -46,6 +46,7 @@ public class Getdown extends Thread
         super("Getdown");
         _app = new Application(appDir);
         _msgs = ResourceBundle.getBundle("com.threerings.getdown.messages");
+        _startup = System.currentTimeMillis();
     }
 
     public void run ()
@@ -56,8 +57,13 @@ public class Getdown extends Thread
                 _ifc = _app.init();
             } catch (IOException ioe) {
                 Log.warning("Failed to parse 'getdown.txt': " + ioe);
+                createInterface();
                 _app.attemptRecovery();
+                // and re-initalize
                 _ifc = _app.init();
+                // now clear out our UI as we probably have a new one
+                _frame.dispose();
+                _frame = null;
             }
 
             for (int ii = 0; ii < MAX_LOOPS; ii++) {
@@ -209,6 +215,18 @@ public class Getdown extends Thread
 
         try {
             Process proc = _app.createProcess();
+
+            // if we have a UI open and we haven't been around for at
+            // least 5 seconds, don't stick a fork in ourselves straight
+            // away but give our lovely user a chance to see what we're
+            // doing
+            long uptime = System.currentTimeMillis() - _startup;
+            if (_frame != null && uptime < MIN_EXIST_TIME) {
+                try {
+                    Thread.sleep(MIN_EXIST_TIME - uptime);
+                } catch (Exception e) {
+                }
+            }
             System.exit(0);
         } catch (IOException ioe) {
             Log.logStackTrace(ioe);
@@ -246,7 +264,7 @@ public class Getdown extends Thread
         // create our user interface, and display it
         _frame = new JFrame(StringUtil.blank(_ifc.name) ? "" : _ifc.name);
         _frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        _status = new StatusPanel(_msgs, bounds, bgimg, ppos, spos);
+        _status = new StatusPanel(_msgs, bounds, bgimg, ppos, spos, _ifc);
         _frame.getContentPane().add(_status, BorderLayout.CENTER);
         _frame.pack();
         SwingUtil.centerWindow(_frame);
@@ -329,7 +347,10 @@ public class Getdown extends Thread
     protected JFrame _frame;
     protected StatusPanel _status;
 
+    protected long _startup;
+
     protected static final int MAX_LOOPS = 5;
+    protected static final long MIN_EXIST_TIME = 5000L;
 
     protected static final Rectangle DEFAULT_PPOS =
         new Rectangle(5, 5, 300, 15);

@@ -1,12 +1,11 @@
 //
-// $Id: StatusPanel.java,v 1.5 2004/07/20 01:25:06 mdb Exp $
+// $Id: StatusPanel.java,v 1.6 2004/07/26 17:52:32 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
-import java.awt.AlphaComposite;
 import java.awt.Color;
-import java.awt.Composite;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Graphics;
 import java.awt.Rectangle;
@@ -24,6 +23,7 @@ import com.samskivert.text.MessageUtil;
 import com.samskivert.util.StringUtil;
 
 import com.threerings.getdown.Log;
+import com.threerings.getdown.data.Application.UpdateInterface;
 
 /**
  * Displays download and patching status.
@@ -31,13 +31,15 @@ import com.threerings.getdown.Log;
 public class StatusPanel extends JComponent
 {
     public StatusPanel (ResourceBundle msgs, Rectangle bounds,
-                        BufferedImage bgimg, Rectangle ppos, Rectangle spos)
+                        BufferedImage bgimg, Rectangle ppos, Rectangle spos,
+                        UpdateInterface ifc)
     {
         _msgs = msgs;
         _bgimg = bgimg;
         _psize = new Dimension(bounds.width, bounds.height);
         _ppos = ppos;
         _spos = spos;
+        _ifc = ifc;
     }
 
     /**
@@ -46,11 +48,17 @@ public class StatusPanel extends JComponent
     public void setProgress (int percent, long remaining)
     {
         _progress = percent;
-        String msg = (remaining > 1) ? "m.complete_remain" : "m.complete";
+        String msg = "m.complete";
+        int minutes = 0, seconds = 0;
+        if (remaining > 1) {
+            msg = "m.complete_remain";
+            minutes = (int)(remaining / 60);
+            seconds = (int)(remaining % 60);
+        }
         msg = get(msg);
         String label = MessageFormat.format(msg, new Object[] {
-            new Integer(percent), new Long(remaining) });
-        _newplab = new Label(label);
+            new Integer(percent), new Integer(minutes), new Integer(seconds) });
+        _newplab = new Label(label, _ifc.progressText, _pfont);
         repaint();
     }
 
@@ -60,7 +68,7 @@ public class StatusPanel extends JComponent
     public void setStatus (String status)
     {
         status = xlate(status);
-        _newlab = new Label(status, _lcolor, null);
+        _newlab = new Label(status, _ifc.statusText, _sfont);
         _newlab.setTargetWidth(_spos.width);
         repaint();
     }
@@ -91,20 +99,15 @@ public class StatusPanel extends JComponent
             _newplab = null;
         }
 
-        Composite ocomp = gfx.getComposite();
-        gfx.setComposite(PROGRESS_ALPHA);
-        gfx.setColor(Color.black);
+        gfx.setColor(_ifc.progressBar);
         gfx.fillRect(_ppos.x, _ppos.y, _progress * _ppos.width / 100,
                      _ppos.height);
-        gfx.setComposite(ocomp);
 
-        gfx.setColor(_lcolor);
         if (_plabel != null) {
             int xmarg = (_ppos.width - _plabel.getSize().width)/2;
             int ymarg = (_ppos.height - _plabel.getSize().height)/2;
             _plabel.render(gfx, _ppos.x + xmarg, _ppos.y + ymarg);
         }
-        gfx.draw(_ppos);
 
         if (_label != null) {
             _label.render(gfx, _spos.x, _spos.y);
@@ -182,8 +185,8 @@ public class StatusPanel extends JComponent
     protected Label _plabel, _newplab;
 
     protected Color _lcolor = new Color(0xD7C94F);
+    protected UpdateInterface _ifc;
 
-    /** The alpha level at which to paint the progress bar. */
-    protected static final Composite PROGRESS_ALPHA =
-        AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.25f);
+    protected static final Font _sfont = new Font("SansSerif", Font.PLAIN, 12);
+    protected static final Font _pfont = new Font("SansSerif", Font.BOLD, 12);
 }
