@@ -1,5 +1,5 @@
 //
-// $Id: Application.java,v 1.15 2004/07/26 17:52:32 mdb Exp $
+// $Id: Application.java,v 1.16 2004/07/26 18:59:15 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -276,12 +276,14 @@ public class Application
         ui.progress = parseRect(
             "ui.progress", (String)cdata.get("ui.progress"));
         ui.progressText = parseColor(
-            "ui.progress_text", (String)cdata.get("ui.progress_text"));
+            "ui.progress_text", (String)cdata.get("ui.progress_text"),
+            Color.white);
         ui.progressBar = parseColor(
-            "ui.progress_bar", (String)cdata.get("ui.progress_bar"));
+            "ui.progress_bar", (String)cdata.get("ui.progress_bar"),
+            new Color(0x6699CC));
         ui.status = parseRect("ui.progress", (String)cdata.get("ui.status"));
         ui.statusText = parseColor(
-            "ui.status_text", (String)cdata.get("ui.status_text"));
+            "ui.status_text", (String)cdata.get("ui.status_text"), Color.white);
         ui.background = (String)cdata.get("ui.background");
         return ui;
     }
@@ -661,7 +663,7 @@ public class Application
     }
 
     /** Used to parse color specifications from the config file. */
-    protected Color parseColor (String name, String value)
+    protected Color parseColor (String name, String value, Color defcolor)
     {
         if (!StringUtil.blank(value)) {
             try {
@@ -671,7 +673,7 @@ public class Application
                             value + "'.");
             }
         }
-        return Color.white;
+        return defcolor;
     }
 
     protected File _appdir;
