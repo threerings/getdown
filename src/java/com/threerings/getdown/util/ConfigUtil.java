@@ -1,5 +1,5 @@
 //
-// $Id: ConfigUtil.java,v 1.2 2004/07/02 15:22:49 mdb Exp $
+// $Id: ConfigUtil.java,v 1.3 2004/07/30 02:23:52 mdb Exp $
 
 package com.threerings.getdown.util;
 
@@ -17,6 +17,8 @@ import java.util.List;
 import com.samskivert.io.StreamUtil;
 import com.samskivert.util.StringUtil;
 
+import com.threerings.getdown.Log;
+
 /**
  * Parses a file containing key/value pairs and returns a {@link HashMap}
  * with the values. Keys may be repeated, in which case they will be made
@@ -31,10 +33,12 @@ public class ConfigUtil
      * @return a list of <code>String[]</code> instances containing the
      * key/value pairs in the order they were parsed from the file.
      */
-    public static List parsePairs (File config)
+    public static List parsePairs (File config, boolean checkPlatform)
         throws IOException
     {
         ArrayList pairs = new ArrayList();
+        String osname = System.getProperty("os.name");
+        osname = (osname == null) ? "" : osname.toLowerCase();
 
         // parse our configuration file
         FileInputStream fin = null;
@@ -67,6 +71,35 @@ public class ConfigUtil
                     pair[1] = "";
                 }
 
+                // allow a value to have a [Linux]
+                if (pair[1].startsWith("[")) {
+                    cidx = pair[1].indexOf("]");
+                    if (cidx == -1) {
+                        Log.warning("Bogus platform specifier [key=" + pair[0] +
+                                    ", value=" + pair[1] + "].");
+                    } else {
+                        String platform = pair[1].substring(1, cidx);
+                        platform = platform.trim().toLowerCase();
+                        pair[1] = pair[1].substring(cidx+1).trim();
+                        if (checkPlatform) {
+                            if (platform.startsWith("!")) {
+                                platform = platform.substring(1);
+                                if (osname.indexOf(platform) != -1) {
+                                    Log.info("Skipping [platform=!" + platform +
+                                             ", key=" + pair[0] +
+                                             ", value=" + pair[1] + "].");
+                                    continue;
+                                }
+                            } else if (osname.indexOf(platform) == -1) {
+                                Log.info("Skipping [platform=" + platform +
+                                         ", key=" + pair[0] +
+                                         ", value=" + pair[1] + "].");
+                                continue;
+                            }
+                        }
+                    }
+                }
+
                 pairs.add(pair);
             }
 
@@ -85,10 +118,10 @@ public class ConfigUtil
      * of strings if more than one key/value pair in the config file was
      * associated with the same key.
      */
-    public static HashMap parseConfig (File config)
+    public static HashMap parseConfig (File config, boolean checkPlatform)
         throws IOException
     {
-        List pairs = parsePairs(config);
+        List pairs = parsePairs(config, checkPlatform);
         HashMap data = new HashMap();
 
         for (Iterator iter = pairs.iterator(); iter.hasNext(); ) {

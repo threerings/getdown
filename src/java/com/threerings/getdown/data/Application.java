@@ -1,5 +1,5 @@
 //
-// $Id: Application.java,v 1.23 2004/07/30 00:27:39 mdb Exp $
+// $Id: Application.java,v 1.24 2004/07/30 02:23:52 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -166,20 +166,20 @@ public class Application
      * @exception IOException thrown if there is an error reading the file
      * or an error encountered during its parsing.
      */
-    public UpdateInterface init ()
+    public UpdateInterface init (boolean checkPlatform)
         throws IOException
     {
         // parse our configuration file
         HashMap cdata = null;
         try {
-            cdata = ConfigUtil.parseConfig(_config);
+            cdata = ConfigUtil.parseConfig(_config, checkPlatform);
         } catch (FileNotFoundException fnfe) {
             // thanks to funny windows bullshit, we have to do this backup
             // file fiddling in case we got screwed while updating our
             // very critical getdown config file
             File cbackup = getLocalPath(CONFIG_FILE + "_old");
             if (cbackup.exists()) {
-                cdata = ConfigUtil.parseConfig(cbackup);
+                cdata = ConfigUtil.parseConfig(cbackup, checkPlatform);
             } else {
                 throw fnfe;
             }
@@ -516,7 +516,7 @@ public class Application
             // if the new copy validates, reinitialize ourselves;
             // otherwise report baffling hoseage
             if (_digest.validateResource(crsrc, null)) {
-                init();
+                init(true);
             }
         }
 

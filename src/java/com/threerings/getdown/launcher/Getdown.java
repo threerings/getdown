@@ -1,5 +1,5 @@
 //
-// $Id: Getdown.java,v 1.23 2004/07/30 00:27:19 mdb Exp $
+// $Id: Getdown.java,v 1.24 2004/07/30 02:23:52 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -78,12 +78,12 @@ public class Getdown extends Thread
         try {
             // first parses our application deployment file
             try {
-                _ifc = _app.init();
+                _ifc = _app.init(true);
             } catch (IOException ioe) {
                 Log.warning("Failed to parse 'getdown.txt': " + ioe);
                 _app.attemptRecovery(this);
                 // and re-initalize
-                _ifc = _app.init();
+                _ifc = _app.init(true);
                 // now force our UI to be recreated with the updated info
                 createInterface(true);
             }
@@ -177,7 +177,7 @@ public class Getdown extends Thread
         // finally update our metadata files...
         _app.updateMetadata();
         // ...and reinitialize the application
-        _ifc = _app.init();
+        _ifc = _app.init(true);
     }
 
     /**

@@ -1,5 +1,5 @@
 //
-// $Id: Differ.java,v 1.5 2004/07/28 02:25:49 mdb Exp $
+// $Id: Differ.java,v 1.6 2004/07/30 02:23:52 mdb Exp $
 
 package com.threerings.getdown.tools;
 
@@ -74,13 +74,13 @@ public class Differ
         }
 
         Application oapp = new Application(ovdir);
-        oapp.init();
+        oapp.init(false);
         ArrayList orsrcs = new ArrayList();
         orsrcs.addAll(oapp.getCodeResources());
         orsrcs.addAll(oapp.getResources());
 
         Application napp = new Application(nvdir);
-        napp.init();
+        napp.init(false);
         ArrayList nrsrcs = new ArrayList();
         nrsrcs.addAll(napp.getCodeResources());
         nrsrcs.addAll(napp.getResources());

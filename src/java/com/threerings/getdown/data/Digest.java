@@ -1,5 +1,5 @@
 //
-// $Id: Digest.java,v 1.5 2004/07/28 01:28:55 mdb Exp $
+// $Id: Digest.java,v 1.6 2004/07/30 02:23:52 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -41,7 +41,8 @@ public class Digest
     {
         // parse and validate our digest file contents
         StringBuffer data = new StringBuffer();
-        List pairs = ConfigUtil.parsePairs(new File(appdir, DIGEST_FILE));
+        File dfile = new File(appdir, DIGEST_FILE);
+        List pairs = ConfigUtil.parsePairs(dfile, false);
         for (Iterator iter = pairs.iterator(); iter.hasNext(); ) {
             String[] pair = (String[])iter.next();
             if (pair[0].equals(DIGEST_FILE)) {

@@ -1,5 +1,5 @@
 //
-// $Id: DigesterTask.java,v 1.2 2004/07/13 17:43:52 mdb Exp $
+// $Id: DigesterTask.java,v 1.3 2004/07/30 02:23:52 mdb Exp $
 
 package com.threerings.getdown.tools;
 
@@ -44,7 +44,7 @@ public class DigesterTask extends Task
         // create our application and instruct it to parse its business
         Application app = new Application(_appdir);
         try {
-            app.init();
+            app.init(false);
         } catch (IOException ioe) {
             throw new BuildException("Error parsing getdown.txt: " +
                                      ioe.getMessage(), ioe);
