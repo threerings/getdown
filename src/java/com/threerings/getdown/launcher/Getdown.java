@@ -1,10 +1,12 @@
 //
-// $Id: Getdown.java,v 1.20 2004/07/28 07:45:44 mdb Exp $
+// $Id: Getdown.java,v 1.21 2004/07/28 08:05:44 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 
 import javax.imageio.ImageIO;
@@ -57,6 +59,7 @@ public class Getdown extends Thread
                 "installed:\n" + dir + "\nis invalid. The directory " +
                 "must not contain the '!' character. Please reinstall.";
             updateStatus(errmsg);
+            _dead = true;
         }
         _app = new Application(appDir);
         _startup = System.currentTimeMillis();
@@ -126,6 +129,7 @@ public class Getdown extends Thread
                 }
             }
             updateStatus(msg);
+            _dead = true;
         }
     }
 
@@ -277,11 +281,21 @@ public class Getdown extends Thread
         String title = StringUtil.blank(_ifc.name) ? "" : _ifc.name;
         if (_frame == null) {
             _frame = new JFrame(title);
+            _frame.addWindowListener(new WindowAdapter() {
+                public void windowClosing (WindowEvent evt) {
+                    if (_dead || _frame.getState() == JFrame.ICONIFIED) {
+                        System.exit(0);
+                    } else {
+                        _frame.setState(JFrame.ICONIFIED);
+                    }
+                }
+            });
+
         } else {
             _frame.setTitle(title);
             _frame.getContentPane().removeAll();
         }
-        _frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        _frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         _status = new StatusPanel(_msgs, _ifc, bgimg);
         _frame.getContentPane().add(_status, BorderLayout.CENTER);
         _frame.pack();
@@ -363,6 +377,7 @@ public class Getdown extends Thread
     protected JFrame _frame;
     protected StatusPanel _status;
 
+    protected boolean _dead;
     protected long _startup;
 
     protected static final int MAX_LOOPS = 5;
