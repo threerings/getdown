@@ -1,5 +1,5 @@
 //
-// $Id: Getdown.java,v 1.22 2004/07/29 17:57:45 mdb Exp $
+// $Id: Getdown.java,v 1.23 2004/07/30 00:27:19 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -370,6 +370,18 @@ public class Getdown extends Thread
                 Log.warning("Failed to detect proxy: " + e);
             }
         }
+
+        // record a few things for posterity
+        Log.info("------------------ VM Info ------------------");
+        Log.info("-- OS Name: " + System.getProperty("os.name"));
+        Log.info("-- OS Arch: " + System.getProperty("os.arch"));
+        Log.info("-- OS Vers: " + System.getProperty("os.version"));
+        Log.info("-- Java Vers: " + System.getProperty("java.version"));
+        Log.info("-- Java Home: " + System.getProperty("java.home"));
+        Log.info("-- User Name: " + System.getProperty("user.name"));
+        Log.info("-- User Home: " + System.getProperty("user.home"));
+        Log.info("-- Cur dir: " + System.getProperty("user.dir"));
+        Log.info("---------------------------------------------");
 
         try {
             Getdown app = new Getdown(appDir);
