@@ -1,5 +1,5 @@
 //
-// $Id: Digest.java,v 1.4 2004/07/14 13:44:49 mdb Exp $
+// $Id: Digest.java,v 1.5 2004/07/28 01:28:55 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -127,20 +127,23 @@ public class Digest
         pout.close();
     }
 
-    /** Used by {@link #createDigest} and {@link Digest}. */
-    protected static void note (StringBuffer data, String path, String digest)
-    {
-        data.append(path).append(" = ").append(digest).append("\n");
-    }
-
-    /** Used by {@link #createDigest} and {@link Digest}. */
-    protected static MessageDigest getMessageDigest ()
+    /**
+     * Obtains an appropriate message digest instance for use by the
+     * Getdown system.
+     */
+    public static MessageDigest getMessageDigest ()
     {
         try {
             return MessageDigest.getInstance("MD5");
         } catch (NoSuchAlgorithmException nsae) {
             throw new RuntimeException("JVM does not support MD5. Gurp!");
         }
+    }
+
+    /** Used by {@link #createDigest} and {@link Digest}. */
+    protected static void note (StringBuffer data, String path, String digest)
+    {
+        data.append(path).append(" = ").append(digest).append("\n");
     }
 
     protected HashMap _digests = new HashMap();
