@@ -1,5 +1,5 @@
 //
-// $Id: Patcher.java,v 1.2 2004/07/14 13:44:49 mdb Exp $
+// $Id: Patcher.java,v 1.3 2004/07/28 07:38:25 mdb Exp $
 
 package com.threerings.getdown.tools;
 
@@ -166,8 +166,12 @@ public class Patcher
             StreamUtil.close(fout);
             StreamUtil.close(in);
             // clean up our temporary files
-            patch.delete();
-            otarget.delete();
+            if (!patch.delete()) {
+                patch.deleteOnExit();
+            }
+            if (!otarget.delete()) {
+                otarget.deleteOnExit();
+            }
         }
     }
 
