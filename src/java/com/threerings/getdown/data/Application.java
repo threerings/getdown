@@ -1,5 +1,5 @@
 //
-// $Id: Application.java,v 1.30 2004/08/10 07:26:19 mdb Exp $
+// $Id: Application.java,v 1.31 2004/08/10 22:28:17 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -137,7 +137,7 @@ public class Application
     {
         if (_targetVersion <= _version) {
             Log.warning("Requested patch resource for up-to-date or " +
-                        "non-versioned appliation [cvers=" + _version +
+                        "non-versioned application [cvers=" + _version +
                         ", tvers=" + _targetVersion + "].");
             return null;
         }
@@ -543,21 +543,24 @@ public class Application
         // start by assuming we are happy with our version
         _targetVersion = _version;
 
-        // now read in the contents of the version.txt file (if any)
-        File vfile = getLocalPath(VERSION_FILE);
-        FileInputStream fin = null;
-        try {
-            fin = new FileInputStream(vfile);
-            BufferedReader bin = new BufferedReader(
-                new InputStreamReader(fin));
-            String vstr = bin.readLine();
-            if (!StringUtil.blank(vstr)) {
-                _targetVersion = Integer.parseInt(vstr);
+        // if we are a versioned application, read in the contents of the
+        // version.txt file
+        if (_version != -1) {
+            File vfile = getLocalPath(VERSION_FILE);
+            FileInputStream fin = null;
+            try {
+                fin = new FileInputStream(vfile);
+                BufferedReader bin = new BufferedReader(
+                    new InputStreamReader(fin));
+                String vstr = bin.readLine();
+                if (!StringUtil.blank(vstr)) {
+                    _targetVersion = Integer.parseInt(vstr);
+                }
+            } catch (Exception e) {
+                Log.info("Unable to read version file: " + e.getMessage());
+            } finally {
+                StreamUtil.close(fin);
             }
-        } catch (Exception e) {
-            Log.info("Unable to read version file: " + e.getMessage());
-        } finally {
-            StreamUtil.close(fin);
         }
 
         // finally let the caller know if we need an update
