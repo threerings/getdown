@@ -8,9 +8,6 @@
   <property name="dist.jar" value="${app.name}.jar"/>
   <property name="app.dop" value="etc/${app.name}.dop"/>
 
-  <!-- we get DashO from a magical place -->
-  <property name="dasho-tool.jar" value="/export/threerings/lib/DashoPro.jar"/>
-
   <!-- used when generating javadocs -->
   <property name="javadoc.dir"  value="${deploy.dir}/docs"/>
   <property name="doc.packages" value="com.threerings.getdown.*"/>
@@ -74,24 +71,10 @@
          basedir="${deploy.dir}/classes"/>
   </target>
 
-  <!-- runs DashO on the code and jars up the results -->
-  <target name="dasho" depends="dist">
-    <delete dir="dclasses"/>
-
-    <!-- now run DashO on the whole business -->
-    <echo message="Invoking DashO ${dasho-tool.jar}..."/>
-    <exec executable="java">
-      <arg line="-mx256M"/>
-      <arg line="-classpath ${dasho-tool.jar}"/>
-      <arg line="DashoPro"/>
-      <arg line="-f ${app.dop}"/>
-    </exec>
-
-    <!-- blow away some javaws crap -->
-    <delete dir="dclasses/com/sun/javaws/resources"/>
-    <delete dir="dclasses/com/sun/javaws/ui"/>
-    <!-- finally jar up the results -->
-    <jar basedir="dclasses" manifest="lib/manifest.mf"
-      destfile="${deploy.dir}/${app.name}-dop.jar"/>
+  <!-- optimizes, combines and removes dead code -->
+  <target name="proguard" depends="dist">
+    <taskdef resource="proguard/ant/task.properties"
+             classpath="lib/proguard.jar"/>
+    <proguard configuration="etc/getdown.pro"/>
   </target>
 </project>
