@@ -1,9 +1,16 @@
 //
-// $Id: Getdown.java,v 1.2 2004/07/02 15:22:49 mdb Exp $
+// $Id: Getdown.java,v 1.3 2004/07/02 17:03:33 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
+
+import java.util.List;
+
+import org.apache.commons.io.TeeOutputStream;
 
 import com.threerings.getdown.Log;
 import com.threerings.getdown.data.Application;
@@ -26,8 +33,15 @@ public class Getdown
 
             if (_app.verifyMetadata()) {
                 Log.info("Application requires update.");
+
             } else {
                 Log.info("Metadata verified.");
+                List failures = _app.verifyResources();
+                if (failures == null) {
+                    Log.info("Resources verified.");
+                } else {
+                    Log.info(failures.size() + " resources require update.");
+                }
             }
 
         } catch (Exception e) {
@@ -49,6 +63,18 @@ public class Getdown
             Log.warning("Invalid app_dir '" + args[0] + "'.");
             System.exit(-1);
         }
+
+//         // tee our output into a file in the application directory
+//         File log = new File(appDir, "getdown.log");
+//         try {
+//             FileOutputStream fout = new FileOutputStream(log);
+//             System.setOut(new PrintStream(
+//                               new TeeOutputStream(System.out, fout)));
+//             System.setErr(new PrintStream(
+//                               new TeeOutputStream(System.err, fout)));
+//         } catch (IOException ioe) {
+//             Log.warning("Unable to redirect output to '" + log + "': " + ioe);
+//         }
 
         try {
             Getdown app = new Getdown(appDir);

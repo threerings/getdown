@@ -1,5 +1,5 @@
 //
-// $Id: Application.java,v 1.2 2004/07/02 15:22:49 mdb Exp $
+// $Id: Application.java,v 1.3 2004/07/02 17:03:33 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -17,6 +17,7 @@ import java.security.MessageDigest;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import com.samskivert.io.NestableIOException;
@@ -193,14 +194,6 @@ public class Application
                 _appargs.add(appargs[ii]);
             }
         }
-
-//         Log.info("Parsed application " + _appbase);
-//         Log.info("Version: " + _version);
-//         Log.info("Class: " + _class);
-//         Log.info("Code: " + StringUtil.toString(_codes.iterator()));
-//         Log.info("Resources: " + StringUtil.toString(_resources.iterator()));
-//         Log.info("JVM Args: " + StringUtil.toString(_jvmargs.iterator()));
-//         Log.info("App Args: " + StringUtil.toString(_appargs.iterator()));
     }
 
     /**
@@ -238,6 +231,14 @@ public class Application
     public boolean verifyMetadata ()
         throws IOException
     {
+        Log.info("Verifying application: " + _appbase);
+        Log.info("Version: " + _version);
+        Log.info("Class: " + _class);
+//         Log.info("Code: " + StringUtil.toString(_codes.iterator()));
+//         Log.info("Resources: " + StringUtil.toString(_resources.iterator()));
+//         Log.info("JVM Args: " + StringUtil.toString(_jvmargs.iterator()));
+//         Log.info("App Args: " + StringUtil.toString(_appargs.iterator()));
+
         // create our digester which will read in the contents of the
         // digest file and validate itself
         try {
@@ -291,6 +292,45 @@ public class Application
 
         // finally let the caller know if we need an update
         return _version != _targetVersion;
+    }
+
+    /**
+     * Verifies the code and media resources associated with this
+     * application. A list of resources that do not exist or fail the
+     * verification process will be returned. If all resources are ready
+     * to go, null will be returned and the application is considered
+     * ready to run.
+     */
+    public List verifyResources ()
+    {
+        ArrayList failures = new ArrayList();
+        verifyResources(_codes.iterator(), failures);
+        verifyResources(_resources.iterator(), failures);
+        return (failures.size() == 0) ? null : failures;
+    }
+
+    /** A helper function used by {@link #verifyResources()}. */
+    protected void verifyResources (Iterator rsrcs, List failures)
+    {
+        while (rsrcs.hasNext()) {
+            Resource rsrc = (Resource)rsrcs.next();
+            if (rsrc.isMarkedValid()) {
+                continue;
+            }
+
+            try {
+                if (_digest.validateResource(rsrc)) {
+                    // make a note that this file is kosher
+                    rsrc.markAsValid();
+                    continue;
+                }
+
+            } catch (Exception e) {
+                Log.info("Failure validating resource [rsrc=" + rsrc +
+                         ", error=" + e + "]. Requesting redownload...");
+            }
+            failures.add(rsrc);
+        }
     }
 
     /**

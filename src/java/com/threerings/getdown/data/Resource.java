@@ -1,5 +1,5 @@
 //
-// $Id: Resource.java,v 1.2 2004/07/02 15:22:49 mdb Exp $
+// $Id: Resource.java,v 1.3 2004/07/02 17:03:33 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -9,10 +9,11 @@ import java.io.IOException;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-
 import java.security.MessageDigest;
 
 import com.samskivert.util.StringUtil;
+
+import com.threerings.getdown.Log;
 
 /**
  * Models a single file resource used by an {@link Application}.
@@ -27,6 +28,7 @@ public class Resource
         _path = path;
         _remote = remote;
         _local = local;
+        _marker = new File(_local.getPath() + "v");
     }
 
     /**
@@ -55,18 +57,64 @@ public class Resource
     }
 
     /**
+     * Returns true if this resource has an associated "validated" marker
+     * file.
+     */
+    public boolean isMarkedValid ()
+    {
+        return _marker.exists();
+    }
+
+    /**
+     * Creates a "validated" marker file for this resource to indicate
+     * that its MD5 hash has been computed and compared with the value in
+     * the digest file.
+     *
+     * @throws IOException if we fail to create the marker file.
+     */
+    public void markAsValid ()
+        throws IOException
+    {
+        _marker.createNewFile();
+    }
+
+    /**
+     * Removes any "validated" marker file associated with this resource.
+     */
+    public void clearMarker ()
+    {
+        if (_marker.exists()) {
+            if (!_marker.delete()) {
+                Log.warning("Failed to erase marker file '" + _marker + "'.");
+            }
+        }
+    }
+
+    /**
+     * Wipes this resource file along with any "validated" marker file
+     * that may be associated with it.
+     */
+    public void erase ()
+    {
+        clearMarker();
+        if (_local.exists()) {
+            if (!_local.delete()) {
+                Log.warning("Failed to erase resource '" + _local + "'.");
+            }
+        }
+    }
+
+    /**
      * Returns a string representation of this instance.
      */
     public String toString ()
     {
-        // return _path;
-        // return _netloc.toString();
-        return _local.getPath();
+        return _path;
     }
 
     protected String _path;
     protected URL _remote;
-    protected File _local;
+    protected File _local, _marker;
 
     protected final static int DIGEST_BUFFER_SIZE = 5 * 1025;
 }
