@@ -1,5 +1,5 @@
 //
-// $Id: Application.java,v 1.26 2004/08/02 23:19:48 mdb Exp $
+// $Id: Application.java,v 1.27 2004/08/03 00:10:34 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -516,6 +516,8 @@ public class Application
             downloadControlFile(CONFIG_FILE);
             downloadControlFile(Digest.DIGEST_FILE);
             _digest = new Digest(_appdir);
+            // revalidate everything if we end up downloading new metadata
+            clearValidationMarkers();
             // if the new copy validates, reinitialize ourselves;
             // otherwise report baffling hoseage
             if (_digest.validateResource(crsrc, null)) {
