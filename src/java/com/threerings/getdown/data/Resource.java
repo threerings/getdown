@@ -1,5 +1,5 @@
 //
-// $Id: Resource.java,v 1.7 2004/07/13 10:39:37 mdb Exp $
+// $Id: Resource.java,v 1.8 2004/07/13 16:15:26 ray Exp $
 
 package com.threerings.getdown.data;
 
@@ -58,7 +58,7 @@ public class Resource
 
     /**
      * Computes the MD5 hash of this resource's underlying file.
-     * <em>Note:</m> This is both CPU and I/O intensive.
+     * <em>Note:</em> This is both CPU and I/O intensive.
      */
     public String computeDigest (MessageDigest md)
         throws IOException
