@@ -1,5 +1,5 @@
 //
-// $Id: Patcher.java,v 1.5 2004/08/03 22:36:48 mdb Exp $
+// $Id$
 
 package com.threerings.getdown.tools;
 
@@ -11,9 +11,6 @@ import java.io.InputStream;
 import java.util.Enumeration;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
-
-import com.sun.javaws.cache.Patcher.PatchDelegate;
-import com.sun.javaws.jardiff.JarDiffPatcher;
 
 import com.samskivert.io.StreamUtil;
 import org.apache.commons.io.CopyUtils;
@@ -150,11 +147,9 @@ public class Patcher
             }
 
             // we'll need this to pass progress along to our observer
-            final String which = entry.getName();
             final long elength = entry.getCompressedSize();
-            PatchDelegate pd = new PatchDelegate() {
-                public void patching (int percent) {
-                    // System.out.println(which + ": " + percent);
+            ProgressObserver obs = new ProgressObserver() {
+                public void progress (int percent) {
                     updateProgress((int)(percent * elength / 100));
                 }
             };
@@ -162,7 +157,7 @@ public class Patcher
             // now apply the patch to create the new target file
             patcher = new JarDiffPatcher();
             fout = new FileOutputStream(target);
-            patcher.applyPatch(pd, otarget.getPath(), patch.getPath(), fout);
+            patcher.patchJar(otarget.getPath(), patch.getPath(), fout, obs);
 
         } catch (IOException ioe) {
             if (patcher == null) {
