@@ -1,8 +1,9 @@
 //
-// $Id: Differ.java,v 1.4 2004/07/28 01:30:53 mdb Exp $
+// $Id: Differ.java,v 1.5 2004/07/28 02:25:49 mdb Exp $
 
 package com.threerings.getdown.tools;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -12,6 +13,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
 
@@ -113,8 +117,23 @@ public class Differ
                         if (verbose) {
                             System.out.println("JarDiff: " + rsrc.getPath());
                         }
+                        // here's a juicy one: JarDiff blindly pulls
+                        // ZipEntry objects out of one jar file and stuffs
+                        // them into another without clearing out things
+                        // like the compressed size, so if, for whatever
+                        // reason (like different JRE versions or phase of
+                        // the moon) the compressed size in the old jar
+                        // file is different than the compressed size
+                        // generated when creating the jardiff jar file,
+                        // ZipOutputStream will choke and we'll be hosed;
+                        // so we recreate the jar files in their entirety
+                        // before running jardiff on 'em
+                        File otemp = rebuildJar(orsrc.getLocal());
+                        File temp = rebuildJar(rsrc.getLocal());
                         jout.putNextEntry(new ZipEntry(rsrc.getPath() + PATCH));
-                        jarDiff(orsrc.getLocal(), rsrc.getLocal(), jout);
+                        jarDiff(otemp, temp, jout);
+                        otemp.delete();
+                        temp.delete();
                         continue;
                     }
                 }
@@ -145,6 +164,31 @@ public class Differ
             patch.delete();
             throw ioe;
         }
+    }
+
+    protected File rebuildJar (File target)
+        throws IOException
+    {
+        JarFile jar = new JarFile(target);
+        File temp = File.createTempFile("differ", "jar");
+        JarOutputStream jout = new JarOutputStream(
+            new BufferedOutputStream(new FileOutputStream(temp)));
+        byte[] buffer = new byte[4096];
+        for (Enumeration enum = jar.entries(); enum.hasMoreElements(); ) {
+            JarEntry entry = (JarEntry)enum.nextElement();
+            entry.setCompressedSize(-1);
+            jout.putNextEntry(entry);
+            InputStream in = jar.getInputStream(entry);
+            int size = in.read(buffer);
+            while (size != -1) {
+                jout.write(buffer, 0, size);
+                size = in.read(buffer);
+            }
+            in.close();
+        }
+        jout.close();
+        jar.close();
+        return temp;
     }
 
     protected void jarDiff (File ofile, File nfile, JarOutputStream jout)
