@@ -10,7 +10,7 @@
 
 -libraryjars <java.home>/lib/rt.jar
 
--outjars dist/getdown-dop.jar
+-outjars dist/getdown-pro.jar
 
 -keep public class ca.beq.util.win32.registry.** {
     public protected *;
