@@ -1,5 +1,5 @@
 //
-// $Id: StatusPanel.java,v 1.7 2004/07/26 18:05:55 mdb Exp $
+// $Id: StatusPanel.java,v 1.8 2004/07/26 18:30:16 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -21,6 +21,7 @@ import com.samskivert.swing.Label;
 import com.samskivert.swing.util.SwingUtil;
 import com.samskivert.text.MessageUtil;
 import com.samskivert.util.StringUtil;
+import com.samskivert.util.Throttle;
 
 import com.threerings.getdown.Log;
 import com.threerings.getdown.data.Application.UpdateInterface;
@@ -51,6 +52,22 @@ public class StatusPanel extends JComponent
         String msg = "m.complete";
         String remstr = "";
         if (remaining > 1) {
+            // skip this estimate if it's been less than a second since
+            // our last one came in
+            if (!_rthrottle.throttleOp()) {
+                _remain[_ridx++%_remain.length] = remaining;
+            }
+
+            // smooth the remaining time by taking the trailing average of
+            // the last four values
+            remaining = 0;
+            int values = Math.min(_ridx, _remain.length);
+            for (int ii = 0; ii < values; ii++) {
+                remaining += _remain[ii];
+            }
+            remaining /= values;
+
+            // now compute our display value
             msg = "m.complete_remain";
             int minutes = (int)(remaining / 60);
             int seconds = (int)(remaining % 60);
@@ -63,7 +80,7 @@ public class StatusPanel extends JComponent
         msg = get(msg);
         String label = MessageFormat.format(msg, new Object[] {
             new Integer(percent), remstr });
-        _newplab = new Label(label, _ifc.progressText, _pfont);
+        _newplab = new Label(label, _ifc.progressText, _font);
         repaint();
     }
 
@@ -73,8 +90,10 @@ public class StatusPanel extends JComponent
     public void setStatus (String status)
     {
         status = xlate(status);
-        _newlab = new Label(status, _ifc.statusText, _sfont);
+        _newlab = new Label(status, _ifc.statusText, _font);
         _newlab.setTargetWidth(_spos.width);
+        _newlab.setAlternateColor(_shadow);
+        _newlab.setStyle(Label.SHADOW);
         repaint();
     }
 
@@ -189,9 +208,12 @@ public class StatusPanel extends JComponent
     protected Label _label, _newlab;
     protected Label _plabel, _newplab;
 
-    protected Color _lcolor = new Color(0xD7C94F);
+    protected Color _shadow = new Color(0x16486D);
     protected UpdateInterface _ifc;
 
-    protected static final Font _sfont = new Font("SansSerif", Font.PLAIN, 12);
-    protected static final Font _pfont = new Font("SansSerif", Font.BOLD, 12);
+    protected long[] _remain = new long[4];
+    protected int _ridx;
+    protected Throttle _rthrottle = new Throttle(1, 1000L);
+
+    protected static final Font _font = new Font("SansSerif", Font.BOLD, 12);
 }
