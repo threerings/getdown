@@ -1,17 +1,25 @@
 //
-// $Id: Resource.java,v 1.8 2004/07/13 16:15:26 ray Exp $
+// $Id: Resource.java,v 1.9 2004/07/14 12:14:44 mdb Exp $
 
 package com.threerings.getdown.data;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.MessageDigest;
 
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+
 import com.samskivert.io.StreamUtil;
+import com.samskivert.util.CollectionUtil;
+import com.samskivert.util.SortableArrayList;
 import com.samskivert.util.StringUtil;
 
 import com.threerings.getdown.Log;
@@ -66,14 +74,56 @@ public class Resource
         md.reset();
         byte[] buffer = new byte[DIGEST_BUFFER_SIZE];
         int read;
-        FileInputStream fin = null;
-        try {
-            fin = new FileInputStream(_local);
-            while ((read = fin.read(buffer)) != -1) {
-                md.update(buffer, 0, read);
+
+        // if this is a jar file, we need to compute the digest in a
+        // timestamp and file order agnostic manner to properly correlate
+        // jardiff patched jars with their unpatched originals
+        if (_local.getPath().endsWith(".jar")) {
+            JarFile jar = new JarFile(_local);
+            try {
+                SortableArrayList entries = new SortableArrayList();
+                CollectionUtil.addAll(entries, jar.entries());
+                entries.sort(ENTRY_COMP);
+
+                for (Iterator iter = entries.iterator(); iter.hasNext(); ) {
+                    JarEntry entry = (JarEntry)iter.next();
+
+                    // skip metadata; we just want the goods
+                    if (entry.getName().startsWith("META-INF")) {
+                        continue;
+                    }
+
+                    // add this file's data to the MD5 hash
+                    InputStream in = null;
+                    try {
+                        in = jar.getInputStream(entry);
+                        while ((read = in.read(buffer)) != -1) {
+                            md.update(buffer, 0, read);
+                        }
+                    } finally {
+                        StreamUtil.close(in);
+                    }
+                }
+
+            } finally {
+                try {
+                    jar.close();
+                } catch (IOException ioe) {
+                    Log.warning("Error closing jar [path=" + _local +
+                                ", error=" + ioe + "].");
+                }
             }
-        } finally {
-            StreamUtil.close(fin);
+
+        } else {
+            FileInputStream fin = null;
+            try {
+                fin = new FileInputStream(_local);
+                while ((read = fin.read(buffer)) != -1) {
+                    md.update(buffer, 0, read);
+                }
+            } finally {
+                StreamUtil.close(fin);
+            }
         }
         return StringUtil.hexlate(md.digest());
     }
@@ -162,5 +212,14 @@ public class Resource
     protected URL _remote;
     protected File _local, _marker;
 
-    protected final static int DIGEST_BUFFER_SIZE = 5 * 1025;
+    /** Used to sort the entries in a jar file. */
+    protected static final Comparator ENTRY_COMP = new Comparator() {
+        public int compare (Object o1, Object o2) {
+            JarEntry e1 = (JarEntry)o1;
+            JarEntry e2 = (JarEntry)o2;
+            return e1.getName().compareTo(e2.getName());
+        }
+    };
+
+    protected static final int DIGEST_BUFFER_SIZE = 5 * 1025;
 }
