@@ -1,5 +1,5 @@
 //
-// $Id: Application.java,v 1.3 2004/07/02 17:03:33 mdb Exp $
+// $Id: Application.java,v 1.4 2004/07/06 05:13:35 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -213,6 +213,64 @@ public class Application
     public File getLocalPath (String path)
     {
         return new File(_appdir, path);
+    }
+
+    /**
+     * Invokes the process associated with this application definition.
+     */
+    public Process createProcess ()
+        throws IOException
+    {
+        // create our classpath
+        StringBuffer cpbuf = new StringBuffer();
+        for (Iterator iter = _codes.iterator(); iter.hasNext(); ) {
+            if (cpbuf.length() > 0) {
+                cpbuf.append(File.pathSeparator);
+            }
+            Resource rsrc = (Resource)iter.next();
+            cpbuf.append(rsrc.getLocal().getAbsolutePath());
+        }
+
+        // we'll need the JVM, classpath, JVM args, class name and app args
+        String[] args = new String[4 + _jvmargs.size() + _appargs.size()];
+        int idx = 0;
+
+        // reconstruct the path to the JVM
+        args[idx++] = System.getProperty("java.home") +
+            File.separator + "bin" + File.separator + "java";
+
+        // add the classpath arguments
+        args[idx++] = "-classpath";
+        args[idx++] = cpbuf.toString();
+
+        // add the JVM arguments
+        for (Iterator iter = _jvmargs.iterator(); iter.hasNext(); ) {
+            args[idx++] = processArg((String)iter.next());
+        }
+
+        // add the application class name
+        args[idx++] = _class;
+
+        // finally add the application arguments
+        for (Iterator iter = _appargs.iterator(); iter.hasNext(); ) {
+            args[idx++] = processArg((String)iter.next());
+        }
+
+        Log.info("Running " + StringUtil.join(args, "\n"));
+        return Runtime.getRuntime().exec(args, null);
+    }
+
+    /** Replaces the application directory and version in any argument. */
+    protected String processArg (String arg)
+    {
+        if (arg.indexOf("%APPDIR%") != -1) {
+            arg = StringUtil.replace(
+                arg, "%APPDIR%", _appdir.getAbsolutePath());
+        }
+        if (arg.indexOf("%VERSION%") != -1) {
+            arg = StringUtil.replace(arg, "%VERSION%", "" + _version);
+        }
+        return arg;
     }
 
     /**

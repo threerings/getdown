@@ -1,5 +1,5 @@
 //
-// $Id: Resource.java,v 1.3 2004/07/02 17:03:33 mdb Exp $
+// $Id: Resource.java,v 1.4 2004/07/06 05:13:36 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -37,6 +37,22 @@ public class Resource
     public String getPath ()
     {
         return _path;
+    }
+
+    /**
+     * Returns the local location of this resource.
+     */
+    public File getLocal ()
+    {
+        return _local;
+    }
+
+    /**
+     * Returns the remote location of this resource.
+     */
+    public URL getRemote ()
+    {
+        return _remote;
     }
 
     /**
