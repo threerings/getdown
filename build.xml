@@ -6,10 +6,12 @@
   <property name="src.dir"      value="src/java"/>
   <property name="deploy.dir"   value="dist"/>
   <property name="dist.jar"     value="${app.name}.jar"/>
+  <property name="app.dop"      value="etc/${app.name}.dop"/>
 
   <!-- we want to access the environment -->
   <property environment="env"/>
   <property name="java.libraries" value="${env.JAVA_LIBS}"/>
+  <property name="dasho-tool.jar" value="${java.libraries}/DashoPro.jar"/>
 
   <!-- used when generating javadocs -->
   <property name="javadoc.dir"  value="${deploy.dir}/docs"/>
@@ -73,5 +75,23 @@
   <target name="dist" depends="prepare,compile">
     <jar destfile="${deploy.dir}/${dist.jar}" manifest="lib/manifest.mf"
          basedir="${deploy.dir}/classes"/>
+  </target>
+
+  <!-- runs DashO on the code and jars up the results -->
+  <target name="dasho" depends="dist">
+    <delete dir="dclasses"/>
+
+    <!-- now run DashO on the whole business -->
+    <echo message="Invoking DashO ${dasho-tool.jar}..."/>
+    <exec executable="java">
+      <arg line="-mx256M"/>
+      <arg line="-classpath ${dasho-tool.jar}"/>
+      <arg line="DashoPro"/>
+      <arg line="-f ${app.dop}"/>
+    </exec>
+
+    <!-- finally jar up the results -->
+    <jar basedir="dclasses" manifest="lib/manifest.mf"
+      destfile="${deploy.dir}/${app.name}-dop.jar"/>
   </target>
 </project>
