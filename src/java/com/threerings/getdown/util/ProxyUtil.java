@@ -1,5 +1,5 @@
 //
-// $Id: ProxyUtil.java,v 1.1 2004/07/29 17:57:45 mdb Exp $
+// $Id: ProxyUtil.java,v 1.2 2004/07/29 18:46:57 mdb Exp $
 
 package com.threerings.getdown.util;
 
@@ -20,6 +20,16 @@ public class ProxyUtil
      */
     public static boolean detectProxy (URL sampleURL)
     {
+        // first look for a proxy that's already set
+        if ((_proxyIP = System.getProperty("proxyHost")) != null) {
+            _proxyPort = System.getProperty("proxyPort");
+            return true;
+        }
+        if ((_proxyIP = System.getProperty("http.proxyHost")) != null) {
+            _proxyPort = System.getProperty("http.proxyPort");
+            return true;
+        }
+
         try {
             //  Look around for the 1.4.X plugin proxy detection
             //  class... Without it, cannot autodetect...
