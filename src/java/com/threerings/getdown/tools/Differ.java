@@ -1,5 +1,5 @@
 //
-// $Id: Differ.java,v 1.3 2004/07/13 17:45:40 mdb Exp $
+// $Id: Differ.java,v 1.4 2004/07/28 01:30:53 mdb Exp $
 
 package com.threerings.getdown.tools;
 
@@ -15,12 +15,15 @@ import java.util.ArrayList;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
 
+import java.security.MessageDigest;
+
 import com.sun.javaws.jardiff.JarDiff;
 import org.apache.commons.io.CopyUtils;
 
 import com.samskivert.io.StreamUtil;
 
 import com.threerings.getdown.data.Application;
+import com.threerings.getdown.data.Digest;
 import com.threerings.getdown.data.Resource;
 
 /**
@@ -78,6 +81,7 @@ public class Differ
         nrsrcs.addAll(napp.getCodeResources());
         nrsrcs.addAll(napp.getResources());
 
+        MessageDigest md = Digest.getMessageDigest();
         File patch = new File(nvdir, "patch" + overs + ".dat");
         JarOutputStream jout = null;
         try {
@@ -91,20 +95,35 @@ public class Differ
                 int oidx = orsrcs.indexOf(rsrc);
                 Resource orsrc = (oidx == -1) ?
                     null : (Resource)orsrcs.remove(oidx);
-                if (orsrc != null && rsrc.getPath().endsWith(".jar")) {
-                    if (verbose) {
-                        System.out.println(
-                            "JarDiff: " + rsrc.getPath());
+                if (orsrc != null) {
+                    // first see if they are the same
+                    String odig = orsrc.computeDigest(md, null);
+                    String ndig = rsrc.computeDigest(md, null);
+                    if (odig.equals(ndig)) {
+                        if (verbose) {
+                            System.out.println("Unchanged: " + rsrc.getPath());
+                        }
+                        // by leaving it out, it will be left as is during
+                        // the patching process
+                        continue;
+                    } 
+
+                    // otherwise potentially create a jar diff
+                    if (rsrc.getPath().endsWith(".jar")) {
+                        if (verbose) {
+                            System.out.println("JarDiff: " + rsrc.getPath());
+                        }
+                        jout.putNextEntry(new ZipEntry(rsrc.getPath() + PATCH));
+                        jarDiff(orsrc.getLocal(), rsrc.getLocal(), jout);
+                        continue;
                     }
-                    jout.putNextEntry(new ZipEntry(rsrc.getPath() + PATCH));
-                    jarDiff(orsrc.getLocal(), rsrc.getLocal(), jout);
-                } else {
-                    if (verbose) {
-                        System.out.println("Addition: " + rsrc.getPath());
-                    }
-                    jout.putNextEntry(new ZipEntry(rsrc.getPath() + CREATE));
-                    pipe(rsrc.getLocal(), jout);
                 }
+
+                if (verbose) {
+                    System.out.println("Addition: " + rsrc.getPath());
+                }
+                jout.putNextEntry(new ZipEntry(rsrc.getPath() + CREATE));
+                pipe(rsrc.getLocal(), jout);
             }
 
             // now any file remaining in orsrcs needs to be removed
