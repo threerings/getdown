@@ -1,5 +1,5 @@
 //
-// $Id: Getdown.java,v 1.10 2004/07/14 13:44:49 mdb Exp $
+// $Id: Getdown.java,v 1.11 2004/07/14 14:04:44 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -113,6 +113,11 @@ public class Getdown extends Thread
             Patcher patcher = new Patcher();
             patcher.patch(patch.getLocal().getParentFile(),
                           patch.getLocal(), _progobs);
+
+            // lastly clean up the patch file
+            if (!patch.getLocal().delete()) {
+                Log.warning("Failed to delete '" + patch + "'.");
+            }
         }
         // if the patch resource is null, that means something was booched
         // in the application, so we skip the patching process but update
