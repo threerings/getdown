@@ -90,6 +90,9 @@
       <arg line="-f ${app.dop}"/>
     </exec>
 
+    <!-- blow away some javaws crap -->
+    <delete dir="dclasses/com/sun/javaws/resources"/>
+    <delete dir="dclasses/com/sun/javaws/ui"/>
     <!-- finally jar up the results -->
     <jar basedir="dclasses" manifest="lib/manifest.mf"
       destfile="${deploy.dir}/${app.name}-dop.jar"/>
