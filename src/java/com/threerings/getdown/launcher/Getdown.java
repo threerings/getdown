@@ -1,5 +1,5 @@
 //
-// $Id: Getdown.java,v 1.34 2004/08/21 01:12:33 ray Exp $
+// $Id$
 
 package com.threerings.getdown.launcher;
 
@@ -98,7 +98,7 @@ public class Getdown extends Thread
                     new ProxyPanel(this, _msgs), BorderLayout.CENTER);
                 _frame.pack();
                 SwingUtil.centerWindow(_frame);
-                _frame.show();
+                _frame.setVisible(true);
                 // allow them to close the window to abort the proxy
                 // configuration
                 _dead = true;
@@ -548,7 +548,7 @@ public class Getdown extends Thread
         _frame.getContentPane().add(_status, BorderLayout.CENTER);
         _frame.pack();
         SwingUtil.centerWindow(_frame);
-        _frame.show();
+        _frame.setVisible(true);
     }
 
     protected void setStatus (final String message, final int percent,

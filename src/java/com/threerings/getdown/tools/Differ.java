@@ -1,5 +1,5 @@
 //
-// $Id: Differ.java,v 1.6 2004/07/30 02:23:52 mdb Exp $
+// $Id$
 
 package com.threerings.getdown.tools;
 
@@ -174,8 +174,8 @@ public class Differ
         JarOutputStream jout = new JarOutputStream(
             new BufferedOutputStream(new FileOutputStream(temp)));
         byte[] buffer = new byte[4096];
-        for (Enumeration enum = jar.entries(); enum.hasMoreElements(); ) {
-            JarEntry entry = (JarEntry)enum.nextElement();
+        for (Enumeration iter = jar.entries(); iter.hasMoreElements(); ) {
+            JarEntry entry = (JarEntry)iter.nextElement();
             entry.setCompressedSize(-1);
             jout.putNextEntry(entry);
             InputStream in = jar.getInputStream(entry);
