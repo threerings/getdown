@@ -1,5 +1,5 @@
 //
-// $Id: Getdown.java,v 1.11 2004/07/14 14:04:44 mdb Exp $
+// $Id: Getdown.java,v 1.12 2004/07/19 11:59:06 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -24,6 +24,7 @@ import java.util.ResourceBundle;
 // import org.apache.commons.io.TeeOutputStream;
 
 import com.samskivert.swing.util.SwingUtil;
+import com.samskivert.text.MessageUtil;
 import com.samskivert.util.StringUtil;
 
 import com.threerings.getdown.Log;
@@ -37,6 +38,7 @@ import com.threerings.getdown.util.ProgressObserver;
  * deployment system.
  */
 public class Getdown extends Thread
+    implements Application.StatusDisplay
 {
     public Getdown (File appDir)
     {
@@ -53,6 +55,7 @@ public class Getdown extends Thread
                 _ifc = _app.init();
             } catch (IOException ioe) {
                 Log.warning("Failed to parse 'getdown.txt': " + ioe);
+                updateStatus("m.init_failed");
                 _app.attemptRecovery();
                 _ifc = _app.init();
             }
@@ -60,8 +63,8 @@ public class Getdown extends Thread
             for (int ii = 0; ii < MAX_LOOPS; ii++) {
                 // make sure we have the desired version and that the
                 // metadata files are valid...
-                setStatus("m.validating", -1, -1L);
-                if (_app.verifyMetadata()) {
+                setStatus("m.validating", -1, -1L, false);
+                if (_app.verifyMetadata(this)) {
                     Log.info("Application requires update.");
                     update();
                     // loop back again and reverify the metadata
@@ -69,6 +72,7 @@ public class Getdown extends Thread
                 }
 
                 // now verify our resources...
+                setStatus("m.validating", -1, -1L, false);
                 List failures = _app.verifyResources(_progobs);
                 if (failures == null) {
                     Log.info("Resources verified.");
@@ -83,12 +87,24 @@ public class Getdown extends Thread
             }
 
             Log.warning("Pants! We couldn't get the job done.");
-            // TODO: throw exception
+            throw new IOException("m.unable_to_repair");
 
         } catch (Exception e) {
             Log.logStackTrace(e);
-            // TODO: display error to user
+            String msg = e.getMessage();
+            if (msg == null) {
+                msg = "m.unknown_error";
+            } else if (!msg.startsWith("m.")) {
+                msg = MessageUtil.tcompose("m.init_error", msg);
+            }
+            updateStatus(msg);
         }
+    }
+
+    // documentation inherited from interface
+    public void updateStatus (String message)
+    {
+        setStatus(message, -1, -1L, true);
     }
 
     /**
@@ -109,7 +125,7 @@ public class Getdown extends Thread
             download(list);
 
             // and apply it...
-            setStatus("m.patching", -1, -1L);
+            updateStatus("m.patching");
             Patcher patcher = new Patcher();
             patcher.patch(patch.getLocal().getParentFile(),
                           patch.getLocal(), _progobs);
@@ -143,11 +159,11 @@ public class Getdown extends Thread
         // create a downloader to download our resources
         Downloader.Observer obs = new Downloader.Observer() {
             public void resolvingDownloads () {
-                setStatus("m.resolving", -1, -1L);
+                updateStatus("m.resolving");
             }
 
             public void downloadProgress (int percent, long remaining) {
-                setStatus("m.downloading", percent, remaining);
+                setStatus("m.downloading", percent, remaining, true);
                 if (percent == 100) {
                     synchronized (lock) {
                         lock.notify();
@@ -159,7 +175,7 @@ public class Getdown extends Thread
                 String msg = MessageFormat.format(
                     _msgs.getString("m.failure"),
                     new Object[] { e.getMessage() });
-                setStatus(msg, -1, -1L);
+                updateStatus(msg);
                 Log.warning("Download failed [rsrc=" + rsrc + "].");
                 Log.logStackTrace(e);
                 synchronized (lock) {
@@ -186,7 +202,7 @@ public class Getdown extends Thread
      */
     protected void launch ()
     {
-        setStatus("m.launching", 100, -1L);
+        setStatus("m.launching", 100, -1L, false);
 
         try {
             Process proc = _app.createProcess();
@@ -235,8 +251,12 @@ public class Getdown extends Thread
     }
 
     protected void setStatus (final String message, final int percent,
-                              final long remaining)
+                              final long remaining, boolean createUI)
     {
+        if (_status == null && createUI) {
+            createInterface();
+        }
+
         if (_status != null) {
             EventQueue.invokeLater(new Runnable() {
                 public void run () {
@@ -294,7 +314,7 @@ public class Getdown extends Thread
     /** Used to pass progress on to our user interface. */
     protected ProgressObserver _progobs = new ProgressObserver() {
         public void progress (final int percent) {
-            setStatus(null, percent, -1L);
+            setStatus(null, percent, -1L, false);
         }
     };
 

@@ -1,5 +1,5 @@
 //
-// $Id: Application.java,v 1.12 2004/07/14 13:44:49 mdb Exp $
+// $Id: Application.java,v 1.13 2004/07/19 11:59:06 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -62,6 +62,14 @@ public class Application
 
         /** The path (relative to the appdir) to the background image. */
         public String background;
+    }
+
+    /** Used by {@link #verifyMetadata} to communicate status in
+     * circumstances where it needs to take network actions. */
+    public static interface StatusDisplay
+    {
+        /** Requests that the specified status message be displayed. */
+        public void updateStatus (String message);
     }
 
     /**
@@ -386,7 +394,7 @@ public class Application
      * @exception IOException thrown if we encounter an unrecoverable
      * error while verifying the metadata.
      */
-    public boolean verifyMetadata ()
+    public boolean verifyMetadata (StatusDisplay status)
         throws IOException
     {
         Log.info("Verifying application: " + _vappbase);
@@ -413,18 +421,25 @@ public class Application
             // to revalidate all of our resources as one or more of them
             // have also changed
             String olddig = (_digest == null) ? "" : _digest.getMetaDigest();
-            downloadControlFile(Digest.DIGEST_FILE);
-            _digest = new Digest(_appdir);
-            if (!olddig.equals(_digest.getMetaDigest())) {
-                Log.info("Unversioned digest changed. Revalidating...");
-                clearValidationMarkers();
+            try {
+                downloadControlFile(Digest.DIGEST_FILE);
+                _digest = new Digest(_appdir);
+                if (!olddig.equals(_digest.getMetaDigest())) {
+                    Log.info("Unversioned digest changed. Revalidating...");
+                    clearValidationMarkers();
+                }
+            } catch (IOException ioe) {
+                Log.warning("Failed to refresh non-versioned digest: " +
+                            ioe.getMessage() + ". Proceeding...");
             }
+        }
 
-        } else if (_digest == null) {
-            // if we failed to load the digest, try to redownload the
-            // digest file and give it another good college try; this time
-            // we allow exceptions to propagate up to the caller as there
-            // is nothing else we can do to recover
+        // regardless of whether we're versioned, if we failed to read the
+        // digest from disk, try to redownload the digest file and give it
+        // another good college try; this time we allow exceptions to
+        // propagate up to the caller as there is nothing else we can do
+        if (_digest == null) {
+            status.updateStatus("m.updating_metadata");
             downloadControlFile(Digest.DIGEST_FILE);
             _digest = new Digest(_appdir);
         }
@@ -432,6 +447,7 @@ public class Application
         // now verify the contents of our main config file
         Resource crsrc = getConfigResource();
         if (!_digest.validateResource(crsrc, null)) {
+            status.updateStatus("m.updating_metadata");
             // attempt to redownload the file; again we pass errors up to
             // our caller because we have no recourse to recovery
             downloadControlFile(CONFIG_FILE);
@@ -461,8 +477,6 @@ public class Application
         } finally {
             StreamUtil.close(fin);
         }
-
-        // next parse any custom user interface information
 
         // finally let the caller know if we need an update
         return _version != _targetVersion;
