@@ -1,5 +1,5 @@
 //
-// $Id: Getdown.java,v 1.25 2004/07/30 17:37:48 mdb Exp $
+// $Id: Getdown.java,v 1.26 2004/07/30 17:45:14 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -400,6 +400,8 @@ public class Getdown extends Thread
         Log.info("-- User Name: " + System.getProperty("user.name"));
         Log.info("-- User Home: " + System.getProperty("user.home"));
         Log.info("-- Cur dir: " + System.getProperty("user.dir"));
+        Log.info("-- Proxy Host: " + System.getProperty("http.proxyHost"));
+        Log.info("-- Proxy Port: " + System.getProperty("http.proxyPort"));
         Log.info("---------------------------------------------");
 
         try {
