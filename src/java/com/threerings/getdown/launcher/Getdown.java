@@ -1,5 +1,5 @@
 //
-// $Id: Getdown.java,v 1.33 2004/08/03 03:29:58 mdb Exp $
+// $Id: Getdown.java,v 1.34 2004/08/21 01:12:33 ray Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -12,6 +12,7 @@ import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -595,9 +596,10 @@ public class Getdown extends Thread
         if (System.getProperty("no_log_redir") == null) {
             File log = new File(appDir, "launcher.log");
             try {
-                FileOutputStream fout = new FileOutputStream(log);
-                System.setOut(new PrintStream(fout));
-                System.setErr(new PrintStream(fout));
+                PrintStream logOut = new PrintStream(
+                    new BufferedOutputStream(new FileOutputStream(log)));
+                System.setOut(logOut);
+                System.setErr(logOut);
             } catch (IOException ioe) {
                 Log.warning("Unable to redirect output to '" + log +
                             "': " + ioe);
