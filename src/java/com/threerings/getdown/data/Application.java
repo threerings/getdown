@@ -1,5 +1,5 @@
 //
-// $Id: Application.java,v 1.28 2004/08/03 03:29:58 mdb Exp $
+// $Id: Application.java,v 1.29 2004/08/09 22:01:56 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -271,6 +271,20 @@ public class Application
         if (appargs != null) {
             for (int ii = 0; ii < appargs.length; ii++) {
                 _appargs.add(appargs[ii]);
+            }
+        }
+
+        // look for custom arguments
+        File file = getLocalPath("extra.txt");
+        if (file.exists()) {
+            try {
+                List args = ConfigUtil.parsePairs(file, false);
+                for (Iterator iter = args.iterator(); iter.hasNext(); ) {
+                    String[] pair = (String[])iter.next();
+                    _jvmargs.add(pair[0] + "=" + pair[1]);
+                }
+            } catch (Throwable t) {
+                Log.warning("Failed to parse '" + file + "': " + t);
             }
         }
 
