@@ -1,5 +1,5 @@
 //
-// $Id: Getdown.java,v 1.16 2004/07/26 17:52:32 mdb Exp $
+// $Id: Getdown.java,v 1.17 2004/07/26 21:24:59 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -57,13 +57,11 @@ public class Getdown extends Thread
                 _ifc = _app.init();
             } catch (IOException ioe) {
                 Log.warning("Failed to parse 'getdown.txt': " + ioe);
-                createInterface();
-                _app.attemptRecovery();
+                _app.attemptRecovery(this);
                 // and re-initalize
                 _ifc = _app.init();
-                // now clear out our UI as we probably have a new one
-                _frame.dispose();
-                _frame = null;
+                // now force our UI to be recreated with the updated info
+                createInterface(true);
             }
 
             for (int ii = 0; ii < MAX_LOOPS; ii++) {
@@ -165,7 +163,7 @@ public class Getdown extends Thread
         final Object lock = new Object();
 
         // create our user interface
-        createInterface();
+        createInterface(false);
 
         // create a downloader to download our resources
         Downloader.Observer obs = new Downloader.Observer() {
@@ -237,9 +235,9 @@ public class Getdown extends Thread
      * Creates our user interface, which we avoid doing unless we actually
      * have to update something.
      */
-    protected void createInterface ()
+    protected void createInterface (boolean force)
     {
-        if (_frame != null) {
+        if (_frame != null && !force) {
             return;
         }
 
@@ -262,7 +260,13 @@ public class Getdown extends Thread
         }
 
         // create our user interface, and display it
-        _frame = new JFrame(StringUtil.blank(_ifc.name) ? "" : _ifc.name);
+        String title = StringUtil.blank(_ifc.name) ? "" : _ifc.name;
+        if (_frame == null) {
+            _frame = new JFrame(title);
+        } else {
+            _frame.setTitle(title);
+            _frame.getContentPane().removeAll();
+        }
         _frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         _status = new StatusPanel(_msgs, bounds, bgimg, ppos, spos, _ifc);
         _frame.getContentPane().add(_status, BorderLayout.CENTER);
@@ -275,7 +279,7 @@ public class Getdown extends Thread
                               final long remaining, boolean createUI)
     {
         if (_status == null && createUI) {
-            createInterface();
+            createInterface(false);
         }
 
         if (_status != null) {

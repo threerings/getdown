@@ -1,5 +1,5 @@
 //
-// $Id: Application.java,v 1.16 2004/07/26 18:59:15 mdb Exp $
+// $Id: Application.java,v 1.17 2004/07/26 21:24:59 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -311,9 +311,10 @@ public class Application
      * Attempts to redownload the <code>getdown.txt</code> file based on
      * information parsed from a previous call to {@link #init}.
      */
-    public void attemptRecovery ()
+    public void attemptRecovery (StatusDisplay status)
         throws IOException
     {
+        status.updateStatus("m.updating_metadata");
         downloadControlFile(CONFIG_FILE);
     }
 
