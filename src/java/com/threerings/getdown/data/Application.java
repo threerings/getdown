@@ -1,5 +1,5 @@
 //
-// $Id: Application.java,v 1.31 2004/08/10 22:28:17 mdb Exp $
+// $Id$
 
 package com.threerings.getdown.data;
 
@@ -202,7 +202,7 @@ public class Application
         String vstr = (String)cdata.get("version");
         if (vstr != null) {
             try {
-                _version = Integer.parseInt(vstr);
+                _version = Long.parseLong(vstr);
             } catch (Exception e) {
                 String err = MessageUtil.tcompose("m.invalid_version", vstr);
                 throw new NestableIOException(err, e);
@@ -554,7 +554,7 @@ public class Application
                     new InputStreamReader(fin));
                 String vstr = bin.readLine();
                 if (!StringUtil.blank(vstr)) {
-                    _targetVersion = Integer.parseInt(vstr);
+                    _targetVersion = Long.parseLong(vstr);
                 }
             } catch (Exception e) {
                 Log.info("Unable to read version file: " + e.getMessage());
@@ -629,7 +629,7 @@ public class Application
     /**
      * Creates a versioned application base URL for the specified version.
      */
-    protected URL createVAppBase (int version)
+    protected URL createVAppBase (long version)
         throws MalformedURLException
     {
         return new URL(
@@ -747,8 +747,8 @@ public class Application
     protected File _config;
     protected Digest _digest;
 
-    protected int _version = -1;
-    protected int _targetVersion = -1;
+    protected long _version = -1;
+    protected long _targetVersion = -1;
     protected String _appbase;
     protected URL _vappbase;
     protected String _class;

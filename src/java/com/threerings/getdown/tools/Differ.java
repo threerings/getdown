@@ -63,7 +63,7 @@ public class Differ
         String nvers = nvdir.getName();
         String overs = ovdir.getName();
         try {
-            if (Integer.parseInt(nvers) <= Integer.parseInt(overs)) {
+            if (Long.parseLong(nvers) <= Long.parseLong(overs)) {
                 String err = "New version (" + nvers + ") must be greater " +
                     "than old version (" + overs + ").";
                 throw new IOException(err);
