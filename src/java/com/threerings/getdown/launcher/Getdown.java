@@ -1,5 +1,5 @@
 //
-// $Id: Getdown.java,v 1.28 2004/07/30 21:45:28 mdb Exp $
+// $Id: Getdown.java,v 1.29 2004/07/30 22:37:15 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -27,10 +27,13 @@ import java.net.URL;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ResourceBundle;
 
-// import org.apache.commons.io.TeeOutputStream;
+import ca.beq.util.win32.registry.RegistryKey;
+import ca.beq.util.win32.registry.RegistryValue;
+import ca.beq.util.win32.registry.RootKey;
 
 import com.samskivert.swing.util.SwingUtil;
 import com.samskivert.text.MessageUtil;
@@ -42,7 +45,6 @@ import com.threerings.getdown.data.Resource;
 import com.threerings.getdown.tools.Patcher;
 import com.threerings.getdown.util.ConfigUtil;
 import com.threerings.getdown.util.ProgressObserver;
-import com.threerings.getdown.util.ProxyUtil;
 
 /**
  * Manages the main control for the Getdown application updater and
@@ -142,10 +144,7 @@ public class Getdown extends Thread
             }
 
             // also configure them in the JVM
-            System.setProperty("http.proxyHost", host);
-            if (!StringUtil.blank(port)) {
-                System.setProperty("http.proxyPort", port);
-            }
+            setProxyProperties(host, port);
         }
 
         // clear out our UI
@@ -170,25 +169,48 @@ public class Getdown extends Thread
             return true;
         }
 
-        // TODO: look in the Vinders registry
+        // look in the Vinders registry
+        try {
+            String host = null, port = null;
+            boolean enabled = false;
+            RegistryKey.initialize();
+            RegistryKey r = new RegistryKey(
+                RootKey.HKEY_CURRENT_USER, PROXY_REGISTRY);
+            for (Iterator iter = r.values(); iter.hasNext(); ) {
+                RegistryValue value = (RegistryValue)iter.next();
+                if (value.getName().equals("ProxyEnable")) {
+                    enabled = value.getStringValue().equals("1");
+                }
+                if (value.getName().equals("ProxyServer")) {
+                    String strval = value.getStringValue();
+                    int cidx = strval.indexOf(":");
+                    if (cidx != -1) {
+                        port = strval.substring(cidx+1);
+                        strval = strval.substring(0, cidx);
+                    }
+                    host = strval;
+                }
+            }
+
+            if (enabled) {
+                setProxyProperties(host, port);
+                return true;
+            } else {
+                Log.info("Detected no proxy settings in the registry.");
+            }
+
+        } catch (Throwable t) {
+            Log.info("Failed to find proxy settings in Windows registry " +
+                     "[error=" + t + "].");
+        }
 
         // otherwise look for and read our proxy.txt file
         File pfile = _app.getLocalPath("proxy.txt");
         if (pfile.exists()) {
             try {
                 HashMap pconf = ConfigUtil.parseConfig(pfile, false);
-                String proxyHost = (String)pconf.get("host");
-                String proxyPort = (String)pconf.get("port");
-                if (!StringUtil.blank(proxyHost)) {
-                    System.setProperty("http.proxyHost", proxyHost);
-                    if (!StringUtil.blank(proxyPort)) {
-                        System.setProperty("http.proxyPort", proxyPort);
-                    }
-                    Log.info("Using proxy [host=" + proxyHost +
-                             ", port=" + proxyPort + "].");
-                }
-
-                // now we can get on with getting down
+                setProxyProperties((String)pconf.get("host"),
+                                   (String)pconf.get("port"));
                 return true;
 
             } catch (IOException ioe) {
@@ -196,10 +218,10 @@ public class Getdown extends Thread
             }
         }
 
-        // otherwise we'll need to try to detect our proxy settings; first
-        // we have to initialize our application to get some sort of
-        // interface configuration and the appbase URL
-        Log.info("Attempting to detect proxy settings...");
+        // otherwise see if we actually need a proxy; first we have to
+        // initialize our application to get some sort of interface
+        // configuration and the appbase URL
+        Log.info("Checking whether we need to use a proxy...");
         try {
             _ifc = _app.init(true);
         } catch (IOException ioe) {
@@ -240,6 +262,20 @@ public class Getdown extends Thread
 
         // let the caller know that we need a proxy but can't detect it
         return false;
+    }
+
+    /**
+     * Configures the JVM proxy system properties.
+     */
+    protected void setProxyProperties (String host, String port)
+    {
+        if (!StringUtil.blank(host)) {
+            System.setProperty("http.proxyHost", host);
+            if (!StringUtil.blank(port)) {
+                System.setProperty("http.proxyPort", port);
+            }
+            Log.info("Using proxy [host=" + host + ", port=" + port + "].");
+        }
     }
 
     /**
@@ -598,4 +634,6 @@ public class Getdown extends Thread
 
     protected static final int MAX_LOOPS = 5;
     protected static final long MIN_EXIST_TIME = 5000L;
+    protected static final String PROXY_REGISTRY =
+        "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings";
 }

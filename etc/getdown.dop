@@ -14,6 +14,7 @@
 -ClassPath:
 /usr/local/jdk1.4/jre/lib/rt.jar
 dist/classes
+lib/jRegistryKey.jar
 ../../projects/samskivert/dist/samskivert.jar
 ../../lib/commons-io.jar
 ../../lib/javaws.jar
@@ -36,6 +37,14 @@ javax.*
 com.sun.*
 
 -ExcludeMethods:
+
+-IncludeClassesUnconditional:
+ca.beq.util.win32.registry.RegistryException
+ca.beq.util.win32.registry.RegistryKey
+ca.beq.util.win32.registry.RegistryValue
+ca.beq.util.win32.registry.RootKey
+ca.beq.util.win32.registry.ValueIterator
+ca.beq.util.win32.registry.ValueType
 
 -General:
 nomakepublic
