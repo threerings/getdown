@@ -1,5 +1,5 @@
 //
-// $Id: Application.java,v 1.7 2004/07/07 10:45:20 mdb Exp $
+// $Id: Application.java,v 1.8 2004/07/07 16:18:23 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -8,6 +8,7 @@ import java.awt.Rectangle;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,6 +26,7 @@ import java.util.List;
 import com.samskivert.io.NestableIOException;
 import com.samskivert.io.StreamUtil;
 import com.samskivert.text.MessageUtil;
+import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
 
 import org.apache.commons.io.StreamUtils;
@@ -120,7 +122,20 @@ public class Application
         throws IOException
     {
         // parse our configuration file
-        HashMap cdata = ConfigUtil.parseConfig(_config);
+        HashMap cdata = null;
+        try {
+            cdata = ConfigUtil.parseConfig(_config);
+        } catch (FileNotFoundException fnfe) {
+            // thanks to funny windows bullshit, we have to do this backup
+            // file fiddling in case we got screwed while updating our
+            // very critical getdown config file
+            File cbackup = getLocalPath(CONFIG_FILE + "_old");
+            if (cbackup.exists()) {
+                cdata = ConfigUtil.parseConfig(cbackup);
+            } else {
+                throw fnfe;
+            }
+        }
 
         // first determine our application base, this way if anything goes
         // wrong later in the process, our caller can use the appbase to
@@ -498,8 +513,26 @@ public class Application
             StreamUtil.close(fout);
         }
 
-        // now attempt to replace the current file with the new one
+        // Windows is a wonderful operating system, it won't let you
+        // rename a file overtop of another one; thus to avoid running the
+        // risk of getting royally fucked, we have to do this complicated
+        // backup bullshit; this way if the shit hits the fan before we
+        // get the new copy into place, we should be able to read from the
+        // backup copy; yay!
         File original = getLocalPath(path);
+        if (RunAnywhere.isWindows() && original.exists()) {
+            File backup = getLocalPath(path + "_old");
+            if (backup.exists() && !backup.delete()) {
+                Log.warning("Failed to delete " + backup + ".");
+            }
+            if (!original.renameTo(backup)) {
+                Log.warning("Failed to move " + original + " to backup. " +
+                            "We will likely fail to replace it with " +
+                            target + ".");
+            }
+        }
+
+        // now attempt to replace the current file with the new one
         if (!target.renameTo(original)) {
             throw new IOException(
                 "Failed to rename(" + target + ", " + original + ")");
