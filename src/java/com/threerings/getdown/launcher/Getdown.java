@@ -1,5 +1,5 @@
 //
-// $Id: Getdown.java,v 1.6 2004/07/07 10:45:20 mdb Exp $
+// $Id: Getdown.java,v 1.7 2004/07/13 02:42:52 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -43,6 +44,7 @@ public class Getdown
     public void run ()
     {
         try {
+            // first parses our application deployment file
             try {
                 _ifc = _app.init();
             } catch (IOException ioe) {
@@ -52,29 +54,35 @@ public class Getdown
             }
 
             for (int ii = 0; ii < MAX_LOOPS; ii++) {
+                // make sure we have the desired version and that the
+                // metadata files are valid...
                 if (_app.verifyMetadata()) {
                     Log.info("Application requires update.");
                     update();
-
-                } else {
-                    Log.info("Metadata verified.");
-                    List failures = _app.verifyResources();
-                    if (failures == null) {
-                        Log.info("Resources verified.");
-                        launch();
-                        return;
-
-                    } else {
-                        Log.info(failures.size() + " rsrcs require update.");
-                        download(failures);
-                        // now we'll loop back and try it all again
-                    }
+                    // loop back again and reverify the metadata
+                    continue;
                 }
+
+                // now verify our resources...
+                List failures = _app.verifyResources();
+                if (failures == null) {
+                    Log.info("Resources verified.");
+                    launch();
+                    return;
+                }
+
+                // redownload any that are corrupt or invalid...
+                Log.info(failures.size() + " rsrcs require update.");
+                download(failures);
+                // now we'll loop back and try it all again
             }
+
             Log.warning("Pants! We couldn't get the job done.");
+            // TODO: throw exception
 
         } catch (Exception e) {
             Log.logStackTrace(e);
+            // TODO: display error to user
         }
     }
 
@@ -82,7 +90,30 @@ public class Getdown
      * Called if the application is determined to be of an old version.
      */
     protected void update ()
+        throws IOException
     {
+        // first clear all validation markers
+        _app.clearValidationMarkers();
+
+        // attempt to download the patch file
+        Resource patch = _app.getPatchResource();
+        if (patch != null) {
+            // download the patch file...
+            ArrayList list = new ArrayList();
+            list.add(patch);
+            download(list);
+
+            // and apply it...
+            // TODO
+        }
+        // if the patch resource is null, that means something was booched
+        // in the application, so we skip the patching process but update
+        // the metadata which will result in a "brute force" upgrade
+
+        // finally update our metadata files...
+        _app.updateMetadata();
+        // ...and reinitialize the application
+        _ifc = _app.init();
     }
 
     /**
@@ -196,16 +227,21 @@ public class Getdown
 
     public static void main (String[] args)
     {
-        // ensure the proper parameters are passed
-        if (args.length != 1) {
-            System.err.println("Usage: java -jar getdown.jar app_dir");
-            System.exit(-1);
+        // maybe they specified the appdir in a system property
+        String adarg = System.getProperty("appdir");
+        // if not, check for a command line argument
+        if (StringUtil.blank(adarg)) {
+            if (args.length != 1) {
+                System.err.println("Usage: java -jar getdown.jar app_dir");
+                System.exit(-1);
+            }
+            adarg = args[0];
         }
 
         // ensure a valid directory was supplied
-        File appDir = new File(args[0]);
+        File appDir = new File(adarg);
         if (!appDir.exists() || !appDir.isDirectory()) {
-            Log.warning("Invalid app_dir '" + args[0] + "'.");
+            Log.warning("Invalid app_dir '" + adarg + "'.");
             System.exit(-1);
         }
 

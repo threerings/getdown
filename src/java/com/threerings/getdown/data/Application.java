@@ -1,5 +1,5 @@
 //
-// $Id: Application.java,v 1.8 2004/07/07 16:18:23 mdb Exp $
+// $Id: Application.java,v 1.9 2004/07/13 02:42:52 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -83,7 +83,7 @@ public class Application
         try {
             return createResource(CONFIG_FILE);
         } catch (Exception e) {
-            throw new RuntimeException("Booched appbase '" + _appbase + "'!?");
+            throw new RuntimeException("Booched appbase '" + _vappbase + "'!?");
         }
     }
 
@@ -103,6 +103,32 @@ public class Application
     public List getResources ()
     {
         return _resources;
+    }
+
+    /**
+     * Returns a resource that can be used to download a patch file that
+     * will bring this application from its current version to the target
+     * version.
+     */
+    public Resource getPatchResource ()
+    {
+        if (_targetVersion <= _version) {
+            Log.warning("Requested patch resource for up-to-date or " +
+                        "non-versioned appliation [cvers=" + _version +
+                        ", tvers=" + _targetVersion + "].");
+            return null;
+        }
+
+        String pfile = "patch" + _version + ".dat";
+        try {
+            URL remote = new URL(createVAppBase(_targetVersion), pfile);
+            return new Resource(pfile, remote, getLocalPath(pfile));
+        } catch (Exception e) {
+            Log.warning("Failed to create patch resource path [pfile=" + pfile +
+                        ", appbase=" + _appbase + ", tvers=" + _targetVersion +
+                        ", error=" + e + "].");
+            return null;
+        }
     }
 
     /**
@@ -140,19 +166,13 @@ public class Application
         // first determine our application base, this way if anything goes
         // wrong later in the process, our caller can use the appbase to
         // download a new configuration file
-        String appbase = (String)cdata.get("appbase");
-        if (appbase == null) {
+        _appbase = (String)cdata.get("appbase");
+        if (_appbase == null) {
             throw new IOException("m.missing_appbase");
         }
-        try {
-            // make sure there's a trailing slash
-            if (!appbase.endsWith("/")) {
-                appbase = appbase + "/";
-            }
-            _appbase = new URL(appbase);
-        } catch (Exception e) {
-            String err = MessageUtil.tcompose("m.invalid_appbase", appbase);
-            throw new NestableIOException(err, e);
+        // make sure there's a trailing slash
+        if (!_appbase.endsWith("/")) {
+            _appbase = _appbase + "/";
         }
 
         // extract our version information
@@ -167,16 +187,15 @@ public class Application
         }
 
         // if we are a versioned deployment, create a versioned appbase
-        if (_version < 0) {
-            _vappbase = _appbase;
-        } else {
-            try {
-                _vappbase = new URL(
-                    StringUtil.replace(_appbase.toString(), "%VERSION%", vstr));
-            } catch (MalformedURLException mue) {
-                String err = MessageUtil.tcompose("m.invalid_appbase", appbase);
-                throw new NestableIOException(err, mue);
+        try {
+            if (_version < 0) {
+                _vappbase = new URL(_appbase);
+            } else {
+                _vappbase = createVAppBase(_version);
             }
+        } catch (MalformedURLException mue) {
+            String err = MessageUtil.tcompose("m.invalid_appbase", _appbase);
+            throw new NestableIOException(err, mue);
         }
 
         // determine our application class name
@@ -272,6 +291,30 @@ public class Application
     }
 
     /**
+     * Downloads and replaces the <code>getdown.txt</code> and
+     * <code>digest.txt</code> files with those for the target version of
+     * our application.
+     */
+    public void updateMetadata ()
+        throws IOException
+    {
+        try {
+            // update our versioned application base with the target version
+            _vappbase = createVAppBase(_targetVersion);
+        } catch (MalformedURLException mue) {
+            String err = MessageUtil.tcompose("m.invalid_appbase", _appbase);
+            throw new NestableIOException(err, mue);
+        }
+
+        // now re-download our control files; we download the digest first
+        // so that if it fails, our config file will still reference the
+        // old version and re-running the updater will start the whole
+        // process over again
+        downloadControlFile(Digest.DIGEST_FILE);
+        downloadControlFile(CONFIG_FILE);
+    }
+
+    /**
      * Invokes the process associated with this application definition.
      */
     public Process createProcess ()
@@ -345,7 +388,7 @@ public class Application
     public boolean verifyMetadata ()
         throws IOException
     {
-        Log.info("Verifying application: " + _appbase);
+        Log.info("Verifying application: " + _vappbase);
         Log.info("Version: " + _version);
         Log.info("Class: " + _class);
 //         Log.info("Code: " + StringUtil.toString(_codes.iterator()));
@@ -439,6 +482,25 @@ public class Application
         return (failures.size() == 0) ? null : failures;
     }
 
+    /**
+     * Clears all validation marker files.
+     */
+    public void clearValidationMarkers ()
+    {
+        clearValidationMarkers(_codes.iterator());
+        clearValidationMarkers(_resources.iterator());
+    }
+
+    /**
+     * Creates a versioned application base URL for the specified version.
+     */
+    protected URL createVAppBase (int version)
+        throws MalformedURLException
+    {
+        return new URL(
+            StringUtil.replace(_appbase, "%VERSION%", "" + version));
+    }
+
     /** A helper function used by {@link #verifyResources()}. */
     protected void verifyResources (Iterator rsrcs, List failures)
     {
@@ -461,13 +523,6 @@ public class Application
             }
             failures.add(rsrc);
         }
-    }
-
-    /** Clears all validation marker files. */
-    protected void clearValidationMarkers ()
-    {
-        clearValidationMarkers(_codes.iterator());
-        clearValidationMarkers(_resources.iterator());
     }
 
     /** Clears all validation marker files for the resources in the
@@ -493,7 +548,7 @@ public class Application
             targetURL = getRemoteURL(path);
         } catch (Exception e) {
             Log.warning("Requested to download invalid control file " +
-                        "[appbase=" + _appbase + ", path=" + path +
+                        "[appbase=" + _vappbase + ", path=" + path +
                         ", error=" + e + "].");
             throw new NestableIOException("Invalid path '" + path + "'.", e);
         }
@@ -567,7 +622,8 @@ public class Application
 
     protected int _version = -1;
     protected int _targetVersion = -1;
-    protected URL _appbase, _vappbase;
+    protected String _appbase;
+    protected URL _vappbase;
     protected String _class;
 
     protected ArrayList _codes = new ArrayList();
