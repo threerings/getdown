@@ -1,5 +1,5 @@
 //
-// $Id: Downloader.java,v 1.3 2004/07/13 10:39:50 mdb Exp $
+// $Id$
 
 package com.threerings.getdown.launcher;
 
@@ -116,6 +116,8 @@ public class Downloader extends Thread
         } catch (Exception e) {
             if (_obs != null) {
                 _obs.downloadFailed(current, e);
+            } else {
+                Log.logStackTrace(e);
             }
         }
     }
