@@ -1,5 +1,5 @@
 //
-// $Id: Getdown.java,v 1.26 2004/07/30 17:45:14 mdb Exp $
+// $Id: Getdown.java,v 1.27 2004/07/30 18:14:21 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -163,9 +163,14 @@ public class Getdown extends Thread
 
             // and apply it...
             updateStatus("m.patching");
-            Patcher patcher = new Patcher();
-            patcher.patch(patch.getLocal().getParentFile(),
-                          patch.getLocal(), _progobs);
+            try {
+                Patcher patcher = new Patcher();
+                patcher.patch(patch.getLocal().getParentFile(),
+                              patch.getLocal(), _progobs);
+            } catch (Exception e) {
+                Log.warning("Failed to apply patch.");
+                Log.logStackTrace(e);
+            }
 
             // lastly clean up the patch file
             if (!patch.getLocal().delete()) {
