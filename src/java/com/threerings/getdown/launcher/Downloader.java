@@ -1,5 +1,5 @@
 //
-// $Id: Downloader.java,v 1.1 2004/07/06 05:13:36 mdb Exp $
+// $Id: Downloader.java,v 1.2 2004/07/07 08:42:40 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -260,5 +260,5 @@ public class Downloader extends Thread
 
     /** The delay in milliseconds between notifying progress observers of
      * file download progress. */
-    protected static final long UPDATE_DELAY = 2500L;
+    protected static final long UPDATE_DELAY = 500L;
 }

@@ -1,7 +1,9 @@
 //
-// $Id: Application.java,v 1.5 2004/07/06 09:46:35 mdb Exp $
+// $Id: Application.java,v 1.6 2004/07/07 08:42:40 mdb Exp $
 
 package com.threerings.getdown.data;
+
+import java.awt.Rectangle;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -41,6 +43,23 @@ public class Application
 
     /** The name of our target version file. */
     public static final String VERSION_FILE = "version.txt";
+
+    /** Used to communicate information about the UI displayed when
+     * updating the application. */
+    public static class UpdateInterface
+    {
+        /** The human readable name of this application. */
+        public String name;
+
+        /** The dimensions of the progress bar. */
+        public Rectangle progress;
+
+        /** The dimensions of the status display. */
+        public Rectangle status;
+
+        /** The path (relative to the appdir) to the background image. */
+        public String background;
+    }
 
     /**
      * Creates an application instance which records the location of the
@@ -91,10 +110,13 @@ public class Application
      * discovered later, the caller can use the application base to
      * download a new <code>config.txt</code> file and try again.
      *
+     * @return a configured UpdateInterface instance that will be used to
+     * configure the update UI.
+     *
      * @exception IOException thrown if there is an error reading the file
      * or an error encountered during its parsing.
      */
-    public void init ()
+    public UpdateInterface init ()
         throws IOException
     {
         // parse our configuration file
@@ -194,6 +216,15 @@ public class Application
                 _appargs.add(appargs[ii]);
             }
         }
+
+        // parse and return our application config
+        UpdateInterface ui = new UpdateInterface();
+        ui.name = (String)cdata.get("ui.name");
+        ui.progress = parseRect(
+            "ui.progress", (String)cdata.get("ui.progress"));
+        ui.status = parseRect("ui.progress", (String)cdata.get("ui.status"));
+        ui.background = (String)cdata.get("ui.background");
+        return ui;
     }
 
     /**
@@ -362,6 +393,8 @@ public class Application
             StreamUtil.close(fin);
         }
 
+        // next parse any custom user interface information
+
         // finally let the caller know if we need an update
         return _version != _targetVersion;
     }
@@ -467,6 +500,21 @@ public class Application
         throws MalformedURLException
     {
         return new Resource(path, getRemoteURL(path), getLocalPath(path));
+    }
+
+    /** Used to parse rectangle specifications from the config file. */
+    protected Rectangle parseRect (String name, String value)
+    {
+        if (!StringUtil.blank(value)) {
+            int[] v = StringUtil.parseIntArray(value);
+            if (v != null && v.length == 4) {
+                return new Rectangle(v[0], v[1], v[2], v[3]);
+            } else {
+                Log.warning("Ignoring invalid '" + name + "' config '" +
+                            value + "'.");
+            }
+        }
+        return null;
     }
 
     protected File _appdir;

@@ -1,7 +1,14 @@
 //
-// $Id: Getdown.java,v 1.4 2004/07/06 05:13:36 mdb Exp $
+// $Id: Getdown.java,v 1.5 2004/07/07 08:42:40 mdb Exp $
 
 package com.threerings.getdown.launcher;
+
+import java.awt.BorderLayout;
+import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
+
+import javax.imageio.ImageIO;
+import javax.swing.JFrame;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -11,6 +18,9 @@ import java.io.PrintStream;
 import java.util.List;
 
 import org.apache.commons.io.TeeOutputStream;
+
+import com.samskivert.swing.util.SwingUtil;
+import com.samskivert.util.StringUtil;
 
 import com.threerings.getdown.Log;
 import com.threerings.getdown.data.Application;
@@ -31,10 +41,11 @@ public class Getdown
     {
         try {
             for (int ii = 0; ii < MAX_LOOPS; ii++) {
-                _app.init();
+                _ifc = _app.init();
 
                 if (_app.verifyMetadata()) {
                     Log.info("Application requires update.");
+                    update();
 
                 } else {
                     Log.info("Metadata verified.");
@@ -63,7 +74,6 @@ public class Getdown
      */
     protected void update ()
     {
-        Log.info("We're needin' an update Cap'n!");
     }
 
     /**
@@ -74,15 +84,20 @@ public class Getdown
     {
         final Object lock = new Object();
 
+        // create our user interface
+        createInterface();
+
         // create a downloader to download our resources
         Downloader.Observer obs = new Downloader.Observer() {
             public void resolvingDownloads () {
                 Log.info("Resolving downloads...");
+                _status.setStatus("Resolving downloads...");
             }
 
             public void downloadProgress (int percent, long remaining) {
-                Log.info("Download progress " + percent + "% " +
-                         remaining + "s remaining.");
+                _status.setStatus("Download progress " + percent + "%, " +
+                                  remaining + " seconds remaining.");
+                _status.setProgress(percent);
                 if (percent == 100) {
                     synchronized (lock) {
                         lock.notify();
@@ -91,6 +106,7 @@ public class Getdown
             }
 
             public void downloadFailed (Resource rsrc, Exception e) {
+                _status.setStatus("Download failed: " + e.getMessage());
                 Log.warning("Download failed [rsrc=" + rsrc + "].");
                 Log.logStackTrace(e);
                 synchronized (lock) {
@@ -117,12 +133,53 @@ public class Getdown
      */
     protected void launch ()
     {
-        Log.info("All systems go!");
+        if (_status != null) {
+            _status.setStatus("Launching...");
+        }
+
         try {
             Process proc = _app.createProcess();
+            System.exit(0);
         } catch (IOException ioe) {
             Log.logStackTrace(ioe);
         }
+    }
+
+    /**
+     * Creates our user interface, which we avoid doing unless we actually
+     * have to update something.
+     */
+    protected void createInterface ()
+    {
+        if (_frame != null) {
+            return;
+        }
+
+        Rectangle ppos = (_ifc.progress == null) ? DEFAULT_PPOS : _ifc.progress;
+        Rectangle spos = (_ifc.status == null) ? DEFAULT_STATUS : _ifc.status;
+        Rectangle bounds = ppos.union(spos);
+        bounds.grow(5, 5);
+
+        // if we have a background image, load it up
+        BufferedImage bgimg = null;
+        if (!StringUtil.blank(_ifc.background)) {
+            File bgpath = _app.getLocalPath(_ifc.background);
+            try {
+                bgimg = ImageIO.read(bgpath);
+                bounds.setRect(0, 0, bgimg.getWidth(), bgimg.getHeight());
+            } catch (IOException ioe) {
+                Log.warning("Failed to read UI background [path=" + bgpath +
+                            ", error=" + ioe + "].");
+            }
+        }
+
+        // create our user interface, and display it
+        _frame = new JFrame(StringUtil.blank(_ifc.name) ? "" : _ifc.name);
+        _status = new StatusPanel(bounds, bgimg, ppos, spos);
+        _frame.getContentPane().add(_status, BorderLayout.CENTER);
+        _frame.pack();
+        SwingUtil.centerWindow(_frame);
+        _frame.show();
     }
 
     public static void main (String[] args)
@@ -161,6 +218,15 @@ public class Getdown
     }
 
     protected Application _app;
+    protected Application.UpdateInterface _ifc;
+
+    protected JFrame _frame;
+    protected StatusPanel _status;
 
     protected static final int MAX_LOOPS = 5;
+
+    protected static final Rectangle DEFAULT_PPOS =
+        new Rectangle(0, 0, 300, 15);
+    protected static final Rectangle DEFAULT_STATUS =
+        new Rectangle(0, 20, 300, 200);
 }
