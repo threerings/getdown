@@ -538,6 +538,7 @@ public class Getdown extends Thread
                     }
                 }
             });
+            _frame.setResizable(false);
 
         } else {
             _frame.setTitle(title);
