@@ -1,5 +1,5 @@
 //
-// $Id: Digest.java,v 1.7 2004/07/31 22:05:06 mdb Exp $
+// $Id: Digest.java,v 1.8 2004/08/04 18:43:27 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -92,9 +92,9 @@ public class Digest
             }
             Log.info("Resource failed digest check [rsrc=" + resource +
                      ", computed=" + cmd5 + ", expected=" + emd5 + "].");
-        } catch (IOException ioe) {
+        } catch (Throwable t) {
             Log.info("Resource failed digest check [rsrc=" + resource +
-                     ", error=" + ioe + "].");
+                     ", error=" + t + "].");
         }
         return false;
     }
@@ -119,9 +119,9 @@ public class Digest
                 String digest = rsrc.computeDigest(md, null);
                 note(data, path, digest);
                 pout.println(path + " = " + digest);
-            } catch (IOException ioe) {
+            } catch (Throwable t) {
                 throw new NestableIOException(
-                    "Error computing digest for: " + rsrc, ioe);
+                    "Error computing digest for: " + rsrc, t);
             }
         }
 
