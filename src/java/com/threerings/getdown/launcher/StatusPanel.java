@@ -1,5 +1,5 @@
 //
-// $Id: StatusPanel.java,v 1.6 2004/07/26 17:52:32 mdb Exp $
+// $Id: StatusPanel.java,v 1.7 2004/07/26 18:05:55 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -49,15 +49,20 @@ public class StatusPanel extends JComponent
     {
         _progress = percent;
         String msg = "m.complete";
-        int minutes = 0, seconds = 0;
+        String remstr = "";
         if (remaining > 1) {
             msg = "m.complete_remain";
-            minutes = (int)(remaining / 60);
-            seconds = (int)(remaining % 60);
+            int minutes = (int)(remaining / 60);
+            int seconds = (int)(remaining % 60);
+            remstr = minutes + ":";
+            if (seconds < 10) {
+                remstr += "0";
+            }
+            remstr += seconds;
         }
         msg = get(msg);
         String label = MessageFormat.format(msg, new Object[] {
-            new Integer(percent), new Integer(minutes), new Integer(seconds) });
+            new Integer(percent), remstr });
         _newplab = new Label(label, _ifc.progressText, _pfont);
         repaint();
     }
