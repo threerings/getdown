@@ -1,0 +1,107 @@
+#!/usr/bin/perl -w
+
+use Getopt::Std;
+
+my $usage = "Usage: $0 [-p pid_file] [-r root_directory] args\n";
+
+# locations of stuff
+chomp($location = `dirname $0`);
+
+# get the server root by popping the /bin off of our parent directory
+@parts = split(/\//, $location);
+pop(@parts);
+my $root = join("/", @parts);
+
+my $jhome = $ENV{"JAVA_HOME"};
+
+# make sure JAVA_HOME is set
+if (!defined $jhome) {
+    warn "$0: Error: No JAVA_HOME specified!\n";
+    warn "\n";
+    warn "You must set your JAVA_HOME environment variable to the\n";
+    warn "the absolute path of your JDK installation. For example:\n";
+    warn "\n";
+    warn " % JAVA_HOME=/usr/local/jdk1.2\n";
+    warn " % export JAVA_HOME\n";
+    die "\n";
+}
+
+# make sure it's set to a directory
+if (! -d $jhome) {
+    die "$0: Can't find a java interpreter in '$jhome'.\n";
+}
+
+my $java = "$jhome/bin/java";
+my $jlib = "$jhome/lib/classes.zip";
+
+# determine our machine architecture
+my $ostype = `uname -s`;
+my $machtype = `uname -m`;
+chomp($ostype);
+chomp($machtype);
+my $arch = "$machtype-$ostype";
+
+# add our native libraries to the runtime library path
+my $libs = "$root/lib/$arch";
+my $libpath = $ENV{"LD_LIBRARY_PATH"};
+
+if (defined $libpath) {
+    $ENV{"LD_LIBRARY_PATH"} = "$libs:$libpath";
+} else {
+    $ENV{"LD_LIBRARY_PATH"} = $libs;
+}
+
+# put everything in our class path
+my $classpath = "-classpath $root/dist/classes";
+
+# add zip and jar files from our lib/ directory and the system lib/ directory
+my @dirs = ( "$root/lib", $ENV{"JAVA_LIBS"} );
+foreach $dir (@dirs) {
+    next unless (defined $dir);
+    if (opendir(DIR, $dir)) {
+        foreach $lib (grep { /.(zip|jar)/ && -f "$dir/$_" } readdir(DIR)) {
+            $classpath .= ":$dir/$lib";
+        }
+        closedir DIR;
+    }
+}
+
+# finally add the standard classes
+$classpath = "$classpath:$jlib";
+
+# specify our application root (the resource manager needs this)
+my $rootarg = "-Dresource_url=file:$root/rsrc";
+
+my $pid_file = undef;
+my $i = 0;
+
+# strip out the -p and -r args (we'd use getopt() but the damned thing
+# provides no way of escaping arguments so that we can pass args to
+# runjava that get passed down to the JVM)
+for ($i = 0; $i < @ARGV; $i++) {
+    my $arg = $ARGV[$i];
+
+    # stop when we see -- (and strip it out because Java don't dig --)
+    if ($arg eq "--") {
+        splice(@ARGV, $i, 1);
+        last;
+    }
+
+    if ($arg eq "-p") {
+        $pid_file = $ARGV[$i+1];
+        splice(@ARGV, $i, 2);
+	$i -= 1; # decrement i so that things stay in sync
+
+    } elsif ($arg eq "-r") {
+        $rootarg = "-DDapplication.root=" . $ARGV[$i+1];
+        splice(@ARGV, $i, 2);
+	$i -= 1; # decrement i so that things stay in sync
+    }
+}
+
+# log the pid file if requested to do so
+print `echo $$ > $pid_file` if (defined $pid_file);
+
+my $cmd = "$java -mx256M $classpath $rootarg " . join(" ", @ARGV);
+# print "$cmd\n";
+exec($cmd);
