@@ -1,5 +1,5 @@
 //
-// $Id: DigesterTask.java,v 1.1 2004/07/02 11:01:21 mdb Exp $
+// $Id: DigesterTask.java,v 1.2 2004/07/13 17:43:52 mdb Exp $
 
 package com.threerings.getdown.tools;
 
@@ -9,8 +9,6 @@ import java.util.ArrayList;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
-
-import com.samskivert.util.CollectionUtil;
 
 import com.threerings.getdown.data.Application;
 import com.threerings.getdown.data.Digest;
@@ -54,8 +52,8 @@ public class DigesterTask extends Task
 
         ArrayList rsrcs = new ArrayList();
         rsrcs.add(app.getConfigResource());
-        CollectionUtil.addAll(rsrcs, app.getCodeResources().iterator());
-        CollectionUtil.addAll(rsrcs, app.getResources().iterator());
+        rsrcs.addAll(app.getCodeResources());
+        rsrcs.addAll(app.getResources());
 
         // now generate the digest file
         try {
