@@ -1,5 +1,5 @@
 //
-// $Id: StatusPanel.java,v 1.3 2004/07/19 12:39:08 mdb Exp $
+// $Id: StatusPanel.java,v 1.4 2004/07/19 12:49:56 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -81,11 +81,13 @@ public class StatusPanel extends JComponent
 
         // if we have new labels; lay them out
         if (_newlab != null) {
+            gfx.setColor(_lcolor);
             _newlab.layout(gfx);
             _label = _newlab;
             _newlab = null;
         }
         if (_newplab != null) {
+            gfx.setColor(_lcolor);
             _newplab.layout(gfx);
             _plabel = _newplab;
             _newplab = null;
@@ -98,7 +100,7 @@ public class StatusPanel extends JComponent
                      _ppos.height);
         gfx.setComposite(ocomp);
 
-        gfx.setColor(Color.white);
+        gfx.setColor(_lcolor);
         if (_plabel != null) {
             int xmarg = (_ppos.width - _plabel.getSize().width)/2;
             int ymarg = (_ppos.height - _plabel.getSize().height)/2;
@@ -180,6 +182,8 @@ public class StatusPanel extends JComponent
     protected int _progress = 0;
     protected Label _label, _newlab;
     protected Label _plabel, _newplab;
+
+    protected Color _lcolor = new Color(0xD7C94F);
 
     /** The alpha level at which to paint the progress bar. */
     protected static final Composite PROGRESS_ALPHA =
