@@ -1,5 +1,5 @@
 //
-// $Id: StatusPanel.java,v 1.10 2004/07/26 18:59:00 mdb Exp $
+// $Id: StatusPanel.java,v 1.11 2004/07/26 22:57:03 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -81,8 +81,10 @@ public class StatusPanel extends JComponent
         String label = MessageFormat.format(msg, new Object[] {
             new Integer(percent), remstr });
         _newplab = new Label(label, _ifc.progressText, _font);
-        _newplab.setAlternateColor(_shadow);
-        _newplab.setStyle(Label.SHADOW);
+        if (_ifc.textShadow != null) {
+            _newplab.setAlternateColor(_ifc.textShadow);
+            _newplab.setStyle(Label.SHADOW);
+        }
         repaint();
     }
 
@@ -94,8 +96,10 @@ public class StatusPanel extends JComponent
         status = xlate(status);
         _newlab = new Label(status, _ifc.statusText, _font);
         _newlab.setTargetWidth(_spos.width);
-        _newlab.setAlternateColor(_shadow);
-        _newlab.setStyle(Label.SHADOW);
+        if (_ifc.textShadow != null) {
+            _newlab.setAlternateColor(_ifc.textShadow);
+            _newlab.setStyle(Label.SHADOW);
+        }
         repaint();
     }
 
@@ -108,6 +112,7 @@ public class StatusPanel extends JComponent
         if (_bgimg != null) {
             gfx.drawImage(_bgimg, 0, 0, null);
         } else {
+            gfx.setColor(getBackground());
             gfx.fillRect(0, 0, getWidth(), getHeight());
         }
 
@@ -196,6 +201,14 @@ public class StatusPanel extends JComponent
     /** Used by {@link #setStatus}, and {@link #setProgress}. */
     protected String get (String key)
     {
+        // if we have no _msgs that means we're probably recovering from a
+        // failure to load the translation messages in the first place, so
+        // just give them their key back because it's probably an english
+        // string; whee!
+        if (_msgs == null) {
+            return key;
+        }
+
         // if this string is tainted, we don't translate it, instead we
         // simply remove the taint character and return it to the caller
         if (key.startsWith(MessageUtil.TAINT_CHAR)) {
@@ -219,7 +232,6 @@ public class StatusPanel extends JComponent
     protected Label _label, _newlab;
     protected Label _plabel, _newplab;
 
-    protected Color _shadow = new Color(0x16486D);
     protected UpdateInterface _ifc;
 
     protected long[] _remain = new long[4];

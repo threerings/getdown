@@ -1,5 +1,5 @@
 //
-// $Id: Application.java,v 1.17 2004/07/26 21:24:59 mdb Exp $
+// $Id: Application.java,v 1.18 2004/07/26 22:57:03 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -59,19 +59,22 @@ public class Application
         public Rectangle progress;
 
         /** The color of the progress text. */
-        public Color progressText;
+        public Color progressText = Color.black;
 
         /** The color of the progress bar. */
-        public Color progressBar;
+        public Color progressBar = new Color(0x6699CC);
 
         /** The dimensions of the status display. */
         public Rectangle status;
 
         /** The color of the status text. */
-        public Color statusText;
+        public Color statusText = Color.black;
 
         /** The path (relative to the appdir) to the background image. */
         public String background;
+
+        /** The color of the text shadow. */
+        public Color textShadow;
     }
 
     /** Used by {@link #verifyMetadata} to communicate status in
@@ -273,17 +276,14 @@ public class Application
         // parse and return our application config
         UpdateInterface ui = new UpdateInterface();
         ui.name = (String)cdata.get("ui.name");
-        ui.progress = parseRect(
-            "ui.progress", (String)cdata.get("ui.progress"));
+        ui.progress = parseRect(cdata, "ui.progress");
         ui.progressText = parseColor(
-            "ui.progress_text", (String)cdata.get("ui.progress_text"),
-            Color.white);
+            cdata, "ui.progress_text", ui.progressText);
         ui.progressBar = parseColor(
-            "ui.progress_bar", (String)cdata.get("ui.progress_bar"),
-            new Color(0x6699CC));
-        ui.status = parseRect("ui.progress", (String)cdata.get("ui.status"));
-        ui.statusText = parseColor(
-            "ui.status_text", (String)cdata.get("ui.status_text"), Color.white);
+            cdata, "ui.progress_bar", ui.progressBar);
+        ui.status = parseRect(cdata, "ui.progress");
+        ui.statusText = parseColor(cdata, "ui.status_text", ui.statusText);
+        ui.textShadow = parseColor(cdata, "ui.text_shadow", ui.textShadow);
         ui.background = (String)cdata.get("ui.background");
         return ui;
     }
@@ -649,8 +649,9 @@ public class Application
     }
 
     /** Used to parse rectangle specifications from the config file. */
-    protected Rectangle parseRect (String name, String value)
+    protected Rectangle parseRect (HashMap cdata, String name)
     {
+        String value = (String)cdata.get(name);
         if (!StringUtil.blank(value)) {
             int[] v = StringUtil.parseIntArray(value);
             if (v != null && v.length == 4) {
@@ -664,8 +665,9 @@ public class Application
     }
 
     /** Used to parse color specifications from the config file. */
-    protected Color parseColor (String name, String value, Color defcolor)
+    protected Color parseColor (HashMap cdata, String name, Color defcolor)
     {
+        String value = (String)cdata.get(name);
         if (!StringUtil.blank(value)) {
             try {
                 return new Color(Integer.parseInt(value, 16));

@@ -1,5 +1,5 @@
 //
-// $Id: Getdown.java,v 1.17 2004/07/26 21:24:59 mdb Exp $
+// $Id: Getdown.java,v 1.18 2004/07/26 22:57:03 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -44,13 +44,33 @@ public class Getdown extends Thread
     public Getdown (File appDir)
     {
         super("Getdown");
+        try {
+            _msgs = ResourceBundle.getBundle("com.threerings.getdown.messages");
+        } catch (Exception e) {
+            // welcome to hell, where java can't cope with a classpath
+            // that contains jars that live in a directory that contains a
+            // !, at least the same bug happens on all platforms
+            String dir = appDir.toString();
+            if (dir.equals(".")) {
+                dir = System.getProperty("user.dir");
+            }
+            String errmsg = "The directory in which this application is " +
+                "installed:\n" + dir + "\nis invalid. The directory " +
+                "must not contain the '!' character. Please reinstall.";
+            updateStatus(errmsg);
+        }
         _app = new Application(appDir);
-        _msgs = ResourceBundle.getBundle("com.threerings.getdown.messages");
         _startup = System.currentTimeMillis();
     }
 
     public void run ()
     {
+        // if we have no messages, just bail because we're hosed; the
+        // error message will be displayed to the user already
+        if (_msgs == null) {
+            return;
+        }
+
         try {
             // first parses our application deployment file
             try {
@@ -316,17 +336,15 @@ public class Getdown extends Thread
             System.exit(-1);
         }
 
-//         // tee our output into a file in the application directory
-//         File log = new File(appDir, "getdown.log");
-//         try {
-//             FileOutputStream fout = new FileOutputStream(log);
-//             System.setOut(new PrintStream(
-//                               new TeeOutputStream(System.out, fout)));
-//             System.setErr(new PrintStream(
-//                               new TeeOutputStream(System.err, fout)));
-//         } catch (IOException ioe) {
-//             Log.warning("Unable to redirect output to '" + log + "': " + ioe);
-//         }
+        // pipe our output into a file in the application directory
+        File log = new File(appDir, "launcher.log");
+        try {
+            FileOutputStream fout = new FileOutputStream(log);
+            System.setOut(new PrintStream(fout));
+            System.setErr(new PrintStream(fout));
+        } catch (IOException ioe) {
+            Log.warning("Unable to redirect output to '" + log + "': " + ioe);
+        }
 
         try {
             Getdown app = new Getdown(appDir);
