@@ -1,5 +1,5 @@
 //
-// $Id: StatusPanel.java,v 1.4 2004/07/19 12:49:56 mdb Exp $
+// $Id: StatusPanel.java,v 1.5 2004/07/20 01:25:06 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -60,7 +60,7 @@ public class StatusPanel extends JComponent
     public void setStatus (String status)
     {
         status = xlate(status);
-        _newlab = new Label(status, Color.white, null);
+        _newlab = new Label(status, _lcolor, null);
         _newlab.setTargetWidth(_spos.width);
         repaint();
     }
@@ -81,13 +81,11 @@ public class StatusPanel extends JComponent
 
         // if we have new labels; lay them out
         if (_newlab != null) {
-            gfx.setColor(_lcolor);
             _newlab.layout(gfx);
             _label = _newlab;
             _newlab = null;
         }
         if (_newplab != null) {
-            gfx.setColor(_lcolor);
             _newplab.layout(gfx);
             _plabel = _newplab;
             _newplab = null;
