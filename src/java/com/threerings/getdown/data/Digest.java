@@ -1,5 +1,5 @@
 //
-// $Id: Digest.java,v 1.3 2004/07/06 09:46:35 mdb Exp $
+// $Id: Digest.java,v 1.4 2004/07/14 13:44:49 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -21,6 +21,7 @@ import com.samskivert.util.StringUtil;
 
 import com.threerings.getdown.Log;
 import com.threerings.getdown.util.ConfigUtil;
+import com.threerings.getdown.util.ProgressObserver;
 
 /**
  * Manages the <code>digest.txt</code> file and the computing and
@@ -79,10 +80,10 @@ public class Digest
      * digest check or if an I/O error was encountered during the
      * validation process.
      */
-    public boolean validateResource (Resource resource)
+    public boolean validateResource (Resource resource, ProgressObserver obs)
     {
         try {
-            String cmd5 = resource.computeDigest(getMessageDigest());
+            String cmd5 = resource.computeDigest(getMessageDigest(), obs);
             String emd5 = (String)_digests.get(resource.getPath());
             if (cmd5.equals(emd5)) {
                 return true;
@@ -112,7 +113,7 @@ public class Digest
         for (Iterator iter = resources.iterator(); iter.hasNext(); ) {
             Resource rsrc = (Resource)iter.next();
             String path = rsrc.getPath();
-            String digest = rsrc.computeDigest(md);
+            String digest = rsrc.computeDigest(md, null);
             note(data, path, digest);
             pout.println(path + " = " + digest);
         }

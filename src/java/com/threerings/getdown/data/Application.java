@@ -1,5 +1,5 @@
 //
-// $Id: Application.java,v 1.11 2004/07/14 12:11:46 mdb Exp $
+// $Id: Application.java,v 1.12 2004/07/14 13:44:49 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -32,6 +32,8 @@ import org.apache.commons.io.CopyUtils;
 
 import com.threerings.getdown.Log;
 import com.threerings.getdown.util.ConfigUtil;
+import com.threerings.getdown.util.MetaProgressObserver;
+import com.threerings.getdown.util.ProgressObserver;
 
 /**
  * Parses and provide access to the information contained in the
@@ -429,13 +431,13 @@ public class Application
 
         // now verify the contents of our main config file
         Resource crsrc = getConfigResource();
-        if (!_digest.validateResource(crsrc)) {
+        if (!_digest.validateResource(crsrc, null)) {
             // attempt to redownload the file; again we pass errors up to
             // our caller because we have no recourse to recovery
             downloadControlFile(CONFIG_FILE);
             // if the new copy validates, reinitialize ourselves;
             // otherwise report baffling hoseage
-            if (_digest.validateResource(crsrc)) {
+            if (_digest.validateResource(crsrc, null)) {
                 init();
             }
         }
@@ -473,11 +475,46 @@ public class Application
      * to go, null will be returned and the application is considered
      * ready to run.
      */
-    public List verifyResources ()
+    public List verifyResources (ProgressObserver obs)
     {
-        ArrayList failures = new ArrayList();
-        verifyResources(_codes.iterator(), failures);
-        verifyResources(_resources.iterator(), failures);
+        ArrayList rsrcs = new ArrayList(), failures = new ArrayList();
+        rsrcs.addAll(_codes);
+        rsrcs.addAll(_resources);
+
+        // total up the file size of the resources to validate
+        long totalSize = 0L;
+        for (Iterator iter = rsrcs.iterator(); iter.hasNext(); ) {
+            Resource rsrc = (Resource)iter.next();
+            totalSize += rsrc.getLocal().length();
+        }
+
+        MetaProgressObserver mpobs = new MetaProgressObserver(obs, totalSize);
+        for (Iterator iter = rsrcs.iterator(); iter.hasNext(); ) {
+            Resource rsrc = (Resource)iter.next();
+            mpobs.startElement(rsrc.getLocal().length());
+
+            if (rsrc.isMarkedValid()) {
+                mpobs.progress(100);
+                continue;
+            }
+
+            try {
+                if (_digest.validateResource(rsrc, mpobs)) {
+                    // make a note that this file is kosher
+                    rsrc.markAsValid();
+                    continue;
+                }
+
+            } catch (Exception e) {
+                Log.info("Failure validating resource [rsrc=" + rsrc +
+                         ", error=" + e + "]. Requesting redownload...");
+
+            } finally {
+                mpobs.progress(100);
+            }
+            failures.add(rsrc);
+        }
+
         return (failures.size() == 0) ? null : failures;
     }
 
@@ -498,30 +535,6 @@ public class Application
     {
         return new URL(
             StringUtil.replace(_appbase, "%VERSION%", "" + version));
-    }
-
-    /** A helper function used by {@link #verifyResources()}. */
-    protected void verifyResources (Iterator rsrcs, List failures)
-    {
-        while (rsrcs.hasNext()) {
-            Resource rsrc = (Resource)rsrcs.next();
-            if (rsrc.isMarkedValid()) {
-                continue;
-            }
-
-            try {
-                if (_digest.validateResource(rsrc)) {
-                    // make a note that this file is kosher
-                    rsrc.markAsValid();
-                    continue;
-                }
-
-            } catch (Exception e) {
-                Log.info("Failure validating resource [rsrc=" + rsrc +
-                         ", error=" + e + "]. Requesting redownload...");
-            }
-            failures.add(rsrc);
-        }
     }
 
     /** Clears all validation marker files for the resources in the

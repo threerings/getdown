@@ -1,5 +1,5 @@
 //
-// $Id: Patcher.java,v 1.1 2004/07/13 17:45:40 mdb Exp $
+// $Id: Patcher.java,v 1.2 2004/07/14 13:44:49 mdb Exp $
 
 package com.threerings.getdown.tools;
 
@@ -12,24 +12,22 @@ import java.util.Enumeration;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
-import com.samskivert.io.StreamUtil;
+import com.sun.javaws.cache.Patcher.PatchDelegate;
 import com.sun.javaws.jardiff.JarDiffPatcher;
+
+import com.samskivert.io.StreamUtil;
 import org.apache.commons.io.CopyUtils;
+
+import com.threerings.getdown.util.ProgressObserver;
 
 /**
  * Applies a unified patch file to an application directory, providing
- * percentage completion feedback along the way.
+ * percentage completion feedback along the way. <em>Note:</em> the
+ * patcher is not thread safe. Create a separate patcher instance for each
+ * patching action that is desired.
  */
 public class Patcher
 {
-    /** Used to communicate patching progress. */
-    public static interface Observer
-    {
-        /** Informs the observer that we have completed the specified
-         * percentage of the patching process. */
-        public void progress (int percent);
-    }
-
     /**
      * Applies the specified patch file to the application living in the
      * specified application directory. The supplied observer, if
@@ -40,14 +38,19 @@ public class Patcher
      * with the patcher so that the user interface is not blocked for the
      * duration of the patch.
      */
-    public void patch (File appdir, File patch, Observer obs)
+    public void patch (File appdir, File patch, ProgressObserver obs)
         throws IOException
     {
+        // save this information for later
+        _obs = obs;
+        _plength = patch.length();
+
         JarFile file = new JarFile(patch);
         Enumeration entries = file.entries(); // old skool!
         while (entries.hasMoreElements()) {
             ZipEntry entry = (ZipEntry)entries.nextElement();
             String path = entry.getName();
+            long elength = entry.getCompressedSize();
 
             // depending on the suffix, we do The Right Thing (tm)
             if (path.endsWith(Differ.CREATE)) {
@@ -71,6 +74,9 @@ public class Patcher
             } else {
                 System.err.println("Skipping bogus patch file entry: " + path);
             }
+
+            // note that we've completed this entry
+            _complete += elength;
         }
     }
 
@@ -81,11 +87,22 @@ public class Patcher
 
     protected void createFile (JarFile file, ZipEntry entry, File target)
     {
+        // create our copy buffer if necessary
+        if (_buffer == null) {
+            _buffer = new byte[COPY_BUFFER_SIZE];
+        }
+
         InputStream in = null;
         FileOutputStream fout = null;
         try {
-            CopyUtils.copy(in = file.getInputStream(entry),
-                           fout = new FileOutputStream(target));
+            in = file.getInputStream(entry);
+            fout = new FileOutputStream(target);
+            int total = 0, read;
+            while ((read = in.read(_buffer)) != -1) {
+                total += read;
+                fout.write(_buffer, 0, read);
+                updateProgress(total);
+            }
 
         } catch (IOException ioe) {
             System.err.println("Error creating '" + target + "': " + ioe);
@@ -122,10 +139,20 @@ public class Patcher
                 return;
             }
 
+            // we'll need this to pass progress along to our observer
+            final String which = entry.getName();
+            final long elength = entry.getCompressedSize();
+            PatchDelegate pd = new PatchDelegate() {
+                public void patching (int percent) {
+                    // System.out.println(which + ": " + percent);
+                    updateProgress((int)(percent * elength / 100));
+                }
+            };
+
             // now apply the patch to create the new target file
             patcher = new JarDiffPatcher();
             fout = new FileOutputStream(target);
-            patcher.applyPatch(null, otarget.getPath(), patch.getPath(), fout);
+            patcher.applyPatch(pd, otarget.getPath(), patch.getPath(), fout);
 
         } catch (IOException ioe) {
             if (patcher == null) {
@@ -144,6 +171,13 @@ public class Patcher
         }
     }
 
+    protected void updateProgress (int progress)
+    {
+        if (_obs != null) {
+            _obs.progress((int)(100 * (_complete + progress) / _plength));
+        }
+    }
+
     public static void main (String[] args)
     {
         if (args.length != 2) {
@@ -159,4 +193,10 @@ public class Patcher
             System.exit(-1);
         }
     }
+
+    protected ProgressObserver _obs;
+    protected long _complete, _plength;
+    protected byte[] _buffer;
+
+    protected static final int COPY_BUFFER_SIZE = 4096;
 }

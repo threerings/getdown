@@ -1,5 +1,5 @@
 //
-// $Id: Resource.java,v 1.9 2004/07/14 12:14:44 mdb Exp $
+// $Id: Resource.java,v 1.10 2004/07/14 13:44:49 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -23,6 +23,7 @@ import com.samskivert.util.SortableArrayList;
 import com.samskivert.util.StringUtil;
 
 import com.threerings.getdown.Log;
+import com.threerings.getdown.util.ProgressObserver;
 
 /**
  * Models a single file resource used by an {@link Application}.
@@ -68,7 +69,7 @@ public class Resource
      * Computes the MD5 hash of this resource's underlying file.
      * <em>Note:</em> This is both CPU and I/O intensive.
      */
-    public String computeDigest (MessageDigest md)
+    public String computeDigest (MessageDigest md, ProgressObserver obs)
         throws IOException
     {
         md.reset();
@@ -85,11 +86,13 @@ public class Resource
                 CollectionUtil.addAll(entries, jar.entries());
                 entries.sort(ENTRY_COMP);
 
+                int eidx = 0;
                 for (Iterator iter = entries.iterator(); iter.hasNext(); ) {
                     JarEntry entry = (JarEntry)iter.next();
 
                     // skip metadata; we just want the goods
                     if (entry.getName().startsWith("META-INF")) {
+                        updateProgress(obs, eidx, entries.size());
                         continue;
                     }
 
@@ -103,6 +106,7 @@ public class Resource
                     } finally {
                         StreamUtil.close(in);
                     }
+                    updateProgress(obs, eidx, entries.size());
                 }
 
             } finally {
@@ -115,11 +119,14 @@ public class Resource
             }
 
         } else {
+            long totalSize = _local.length(), position = 0L;
             FileInputStream fin = null;
             try {
                 fin = new FileInputStream(_local);
                 while ((read = fin.read(buffer)) != -1) {
                     md.update(buffer, 0, read);
+                    position += read;
+                    updateProgress(obs, position, totalSize);
                 }
             } finally {
                 StreamUtil.close(fin);
@@ -206,6 +213,14 @@ public class Resource
     public String toString ()
     {
         return _path;
+    }
+
+    /** Helper function to simplify the process of reporting progress. */
+    protected void updateProgress (ProgressObserver obs, long pos, long total)
+    {
+        if (obs != null) {
+            obs.progress((int)(100 * pos / total));
+        }
     }
 
     protected String _path;

@@ -1,9 +1,10 @@
 //
-// $Id: Getdown.java,v 1.9 2004/07/13 17:45:40 mdb Exp $
+// $Id: Getdown.java,v 1.10 2004/07/14 13:44:49 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
 import java.awt.BorderLayout;
+import java.awt.EventQueue;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 
@@ -29,15 +30,17 @@ import com.threerings.getdown.Log;
 import com.threerings.getdown.data.Application;
 import com.threerings.getdown.data.Resource;
 import com.threerings.getdown.tools.Patcher;
+import com.threerings.getdown.util.ProgressObserver;
 
 /**
  * Manages the main control for the Getdown application updater and
  * deployment system.
  */
-public class Getdown
+public class Getdown extends Thread
 {
     public Getdown (File appDir)
     {
+        super("Getdown");
         _app = new Application(appDir);
         _msgs = ResourceBundle.getBundle("com.threerings.getdown.messages");
     }
@@ -57,6 +60,7 @@ public class Getdown
             for (int ii = 0; ii < MAX_LOOPS; ii++) {
                 // make sure we have the desired version and that the
                 // metadata files are valid...
+                setStatus("m.validating", -1, -1L);
                 if (_app.verifyMetadata()) {
                     Log.info("Application requires update.");
                     update();
@@ -65,7 +69,7 @@ public class Getdown
                 }
 
                 // now verify our resources...
-                List failures = _app.verifyResources();
+                List failures = _app.verifyResources(_progobs);
                 if (failures == null) {
                     Log.info("Resources verified.");
                     launch();
@@ -97,7 +101,7 @@ public class Getdown
         _app.clearValidationMarkers();
 
         // attempt to download the patch file
-        Resource patch = _app.getPatchResource();
+        final Resource patch = _app.getPatchResource();
         if (patch != null) {
             // download the patch file...
             ArrayList list = new ArrayList();
@@ -105,9 +109,10 @@ public class Getdown
             download(list);
 
             // and apply it...
+            setStatus("m.patching", -1, -1L);
             Patcher patcher = new Patcher();
-            patcher.patch(patch.getLocal().getParentFile(), patch.getLocal(),
-                          null);
+            patcher.patch(patch.getLocal().getParentFile(),
+                          patch.getLocal(), _progobs);
         }
         // if the patch resource is null, that means something was booched
         // in the application, so we skip the patching process but update
@@ -133,12 +138,11 @@ public class Getdown
         // create a downloader to download our resources
         Downloader.Observer obs = new Downloader.Observer() {
             public void resolvingDownloads () {
-                _status.setStatus(_msgs.getString("m.resolving"));
+                setStatus("m.resolving", -1, -1L);
             }
 
             public void downloadProgress (int percent, long remaining) {
-                _status.setStatus(_msgs.getString("m.downloading"));
-                _status.setProgress(percent, remaining);
+                setStatus("m.downloading", percent, remaining);
                 if (percent == 100) {
                     synchronized (lock) {
                         lock.notify();
@@ -150,7 +154,7 @@ public class Getdown
                 String msg = MessageFormat.format(
                     _msgs.getString("m.failure"),
                     new Object[] { e.getMessage() });
-                _status.setStatus(msg);
+                setStatus(msg, -1, -1L);
                 Log.warning("Download failed [rsrc=" + rsrc + "].");
                 Log.logStackTrace(e);
                 synchronized (lock) {
@@ -177,9 +181,7 @@ public class Getdown
      */
     protected void launch ()
     {
-        if (_status != null) {
-            _status.setStatus(_msgs.getString("m.launching"));
-        }
+        setStatus("m.launching", 100, -1L);
 
         try {
             Process proc = _app.createProcess();
@@ -227,6 +229,23 @@ public class Getdown
         _frame.show();
     }
 
+    protected void setStatus (final String message, final int percent,
+                              final long remaining)
+    {
+        if (_status != null) {
+            EventQueue.invokeLater(new Runnable() {
+                public void run () {
+                    if (message != null) {
+                        _status.setStatus(_msgs.getString(message));
+                    }
+                    if (percent >= 0) {
+                        _status.setProgress(percent, remaining);
+                    }
+                }
+            });
+        }
+    }
+
     public static void main (String[] args)
     {
         // maybe they specified the appdir in a system property
@@ -261,11 +280,18 @@ public class Getdown
 
         try {
             Getdown app = new Getdown(appDir);
-            app.run();
+            app.start();
         } catch (Exception e) {
             Log.logStackTrace(e);
         }
     }
+
+    /** Used to pass progress on to our user interface. */
+    protected ProgressObserver _progobs = new ProgressObserver() {
+        public void progress (final int percent) {
+            setStatus(null, percent, -1L);
+        }
+    };
 
     protected Application _app;
     protected Application.UpdateInterface _ifc;
