@@ -1,5 +1,5 @@
 //
-// $Id: StatusPanel.java,v 1.12 2004/07/26 23:27:46 mdb Exp $
+// $Id: StatusPanel.java,v 1.13 2004/07/28 06:01:58 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -156,7 +156,6 @@ public class StatusPanel extends JComponent
                 ly = _ifc.status.y + (_ifc.status.height -
                                       _label.getSize().height);
             }
-            System.out.println("Rendering " + _ifc.status + "/" + ly);
             _label.render(gfx, _ifc.status.x, ly);
         }
 
