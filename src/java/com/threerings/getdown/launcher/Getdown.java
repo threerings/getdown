@@ -598,7 +598,7 @@ public class Getdown extends Thread
             File log = new File(appDir, "launcher.log");
             try {
                 PrintStream logOut = new PrintStream(
-                    new BufferedOutputStream(new FileOutputStream(log)));
+                    new BufferedOutputStream(new FileOutputStream(log)), true);
                 System.setOut(logOut);
                 System.setErr(logOut);
             } catch (IOException ioe) {
