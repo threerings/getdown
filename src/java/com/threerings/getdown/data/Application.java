@@ -1,5 +1,5 @@
 //
-// $Id: Application.java,v 1.24 2004/07/30 02:23:52 mdb Exp $
+// $Id: Application.java,v 1.25 2004/07/30 21:45:28 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -65,7 +65,7 @@ public class Application
         public Color progressBar = new Color(0x6699CC);
 
         /** The dimensions of the status display. */
-        public Rectangle status = new Rectangle(5, 25, 300, 100);
+        public Rectangle status = new Rectangle(5, 25, 500, 100);
 
         /** The color of the status text. */
         public Color statusText = Color.black;
@@ -105,7 +105,7 @@ public class Application
         try {
             return createResource(CONFIG_FILE);
         } catch (Exception e) {
-            throw new RuntimeException("Booched appbase '" + _vappbase + "'!?");
+            throw new RuntimeException("Invalid appbase '" + _vappbase + "'.");
         }
     }
 

@@ -1,5 +1,5 @@
 //
-// $Id: Getdown.java,v 1.27 2004/07/30 18:14:21 mdb Exp $
+// $Id: Getdown.java,v 1.28 2004/07/30 21:45:28 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -21,9 +21,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 
+import java.net.HttpURLConnection;
 import java.net.URL;
+
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -37,6 +40,7 @@ import com.threerings.getdown.Log;
 import com.threerings.getdown.data.Application;
 import com.threerings.getdown.data.Resource;
 import com.threerings.getdown.tools.Patcher;
+import com.threerings.getdown.util.ConfigUtil;
 import com.threerings.getdown.util.ProgressObserver;
 import com.threerings.getdown.util.ProxyUtil;
 
@@ -77,6 +81,177 @@ public class Getdown extends Thread
         if (_msgs == null) {
             return;
         }
+
+        try {
+            _dead = false;
+            if (detectProxy()) {
+                getdown();
+            } else {
+                // create a panel they can use to configure the proxy settings
+                _frame.getContentPane().removeAll();
+                _frame.getContentPane().add(
+                    new ProxyPanel(this, _msgs), BorderLayout.CENTER);
+                _frame.pack();
+                SwingUtil.centerWindow(_frame);
+                _frame.show();
+                // allow them to close the window to abort the proxy
+                // configuration
+                _dead = true;
+            }
+
+        } catch (Exception e) {
+            Log.logStackTrace(e);
+            String msg = e.getMessage();
+            if (msg == null) {
+                msg = "m.unknown_error";
+            } else if (!msg.startsWith("m.")) {
+                // try to do something sensible based on the type of error
+                if (e instanceof FileNotFoundException) {
+                    msg = MessageUtil.tcompose("m.missing_resource", msg);
+                } else {
+                    msg = MessageUtil.tcompose("m.init_error", msg);
+                }
+            }
+            updateStatus(msg);
+            _dead = true;
+        }
+    }
+
+    /**
+     * Configures our proxy settings (called by {@link ProxyPanel}) and
+     * fires up the launcher.
+     */
+    public void configureProxy (String host, String port)
+    {
+        Log.info("User configured proxy [host=" + host +
+                 ", port=" + port + "].");
+
+        // if we're provided with valid values, create a proxy.txt file
+        if (!StringUtil.blank(host)) {
+            File pfile = _app.getLocalPath("proxy.txt");
+            try {
+                PrintStream pout = new PrintStream(new FileOutputStream(pfile));
+                pout.println("host = " + host);
+                if (!StringUtil.blank(port)) {
+                    pout.println("port = " + port);
+                }
+                pout.close();
+            } catch (IOException ioe) {
+                Log.warning("Error creating proxy file '" + pfile +
+                            "': " + ioe);
+            }
+
+            // also configure them in the JVM
+            System.setProperty("http.proxyHost", host);
+            if (!StringUtil.blank(port)) {
+                System.setProperty("http.proxyPort", port);
+            }
+        }
+
+        // clear out our UI
+        _frame.dispose();
+        _status = null;
+        _frame = null;
+
+        // fire up a new thread
+        new Thread(this).start();
+    }
+
+    /**
+     * Reads and/or autodetects our proxy settings.
+     *
+     * @return true if we should proceed with running the launcher, false
+     * if we need to wait for the user to enter proxy settings.
+     */
+    protected boolean detectProxy ()
+    {
+        // we may already have a proxy configured
+        if (System.getProperty("http.proxyHost") != null) {
+            return true;
+        }
+
+        // TODO: look in the Vinders registry
+
+        // otherwise look for and read our proxy.txt file
+        File pfile = _app.getLocalPath("proxy.txt");
+        if (pfile.exists()) {
+            try {
+                HashMap pconf = ConfigUtil.parseConfig(pfile, false);
+                String proxyHost = (String)pconf.get("host");
+                String proxyPort = (String)pconf.get("port");
+                if (!StringUtil.blank(proxyHost)) {
+                    System.setProperty("http.proxyHost", proxyHost);
+                    if (!StringUtil.blank(proxyPort)) {
+                        System.setProperty("http.proxyPort", proxyPort);
+                    }
+                    Log.info("Using proxy [host=" + proxyHost +
+                             ", port=" + proxyPort + "].");
+                }
+
+                // now we can get on with getting down
+                return true;
+
+            } catch (IOException ioe) {
+                Log.warning("Failed to read '" + pfile + "': " + ioe);
+            }
+        }
+
+        // otherwise we'll need to try to detect our proxy settings; first
+        // we have to initialize our application to get some sort of
+        // interface configuration and the appbase URL
+        Log.info("Attempting to detect proxy settings...");
+        try {
+            _ifc = _app.init(true);
+        } catch (IOException ioe) {
+            // no worries
+        }
+        updateStatus("m.detecting_proxy");
+
+        URL rurl = _app.getConfigResource().getRemote();
+        try {
+            // try to make a HEAD request for this URL
+            HttpURLConnection ucon = (HttpURLConnection)
+                rurl.openConnection();
+            ucon.setRequestMethod("HEAD");
+            ucon.connect();
+
+            // make sure we got a satisfactory response code
+            if (ucon.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                Log.warning("Got a non-200 response but assuming we're OK " +
+                            "because we got something... [url=" + rurl +
+                            ", rsp=" + ucon.getResponseCode() + "].");
+            }
+
+            // we got through, so we appear not to require a proxy; make a
+            // blank proxy config and get on gettin' down
+            Log.info("No proxy appears to be needed.");
+            try {
+                pfile.createNewFile();
+            } catch (IOException ioe) {
+                Log.warning("Failed to create blank proxy file '" +
+                            pfile + "': " + ioe);
+            }
+            return true;
+
+        } catch (IOException ioe) {
+            Log.info("Failed to HEAD " + rurl + ": " + ioe);
+            Log.info("We probably need a proxy. Attempting to auto-detect...");
+        }
+
+        // let the caller know that we need a proxy but can't detect it
+        return false;
+    }
+
+    /**
+     * Does the actual application validation, update and launching
+     * business.
+     */
+    protected void getdown ()
+    {
+        Log.info("---------------- Proxy Info -----------------");
+        Log.info("-- Proxy Host: " + System.getProperty("http.proxyHost"));
+        Log.info("-- Proxy Port: " + System.getProperty("http.proxyPort"));
+        Log.info("---------------------------------------------");
 
         try {
             // first parses our application deployment file
@@ -371,27 +546,15 @@ public class Getdown extends Thread
         }
 
         // pipe our output into a file in the application directory
-        File log = new File(appDir, "launcher.log");
-        try {
-            FileOutputStream fout = new FileOutputStream(log);
-            System.setOut(new PrintStream(fout));
-            System.setErr(new PrintStream(fout));
-        } catch (IOException ioe) {
-            Log.warning("Unable to redirect output to '" + log + "': " + ioe);
-        }
-
-        // attempt to obtain our proxy information; it may be specified
-        // via system properties or we can autodetect it
-        if (System.getProperty("http.proxyHost") == null) {
+        if (System.getProperty("no_log_redir") == null) {
+            File log = new File(appDir, "launcher.log");
             try {
-                URL sample = new URL("http://www.threerings.net/");
-                if (ProxyUtil.detectProxy(sample)) {
-                    String host = ProxyUtil.getProxyIP();
-                    String port = ProxyUtil.getProxyPort();
-                    ProxyUtil.configureProxy(host, port);
-                }
-            } catch (Exception e) {
-                Log.warning("Failed to detect proxy: " + e);
+                FileOutputStream fout = new FileOutputStream(log);
+                System.setOut(new PrintStream(fout));
+                System.setErr(new PrintStream(fout));
+            } catch (IOException ioe) {
+                Log.warning("Unable to redirect output to '" + log +
+                            "': " + ioe);
             }
         }
 
@@ -405,8 +568,6 @@ public class Getdown extends Thread
         Log.info("-- User Name: " + System.getProperty("user.name"));
         Log.info("-- User Home: " + System.getProperty("user.home"));
         Log.info("-- Cur dir: " + System.getProperty("user.dir"));
-        Log.info("-- Proxy Host: " + System.getProperty("http.proxyHost"));
-        Log.info("-- Proxy Port: " + System.getProperty("http.proxyPort"));
         Log.info("---------------------------------------------");
 
         try {
