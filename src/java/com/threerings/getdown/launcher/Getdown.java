@@ -1,5 +1,5 @@
 //
-// $Id: Getdown.java,v 1.12 2004/07/19 11:59:06 mdb Exp $
+// $Id: Getdown.java,v 1.13 2004/07/19 12:39:08 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -12,6 +12,7 @@ import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -95,7 +96,12 @@ public class Getdown extends Thread
             if (msg == null) {
                 msg = "m.unknown_error";
             } else if (!msg.startsWith("m.")) {
-                msg = MessageUtil.tcompose("m.init_error", msg);
+                // try to do something sensible based on the type of error
+                if (e instanceof FileNotFoundException) {
+                    msg = MessageUtil.tcompose("m.missing_resource", msg);
+                } else {
+                    msg = MessageUtil.tcompose("m.init_error", msg);
+                }
             }
             updateStatus(msg);
         }
@@ -172,10 +178,8 @@ public class Getdown extends Thread
             }
 
             public void downloadFailed (Resource rsrc, Exception e) {
-                String msg = MessageFormat.format(
-                    _msgs.getString("m.failure"),
-                    new Object[] { e.getMessage() });
-                updateStatus(msg);
+                updateStatus(
+                    MessageUtil.tcompose("m.failure", e.getMessage()));
                 Log.warning("Download failed [rsrc=" + rsrc + "].");
                 Log.logStackTrace(e);
                 synchronized (lock) {
@@ -261,7 +265,7 @@ public class Getdown extends Thread
             EventQueue.invokeLater(new Runnable() {
                 public void run () {
                     if (message != null) {
-                        _status.setStatus(_msgs.getString(message));
+                        _status.setStatus(message);
                     }
                     if (percent >= 0) {
                         _status.setProgress(percent, remaining);
@@ -319,7 +323,8 @@ public class Getdown extends Thread
     };
 
     protected Application _app;
-    protected Application.UpdateInterface _ifc;
+    protected Application.UpdateInterface _ifc =
+        new Application.UpdateInterface();
 
     protected ResourceBundle _msgs;
     protected JFrame _frame;
