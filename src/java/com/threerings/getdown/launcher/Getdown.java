@@ -1,5 +1,5 @@
 //
-// $Id: Getdown.java,v 1.21 2004/07/28 08:05:44 mdb Exp $
+// $Id: Getdown.java,v 1.22 2004/07/29 17:57:45 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -18,6 +18,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 
+import java.net.URL;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +35,7 @@ import com.threerings.getdown.data.Application;
 import com.threerings.getdown.data.Resource;
 import com.threerings.getdown.tools.Patcher;
 import com.threerings.getdown.util.ProgressObserver;
+import com.threerings.getdown.util.ProxyUtil;
 
 /**
  * Manages the main control for the Getdown application updater and
@@ -352,6 +354,21 @@ public class Getdown extends Thread
             System.setErr(new PrintStream(fout));
         } catch (IOException ioe) {
             Log.warning("Unable to redirect output to '" + log + "': " + ioe);
+        }
+
+        // attempt to obtain our proxy information; it may be specified
+        // via system properties or we can autodetect it
+        if (System.getProperty("http.proxyHost") == null) {
+            try {
+                URL sample = new URL("http://www.threerings.net/");
+                if (ProxyUtil.detectProxy(sample)) {
+                    String host = ProxyUtil.getProxyIP();
+                    String port = ProxyUtil.getProxyPort();
+                    ProxyUtil.configureProxy(host, port);
+                }
+            } catch (Exception e) {
+                Log.warning("Failed to detect proxy: " + e);
+            }
         }
 
         try {

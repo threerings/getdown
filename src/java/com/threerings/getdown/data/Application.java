@@ -1,5 +1,5 @@
 //
-// $Id: Application.java,v 1.19 2004/07/26 23:27:46 mdb Exp $
+// $Id: Application.java,v 1.20 2004/07/29 17:57:45 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -358,8 +358,16 @@ public class Application
             cpbuf.append(rsrc.getLocal().getAbsolutePath());
         }
 
+        String proxyHost, proxyPort = null;
+        int pargs = 0;
+        if ((proxyHost = System.getProperty("http.proxyHost")) != null) {
+            pargs = 2;
+            proxyPort = System.getProperty("http.proxyPort");
+        }
+
         // we'll need the JVM, classpath, JVM args, class name and app args
-        String[] args = new String[4 + _jvmargs.size() + _appargs.size()];
+        String[] args = new String[
+            4 + _jvmargs.size() + pargs + _appargs.size()];
         int idx = 0;
 
         // reconstruct the path to the JVM
@@ -369,6 +377,12 @@ public class Application
         // add the classpath arguments
         args[idx++] = "-classpath";
         args[idx++] = cpbuf.toString();
+
+        // if we have a proxy configuration, add those
+        if (proxyHost != null) {
+            args[idx++] = "-Dhttp.proxyHost=" + proxyHost;
+            args[idx++] = "-Dhttp.proxyPort=" + proxyPort;
+        }
 
         // add the JVM arguments
         for (Iterator iter = _jvmargs.iterator(); iter.hasNext(); ) {
