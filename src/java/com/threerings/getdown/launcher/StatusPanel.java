@@ -1,5 +1,5 @@
 //
-// $Id: StatusPanel.java,v 1.9 2004/07/26 18:31:39 mdb Exp $
+// $Id: StatusPanel.java,v 1.10 2004/07/26 18:59:00 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -136,7 +136,16 @@ public class StatusPanel extends JComponent
         }
 
         if (_label != null) {
-            _label.render(gfx, _spos.x, _spos.y);
+            // if the status region is higher than the progress region, we
+            // want to align the label with the bottom of its region
+            // rather than the top
+            int ly;
+            if (_spos.y > _ppos.y) {
+                ly = _spos.y;
+            } else {
+                ly = _spos.y + (_spos.height - _label.getSize().height);
+            }
+            _label.render(gfx, _spos.x, ly);
         }
 
         SwingUtil.restoreAntiAliasing(gfx, oalias);
