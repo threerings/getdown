@@ -1,5 +1,5 @@
 //
-// $Id: Application.java,v 1.20 2004/07/29 17:57:45 mdb Exp $
+// $Id: Application.java,v 1.21 2004/07/29 21:08:56 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -275,7 +275,7 @@ public class Application
 
         // parse and return our application config
         UpdateInterface ui = new UpdateInterface();
-        ui.name = (String)cdata.get("ui.name");
+        _name = ui.name = (String)cdata.get("ui.name");
         ui.progress = parseRect(cdata, "ui.progress", ui.progress);
         ui.progressText = parseColor(
             cdata, "ui.progress_text", ui.progressText);
@@ -358,16 +358,24 @@ public class Application
             cpbuf.append(rsrc.getLocal().getAbsolutePath());
         }
 
+        int exargs = 0;
+
+        // we love our Mac users, so we do nice things to preserve our
+        // application identity
+        if (RunAnywhere.isMacOS()) {
+            exargs += 2;
+        }
+
+        // pass along our proxy settings
         String proxyHost, proxyPort = null;
-        int pargs = 0;
         if ((proxyHost = System.getProperty("http.proxyHost")) != null) {
-            pargs = 2;
+            exargs += 2;
             proxyPort = System.getProperty("http.proxyPort");
         }
 
         // we'll need the JVM, classpath, JVM args, class name and app args
         String[] args = new String[
-            4 + _jvmargs.size() + pargs + _appargs.size()];
+            4 + _jvmargs.size() + exargs + _appargs.size()];
         int idx = 0;
 
         // reconstruct the path to the JVM
@@ -377,6 +385,13 @@ public class Application
         // add the classpath arguments
         args[idx++] = "-classpath";
         args[idx++] = cpbuf.toString();
+
+        // do our Mac identity business
+        if (RunAnywhere.isMacOS()) {
+            String idir = _appdir.getParentFile().getAbsolutePath();
+            args[idx++] = "-Xdock:icon=" + idir + "/desktop.icns";
+            args[idx++] = "-Xdock:name=" + _name;
+        }
 
         // if we have a proxy configuration, add those
         if (proxyHost != null) {
@@ -702,6 +717,7 @@ public class Application
     protected String _appbase;
     protected URL _vappbase;
     protected String _class;
+    protected String _name;
 
     protected ArrayList _codes = new ArrayList();
     protected ArrayList _resources = new ArrayList();
