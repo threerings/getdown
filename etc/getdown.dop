@@ -34,7 +34,6 @@ all
 
 -ExcludePackages:
 javax.*
-com.sun.*
 
 -ExcludeMethods:
 
@@ -69,3 +68,4 @@ none
 
 -IncludeNonClassFiles:
 dist/classes
+../../lib/javaws.jar
