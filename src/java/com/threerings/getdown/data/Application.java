@@ -1,5 +1,5 @@
 //
-// $Id: Application.java,v 1.4 2004/07/06 05:13:35 mdb Exp $
+// $Id: Application.java,v 1.5 2004/07/06 09:46:35 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -256,7 +256,7 @@ public class Application
             args[idx++] = processArg((String)iter.next());
         }
 
-        Log.info("Running " + StringUtil.join(args, "\n"));
+        Log.info("Running " + StringUtil.join(args, "\n  "));
         return Runtime.getRuntime().exec(args, null);
     }
 
@@ -306,11 +306,25 @@ public class Application
                      "Attempting recovery...");
         }
 
-        // if we failed to load the digest, try to redownload the digest
-        // file and give it another good college try; this time we allow
-        // exceptions to propagate up to the caller as there is nothing
-        // else we can do to recover
-        if (_digest == null) {
+        // if we have no version, then we are running in unversioned mode
+        // so we need to download our digest.txt file on every invocation
+        if (_version == -1) {
+            // make a note of the old meta-digest, if this changes we need
+            // to revalidate all of our resources as one or more of them
+            // have also changed
+            String olddig = (_digest == null) ? "" : _digest.getMetaDigest();
+            downloadControlFile(Digest.DIGEST_FILE);
+            _digest = new Digest(_appdir);
+            if (!olddig.equals(_digest.getMetaDigest())) {
+                Log.info("Unversioned digest changed. Revalidating...");
+                clearValidationMarkers();
+            }
+
+        } else if (_digest == null) {
+            // if we failed to load the digest, try to redownload the
+            // digest file and give it another good college try; this time
+            // we allow exceptions to propagate up to the caller as there
+            // is nothing else we can do to recover
             downloadControlFile(Digest.DIGEST_FILE);
             _digest = new Digest(_appdir);
         }
@@ -388,6 +402,22 @@ public class Application
                          ", error=" + e + "]. Requesting redownload...");
             }
             failures.add(rsrc);
+        }
+    }
+
+    /** Clears all validation marker files. */
+    protected void clearValidationMarkers ()
+    {
+        clearValidationMarkers(_codes.iterator());
+        clearValidationMarkers(_resources.iterator());
+    }
+
+    /** Clears all validation marker files for the resources in the
+     * supplied iterator. */
+    protected void clearValidationMarkers (Iterator iter)
+    {
+        while (iter.hasNext()) {
+            ((Resource)iter.next()).clearMarker();
         }
     }
 

@@ -1,5 +1,5 @@
 //
-// $Id: Digest.java,v 1.2 2004/07/02 15:22:49 mdb Exp $
+// $Id: Digest.java,v 1.3 2004/07/06 09:46:35 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -39,13 +39,12 @@ public class Digest
         throws IOException
     {
         // parse and validate our digest file contents
-        String metaDigest = "";
         StringBuffer data = new StringBuffer();
         List pairs = ConfigUtil.parsePairs(new File(appdir, DIGEST_FILE));
         for (Iterator iter = pairs.iterator(); iter.hasNext(); ) {
             String[] pair = (String[])iter.next();
             if (pair[0].equals(DIGEST_FILE)) {
-                metaDigest = pair[1];
+                _metaDigest = pair[1];
                 break;
             }
             _digests.put(pair[0], pair[1]);
@@ -56,21 +55,20 @@ public class Digest
         MessageDigest md = getMessageDigest();
         byte[] contents = data.toString().getBytes("UTF-8");
         String md5 = StringUtil.hexlate(md.digest(contents));
-        if (!md5.equals(metaDigest)) {
+        if (!md5.equals(_metaDigest)) {
             String err = MessageUtil.tcompose(
-                "m.invalid_digest_file", metaDigest, md5);
+                "m.invalid_digest_file", _metaDigest, md5);
             throw new IOException(err);
         }
     }
 
-//     /**
-//      * Returns the stored digest value for the file with the supplied
-//      * path, or null if no digest exists for a file with that path.
-//      */
-//     public String getDigest (String path)
-//     {
-//         return (String)_digests.get(path);
-//     }
+    /**
+     * Returns the digest for the digest file.
+     */
+    public String getMetaDigest ()
+    {
+        return _metaDigest;
+    }
 
     /**
      * Computes the MD5 hash of the specified resource and compares it
@@ -145,4 +143,5 @@ public class Digest
     }
 
     protected HashMap _digests = new HashMap();
+    protected String _metaDigest = "";
 }

@@ -1,5 +1,5 @@
 //
-// $Id: Resource.java,v 1.4 2004/07/06 05:13:36 mdb Exp $
+// $Id: Resource.java,v 1.5 2004/07/06 09:46:35 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -78,6 +78,10 @@ public class Resource
      */
     public boolean isMarkedValid ()
     {
+        if (!_local.exists()) {
+            clearMarker();
+            return false;
+        }
         return _marker.exists();
     }
 
