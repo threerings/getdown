@@ -1,5 +1,5 @@
 //
-// $Id: StatusPanel.java,v 1.11 2004/07/26 22:57:03 mdb Exp $
+// $Id: StatusPanel.java,v 1.12 2004/07/26 23:27:46 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -31,16 +31,19 @@ import com.threerings.getdown.data.Application.UpdateInterface;
  */
 public class StatusPanel extends JComponent
 {
-    public StatusPanel (ResourceBundle msgs, Rectangle bounds,
-                        BufferedImage bgimg, Rectangle ppos, Rectangle spos,
-                        UpdateInterface ifc)
+    public StatusPanel (ResourceBundle msgs, UpdateInterface ifc,
+                        BufferedImage bgimg)
     {
         _msgs = msgs;
-        _bgimg = bgimg;
-        _psize = new Dimension(bounds.width, bounds.height);
-        _ppos = ppos;
-        _spos = spos;
         _ifc = ifc;
+        _bgimg = bgimg;
+        if (bgimg == null) {
+            Rectangle bounds = ifc.progress.union(ifc.status);
+            bounds.grow(5, 5);
+            _psize = bounds.getSize();
+        } else {
+            _psize = new Dimension(bgimg.getWidth(), bgimg.getHeight());
+        }
     }
 
     /**
@@ -95,7 +98,7 @@ public class StatusPanel extends JComponent
     {
         status = xlate(status);
         _newlab = new Label(status, _ifc.statusText, _font);
-        _newlab.setTargetWidth(_spos.width);
+        _newlab.setTargetWidth(_ifc.status.width);
         if (_ifc.textShadow != null) {
             _newlab.setAlternateColor(_ifc.textShadow);
             _newlab.setStyle(Label.SHADOW);
@@ -131,13 +134,15 @@ public class StatusPanel extends JComponent
         }
 
         gfx.setColor(_ifc.progressBar);
-        gfx.fillRect(_ppos.x, _ppos.y, _progress * _ppos.width / 100,
-                     _ppos.height);
+        gfx.fillRect(_ifc.progress.x, _ifc.progress.y,
+                     _progress * _ifc.progress.width / 100,
+                     _ifc.progress.height);
 
         if (_plabel != null) {
-            int xmarg = (_ppos.width - _plabel.getSize().width)/2;
-            int ymarg = (_ppos.height - _plabel.getSize().height)/2;
-            _plabel.render(gfx, _ppos.x + xmarg, _ppos.y + ymarg);
+            int xmarg = (_ifc.progress.width - _plabel.getSize().width)/2;
+            int ymarg = (_ifc.progress.height - _plabel.getSize().height)/2;
+            _plabel.render(gfx, _ifc.progress.x + xmarg,
+                           _ifc.progress.y + ymarg);
         }
 
         if (_label != null) {
@@ -145,12 +150,14 @@ public class StatusPanel extends JComponent
             // want to align the label with the bottom of its region
             // rather than the top
             int ly;
-            if (_spos.y > _ppos.y) {
-                ly = _spos.y;
+            if (_ifc.status.y > _ifc.progress.y) {
+                ly = _ifc.status.y;
             } else {
-                ly = _spos.y + (_spos.height - _label.getSize().height);
+                ly = _ifc.status.y + (_ifc.status.height -
+                                      _label.getSize().height);
             }
-            _label.render(gfx, _spos.x, ly);
+            System.out.println("Rendering " + _ifc.status + "/" + ly);
+            _label.render(gfx, _ifc.status.x, ly);
         }
 
         SwingUtil.restoreAntiAliasing(gfx, oalias);
@@ -224,7 +231,6 @@ public class StatusPanel extends JComponent
 
     protected BufferedImage _bgimg;
     protected Dimension _psize;
-    protected Rectangle _ppos, _spos;
 
     protected ResourceBundle _msgs;
 

@@ -1,11 +1,10 @@
 //
-// $Id: Getdown.java,v 1.18 2004/07/26 22:57:03 mdb Exp $
+// $Id: Getdown.java,v 1.19 2004/07/26 23:27:46 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
-import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 
 import javax.imageio.ImageIO;
@@ -261,18 +260,12 @@ public class Getdown extends Thread
             return;
         }
 
-        Rectangle ppos = (_ifc.progress == null) ? DEFAULT_PPOS : _ifc.progress;
-        Rectangle spos = (_ifc.status == null) ? DEFAULT_STATUS : _ifc.status;
-        Rectangle bounds = ppos.union(spos);
-        bounds.grow(5, 5);
-
         // if we have a background image, load it up
         BufferedImage bgimg = null;
         if (!StringUtil.blank(_ifc.background)) {
             File bgpath = _app.getLocalPath(_ifc.background);
             try {
                 bgimg = ImageIO.read(bgpath);
-                bounds.setRect(0, 0, bgimg.getWidth(), bgimg.getHeight());
             } catch (IOException ioe) {
                 Log.warning("Failed to read UI background [path=" + bgpath +
                             ", error=" + ioe + "].");
@@ -288,7 +281,7 @@ public class Getdown extends Thread
             _frame.getContentPane().removeAll();
         }
         _frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        _status = new StatusPanel(_msgs, bounds, bgimg, ppos, spos, _ifc);
+        _status = new StatusPanel(_msgs, _ifc, bgimg);
         _frame.getContentPane().add(_status, BorderLayout.CENTER);
         _frame.pack();
         SwingUtil.centerWindow(_frame);
@@ -373,9 +366,4 @@ public class Getdown extends Thread
 
     protected static final int MAX_LOOPS = 5;
     protected static final long MIN_EXIST_TIME = 5000L;
-
-    protected static final Rectangle DEFAULT_PPOS =
-        new Rectangle(5, 5, 300, 15);
-    protected static final Rectangle DEFAULT_STATUS =
-        new Rectangle(5, 25, 300, 100);
 }

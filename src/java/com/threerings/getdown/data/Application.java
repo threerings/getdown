@@ -1,5 +1,5 @@
 //
-// $Id: Application.java,v 1.18 2004/07/26 22:57:03 mdb Exp $
+// $Id: Application.java,v 1.19 2004/07/26 23:27:46 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -56,7 +56,7 @@ public class Application
         public String name;
 
         /** The dimensions of the progress bar. */
-        public Rectangle progress;
+        public Rectangle progress = new Rectangle(5, 5, 300, 15);
 
         /** The color of the progress text. */
         public Color progressText = Color.black;
@@ -65,7 +65,7 @@ public class Application
         public Color progressBar = new Color(0x6699CC);
 
         /** The dimensions of the status display. */
-        public Rectangle status;
+        public Rectangle status = new Rectangle(5, 25, 300, 100);
 
         /** The color of the status text. */
         public Color statusText = Color.black;
@@ -276,12 +276,12 @@ public class Application
         // parse and return our application config
         UpdateInterface ui = new UpdateInterface();
         ui.name = (String)cdata.get("ui.name");
-        ui.progress = parseRect(cdata, "ui.progress");
+        ui.progress = parseRect(cdata, "ui.progress", ui.progress);
         ui.progressText = parseColor(
             cdata, "ui.progress_text", ui.progressText);
         ui.progressBar = parseColor(
             cdata, "ui.progress_bar", ui.progressBar);
-        ui.status = parseRect(cdata, "ui.progress");
+        ui.status = parseRect(cdata, "ui.status", ui.status);
         ui.statusText = parseColor(cdata, "ui.status_text", ui.statusText);
         ui.textShadow = parseColor(cdata, "ui.text_shadow", ui.textShadow);
         ui.background = (String)cdata.get("ui.background");
@@ -649,7 +649,7 @@ public class Application
     }
 
     /** Used to parse rectangle specifications from the config file. */
-    protected Rectangle parseRect (HashMap cdata, String name)
+    protected Rectangle parseRect (HashMap cdata, String name, Rectangle def)
     {
         String value = (String)cdata.get(name);
         if (!StringUtil.blank(value)) {
@@ -661,11 +661,11 @@ public class Application
                             value + "'.");
             }
         }
-        return null;
+        return def;
     }
 
     /** Used to parse color specifications from the config file. */
-    protected Color parseColor (HashMap cdata, String name, Color defcolor)
+    protected Color parseColor (HashMap cdata, String name, Color def)
     {
         String value = (String)cdata.get(name);
         if (!StringUtil.blank(value)) {
@@ -676,7 +676,7 @@ public class Application
                             value + "'.");
             }
         }
-        return defcolor;
+        return def;
     }
 
     protected File _appdir;
