@@ -1,5 +1,5 @@
 //
-// $Id: Getdown.java,v 1.30 2004/07/31 03:05:12 mdb Exp $
+// $Id: Getdown.java,v 1.31 2004/07/31 03:55:16 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -37,6 +37,7 @@ import ca.beq.util.win32.registry.RootKey;
 
 import com.samskivert.swing.util.SwingUtil;
 import com.samskivert.text.MessageUtil;
+import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
 
 import com.threerings.getdown.Log;
@@ -170,38 +171,40 @@ public class Getdown extends Thread
         }
 
         // look in the Vinders registry
-        try {
-            String host = null, port = null;
-            boolean enabled = false;
-            RegistryKey.initialize();
-            RegistryKey r = new RegistryKey(
-                RootKey.HKEY_CURRENT_USER, PROXY_REGISTRY);
-            for (Iterator iter = r.values(); iter.hasNext(); ) {
-                RegistryValue value = (RegistryValue)iter.next();
-                if (value.getName().equals("ProxyEnable")) {
-                    enabled = value.getStringValue().equals("1");
-                }
-                if (value.getName().equals("ProxyServer")) {
-                    String strval = value.getStringValue();
-                    int cidx = strval.indexOf(":");
-                    if (cidx != -1) {
-                        port = strval.substring(cidx+1);
-                        strval = strval.substring(0, cidx);
+        if (RunAnywhere.isWindows()) {
+            try {
+                String host = null, port = null;
+                boolean enabled = false;
+                RegistryKey.initialize();
+                RegistryKey r = new RegistryKey(
+                    RootKey.HKEY_CURRENT_USER, PROXY_REGISTRY);
+                for (Iterator iter = r.values(); iter.hasNext(); ) {
+                    RegistryValue value = (RegistryValue)iter.next();
+                    if (value.getName().equals("ProxyEnable")) {
+                        enabled = value.getStringValue().equals("1");
                     }
-                    host = strval;
+                    if (value.getName().equals("ProxyServer")) {
+                        String strval = value.getStringValue();
+                        int cidx = strval.indexOf(":");
+                        if (cidx != -1) {
+                            port = strval.substring(cidx+1);
+                            strval = strval.substring(0, cidx);
+                        }
+                        host = strval;
+                    }
                 }
-            }
 
-            if (enabled) {
-                setProxyProperties(host, port);
-                return true;
-            } else {
-                Log.info("Detected no proxy settings in the registry.");
-            }
+                if (enabled) {
+                    setProxyProperties(host, port);
+                    return true;
+                } else {
+                    Log.info("Detected no proxy settings in the registry.");
+                }
 
-        } catch (Throwable t) {
-            Log.info("Failed to find proxy settings in Windows registry " +
-                     "[error=" + t + "].");
+            } catch (Throwable t) {
+                Log.info("Failed to find proxy settings in Windows registry " +
+                         "[error=" + t + "].");
+            }
         }
 
         // otherwise look for and read our proxy.txt file
