@@ -1,5 +1,5 @@
 //
-// $Id: Application.java,v 1.21 2004/07/29 21:08:56 mdb Exp $
+// $Id: Application.java,v 1.22 2004/07/29 21:23:04 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -388,8 +388,8 @@ public class Application
 
         // do our Mac identity business
         if (RunAnywhere.isMacOS()) {
-            String idir = _appdir.getParentFile().getAbsolutePath();
-            args[idx++] = "-Xdock:icon=" + idir + "/desktop.icns";
+            args[idx++] = "-Xdock:icon=" + _appdir.getAbsolutePath() +
+                "/../desktop.icns";
             args[idx++] = "-Xdock:name=" + _name;
         }
 
