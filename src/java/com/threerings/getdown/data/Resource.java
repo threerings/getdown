@@ -1,5 +1,5 @@
 //
-// $Id: Resource.java,v 1.5 2004/07/06 09:46:35 mdb Exp $
+// $Id: Resource.java,v 1.6 2004/07/07 16:17:01 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -11,6 +11,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.MessageDigest;
 
+import com.samskivert.io.StreamUtil;
 import com.samskivert.util.StringUtil;
 
 import com.threerings.getdown.Log;
@@ -65,9 +66,14 @@ public class Resource
         md.reset();
         byte[] buffer = new byte[DIGEST_BUFFER_SIZE];
         int read;
-        FileInputStream fin = new FileInputStream(_local);
-        while ((read = fin.read(buffer)) != -1) {
-            md.update(buffer, 0, read);
+        FileInputStream fin = null;
+        try {
+            fin = new FileInputStream(_local);
+            while ((read = fin.read(buffer)) != -1) {
+                md.update(buffer, 0, read);
+            }
+        } finally {
+            StreamUtil.close(fin);
         }
         return StringUtil.hexlate(md.digest());
     }
