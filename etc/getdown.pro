@@ -11,9 +11,11 @@
 -libraryjars <java.home>/lib/rt.jar
 
 -outjars dist/getdown-pro.jar
+-printseeds dist/proguard.seeds
+-printmapping dist/proguard.map
 
 -keep public class ca.beq.util.win32.registry.** {
-    public protected *;
+    *;
 }
 
 -keep public class com.threerings.getdown.launcher.Getdown {
