@@ -1,5 +1,5 @@
 //
-// $Id: Application.java,v 1.6 2004/07/07 08:42:40 mdb Exp $
+// $Id: Application.java,v 1.7 2004/07/07 10:45:20 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -247,6 +247,16 @@ public class Application
     }
 
     /**
+     * Attempts to redownload the <code>getdown.txt</code> file based on
+     * information parsed from a previous call to {@link #init}.
+     */
+    public void attemptRecovery ()
+        throws IOException
+    {
+        downloadControlFile(CONFIG_FILE);
+    }
+
+    /**
      * Invokes the process associated with this application definition.
      */
     public Process createProcess ()
@@ -473,7 +483,8 @@ public class Application
             throw new NestableIOException("Invalid path '" + path + "'.", e);
         }
 
-        Log.info("Attempting to refetch '" + path + "'.");
+        Log.info("Attempting to refetch '" + path + "' from '" +
+                 targetURL + "'.");
 
         // stream the URL into our temporary file
         InputStream fin = null;

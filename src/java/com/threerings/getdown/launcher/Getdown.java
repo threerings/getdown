@@ -1,5 +1,5 @@
 //
-// $Id: Getdown.java,v 1.5 2004/07/07 08:42:40 mdb Exp $
+// $Id: Getdown.java,v 1.6 2004/07/07 10:45:20 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -15,7 +15,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 
+import java.text.MessageFormat;
 import java.util.List;
+import java.util.ResourceBundle;
 
 import org.apache.commons.io.TeeOutputStream;
 
@@ -35,14 +37,21 @@ public class Getdown
     public Getdown (File appDir)
     {
         _app = new Application(appDir);
+        _msgs = ResourceBundle.getBundle("com.threerings.getdown.messages");
     }
 
     public void run ()
     {
         try {
-            for (int ii = 0; ii < MAX_LOOPS; ii++) {
+            try {
                 _ifc = _app.init();
+            } catch (IOException ioe) {
+                Log.warning("Failed to parse 'getdown.txt': " + ioe);
+                _app.attemptRecovery();
+                _ifc = _app.init();
+            }
 
+            for (int ii = 0; ii < MAX_LOOPS; ii++) {
                 if (_app.verifyMetadata()) {
                     Log.info("Application requires update.");
                     update();
@@ -91,13 +100,12 @@ public class Getdown
         Downloader.Observer obs = new Downloader.Observer() {
             public void resolvingDownloads () {
                 Log.info("Resolving downloads...");
-                _status.setStatus("Resolving downloads...");
+                _status.setStatus(_msgs.getString("m.resolving"));
             }
 
             public void downloadProgress (int percent, long remaining) {
-                _status.setStatus("Download progress " + percent + "%, " +
-                                  remaining + " seconds remaining.");
-                _status.setProgress(percent);
+                _status.setStatus(_msgs.getString("m.downloading"));
+                _status.setProgress(percent, remaining);
                 if (percent == 100) {
                     synchronized (lock) {
                         lock.notify();
@@ -106,7 +114,10 @@ public class Getdown
             }
 
             public void downloadFailed (Resource rsrc, Exception e) {
-                _status.setStatus("Download failed: " + e.getMessage());
+                String msg = MessageFormat.format(
+                    _msgs.getString("m.failure"),
+                    new Object[] { e.getMessage() });
+                _status.setStatus(msg);
                 Log.warning("Download failed [rsrc=" + rsrc + "].");
                 Log.logStackTrace(e);
                 synchronized (lock) {
@@ -134,7 +145,7 @@ public class Getdown
     protected void launch ()
     {
         if (_status != null) {
-            _status.setStatus("Launching...");
+            _status.setStatus(_msgs.getString("m.launching"));
         }
 
         try {
@@ -175,7 +186,8 @@ public class Getdown
 
         // create our user interface, and display it
         _frame = new JFrame(StringUtil.blank(_ifc.name) ? "" : _ifc.name);
-        _status = new StatusPanel(bounds, bgimg, ppos, spos);
+        _frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        _status = new StatusPanel(_msgs, bounds, bgimg, ppos, spos);
         _frame.getContentPane().add(_status, BorderLayout.CENTER);
         _frame.pack();
         SwingUtil.centerWindow(_frame);
@@ -220,6 +232,7 @@ public class Getdown
     protected Application _app;
     protected Application.UpdateInterface _ifc;
 
+    protected ResourceBundle _msgs;
     protected JFrame _frame;
     protected StatusPanel _status;
 
