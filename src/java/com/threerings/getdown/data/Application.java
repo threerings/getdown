@@ -1,5 +1,5 @@
 //
-// $Id: Application.java,v 1.27 2004/08/03 00:10:34 mdb Exp $
+// $Id: Application.java,v 1.28 2004/08/03 03:29:58 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -33,6 +33,7 @@ import org.apache.commons.io.CopyUtils;
 
 import com.threerings.getdown.Log;
 import com.threerings.getdown.util.ConfigUtil;
+import com.threerings.getdown.util.LaunchUtil;
 import com.threerings.getdown.util.MetaProgressObserver;
 import com.threerings.getdown.util.ProgressObserver;
 
@@ -379,20 +380,7 @@ public class Application
         int idx = 0;
 
         // reconstruct the path to the JVM
-        String apbase = System.getProperty("java.home") +
-            File.separator + "bin" + File.separator;
-        String apath = apbase + "java";
-        if (!new File(apath).exists()) {
-            apath = apbase + "javaw.exe";
-            if (!new File(apath).exists()) {
-                apath = apbase + "java.exe";
-                if (!new File(apath).exists()) {
-                    Log.warning("Unable to find java! [jhome=" + apbase + "].");
-                    apath = apbase + "java";
-                }
-            }
-        }
-        args[idx++] = apath;
+        args[idx++] = LaunchUtil.getJVMPath();
 
         // add the classpath arguments
         args[idx++] = "-classpath";

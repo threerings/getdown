@@ -1,5 +1,5 @@
 //
-// $Id: Getdown.java,v 1.32 2004/08/02 20:07:33 mdb Exp $
+// $Id: Getdown.java,v 1.33 2004/08/03 03:29:58 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -45,6 +45,7 @@ import com.threerings.getdown.data.Application;
 import com.threerings.getdown.data.Resource;
 import com.threerings.getdown.tools.Patcher;
 import com.threerings.getdown.util.ConfigUtil;
+import com.threerings.getdown.util.LaunchUtil;
 import com.threerings.getdown.util.ProgressObserver;
 
 /**
@@ -462,19 +463,17 @@ public class Getdown extends Thread
         try {
             Process proc = _app.createProcess();
 
-            // on Windows 98 we need to stick around and read the output
-            // of stdout lest the process fills its output buffer and
-            // chokes, yay!
-            String osname = System.getProperty("os.name").toLowerCase();
-            if (osname.indexOf("windows 98") != -1 ||
-                osname.indexOf("windows me") != -1) {
+            // on Windows 98 and ME we need to stick around and read the
+            // output of stderr lest the process fill its output buffer
+            // and choke, yay!
+            if (LaunchUtil.mustMonitorChildren()) {
                 // close our window if it's around
                 if (_frame != null) {
                     _frame.dispose();
                     _status = null;
                     _frame = null;
                 }
-                Log.info("Sticking around to read stderr on " + osname + "...");
+                Log.info("Sticking around to read stderr...");
                 InputStream stderr = proc.getErrorStream();
                 BufferedReader reader = new BufferedReader(
                     new InputStreamReader(stderr));
