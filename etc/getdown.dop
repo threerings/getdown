@@ -16,6 +16,7 @@
 dist/classes
 ../../projects/samskivert/dist/samskivert.jar
 ../../lib/commons-io.jar
+../../lib/javaws.jar
 
 -Destination:
 ./dclasses
