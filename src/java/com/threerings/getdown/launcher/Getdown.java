@@ -1,5 +1,5 @@
 //
-// $Id: Getdown.java,v 1.14 2004/07/20 01:24:54 mdb Exp $
+// $Id: Getdown.java,v 1.15 2004/07/20 01:27:32 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -332,7 +332,7 @@ public class Getdown extends Thread
     protected static final int MAX_LOOPS = 5;
 
     protected static final Rectangle DEFAULT_PPOS =
-        new Rectangle(10, 10, 300, 15);
+        new Rectangle(5, 5, 300, 15);
     protected static final Rectangle DEFAULT_STATUS =
-        new Rectangle(10, 30, 300, 200);
+        new Rectangle(5, 25, 300, 100);
 }
