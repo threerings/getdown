@@ -1,5 +1,5 @@
 //
-// $Id: Differ.java,v 1.2 2004/07/13 15:52:18 ray Exp $
+// $Id: Differ.java,v 1.3 2004/07/13 17:45:40 mdb Exp $
 
 package com.threerings.getdown.tools;
 
@@ -8,12 +8,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 import java.util.ArrayList;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
 
 import com.sun.javaws.jardiff.JarDiff;
+import org.apache.commons.io.CopyUtils;
 
 import com.samskivert.io.StreamUtil;
 
@@ -47,37 +50,33 @@ public class Differ
      * <code>patchV.dat</code> where V is the old application version.
      */
     public void createDiff (File nvdir, File ovdir, boolean verbose)
+        throws IOException
     {
         // sanity check
         String nvers = nvdir.getName();
         String overs = ovdir.getName();
         try {
             if (Integer.parseInt(nvers) <= Integer.parseInt(overs)) {
-                System.err.println("New version (" + nvers + ") must be " +
-                                   "greater than old version (" + overs + ").");
-                System.exit(-1);
+                String err = "New version (" + nvers + ") must be greater " +
+                    "than old version (" + overs + ").";
+                throw new IOException(err);
             }
-        } catch (Exception e) {
-            System.err.println("Non-numeric versions? [nvers=" + nvers +
-                               ", overs=" + overs + "].");
-            System.exit(-1);
+        } catch (NumberFormatException nfe) {
+            throw new IOException("Non-numeric versions? [nvers=" + nvers +
+                                  ", overs=" + overs + "].");
         }
 
-        Application oapp = createApplication(ovdir);
+        Application oapp = new Application(ovdir);
+        oapp.init();
         ArrayList orsrcs = new ArrayList();
         orsrcs.addAll(oapp.getCodeResources());
         orsrcs.addAll(oapp.getResources());
-        if (verbose) {
-            System.out.println(orsrcs.size() + " old resources.");
-        }
 
-        Application napp = createApplication(nvdir);
+        Application napp = new Application(nvdir);
+        napp.init();
         ArrayList nrsrcs = new ArrayList();
         nrsrcs.addAll(napp.getCodeResources());
         nrsrcs.addAll(napp.getResources());
-        if (verbose) {
-            System.out.println(nrsrcs.size() + " new resources.");
-        }
 
         File patch = new File(nvdir, "patch" + overs + ".dat");
         JarOutputStream jout = null;
@@ -95,13 +94,13 @@ public class Differ
                 if (orsrc != null && rsrc.getPath().endsWith(".jar")) {
                     if (verbose) {
                         System.out.println(
-                            "Generating jardiff: " + rsrc.getPath());
+                            "JarDiff: " + rsrc.getPath());
                     }
                     jout.putNextEntry(new ZipEntry(rsrc.getPath() + PATCH));
                     jarDiff(orsrc.getLocal(), rsrc.getLocal(), jout);
                 } else {
                     if (verbose) {
-                        System.out.println("New entry: " + rsrc.getPath());
+                        System.out.println("Addition: " + rsrc.getPath());
                     }
                     jout.putNextEntry(new ZipEntry(rsrc.getPath() + CREATE));
                     pipe(rsrc.getLocal(), jout);
@@ -114,46 +113,18 @@ public class Differ
                 // simply add an entry with the resource name and the
                 // deletion suffix
                 if (verbose) {
-                    System.out.println("Removing entry: " + rsrc.getPath());
+                    System.out.println("Removal: " + rsrc.getPath());
                 }
                 jout.putNextEntry(new ZipEntry(rsrc.getPath() + DELETE));
             }
 
             StreamUtil.close(jout);
+            System.out.println("Created patch file: " + patch);
 
-        } catch (Exception ioe) {
-            System.err.println("Failure creating patch file [patch=" + patch +
-                               ", error=" + ioe + "].");
+        } catch (IOException ioe) {
             StreamUtil.close(jout);
             patch.delete();
-        }
-    }
-
-    protected Application createApplication (File dir)
-    {
-        Application app = new Application(dir);
-        try {
-            app.init();
-        } catch (IOException ioe) {
-            System.err.println("Invalid app directory '" + dir + "': " + ioe);
-            System.exit(-1);
-        }
-        return app;
-    }
-
-    protected void pipe (File file, JarOutputStream jout)
-        throws IOException
-    {
-        FileInputStream fin = null;
-        try {
-            fin = new FileInputStream(file);
-            byte[] buffer = new byte[4096];
-            int read;
-            while ((read = fin.read(buffer)) >= 0) {
-                jout.write(buffer, 0, read);
-            }
-        } finally {
-            StreamUtil.close(fin);
+            throw ioe;
         }
     }
 
@@ -165,11 +136,34 @@ public class Differ
 
     public static void main (String[] args)
     {
-        if (args.length != 2) {
-            System.err.println("Usage: Differ new_vers_dir old_vers_dir");
+        if (args.length < 2) {
+            System.err.println(
+                "Usage: Differ [-verbose] new_vers_dir old_vers_dir");
             System.exit(-1);
         }
         Differ differ = new Differ();
-        differ.createDiff(new File(args[0]), new File(args[1]), false);
+        boolean verbose = false;
+        int aidx = 0;
+        if (args[0].equals("-verbose")) {
+            verbose = true;
+            aidx++;
+        }
+        try {
+            differ.createDiff(new File(args[aidx++]),
+                              new File(args[aidx++]), verbose);
+        } catch (IOException ioe) {
+            System.err.println("Error: " + ioe.getMessage());
+        }
+    }
+
+    protected static void pipe (File file, JarOutputStream jout)
+        throws IOException
+    {
+        FileInputStream fin = null;
+        try {
+            CopyUtils.copy(fin = new FileInputStream(file), jout);
+        } finally {
+            StreamUtil.close(fin);
+        }
     }
 }

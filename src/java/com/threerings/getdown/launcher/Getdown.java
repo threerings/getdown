@@ -1,5 +1,5 @@
 //
-// $Id: Getdown.java,v 1.8 2004/07/13 10:39:50 mdb Exp $
+// $Id: Getdown.java,v 1.9 2004/07/13 17:45:40 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
-import org.apache.commons.io.TeeOutputStream;
+// import org.apache.commons.io.TeeOutputStream;
 
 import com.samskivert.swing.util.SwingUtil;
 import com.samskivert.util.StringUtil;
@@ -28,6 +28,7 @@ import com.samskivert.util.StringUtil;
 import com.threerings.getdown.Log;
 import com.threerings.getdown.data.Application;
 import com.threerings.getdown.data.Resource;
+import com.threerings.getdown.tools.Patcher;
 
 /**
  * Manages the main control for the Getdown application updater and
@@ -104,7 +105,9 @@ public class Getdown
             download(list);
 
             // and apply it...
-            // TODO
+            Patcher patcher = new Patcher();
+            patcher.patch(patch.getLocal().getParentFile(), patch.getLocal(),
+                          null);
         }
         // if the patch resource is null, that means something was booched
         // in the application, so we skip the patching process but update

@@ -1,5 +1,5 @@
 //
-// $Id: Application.java,v 1.9 2004/07/13 02:42:52 mdb Exp $
+// $Id: Application.java,v 1.10 2004/07/13 17:45:40 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -29,7 +29,7 @@ import com.samskivert.text.MessageUtil;
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
 
-import org.apache.commons.io.StreamUtils;
+import org.apache.commons.io.CopyUtils;
 
 import com.threerings.getdown.Log;
 import com.threerings.getdown.util.ConfigUtil;
@@ -562,7 +562,7 @@ public class Application
         try {
             fin = targetURL.openStream();
             fout = new FileOutputStream(target);
-            StreamUtils.pipe(fin, fout);
+            CopyUtils.copy(fin, fout);
         } finally {
             StreamUtil.close(fin);
             StreamUtil.close(fout);
