@@ -3,15 +3,13 @@
 
   <!-- various basic settings -->
   <property name="app.name" value="getdown"/>
-  <property name="src.dir"      value="src/java"/>
-  <property name="deploy.dir"   value="dist"/>
-  <property name="dist.jar"     value="${app.name}.jar"/>
-  <property name="app.dop"      value="etc/${app.name}.dop"/>
+  <property name="src.dir" value="src/java"/>
+  <property name="deploy.dir" value="dist"/>
+  <property name="dist.jar" value="${app.name}.jar"/>
+  <property name="app.dop" value="etc/${app.name}.dop"/>
 
-  <!-- we want to access the environment -->
-  <property environment="env"/>
-  <property name="java.libraries" value="${env.JAVA_LIBS}"/>
-  <property name="dasho-tool.jar" value="${java.libraries}/DashoPro.jar"/>
+  <!-- we get DashO from a magical place -->
+  <property name="dasho-tool.jar" value="../../lib/DashoPro.jar"/>
 
   <!-- used when generating javadocs -->
   <property name="javadoc.dir"  value="${deploy.dir}/docs"/>
@@ -23,7 +21,6 @@
 
   <!-- declare our classpath -->
   <path id="clazzpath">
-    <fileset dir="${java.libraries}" includesfile="lib/LIBS"/>
     <fileset dir="lib" includes="**/*.jar"/>
     <pathelement location="${deploy.dir}/classes"/>
   </path>
