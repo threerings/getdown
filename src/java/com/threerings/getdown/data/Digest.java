@@ -1,5 +1,5 @@
 //
-// $Id: Digest.java,v 1.6 2004/07/30 02:23:52 mdb Exp $
+// $Id: Digest.java,v 1.7 2004/07/31 22:05:06 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
+import com.samskivert.io.NestableIOException;
 import com.samskivert.text.MessageUtil;
 import com.samskivert.util.StringUtil;
 
@@ -114,9 +115,14 @@ public class Digest
         for (Iterator iter = resources.iterator(); iter.hasNext(); ) {
             Resource rsrc = (Resource)iter.next();
             String path = rsrc.getPath();
-            String digest = rsrc.computeDigest(md, null);
-            note(data, path, digest);
-            pout.println(path + " = " + digest);
+            try {
+                String digest = rsrc.computeDigest(md, null);
+                note(data, path, digest);
+                pout.println(path + " = " + digest);
+            } catch (IOException ioe) {
+                throw new NestableIOException(
+                    "Error computing digest for: " + rsrc, ioe);
+            }
         }
 
         // finally compute and append the digest for the file contents
