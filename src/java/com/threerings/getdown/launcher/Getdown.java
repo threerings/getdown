@@ -1,5 +1,5 @@
 //
-// $Id: Getdown.java,v 1.24 2004/07/30 02:23:52 mdb Exp $
+// $Id: Getdown.java,v 1.25 2004/07/30 17:37:48 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -12,10 +12,13 @@ import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 
 import java.net.URL;
@@ -240,6 +243,21 @@ public class Getdown extends Thread
         try {
             Process proc = _app.createProcess();
 
+            // on Windows 98 we need to stick around and read the output
+            // of stdout lest the process fills its output buffer and
+            // chokes, yay!
+            if (System.getProperty("os.name").indexOf("Windows 98") != -1) {
+                Log.info("Sticking around to read stderr on Win98...");
+                InputStream stderr = proc.getErrorStream();
+                BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(stderr));
+                String line = null;
+                while ((line = reader.readLine()) != null) {
+                    // nothing doing!
+                }
+                Log.info("Process exited: " + proc.waitFor());
+            }
+
             // if we have a UI open and we haven't been around for at
             // least 5 seconds, don't stick a fork in ourselves straight
             // away but give our lovely user a chance to see what we're
@@ -252,8 +270,9 @@ public class Getdown extends Thread
                 }
             }
             System.exit(0);
-        } catch (IOException ioe) {
-            Log.logStackTrace(ioe);
+
+        } catch (Exception e) {
+            Log.logStackTrace(e);
         }
     }
 
