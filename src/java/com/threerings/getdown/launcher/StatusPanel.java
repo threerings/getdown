@@ -1,5 +1,5 @@
 //
-// $Id: StatusPanel.java,v 1.8 2004/07/26 18:30:16 mdb Exp $
+// $Id: StatusPanel.java,v 1.9 2004/07/26 18:31:39 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -81,6 +81,8 @@ public class StatusPanel extends JComponent
         String label = MessageFormat.format(msg, new Object[] {
             new Integer(percent), remstr });
         _newplab = new Label(label, _ifc.progressText, _font);
+        _newplab.setAlternateColor(_shadow);
+        _newplab.setStyle(Label.SHADOW);
         repaint();
     }
 
