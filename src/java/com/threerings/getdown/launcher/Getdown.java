@@ -1,5 +1,5 @@
 //
-// $Id: Getdown.java,v 1.7 2004/07/13 02:42:52 mdb Exp $
+// $Id: Getdown.java,v 1.8 2004/07/13 10:39:50 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -130,7 +130,6 @@ public class Getdown
         // create a downloader to download our resources
         Downloader.Observer obs = new Downloader.Observer() {
             public void resolvingDownloads () {
-                Log.info("Resolving downloads...");
                 _status.setStatus(_msgs.getString("m.resolving"));
             }
 

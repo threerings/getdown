@@ -1,5 +1,5 @@
 //
-// $Id: Downloader.java,v 1.2 2004/07/07 08:42:40 mdb Exp $
+// $Id: Downloader.java,v 1.3 2004/07/13 10:39:50 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -95,6 +95,8 @@ public class Downloader extends Thread
             for (Iterator iter = _resources.iterator(); iter.hasNext(); ) {
                 discoverSize((Resource)iter.next());
             }
+
+            Log.info("Downloading " + _totalSize + " bytes...");
 
             // make a note of the time at which we started the download
             _start = System.currentTimeMillis();
