@@ -1,5 +1,5 @@
 //
-// $Id: Resource.java,v 1.6 2004/07/07 16:17:01 mdb Exp $
+// $Id: Resource.java,v 1.7 2004/07/13 10:39:37 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -128,6 +128,26 @@ public class Resource
                 Log.warning("Failed to erase resource '" + _local + "'.");
             }
         }
+    }
+
+    /**
+     * If our path is equal, we are equal.
+     */
+    public boolean equals (Object other)
+    {
+        if (other instanceof Resource) {
+            return _path.equals(((Resource)other)._path);
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * We hash on our path.
+     */
+    public int hashCode ()
+    {
+        return _path.hashCode();
     }
 
     /**
