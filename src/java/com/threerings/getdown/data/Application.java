@@ -1,5 +1,5 @@
 //
-// $Id: Application.java,v 1.25 2004/07/30 21:45:28 mdb Exp $
+// $Id: Application.java,v 1.26 2004/08/02 23:19:48 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -510,13 +510,19 @@ public class Application
         Resource crsrc = getConfigResource();
         if (!_digest.validateResource(crsrc, null)) {
             status.updateStatus("m.updating_metadata");
-            // attempt to redownload the file; again we pass errors up to
-            // our caller because we have no recourse to recovery
+            // attempt to redownload both of our metadata files; again we
+            // pass errors up to our caller because there's nothing we can
+            // do to automatically recover
             downloadControlFile(CONFIG_FILE);
+            downloadControlFile(Digest.DIGEST_FILE);
+            _digest = new Digest(_appdir);
             // if the new copy validates, reinitialize ourselves;
             // otherwise report baffling hoseage
             if (_digest.validateResource(crsrc, null)) {
                 init(true);
+            } else {
+                Log.warning(CONFIG_FILE + " failed to validate even after " +
+                            "redownloading. Blindly forging onward.");
             }
         }
 
