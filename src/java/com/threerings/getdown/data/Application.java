@@ -1,5 +1,5 @@
 //
-// $Id: Application.java,v 1.29 2004/08/09 22:01:56 mdb Exp $
+// $Id: Application.java,v 1.30 2004/08/10 07:26:19 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -272,6 +272,16 @@ public class Application
             for (int ii = 0; ii < appargs.length; ii++) {
                 _appargs.add(appargs[ii]);
             }
+        }
+
+        // TODO: make this less of a hack
+        String username = System.getProperty("username");
+        if (!StringUtil.blank(username)) {
+            _jvmargs.add("-Dusername=" + username);
+        }
+        String password = System.getProperty("password");
+        if (!StringUtil.blank(password)) {
+            _jvmargs.add("-Dpassword=" + password);
         }
 
         // look for custom arguments
