@@ -1,5 +1,5 @@
 //
-// $Id: Application.java,v 1.10 2004/07/13 17:45:40 mdb Exp $
+// $Id: Application.java,v 1.11 2004/07/14 12:11:46 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -16,7 +16,6 @@ import java.io.InputStreamReader;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.MessageDigest;
 
 import java.util.ArrayList;
 import java.util.HashMap;
