@@ -1,5 +1,5 @@
 //
-// $Id: Application.java,v 1.13 2004/07/19 11:59:06 mdb Exp $
+// $Id: Application.java,v 1.14 2004/07/20 07:35:56 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -426,6 +426,7 @@ public class Application
                 _digest = new Digest(_appdir);
                 if (!olddig.equals(_digest.getMetaDigest())) {
                     Log.info("Unversioned digest changed. Revalidating...");
+                    status.updateStatus("m.validating");
                     clearValidationMarkers();
                 }
             } catch (IOException ioe) {
