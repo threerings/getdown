@@ -1,5 +1,5 @@
 //
-// $Id: Getdown.java,v 1.1 2004/07/02 11:01:21 mdb Exp $
+// $Id: Getdown.java,v 1.2 2004/07/02 15:22:49 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -23,6 +23,13 @@ public class Getdown
     {
         try {
             _app.init();
+
+            if (_app.verifyMetadata()) {
+                Log.info("Application requires update.");
+            } else {
+                Log.info("Metadata verified.");
+            }
+
         } catch (Exception e) {
             Log.logStackTrace(e);
         }

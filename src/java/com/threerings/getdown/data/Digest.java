@@ -1,5 +1,5 @@
 //
-// $Id: Digest.java,v 1.1 2004/07/02 11:01:21 mdb Exp $
+// $Id: Digest.java,v 1.2 2004/07/02 15:22:49 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -19,6 +19,7 @@ import java.util.List;
 import com.samskivert.text.MessageUtil;
 import com.samskivert.util.StringUtil;
 
+import com.threerings.getdown.Log;
 import com.threerings.getdown.util.ConfigUtil;
 
 /**
@@ -62,13 +63,39 @@ public class Digest
         }
     }
 
+//     /**
+//      * Returns the stored digest value for the file with the supplied
+//      * path, or null if no digest exists for a file with that path.
+//      */
+//     public String getDigest (String path)
+//     {
+//         return (String)_digests.get(path);
+//     }
+
     /**
-     * Returns the stored digest value for the file with the supplied
-     * path, or null if no digest exists for a file with that path.
+     * Computes the MD5 hash of the specified resource and compares it
+     * with the value parsed from the digest file. Logs a message if the
+     * resource fails validation.
+     *
+     * @return true if the resource is valid, false if it failed the
+     * digest check or if an I/O error was encountered during the
+     * validation process.
      */
-    public String getDigest (String path)
+    public boolean validateResource (Resource resource)
     {
-        return (String)_digests.get(path);
+        try {
+            String cmd5 = resource.computeDigest(getMessageDigest());
+            String emd5 = (String)_digests.get(resource.getPath());
+            if (cmd5.equals(emd5)) {
+                return true;
+            }
+            Log.info("Resource failed digest check [rsrc=" + resource +
+                     ", computed=" + cmd5 + ", expected=" + emd5 + "].");
+        } catch (IOException ioe) {
+            Log.info("Resource failed digest check [rsrc=" + resource +
+                     ", error=" + ioe + "].");
+        }
+        return false;
     }
 
     /**

@@ -1,5 +1,5 @@
 //
-// $Id: ConfigUtil.java,v 1.1 2004/07/02 11:01:21 mdb Exp $
+// $Id: ConfigUtil.java,v 1.2 2004/07/02 15:22:49 mdb Exp $
 
 package com.threerings.getdown.util;
 
@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
+import com.samskivert.io.StreamUtil;
 import com.samskivert.util.StringUtil;
 
 /**
@@ -36,34 +37,41 @@ public class ConfigUtil
         ArrayList pairs = new ArrayList();
 
         // parse our configuration file
-        BufferedReader bin = new BufferedReader(
-            new InputStreamReader(new FileInputStream(config), "UTF-8"));
-        String line = null;
-        while ((line = bin.readLine()) != null) {
-            // nix comments
-            int cidx = line.indexOf("#");
-            if (cidx != -1) {
-                line = line.substring(0, cidx);
+        FileInputStream fin = null;
+        try {
+            fin = new FileInputStream(config);
+            BufferedReader bin =
+                new BufferedReader(new InputStreamReader(fin, "UTF-8"));
+            String line = null;
+            while ((line = bin.readLine()) != null) {
+                // nix comments
+                int cidx = line.indexOf("#");
+                if (cidx != -1) {
+                    line = line.substring(0, cidx);
+                }
+
+                // trim whitespace and skip blank lines
+                line = line.trim();
+                if (StringUtil.blank(line)) {
+                    continue;
+                }
+
+                // parse our key/value pair
+                String[] pair = new String[2];
+                int eidx = line.indexOf("=");
+                if (eidx != -1) {
+                    pair[0] = line.substring(0, eidx).trim();
+                    pair[1] = line.substring(eidx+1).trim();
+                } else {
+                    pair[0] = line;
+                    pair[1] = "";
+                }
+
+                pairs.add(pair);
             }
 
-            // trim whitespace and skip blank lines
-            line = line.trim();
-            if (StringUtil.blank(line)) {
-                continue;
-            }
-
-            // parse our key/value pair
-            String[] pair = new String[2];
-            int eidx = line.indexOf("=");
-            if (eidx != -1) {
-                pair[0] = line.substring(0, eidx).trim();
-                pair[1] = line.substring(eidx+1).trim();
-            } else {
-                pair[0] = line;
-                pair[1] = "";
-            }
-
-            pairs.add(pair);
+        } finally {
+            StreamUtil.close(fin);
         }
 
         return pairs;

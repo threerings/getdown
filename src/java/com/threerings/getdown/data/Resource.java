@@ -1,5 +1,5 @@
 //
-// $Id: Resource.java,v 1.1 2004/07/02 11:01:21 mdb Exp $
+// $Id: Resource.java,v 1.2 2004/07/02 15:22:49 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -20,15 +20,13 @@ import com.samskivert.util.StringUtil;
 public class Resource
 {
     /**
-     * Creates a resource with the supplied application base URL and
-     * resource path.
+     * Creates a resource with the supplied remote URL and local path.
      */
-    public Resource (URL appbase, File appdir, String path)
-        throws MalformedURLException
+    public Resource (String path, URL remote, File local)
     {
         _path = path;
-        _remote = new URL(appbase, path);
-        _local = new File(appdir, path);
+        _remote = remote;
+        _local = local;
     }
 
     /**
@@ -64,18 +62,6 @@ public class Resource
         // return _path;
         // return _netloc.toString();
         return _local.getPath();
-    }
-
-    public static void main (String[] args)
-    {
-        try {
-            Resource rsrc = new Resource(
-                new URL("file:/"), new File("."), args[0]);
-            System.out.println("MD5: " + rsrc.computeDigest(
-                                   MessageDigest.getInstance("MD5")));
-        } catch (Exception e) {
-            e.printStackTrace(System.err);
-        }
     }
 
     protected String _path;
