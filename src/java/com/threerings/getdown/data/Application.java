@@ -1,5 +1,5 @@
 //
-// $Id: Application.java,v 1.22 2004/07/29 21:23:04 mdb Exp $
+// $Id: Application.java,v 1.23 2004/07/30 00:27:39 mdb Exp $
 
 package com.threerings.getdown.data;
 
@@ -379,8 +379,20 @@ public class Application
         int idx = 0;
 
         // reconstruct the path to the JVM
-        args[idx++] = System.getProperty("java.home") +
-            File.separator + "bin" + File.separator + "java";
+        String apbase = System.getProperty("java.home") +
+            File.separator + "bin" + File.separator;
+        String apath = apbase + "java";
+        if (!new File(apath).exists()) {
+            apath = apbase + "javaw.exe";
+            if (!new File(apath).exists()) {
+                apath = apbase + "java.exe";
+                if (!new File(apath).exists()) {
+                    Log.warning("Unable to find java! [jhome=" + apbase + "].");
+                    apath = apbase + "java";
+                }
+            }
+        }
+        args[idx++] = apath;
 
         // add the classpath arguments
         args[idx++] = "-classpath";
