@@ -9,7 +9,7 @@
   <property name="app.dop" value="etc/${app.name}.dop"/>
 
   <!-- we get DashO from a magical place -->
-  <property name="dasho-tool.jar" value="../../lib/DashoPro.jar"/>
+  <property name="dasho-tool.jar" value="/export/threerings/lib/DashoPro.jar"/>
 
   <!-- used when generating javadocs -->
   <property name="javadoc.dir"  value="${deploy.dir}/docs"/>
