@@ -1,5 +1,5 @@
 //
-// $Id: Getdown.java,v 1.13 2004/07/19 12:39:08 mdb Exp $
+// $Id: Getdown.java,v 1.14 2004/07/20 01:24:54 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -56,7 +56,6 @@ public class Getdown extends Thread
                 _ifc = _app.init();
             } catch (IOException ioe) {
                 Log.warning("Failed to parse 'getdown.txt': " + ioe);
-                updateStatus("m.init_failed");
                 _app.attemptRecovery();
                 _ifc = _app.init();
             }
@@ -333,7 +332,7 @@ public class Getdown extends Thread
     protected static final int MAX_LOOPS = 5;
 
     protected static final Rectangle DEFAULT_PPOS =
-        new Rectangle(0, 0, 300, 15);
+        new Rectangle(10, 10, 300, 15);
     protected static final Rectangle DEFAULT_STATUS =
-        new Rectangle(0, 20, 300, 200);
+        new Rectangle(10, 30, 300, 200);
 }
