@@ -1,5 +1,5 @@
 //
-// $Id: Patcher.java,v 1.3 2004/07/28 07:38:25 mdb Exp $
+// $Id: Patcher.java,v 1.4 2004/07/28 07:45:44 mdb Exp $
 
 package com.threerings.getdown.tools;
 
@@ -78,6 +78,7 @@ public class Patcher
             // note that we've completed this entry
             _complete += elength;
         }
+        file.close();
     }
 
     protected String strip (String path, String suffix)

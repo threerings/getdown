@@ -1,5 +1,5 @@
 //
-// $Id: Getdown.java,v 1.19 2004/07/26 23:27:46 mdb Exp $
+// $Id: Getdown.java,v 1.20 2004/07/28 07:45:44 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -161,6 +161,7 @@ public class Getdown extends Thread
             // lastly clean up the patch file
             if (!patch.getLocal().delete()) {
                 Log.warning("Failed to delete '" + patch + "'.");
+                patch.getLocal().deleteOnExit();
             }
         }
         // if the patch resource is null, that means something was booched
