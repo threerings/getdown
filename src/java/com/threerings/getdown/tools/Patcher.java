@@ -1,5 +1,5 @@
 //
-// $Id: Patcher.java,v 1.4 2004/07/28 07:45:44 mdb Exp $
+// $Id: Patcher.java,v 1.5 2004/08/03 22:36:48 mdb Exp $
 
 package com.threerings.getdown.tools;
 
@@ -18,6 +18,7 @@ import com.sun.javaws.jardiff.JarDiffPatcher;
 import com.samskivert.io.StreamUtil;
 import org.apache.commons.io.CopyUtils;
 
+import com.threerings.getdown.Log;
 import com.threerings.getdown.util.ProgressObserver;
 
 /**
@@ -91,6 +92,14 @@ public class Patcher
         // create our copy buffer if necessary
         if (_buffer == null) {
             _buffer = new byte[COPY_BUFFER_SIZE];
+        }
+
+        // make sure the file's parent directory exists
+        File pdir = target.getParentFile();
+        if (!pdir.exists()) {
+            if (!pdir.mkdirs()) {
+                Log.warning("Failed to create parent for '" + target + "'.");
+            }
         }
 
         InputStream in = null;
