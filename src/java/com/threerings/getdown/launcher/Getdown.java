@@ -1,5 +1,5 @@
 //
-// $Id: Getdown.java,v 1.29 2004/07/30 22:37:15 mdb Exp $
+// $Id: Getdown.java,v 1.30 2004/07/31 03:05:12 mdb Exp $
 
 package com.threerings.getdown.launcher;
 
@@ -463,6 +463,12 @@ public class Getdown extends Thread
             // of stdout lest the process fills its output buffer and
             // chokes, yay!
             if (System.getProperty("os.name").indexOf("Windows 98") != -1) {
+                // close our window if it's around
+                if (_frame != null) {
+                    _frame.dispose();
+                    _status = null;
+                    _frame = null;
+                }
                 Log.info("Sticking around to read stderr on Win98...");
                 InputStream stderr = proc.getErrorStream();
                 BufferedReader reader = new BufferedReader(
