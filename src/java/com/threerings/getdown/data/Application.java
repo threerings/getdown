@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import com.samskivert.io.NestableIOException;
 import com.samskivert.io.StreamUtil;
@@ -48,6 +49,10 @@ public class Application
 
     /** The name of our target version file. */
     public static final String VERSION_FILE = "version.txt";
+
+    /** System properties that are prefixed with this string will be
+     * passed through to our application (minus this prefix). */
+    public static final String PROP_PASSTHROUGH_PREFIX = "app.";
 
     /** Used to communicate information about the UI displayed when
      * updating the application. */
@@ -383,73 +388,66 @@ public class Application
             cpbuf.append(rsrc.getLocal().getAbsolutePath());
         }
 
-        int exargs = 0;
+        ArrayList args = new ArrayList();
+
+        // reconstruct the path to the JVM
+        args.add(LaunchUtil.getJVMPath());
+
+        // add the classpath arguments
+        args.add("-classpath");
+        args.add(cpbuf.toString());
 
         // we love our Mac users, so we do nice things to preserve our
         // application identity
         if (RunAnywhere.isMacOS()) {
-            exargs += 2;
+            args.add("-Xdock:icon=" + _appdir.getAbsolutePath() +
+                "/../desktop.icns");
+            args.add("-Xdock:name=" + _name);
         }
 
         // pass along our proxy settings
-        String proxyHost, proxyPort = null;
+        String proxyHost;
         if ((proxyHost = System.getProperty("http.proxyHost")) != null) {
-            exargs += 2;
-            proxyPort = System.getProperty("http.proxyPort");
+            args.add("-Dhttp.proxyHost=" + proxyHost);
+            args.add("-Dhttp.proxyPort=" + System.getProperty("http.proxyPort"));
         }
 
-        // we'll need the JVM, classpath, JVM args, class name and app args
-        String[] args = new String[
-            4 + _jvmargs.size() + exargs + _appargs.size()];
-        int idx = 0;
-
-        // reconstruct the path to the JVM
-        args[idx++] = LaunchUtil.getJVMPath();
-
-        // add the classpath arguments
-        args[idx++] = "-classpath";
-        args[idx++] = cpbuf.toString();
-
-        // do our Mac identity business
-        if (RunAnywhere.isMacOS()) {
-            args[idx++] = "-Xdock:icon=" + _appdir.getAbsolutePath() +
-                "/../desktop.icns";
-            args[idx++] = "-Xdock:name=" + _name;
-        }
-
-        // if we have a proxy configuration, add those
-        if (proxyHost != null) {
-            args[idx++] = "-Dhttp.proxyHost=" + proxyHost;
-            args[idx++] = "-Dhttp.proxyPort=" + proxyPort;
+        // pass along any pass-through arguments
+        for (Iterator itr = System.getProperties().entrySet().iterator();
+                itr.hasNext(); ) {
+            Map.Entry entry = (Map.Entry) itr.next();
+            String key = (String) entry.getKey();
+            if (key.startsWith(PROP_PASSTHROUGH_PREFIX)) {
+                key = key.substring(PROP_PASSTHROUGH_PREFIX.length());
+                args.add("-D" + key + "=" + entry.getValue());
+            }
         }
 
         // add the JVM arguments
         for (Iterator iter = _jvmargs.iterator(); iter.hasNext(); ) {
-            args[idx++] = processArg((String)iter.next());
+            args.add(processArg((String)iter.next()));
         }
 
         // add the application class name
-        args[idx++] = _class;
+        args.add(_class);
 
         // finally add the application arguments
         for (Iterator iter = _appargs.iterator(); iter.hasNext(); ) {
-            args[idx++] = processArg((String)iter.next());
+            args.add(processArg((String)iter.next()));
         }
 
-        Log.info("Running " + StringUtil.join(args, "\n  "));
-        return Runtime.getRuntime().exec(args, null);
+        String[] sargs = new String[args.size()];
+        args.toArray(sargs);
+
+        Log.info("Running " + StringUtil.join(sargs, "\n  "));
+        return Runtime.getRuntime().exec(sargs, null);
     }
 
     /** Replaces the application directory and version in any argument. */
     protected String processArg (String arg)
     {
-        if (arg.indexOf("%APPDIR%") != -1) {
-            arg = StringUtil.replace(
-                arg, "%APPDIR%", _appdir.getAbsolutePath());
-        }
-        if (arg.indexOf("%VERSION%") != -1) {
-            arg = StringUtil.replace(arg, "%VERSION%", "" + _version);
-        }
+        arg = StringUtil.replace(arg, "%APPDIR%", _appdir.getAbsolutePath());
+        arg = StringUtil.replace(arg, "%VERSION%", String.valueOf(_version));
         return arg;
     }
 
