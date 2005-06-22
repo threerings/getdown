@@ -73,13 +73,13 @@ public class Differ
                                   ", overs=" + overs + "].");
         }
 
-        Application oapp = new Application(ovdir);
+        Application oapp = new Application(ovdir, null);
         oapp.init(false);
         ArrayList orsrcs = new ArrayList();
         orsrcs.addAll(oapp.getCodeResources());
         orsrcs.addAll(oapp.getResources());
 
-        Application napp = new Application(nvdir);
+        Application napp = new Application(nvdir, null);
         napp.init(false);
         ArrayList nrsrcs = new ArrayList();
         nrsrcs.addAll(napp.getCodeResources());

@@ -1,5 +1,5 @@
 //
-// $Id: DigesterTask.java,v 1.4 2004/08/10 07:23:12 mdb Exp $
+// $Id$
 
 package com.threerings.getdown.tools;
 
@@ -57,7 +57,7 @@ public class DigesterTask extends Task
         System.out.println("Generating digest file '" + target + "'...");
 
         // create our application and instruct it to parse its business
-        Application app = new Application(appdir);
+        Application app = new Application(appdir, null);
         app.init(false);
 
         ArrayList rsrcs = new ArrayList();

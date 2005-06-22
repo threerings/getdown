@@ -95,10 +95,17 @@ public class Application
      * Creates an application instance which records the location of the
      * <code>getdown.txt</code> configuration file from the supplied
      * application directory.
+     *
+     * @param appid usually null but a string identifier if a secondary
+     * application is desired to be launched. That application will use *
+     * <code>appid.class</code> and <code>appid.apparg</code> to configure
+     * itself but all other parameters will be the same as the primary
+     * application.
      */
-    public Application (File appdir)
+    public Application (File appdir, String appid)
     {
         _appdir = appdir;
+        _appid = appid;
         _config = getLocalPath(CONFIG_FILE);
     }
 
@@ -226,8 +233,10 @@ public class Application
             throw new NestableIOException(err, mue);
         }
 
+        String prefix = (_appid == null) ? "" : (_appid + ".");
+
         // determine our application class name
-        _class = (String)cdata.get("class");
+        _class = (String)cdata.get(prefix + "class");
         if (_class == null) {
             throw new IOException("m.missing_class");
         }
@@ -272,7 +281,7 @@ public class Application
         }
 
         // transfer our application arguments
-        String[] appargs = ConfigUtil.getMultiValue(cdata, "apparg");
+        String[] appargs = ConfigUtil.getMultiValue(cdata, prefix + "apparg");
         if (appargs != null) {
             for (int ii = 0; ii < appargs.length; ii++) {
                 _appargs.add(appargs[ii]);
@@ -742,6 +751,7 @@ public class Application
     }
 
     protected File _appdir;
+    protected String _appid;
     protected File _config;
     protected Digest _digest;
 

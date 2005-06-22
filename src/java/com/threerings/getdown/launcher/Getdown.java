@@ -56,7 +56,7 @@ import com.threerings.getdown.util.ProgressObserver;
 public class Getdown extends Thread
     implements Application.StatusDisplay
 {
-    public Getdown (File appDir)
+    public Getdown (File appDir, String appId)
     {
         super("Getdown");
         try {
@@ -75,7 +75,7 @@ public class Getdown extends Thread
             updateStatus(errmsg);
             _dead = true;
         }
-        _app = new Application(appDir);
+        _app = new Application(appDir, appId);
         _startup = System.currentTimeMillis();
     }
 
@@ -576,14 +576,22 @@ public class Getdown extends Thread
     public static void main (String[] args)
     {
         // maybe they specified the appdir in a system property
+        int aidx = 0;
         String adarg = System.getProperty("appdir");
         // if not, check for a command line argument
         if (StringUtil.blank(adarg)) {
-            if (args.length != 1) {
-                System.err.println("Usage: java -jar getdown.jar app_dir");
+            if (args.length < 1) {
+                System.err.println(
+                    "Usage: java -jar getdown.jar app_dir [app_id]");
                 System.exit(-1);
             }
-            adarg = args[0];
+            adarg = args[aidx++];
+        }
+
+        // look for a specific app identifier
+        String appId = null;
+        if (args.length > aidx) {
+            appId = args[aidx++];
         }
 
         // ensure a valid directory was supplied
@@ -620,7 +628,7 @@ public class Getdown extends Thread
         Log.info("---------------------------------------------");
 
         try {
-            Getdown app = new Getdown(appDir);
+            Getdown app = new Getdown(appDir, appId);
             app.start();
         } catch (Exception e) {
             Log.logStackTrace(e);
