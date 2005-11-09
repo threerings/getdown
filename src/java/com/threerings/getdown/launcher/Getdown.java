@@ -132,12 +132,12 @@ public class Getdown extends Thread
                  ", port=" + port + "].");
 
         // if we're provided with valid values, create a proxy.txt file
-        if (!StringUtil.blank(host)) {
+        if (!StringUtil.isBlank(host)) {
             File pfile = _app.getLocalPath("proxy.txt");
             try {
                 PrintStream pout = new PrintStream(new FileOutputStream(pfile));
                 pout.println("host = " + host);
-                if (!StringUtil.blank(port)) {
+                if (!StringUtil.isBlank(port)) {
                     pout.println("port = " + port);
                 }
                 pout.close();
@@ -274,9 +274,9 @@ public class Getdown extends Thread
      */
     protected void setProxyProperties (String host, String port)
     {
-        if (!StringUtil.blank(host)) {
+        if (!StringUtil.isBlank(host)) {
             System.setProperty("http.proxyHost", host);
-            if (!StringUtil.blank(port)) {
+            if (!StringUtil.isBlank(port)) {
                 System.setProperty("http.proxyPort", port);
             }
             Log.info("Using proxy [host=" + host + ", port=" + port + "].");
@@ -515,7 +515,7 @@ public class Getdown extends Thread
 
         // if we have a background image, load it up
         BufferedImage bgimg = null;
-        if (!StringUtil.blank(_ifc.background)) {
+        if (!StringUtil.isBlank(_ifc.background)) {
             File bgpath = _app.getLocalPath(_ifc.background);
             try {
                 bgimg = ImageIO.read(bgpath);
@@ -526,7 +526,7 @@ public class Getdown extends Thread
         }
 
         // create our user interface, and display it
-        String title = StringUtil.blank(_ifc.name) ? "" : _ifc.name;
+        String title = StringUtil.isBlank(_ifc.name) ? "" : _ifc.name;
         if (_frame == null) {
             _frame = new JFrame(title);
             _frame.addWindowListener(new WindowAdapter() {
@@ -579,7 +579,7 @@ public class Getdown extends Thread
         int aidx = 0;
         String adarg = System.getProperty("appdir");
         // if not, check for a command line argument
-        if (StringUtil.blank(adarg)) {
+        if (StringUtil.isBlank(adarg)) {
             if (args.length < 1) {
                 System.err.println(
                     "Usage: java -jar getdown.jar app_dir [app_id]");

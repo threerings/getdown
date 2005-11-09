@@ -1,5 +1,5 @@
 //
-// $Id: ConfigUtil.java,v 1.3 2004/07/30 02:23:52 mdb Exp $
+// $Id$
 
 package com.threerings.getdown.util;
 
@@ -56,7 +56,7 @@ public class ConfigUtil
 
                 // trim whitespace and skip blank lines
                 line = line.trim();
-                if (StringUtil.blank(line)) {
+                if (StringUtil.isBlank(line)) {
                     continue;
                 }
 

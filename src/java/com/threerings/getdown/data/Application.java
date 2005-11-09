@@ -290,11 +290,11 @@ public class Application
 
         // TODO: make this less of a hack
         String username = System.getProperty("username");
-        if (!StringUtil.blank(username)) {
+        if (!StringUtil.isBlank(username)) {
             _jvmargs.add("-Dusername=" + username);
         }
         String password = System.getProperty("password");
-        if (!StringUtil.blank(password)) {
+        if (!StringUtil.isBlank(password)) {
             _jvmargs.add("-Dpassword=" + password);
         }
 
@@ -560,7 +560,7 @@ public class Application
                 BufferedReader bin = new BufferedReader(
                     new InputStreamReader(fin));
                 String vstr = bin.readLine();
-                if (!StringUtil.blank(vstr)) {
+                if (!StringUtil.isBlank(vstr)) {
                     _targetVersion = Long.parseLong(vstr);
                 }
             } catch (Exception e) {
@@ -723,7 +723,7 @@ public class Application
     protected Rectangle parseRect (HashMap cdata, String name, Rectangle def)
     {
         String value = (String)cdata.get(name);
-        if (!StringUtil.blank(value)) {
+        if (!StringUtil.isBlank(value)) {
             int[] v = StringUtil.parseIntArray(value);
             if (v != null && v.length == 4) {
                 return new Rectangle(v[0], v[1], v[2], v[3]);
@@ -739,7 +739,7 @@ public class Application
     protected Color parseColor (HashMap cdata, String name, Color def)
     {
         String value = (String)cdata.get(name);
-        if (!StringUtil.blank(value)) {
+        if (!StringUtil.isBlank(value)) {
             try {
                 return new Color(Integer.parseInt(value, 16));
             } catch (Exception e) {
