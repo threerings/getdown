@@ -229,7 +229,7 @@ public class Application
             }
         } catch (MalformedURLException mue) {
             String err = MessageUtil.tcompose("m.invalid_appbase", _appbase);
-            throw new (IOException) IOException(err).initCause(mue);
+            throw (IOException) new IOException(err).initCause(mue);
         }
 
         String prefix = (_appid == null) ? "" : (_appid + ".");
