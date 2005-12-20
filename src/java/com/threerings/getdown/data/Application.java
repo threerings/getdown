@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.samskivert.io.NestableIOException;
 import com.samskivert.io.StreamUtil;
 import com.samskivert.text.MessageUtil;
 import com.samskivert.util.RunAnywhere;
@@ -217,7 +216,7 @@ public class Application
                 _version = Long.parseLong(vstr);
             } catch (Exception e) {
                 String err = MessageUtil.tcompose("m.invalid_version", vstr);
-                throw new NestableIOException(err, e);
+                throw (IOException) new IOException(err).initCause(e);
             }
         }
 
@@ -230,7 +229,7 @@ public class Application
             }
         } catch (MalformedURLException mue) {
             String err = MessageUtil.tcompose("m.invalid_appbase", _appbase);
-            throw new NestableIOException(err, mue);
+            throw new (IOException) IOException(err).initCause(mue);
         }
 
         String prefix = (_appid == null) ? "" : (_appid + ".");
@@ -370,7 +369,7 @@ public class Application
             _vappbase = createVAppBase(_targetVersion);
         } catch (MalformedURLException mue) {
             String err = MessageUtil.tcompose("m.invalid_appbase", _appbase);
-            throw new NestableIOException(err, mue);
+            throw (IOException) new IOException(err).initCause(mue);
         }
 
         // now re-download our control files; we download the digest first
@@ -668,7 +667,8 @@ public class Application
             Log.warning("Requested to download invalid control file " +
                         "[appbase=" + _vappbase + ", path=" + path +
                         ", error=" + e + "].");
-            throw new NestableIOException("Invalid path '" + path + "'.", e);
+            String msg = "Invalid path '" + path + "'.";
+            throw (IOException) new IOException(msg).initCause(e);
         }
 
         Log.info("Attempting to refetch '" + path + "' from '" +

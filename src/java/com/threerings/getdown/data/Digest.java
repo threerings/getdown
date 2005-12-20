@@ -1,5 +1,5 @@
 //
-// $Id: Digest.java,v 1.8 2004/08/04 18:43:27 mdb Exp $
+// $Id$
 
 package com.threerings.getdown.data;
 
@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
-import com.samskivert.io.NestableIOException;
 import com.samskivert.text.MessageUtil;
 import com.samskivert.util.StringUtil;
 
@@ -120,8 +119,8 @@ public class Digest
                 note(data, path, digest);
                 pout.println(path + " = " + digest);
             } catch (Throwable t) {
-                throw new NestableIOException(
-                    "Error computing digest for: " + rsrc, t);
+                throw (IOException) new IOException(
+                    "Error computing digest for: " + rsrc).initCause(t);
             }
         }
 
