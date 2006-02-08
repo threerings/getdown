@@ -1,4 +1,5 @@
 #!/bin/sh
 
-ROOT=`dirname $0 | sed 's:/bin::g'`
+ROOT=`dirname $0`
+ROOT=`cd $ROOT ; cd .. ; pwd`
 $ROOT/bin/runjava com.threerings.getdown.tools.Differ "$@"
