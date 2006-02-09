@@ -1,5 +1,5 @@
 //
-// $Id: LaunchUtil.java,v 1.1 2004/08/03 03:29:58 mdb Exp $
+// $Id$
 
 package com.threerings.getdown.util;
 
@@ -18,20 +18,38 @@ public class LaunchUtil
      */
     public static String getJVMPath ()
     {
+        return getJVMPath(false);
+    }
+
+    /**
+     * Reconstructs the path to the JVM used to launch this process.
+     *
+     * @param windebug if true we will use java.exe instead of javaw.exe on
+     * Windows.
+     */
+    public static String getJVMPath (boolean windebug)
+    {
         String apbase = System.getProperty("java.home") +
             File.separator + "bin" + File.separator;
         String apath = apbase + "java";
-        if (!new File(apath).exists()) {
+        if (new File(apath).exists()) {
+            return apath;
+        }
+
+        if (!windebug) {
             apath = apbase + "javaw.exe";
-            if (!new File(apath).exists()) {
-                apath = apbase + "java.exe";
-                if (!new File(apath).exists()) {
-                    Log.warning("Unable to find java! [jhome=" + apbase + "].");
-                    apath = apbase + "java";
-                }
+            if (new File(apath).exists()) {
+                return apath;
             }
         }
-        return apath;
+
+        apath = apbase + "java.exe";
+        if (new File(apath).exists()) {
+            return apath;
+        }
+
+        Log.warning("Unable to find java! [jhome=" + apbase + "].");
+        return apbase + "java";
     }
 
     /**

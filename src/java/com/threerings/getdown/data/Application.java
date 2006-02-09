@@ -311,6 +311,10 @@ public class Application
             }
         }
 
+        // look for a debug.txt file which causes us to run in java.exe on
+        // Windows so that we can obtain a thread dump of the running JVM
+        _windebug = getLocalPath("debug.txt").exists();
+
         // parse and return our application config
         UpdateInterface ui = new UpdateInterface();
         _name = ui.name = (String)cdata.get("ui.name");
@@ -399,7 +403,7 @@ public class Application
         ArrayList args = new ArrayList();
 
         // reconstruct the path to the JVM
-        args.add(LaunchUtil.getJVMPath());
+        args.add(LaunchUtil.getJVMPath(_windebug));
 
         // add the classpath arguments
         args.add("-classpath");
@@ -417,7 +421,8 @@ public class Application
         String proxyHost;
         if ((proxyHost = System.getProperty("http.proxyHost")) != null) {
             args.add("-Dhttp.proxyHost=" + proxyHost);
-            args.add("-Dhttp.proxyPort=" + System.getProperty("http.proxyPort"));
+            args.add("-Dhttp.proxyPort=" +
+                     System.getProperty("http.proxyPort"));
         }
 
         // pass along any pass-through arguments
@@ -761,6 +766,7 @@ public class Application
     protected URL _vappbase;
     protected String _class;
     protected String _name;
+    protected boolean _windebug;
 
     protected ArrayList _codes = new ArrayList();
     protected ArrayList _resources = new ArrayList();
