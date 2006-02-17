@@ -10,6 +10,7 @@ import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 
 import javax.imageio.ImageIO;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 
 import java.io.BufferedOutputStream;
@@ -531,10 +532,17 @@ public class Getdown extends Thread
             _frame = new JFrame(title);
             _frame.addWindowListener(new WindowAdapter() {
                 public void windowClosing (WindowEvent evt) {
-                    if (_dead || _frame.getState() == JFrame.ICONIFIED) {
+                    if (_dead) {
                         System.exit(0);
                     } else {
-                        _frame.setState(JFrame.ICONIFIED);
+                        if (_abort == null) {
+                            _abort = new AbortPanel(Getdown.this, _msgs);
+                        }
+                        _abort.pack();
+                        SwingUtil.centerWindow(_abort);
+                        _abort.setVisible(true);
+                        _abort.setState(JFrame.NORMAL);
+                        _abort.requestFocus();
                     }
                 }
             });
@@ -649,6 +657,7 @@ public class Getdown extends Thread
     protected ResourceBundle _msgs;
     protected JFrame _frame;
     protected StatusPanel _status;
+    protected AbortPanel _abort;
 
     protected boolean _dead;
     protected long _startup;
