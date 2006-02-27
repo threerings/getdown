@@ -514,17 +514,9 @@ public class Getdown extends Thread
             return;
         }
 
-        // if we have a background image, load it up
-        BufferedImage bgimg = null;
-        if (!StringUtil.isBlank(_ifc.background)) {
-            File bgpath = _app.getLocalPath(_ifc.background);
-            try {
-                bgimg = ImageIO.read(bgpath);
-            } catch (IOException ioe) {
-                Log.warning("Failed to read UI background [path=" + bgpath +
-                            ", error=" + ioe + "].");
-            }
-        }
+        // load up our background and progress bar images
+        BufferedImage bgimg = loadImage(_ifc.backgroundImage);
+        BufferedImage barimg = loadImage(_ifc.progressImage);
 
         // create our user interface, and display it
         String title = StringUtil.isBlank(_ifc.name) ? "" : _ifc.name;
@@ -553,7 +545,7 @@ public class Getdown extends Thread
             _frame.getContentPane().removeAll();
         }
         _frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        _status = new StatusPanel(_msgs, _ifc, bgimg);
+        _status = new StatusPanel(_msgs, _ifc, bgimg, barimg);
         _frame.getContentPane().add(_status, BorderLayout.CENTER);
         _frame.pack();
         SwingUtil.centerWindow(_frame);
@@ -578,6 +570,21 @@ public class Getdown extends Thread
                     }
                 }
             });
+        }
+    }
+
+    protected BufferedImage loadImage (String path)
+    {
+        if (StringUtil.isBlank(path)) {
+            return null;
+        }
+        File imgpath = _app.getLocalPath(path);
+        try {
+            return ImageIO.read(imgpath);
+        } catch (IOException ioe) {
+            Log.warning("Failed to load image [path=" + imgpath +
+                        ", error=" + ioe + "].");
+            return null;
         }
     }
 

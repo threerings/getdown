@@ -1,5 +1,5 @@
 //
-// $Id: StatusPanel.java,v 1.13 2004/07/28 06:01:58 mdb Exp $
+// $Id$
 
 package com.threerings.getdown.launcher;
 
@@ -32,7 +32,7 @@ import com.threerings.getdown.data.Application.UpdateInterface;
 public class StatusPanel extends JComponent
 {
     public StatusPanel (ResourceBundle msgs, UpdateInterface ifc,
-                        BufferedImage bgimg)
+                        BufferedImage bgimg, BufferedImage barimg)
     {
         _msgs = msgs;
         _ifc = ifc;
@@ -44,6 +44,7 @@ public class StatusPanel extends JComponent
         } else {
             _psize = new Dimension(bgimg.getWidth(), bgimg.getHeight());
         }
+        _barimg = barimg;
     }
 
     /**
@@ -133,10 +134,18 @@ public class StatusPanel extends JComponent
             _newplab = null;
         }
 
-        gfx.setColor(_ifc.progressBar);
-        gfx.fillRect(_ifc.progress.x, _ifc.progress.y,
-                     _progress * _ifc.progress.width / 100,
-                     _ifc.progress.height);
+        if (_barimg != null) {
+            gfx.setClip(_ifc.progress.x, _ifc.progress.y,
+                        _progress * _ifc.progress.width / 100,
+                        _ifc.progress.height);
+            gfx.drawImage(_barimg, _ifc.progress.x, _ifc.progress.y, null);
+            gfx.setClip(null);
+        } else {
+            gfx.setColor(_ifc.progressBar);
+            gfx.fillRect(_ifc.progress.x, _ifc.progress.y,
+                         _progress * _ifc.progress.width / 100,
+                         _ifc.progress.height);
+        }
 
         if (_plabel != null) {
             int xmarg = (_ifc.progress.width - _plabel.getSize().width)/2;
@@ -228,7 +237,7 @@ public class StatusPanel extends JComponent
         }
     }
 
-    protected BufferedImage _bgimg;
+    protected BufferedImage _bgimg, _barimg;
     protected Dimension _psize;
 
     protected ResourceBundle _msgs;

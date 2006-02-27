@@ -60,6 +60,12 @@ public class Application
         /** The human readable name of this application. */
         public String name;
 
+        /** The path (relative to the appdir) to the background image. */
+        public String backgroundImage;
+
+        /** The path (relative to the appdir) to the progress bar image. */
+        public String progressImage;
+
         /** The dimensions of the progress bar. */
         public Rectangle progress = new Rectangle(5, 5, 300, 15);
 
@@ -74,9 +80,6 @@ public class Application
 
         /** The color of the status text. */
         public Color statusText = Color.black;
-
-        /** The path (relative to the appdir) to the background image. */
-        public String background;
 
         /** The color of the text shadow. */
         public Color textShadow;
@@ -326,7 +329,11 @@ public class Application
         ui.status = parseRect(cdata, "ui.status", ui.status);
         ui.statusText = parseColor(cdata, "ui.status_text", ui.statusText);
         ui.textShadow = parseColor(cdata, "ui.text_shadow", ui.textShadow);
-        ui.background = (String)cdata.get("ui.background");
+        ui.backgroundImage = (String)cdata.get("ui.background_image");
+        if (ui.backgroundImage == null) { // support legacy format
+            ui.backgroundImage = (String)cdata.get("ui.background");
+        }
+        ui.progressImage = (String)cdata.get("ui.progress_image");
         return ui;
     }
 
