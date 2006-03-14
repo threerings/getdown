@@ -109,13 +109,15 @@ public class Getdown extends Thread
             Log.logStackTrace(e);
             String msg = e.getMessage();
             if (msg == null) {
-                msg = "m.unknown_error";
+                msg = MessageUtil.compose("m.unknown_error", _ifc.installError);
             } else if (!msg.startsWith("m.")) {
                 // try to do something sensible based on the type of error
                 if (e instanceof FileNotFoundException) {
-                    msg = MessageUtil.tcompose("m.missing_resource", msg);
+                    msg = MessageUtil.compose("m.missing_resource",
+                        MessageUtil.taint(msg), _ifc.installError);
                 } else {
-                    msg = MessageUtil.tcompose("m.init_error", msg);
+                    msg = MessageUtil.compose("m.init_error",
+                        MessageUtil.taint(msg), _ifc.installError);
                 }
             }
             updateStatus(msg);
@@ -341,13 +343,15 @@ public class Getdown extends Thread
             Log.logStackTrace(e);
             String msg = e.getMessage();
             if (msg == null) {
-                msg = "m.unknown_error";
+                msg = MessageUtil.compose("m.unknown_error", _ifc.installError);
             } else if (!msg.startsWith("m.")) {
                 // try to do something sensible based on the type of error
                 if (e instanceof FileNotFoundException) {
-                    msg = MessageUtil.tcompose("m.missing_resource", msg);
+                    msg = MessageUtil.compose("m.missing_resource",
+                        MessageUtil.taint(msg), _ifc.installError);
                 } else {
-                    msg = MessageUtil.tcompose("m.init_error", msg);
+                    msg = MessageUtil.compose("m.init_error", msg,
+                        MessageUtil.taint(msg), _ifc.installError);
                 }
             }
             updateStatus(msg);

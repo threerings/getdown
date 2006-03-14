@@ -83,6 +83,9 @@ public class Application
 
         /** The color of the text shadow. */
         public Color textShadow;
+        
+        /** Where to point the user for help with install errors. */
+        public String installError;
     }
 
     /** Used by {@link #verifyMetadata} to communicate status in
@@ -334,6 +337,15 @@ public class Application
             ui.backgroundImage = (String)cdata.get("ui.background");
         }
         ui.progressImage = (String)cdata.get("ui.progress_image");
+
+        // On an installation error, where do we point the user.
+        ui.installError = (String)cdata.get("ui.install_error");
+        if (ui.installError == null) {
+            ui.installError = "m.default_install_error";
+        } else {
+            ui.installError = MessageUtil.taint(ui.installError);
+        }
+
         return ui;
     }
 
