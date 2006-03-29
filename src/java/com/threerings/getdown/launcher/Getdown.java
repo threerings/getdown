@@ -88,6 +88,14 @@ public class Getdown extends Thread
             return;
         }
 
+        // determine whether or not we can write to our install directory
+        File instdir = _app.getLocalPath("");
+        if (!instdir.canWrite()) {
+            updateStatus(MessageUtil.tcompose("m.readonly_error", instdir));
+            _dead = true;
+            return;
+        }
+
         try {
             _dead = false;
             if (detectProxy()) {
