@@ -91,7 +91,11 @@ public class Getdown extends Thread
         // determine whether or not we can write to our install directory
         File instdir = _app.getLocalPath("");
         if (!instdir.canWrite()) {
-            updateStatus(MessageUtil.tcompose("m.readonly_error", instdir));
+            String path = instdir.getPath();
+            if (path.equals(".")) {
+                path = System.getProperty("user.dir");
+            }
+            updateStatus(MessageUtil.tcompose("m.readonly_error", path));
             _dead = true;
             return;
         }
