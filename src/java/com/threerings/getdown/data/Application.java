@@ -271,14 +271,18 @@ public class Application
             for (int ii = 0; ii < rsrcs.length; ii++) {
                 String rsrc = rsrcs[ii];
                 try {
-                    boolean unpack = false;
-                    int uidx; 
-                    if ((uidx = rsrc.indexOf("[u]")) != -1) {
-                        unpack = true;
-                        rsrc = rsrc.substring(0, uidx).trim() +
-                            rsrc.substring(uidx+3).trim();
-                    }
-                    _resources.add(createResource(rsrc, unpack));
+                    _resources.add(createResource(rsrc, false));
+                } catch (Exception e) {
+                    Log.warning("Invalid resource '" + rsrcs[ii] + "'. " + e);
+                }
+            }
+        }
+        rsrcs = ConfigUtil.getMultiValue(cdata, "uresource");
+        if (rsrcs != null) {
+            for (int ii = 0; ii < rsrcs.length; ii++) {
+                String rsrc = rsrcs[ii];
+                try {
+                    _resources.add(createResource(rsrc, true));
                 } catch (Exception e) {
                     Log.warning("Invalid resource '" + rsrcs[ii] + "'. " + e);
                 }
