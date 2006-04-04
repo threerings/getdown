@@ -19,6 +19,7 @@ import java.util.jar.JarFile;
 
 import com.samskivert.io.StreamUtil;
 import com.samskivert.util.CollectionUtil;
+import com.samskivert.util.FileUtil;
 import com.samskivert.util.SortableArrayList;
 import com.samskivert.util.StringUtil;
 
@@ -33,12 +34,13 @@ public class Resource
     /**
      * Creates a resource with the supplied remote URL and local path.
      */
-    public Resource (String path, URL remote, File local)
+    public Resource (String path, URL remote, File local, boolean unpack)
     {
         _path = path;
         _remote = remote;
         _local = local;
         _marker = new File(_local.getPath() + "v");
+        _unpack = unpack;
     }
 
     /**
@@ -63,6 +65,15 @@ public class Resource
     public URL getRemote ()
     {
         return _remote;
+    }
+
+    /**
+     * Returns true if this resource should be unpacked as a part of the
+     * validation process.
+     */
+    public boolean shouldUnpack ()
+    {
+        return _unpack;
     }
 
     /**
@@ -110,6 +121,27 @@ public class Resource
             if (!_marker.delete()) {
                 Log.warning("Failed to erase marker file '" + _marker + "'.");
             }
+        }
+    }
+
+    /**
+     * Unpacks this resource file into the directory that contains it. Returns
+     * false if an error occurs while unpacking it.
+     */
+    public boolean unpack ()
+    {
+        // sanity check
+        if (!_local.getPath().endsWith(".jar")) {
+            Log.warning("Requested to unpack non-jar file '" + _local + "'.");
+            return false;
+        }
+        try {
+            return FileUtil.unpackJar(
+                new JarFile(_local), _local.getParentFile());
+        } catch (IOException ioe) {
+            Log.warning("Failed to create JarFile from '" +
+                        _local + "': " + ioe);
+            return false;
         }
     }
 
@@ -237,6 +269,7 @@ public class Resource
     protected String _path;
     protected URL _remote;
     protected File _local, _marker;
+    protected boolean _unpack;
 
     /** Used to sort the entries in a jar file. */
     protected static final Comparator ENTRY_COMP = new Comparator() {

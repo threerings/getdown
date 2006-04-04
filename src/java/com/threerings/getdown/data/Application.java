@@ -121,7 +121,7 @@ public class Application
     public Resource getConfigResource ()
     {
         try {
-            return createResource(CONFIG_FILE);
+            return createResource(CONFIG_FILE, false);
         } catch (Exception e) {
             throw new RuntimeException("Invalid appbase '" + _vappbase + "'.");
         }
@@ -162,7 +162,7 @@ public class Application
         String pfile = "patch" + _version + ".dat";
         try {
             URL remote = new URL(createVAppBase(_targetVersion), pfile);
-            return new Resource(pfile, remote, getLocalPath(pfile));
+            return new Resource(pfile, remote, getLocalPath(pfile), false);
         } catch (Exception e) {
             Log.warning("Failed to create patch resource path [pfile=" + pfile +
                         ", appbase=" + _appbase + ", tvers=" + _targetVersion +
@@ -259,7 +259,7 @@ public class Application
         }
         for (int ii = 0; ii < codes.length; ii++) {
             try {
-                _codes.add(createResource(codes[ii]));
+                _codes.add(createResource(codes[ii], false));
             } catch (Exception e) {
                 Log.warning("Invalid code resource '" + codes[ii] + "'." + e);
             }
@@ -269,8 +269,16 @@ public class Application
         String[] rsrcs = ConfigUtil.getMultiValue(cdata, "resource");
         if (rsrcs != null) {
             for (int ii = 0; ii < rsrcs.length; ii++) {
+                String rsrc = rsrcs[ii];
                 try {
-                    _resources.add(createResource(rsrcs[ii]));
+                    boolean unpack = false;
+                    int uidx; 
+                    if ((uidx = rsrc.indexOf("[u]")) != -1) {
+                        unpack = true;
+                        rsrc = rsrc.substring(0, uidx).trim() +
+                            rsrc.substring(uidx+3).trim();
+                    }
+                    _resources.add(createResource(rsrc, unpack));
                 } catch (Exception e) {
                     Log.warning("Invalid resource '" + rsrcs[ii] + "'. " + e);
                 }
@@ -629,9 +637,13 @@ public class Application
 
             try {
                 if (_digest.validateResource(rsrc, mpobs)) {
-                    // make a note that this file is kosher
-                    rsrc.markAsValid();
-                    continue;
+                    // unpack this resource if appropriate
+                    if (!rsrc.shouldUnpack() || rsrc.unpack()) {
+                        // finally note that this resource is kosher
+                        rsrc.markAsValid();
+                        continue;
+                    }
+                    Log.info("Failure unpacking resource [rsrc=" + rsrc + "].");
                 }
 
             } catch (Exception e) {
@@ -737,10 +749,11 @@ public class Application
     }
 
     /** Helper function for creating {@link Resource} instances. */
-    protected Resource createResource (String path)
+    protected Resource createResource (String path, boolean unpack)
         throws MalformedURLException
     {
-        return new Resource(path, getRemoteURL(path), getLocalPath(path));
+        return new Resource(
+            path, getRemoteURL(path), getLocalPath(path), unpack);
     }
 
     /** Used to parse rectangle specifications from the config file. */
