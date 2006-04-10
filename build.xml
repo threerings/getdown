@@ -68,11 +68,6 @@
   <target name="dist" depends="prepare,compile">
     <jar destfile="${deploy.dir}/${app.name}.jar" manifest="lib/manifest.mf"
          basedir="${deploy.dir}/classes"/>
-
-    <taskdef name="weave" classname="com.rc.retroweaver.ant.RetroWeaverTask"
-             classpath="lib/retroweaver-all-1.2.2.jar"/>
-    <weave inputjar="${deploy.dir}/${app.name}.jar"
-           outputjar="${deploy.dir}/${app.name}-retro.jar"/>
   </target>
 
   <!-- optimizes, combines and removes dead code -->
@@ -80,5 +75,10 @@
     <taskdef resource="proguard/ant/task.properties"
              classpath="lib/proguard.jar"/>
     <proguard configuration="etc/getdown.pro"/>
+
+    <taskdef name="weave" classname="com.rc.retroweaver.ant.RetroWeaverTask"
+             classpath="lib/retroweaver-all-1.2.2.jar"/>
+    <weave inputjar="${deploy.dir}/${app.name}-pro.jar"
+           outputjar="${deploy.dir}/${app.name}-retro-pro.jar"/>
   </target>
 </project>
