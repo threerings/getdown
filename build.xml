@@ -5,8 +5,6 @@
   <property name="app.name" value="getdown"/>
   <property name="src.dir" value="src/java"/>
   <property name="deploy.dir" value="dist"/>
-  <property name="dist.jar" value="${app.name}.jar"/>
-  <property name="app.dop" value="etc/${app.name}.dop"/>
 
   <!-- used when generating javadocs -->
   <property name="javadoc.dir"  value="${deploy.dir}/docs"/>
@@ -44,7 +42,8 @@
   <target name="compile" depends="prepare">
     <javac srcdir="${src.dir}" destdir="${deploy.dir}/classes"
            debug="on" optimize="off" deprecation="on"
-           classpathref="clazzpath" includeAntRuntime="no"/>
+           classpathref="clazzpath" includeAntRuntime="no"
+           source="1.5" target="1.5"/>
   </target>
 
   <!-- build the javadoc documentation -->
@@ -67,8 +66,13 @@
 
   <!-- builds our distribution files -->
   <target name="dist" depends="prepare,compile">
-    <jar destfile="${deploy.dir}/${dist.jar}" manifest="lib/manifest.mf"
+    <jar destfile="${deploy.dir}/${app.name}.jar" manifest="lib/manifest.mf"
          basedir="${deploy.dir}/classes"/>
+
+    <taskdef name="weave" classname="com.rc.retroweaver.ant.RetroWeaverTask"
+             classpath="lib/retroweaver-all-1.2.2.jar"/>
+    <weave inputjar="${deploy.dir}/${app.name}.jar"
+           outputjar="${deploy.dir}/${app.name}-retro.jar"/>
   </target>
 
   <!-- optimizes, combines and removes dead code -->
