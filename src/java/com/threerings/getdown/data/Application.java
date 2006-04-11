@@ -123,7 +123,6 @@ public class Application
         try {
             return createResource(CONFIG_FILE, false);
         } catch (Exception e) {
-            Thread.dumpStack();
             throw new RuntimeException("Invalid appbase '" + _vappbase + "'.");
         }
     }
