@@ -62,21 +62,21 @@ public class JarDiffPatcher
         JarOutputStream jos = new JarOutputStream(target);
         JarFile oldJar = new JarFile(oldFile);
         JarFile jarDiff = new JarFile(diffFile);
-        Set ignoreSet = new HashSet();
+        Set<String> ignoreSet = new HashSet<String>();
 
-        Map renameMap = new HashMap();
+        Map<String, String> renameMap = new HashMap<String, String>();
         determineNameMapping(jarDiff, ignoreSet, renameMap);
 
         // get all keys in renameMap
         Object[] keys = renameMap.keySet().toArray();
 
         // Files to implicit move
-        Set oldjarNames  = new HashSet();
+        Set<String> oldjarNames  = new HashSet<String>();
 	    
-        Enumeration oldEntries = oldJar.entries();
+        Enumeration<JarEntry> oldEntries = oldJar.entries();
         if (oldEntries != null) {
             while  (oldEntries.hasMoreElements()) {
-                oldjarNames.add(((JarEntry)oldEntries.nextElement()).getName());
+                oldjarNames.add(oldEntries.nextElement().getName());
             }
         }
 	   
@@ -94,10 +94,10 @@ public class JarDiffPatcher
         size -= ignoreSet.size();
 
         // Add content from JARDiff 
-        Enumeration entries = jarDiff.entries();
+        Enumeration<JarEntry> entries = jarDiff.entries();
         if (entries != null) {
             while (entries.hasMoreElements()) {
-                JarEntry entry = (JarEntry)entries.nextElement();
+                JarEntry entry = entries.nextElement();
                 if (!INDEX_NAME.equals(entry.getName())) {
                     updateObserver(observer, currentEntry, size);
                     currentEntry++;
@@ -188,55 +188,56 @@ public class JarDiffPatcher
 	}
     }
 
-    protected void determineNameMapping (JarFile jarDiff, Set ignoreSet,
-                                         Map renameMap)
+    protected void determineNameMapping (JarFile jarDiff, Set<String> ignoreSet,
+                                         Map<String, String> renameMap)
         throws IOException
     {
         InputStream is = jarDiff.getInputStream(jarDiff.getEntry(INDEX_NAME));
         if (is == null) {
-	    throw new IOException("error.noindex");
-	}
+            throw new IOException("error.noindex");
+        }
 
         LineNumberReader indexReader =
             new LineNumberReader(new InputStreamReader(is, "UTF-8"));
         String line = indexReader.readLine();
         if (line == null || !line.equals(VERSION_HEADER)) {
-	    throw new IOException("jardiff.error.badheader: " + line);
+            throw new IOException("jardiff.error.badheader: " + line);
         }
 
         while ((line = indexReader.readLine()) != null) {
             if (line.startsWith(REMOVE_COMMAND)) {
-                List sub = getSubpaths(
+                List<String> sub = getSubpaths(
                     line.substring(REMOVE_COMMAND.length()));
                 
                 if (sub.size() != 1) {
-		    throw new IOException("error.badremove: " + line);
+                    throw new IOException("error.badremove: " + line);
                 }
                 ignoreSet.add(sub.get(0));
 
             } else if (line.startsWith(MOVE_COMMAND)) {
-                List sub = getSubpaths(line.substring(MOVE_COMMAND.length()));
+                List<String> sub = getSubpaths(line.substring(
+                    MOVE_COMMAND.length()));
                 if (sub.size() != 2) {
-		    throw new IOException("error.badmove: " + line);
+                    throw new IOException("error.badmove: " + line);
                 }
 
-		// target of move should be the key
+        		// target of move should be the key
                 if (renameMap.put(sub.get(1), sub.get(0)) != null) {
-		    // invalid move - should not move to same target twice
-		    throw new IOException("error.badmove: " + line);
-		}
+        		    // invalid move - should not move to same target twice
+        		    throw new IOException("error.badmove: " + line);
+        		}
 
             } else if (line.length() > 0) {
-		throw new IOException("error.badcommand: " + line);
+                throw new IOException("error.badcommand: " + line);
             }
         }
     }
     
-    protected List getSubpaths (String path)
+    protected List<String> getSubpaths (String path)
     {
         int index = 0;
         int length = path.length();
-        ArrayList sub = new ArrayList();
+        ArrayList<String> sub = new ArrayList<String>();
         
         while (index < length) {
             while (index < length && Character.isWhitespace

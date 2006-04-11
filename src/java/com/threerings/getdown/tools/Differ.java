@@ -3,14 +3,12 @@
 
 package com.threerings.getdown.tools;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -75,13 +73,13 @@ public class Differ
 
         Application oapp = new Application(ovdir, null);
         oapp.init(false);
-        ArrayList orsrcs = new ArrayList();
+        ArrayList<Resource> orsrcs = new ArrayList<Resource>();
         orsrcs.addAll(oapp.getCodeResources());
         orsrcs.addAll(oapp.getResources());
 
         Application napp = new Application(nvdir, null);
         napp.init(false);
-        ArrayList nrsrcs = new ArrayList();
+        ArrayList<Resource> nrsrcs = new ArrayList<Resource>();
         nrsrcs.addAll(napp.getCodeResources());
         nrsrcs.addAll(napp.getResources());
 
@@ -95,7 +93,7 @@ public class Differ
             // for each file in the new application, it either already
             // exists in the old application, or it is new
             for (int ii = 0; ii < nrsrcs.size(); ii++) {
-                Resource rsrc = (Resource)nrsrcs.get(ii);
+                Resource rsrc = nrsrcs.get(ii);
                 int oidx = orsrcs.indexOf(rsrc);
                 Resource orsrc = (oidx == -1) ?
                     null : (Resource)orsrcs.remove(oidx);
@@ -147,7 +145,7 @@ public class Differ
 
             // now any file remaining in orsrcs needs to be removed
             for (int ii = 0; ii < orsrcs.size(); ii++) {
-                Resource rsrc = (Resource)orsrcs.get(ii);
+                Resource rsrc = orsrcs.get(ii);
                 // simply add an entry with the resource name and the
                 // deletion suffix
                 if (verbose) {

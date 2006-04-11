@@ -12,6 +12,7 @@ import org.apache.tools.ant.Task;
 
 import com.threerings.getdown.data.Application;
 import com.threerings.getdown.data.Digest;
+import com.threerings.getdown.data.Resource;
 
 /**
  * An ant task used to create a <code>digest.txt</code> for a Getdown
@@ -60,7 +61,7 @@ public class DigesterTask extends Task
         Application app = new Application(appdir, null);
         app.init(false);
 
-        ArrayList rsrcs = new ArrayList();
+        ArrayList<Resource> rsrcs = new ArrayList<Resource>();
         rsrcs.add(app.getConfigResource());
         rsrcs.addAll(app.getCodeResources());
         rsrcs.addAll(app.getResources());

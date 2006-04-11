@@ -123,6 +123,7 @@ public class Application
         try {
             return createResource(CONFIG_FILE, false);
         } catch (Exception e) {
+            Thread.dumpStack();
             throw new RuntimeException("Invalid appbase '" + _vappbase + "'.");
         }
     }
@@ -131,7 +132,7 @@ public class Application
      * Returns a list of the code {@link Resource} objects used by this
      * application.
      */
-    public List getCodeResources ()
+    public List<Resource> getCodeResources ()
     {
         return _codes;
     }
@@ -140,7 +141,7 @@ public class Application
      * Returns a list of the non-code {@link Resource} objects used by
      * this application.
      */
-    public List getResources ()
+    public List<Resource> getResources ()
     {
         return _resources;
     }
@@ -188,7 +189,7 @@ public class Application
         throws IOException
     {
         // parse our configuration file
-        HashMap cdata = null;
+        HashMap<String, Object> cdata = null;
         try {
             cdata = ConfigUtil.parseConfig(_config, checkPlatform);
         } catch (FileNotFoundException fnfe) {
@@ -319,9 +320,10 @@ public class Application
         File file = getLocalPath("extra.txt");
         if (file.exists()) {
             try {
-                List args = ConfigUtil.parsePairs(file, false);
-                for (Iterator iter = args.iterator(); iter.hasNext(); ) {
-                    String[] pair = (String[])iter.next();
+                List<String[]> args = ConfigUtil.parsePairs(file, false);
+                for (Iterator<String[]> iter = args.iterator();
+                        iter.hasNext();) {
+                    String[] pair = iter.next();
                     _jvmargs.add(pair[0] + "=" + pair[1]);
                 }
             } catch (Throwable t) {
@@ -423,15 +425,15 @@ public class Application
     {
         // create our classpath
         StringBuffer cpbuf = new StringBuffer();
-        for (Iterator iter = _codes.iterator(); iter.hasNext(); ) {
+        for (Iterator<Resource> iter = _codes.iterator(); iter.hasNext(); ) {
             if (cpbuf.length() > 0) {
                 cpbuf.append(File.pathSeparator);
             }
-            Resource rsrc = (Resource)iter.next();
+            Resource rsrc = iter.next();
             cpbuf.append(rsrc.getLocal().getAbsolutePath());
         }
 
-        ArrayList args = new ArrayList();
+        ArrayList<String> args = new ArrayList<String>();
 
         // reconstruct the path to the JVM
         args.add(LaunchUtil.getJVMPath(_windebug));
@@ -468,16 +470,16 @@ public class Application
         }
 
         // add the JVM arguments
-        for (Iterator iter = _jvmargs.iterator(); iter.hasNext(); ) {
-            args.add(processArg((String)iter.next()));
+        for (Iterator<String> iter = _jvmargs.iterator(); iter.hasNext(); ) {
+            args.add(processArg(iter.next()));
         }
 
         // add the application class name
         args.add(_class);
 
         // finally add the application arguments
-        for (Iterator iter = _appargs.iterator(); iter.hasNext(); ) {
-            args.add(processArg((String)iter.next()));
+        for (Iterator<String> iter = _appargs.iterator(); iter.hasNext(); ) {
+            args.add(processArg(iter.next()));
         }
 
         String[] sargs = new String[args.size()];
@@ -618,20 +620,21 @@ public class Application
      */
     public List verifyResources (ProgressObserver obs)
     {
-        ArrayList rsrcs = new ArrayList(), failures = new ArrayList();
+        ArrayList<Resource> rsrcs = new ArrayList<Resource>();
+        ArrayList<Resource> failures = new ArrayList<Resource>();
         rsrcs.addAll(_codes);
         rsrcs.addAll(_resources);
 
         // total up the file size of the resources to validate
         long totalSize = 0L;
-        for (Iterator iter = rsrcs.iterator(); iter.hasNext(); ) {
-            Resource rsrc = (Resource)iter.next();
+        for (Iterator<Resource> iter = rsrcs.iterator(); iter.hasNext(); ) {
+            Resource rsrc = iter.next();
             totalSize += rsrc.getLocal().length();
         }
 
         MetaProgressObserver mpobs = new MetaProgressObserver(obs, totalSize);
-        for (Iterator iter = rsrcs.iterator(); iter.hasNext(); ) {
-            Resource rsrc = (Resource)iter.next();
+        for (Iterator<Resource> iter = rsrcs.iterator(); iter.hasNext(); ) {
+            Resource rsrc = iter.next();
             mpobs.startElement(rsrc.getLocal().length());
 
             if (rsrc.isMarkedValid()) {
@@ -684,10 +687,10 @@ public class Application
 
     /** Clears all validation marker files for the resources in the
      * supplied iterator. */
-    protected void clearValidationMarkers (Iterator iter)
+    protected void clearValidationMarkers (Iterator<Resource> iter)
     {
         while (iter.hasNext()) {
-            ((Resource)iter.next()).clearMarker();
+            iter.next().clearMarker();
         }
     }
 
@@ -761,7 +764,8 @@ public class Application
     }
 
     /** Used to parse rectangle specifications from the config file. */
-    protected Rectangle parseRect (HashMap cdata, String name, Rectangle def)
+    protected Rectangle parseRect (HashMap<String, Object> cdata,
+        String name, Rectangle def)
     {
         String value = (String)cdata.get(name);
         if (!StringUtil.isBlank(value)) {
@@ -777,7 +781,8 @@ public class Application
     }
 
     /** Used to parse color specifications from the config file. */
-    protected Color parseColor (HashMap cdata, String name, Color def)
+    protected Color parseColor (HashMap<String, Object> cdata, String name,
+            Color def)
     {
         String value = (String)cdata.get(name);
         if (!StringUtil.isBlank(value)) {
@@ -804,9 +809,9 @@ public class Application
     protected String _name;
     protected boolean _windebug;
 
-    protected ArrayList _codes = new ArrayList();
-    protected ArrayList _resources = new ArrayList();
+    protected ArrayList<Resource> _codes = new ArrayList<Resource>();
+    protected ArrayList<Resource> _resources = new ArrayList<Resource>();
 
-    protected ArrayList _jvmargs = new ArrayList();
-    protected ArrayList _appargs = new ArrayList();
+    protected ArrayList<String> _jvmargs = new ArrayList<String>();
+    protected ArrayList<String> _appargs = new ArrayList<String>();
 }

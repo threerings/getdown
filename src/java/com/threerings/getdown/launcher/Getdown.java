@@ -10,7 +10,6 @@ import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 
 import javax.imageio.ImageIO;
-import javax.swing.JDialog;
 import javax.swing.JFrame;
 
 import java.io.BufferedOutputStream;
@@ -26,7 +25,6 @@ import java.io.PrintStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -390,7 +388,7 @@ public class Getdown extends Thread
         final Resource patch = _app.getPatchResource();
         if (patch != null) {
             // download the patch file...
-            ArrayList list = new ArrayList();
+            ArrayList<Resource> list = new ArrayList<Resource>();
             list.add(patch);
             download(list);
 
@@ -495,8 +493,7 @@ public class Getdown extends Thread
                 InputStream stderr = proc.getErrorStream();
                 BufferedReader reader = new BufferedReader(
                     new InputStreamReader(stderr));
-                String line = null;
-                while ((line = reader.readLine()) != null) {
+                while (reader.readLine() != null) {
                     // nothing doing!
                 }
                 Log.info("Process exited: " + proc.waitFor());

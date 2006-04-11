@@ -33,10 +33,10 @@ public class ConfigUtil
      * @return a list of <code>String[]</code> instances containing the
      * key/value pairs in the order they were parsed from the file.
      */
-    public static List parsePairs (File config, boolean checkPlatform)
+    public static List<String[]> parsePairs (File config, boolean checkPlatform)
         throws IOException
     {
-        ArrayList pairs = new ArrayList();
+        ArrayList<String[]> pairs = new ArrayList<String[]>();
         String osname = System.getProperty("os.name");
         osname = (osname == null) ? "" : osname.toLowerCase();
 
@@ -118,12 +118,16 @@ public class ConfigUtil
      * of strings if more than one key/value pair in the config file was
      * associated with the same key.
      */
-    public static HashMap parseConfig (File config, boolean checkPlatform)
+    public static HashMap<String, Object> parseConfig (File config,
+            boolean checkPlatform)
         throws IOException
     {
-        List pairs = parsePairs(config, checkPlatform);
-        HashMap data = new HashMap();
+        List<String[]> pairs = parsePairs(config, checkPlatform);
+        HashMap<String, Object> data = new HashMap<String, Object>();
 
+        // I thought that we could use HashMap<String, String[]> and put
+        // new String[] {pair[1]} for the null case, but it mysteriously dies
+        // on launch, so leaving it as HashMap<String, Object> for now
         for (Iterator iter = pairs.iterator(); iter.hasNext(); ) {
             String[] pair = (String[])iter.next();
             Object value = data.get(pair[0]);

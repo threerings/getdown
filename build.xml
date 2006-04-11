@@ -43,7 +43,9 @@
     <javac srcdir="${src.dir}" destdir="${deploy.dir}/classes"
            debug="on" optimize="off" deprecation="on"
            classpathref="clazzpath" includeAntRuntime="no"
-           source="1.5" target="1.5"/>
+           source="1.5" target="1.5">
+      <compilerarg value="-Xlint:unchecked"/>
+    </javac>
   </target>
 
   <!-- build the javadoc documentation -->

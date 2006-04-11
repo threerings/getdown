@@ -8,7 +8,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.MessageDigest;
 
@@ -204,7 +203,8 @@ public class Resource
         if (target.getPath().endsWith(".jar")) {
             JarFile jar = new JarFile(target);
             try {
-                SortableArrayList entries = new SortableArrayList();
+                SortableArrayList<JarEntry> entries =
+                    new SortableArrayList<JarEntry>();
                 CollectionUtil.addAll(entries, jar.entries());
                 entries.sort(ENTRY_COMP);
 
@@ -272,10 +272,9 @@ public class Resource
     protected boolean _unpack;
 
     /** Used to sort the entries in a jar file. */
-    protected static final Comparator ENTRY_COMP = new Comparator() {
-        public int compare (Object o1, Object o2) {
-            JarEntry e1 = (JarEntry)o1;
-            JarEntry e2 = (JarEntry)o2;
+    protected static final Comparator<JarEntry> ENTRY_COMP =
+            new Comparator<JarEntry>() {
+        public int compare (JarEntry e1, JarEntry e2) {
             return e1.getName().compareTo(e2.getName());
         }
     };

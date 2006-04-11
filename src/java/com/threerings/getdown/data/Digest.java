@@ -85,7 +85,7 @@ public class Digest
     {
         try {
             String cmd5 = resource.computeDigest(getMessageDigest(), obs);
-            String emd5 = (String)_digests.get(resource.getPath());
+            String emd5 = _digests.get(resource.getPath());
             if (cmd5.equals(emd5)) {
                 return true;
             }
@@ -102,7 +102,7 @@ public class Digest
      * Creates a digest file at the specified location using the supplied
      * list of resources.
      */
-    public static void createDigest (List resources, File output)
+    public static void createDigest (List<Resource> resources, File output)
         throws IOException
     {
         MessageDigest md = getMessageDigest();
@@ -111,8 +111,8 @@ public class Digest
             new OutputStreamWriter(new FileOutputStream(output), "UTF-8"));
 
         // compute and append the MD5 digest of each resource in the list
-        for (Iterator iter = resources.iterator(); iter.hasNext(); ) {
-            Resource rsrc = (Resource)iter.next();
+        for (Iterator<Resource> iter = resources.iterator(); iter.hasNext();) {
+            Resource rsrc = iter.next();
             String path = rsrc.getPath();
             try {
                 String digest = rsrc.computeDigest(md, null);
@@ -152,6 +152,6 @@ public class Digest
         data.append(path).append(" = ").append(digest).append("\n");
     }
 
-    protected HashMap _digests = new HashMap();
+    protected HashMap<String, String> _digests = new HashMap<String, String>();
     protected String _metaDigest = "";
 }
