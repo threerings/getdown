@@ -3,6 +3,8 @@
 #
 # Proguard configuration file for Getdown launcher
 
+-basedirectory ../
+
 -injars dist/getdown.jar(!**/tools/DigesterTask*,!**/tools/Differ*)
 -injars lib/jRegistryKey.jar(!META-INF/*)
 -injars lib/samskivert.jar(!META-INF/*,!**/velocity/**,!**/xml/**)
