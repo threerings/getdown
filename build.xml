@@ -6,6 +6,10 @@
   <property name="src.dir" value="src/java"/>
   <property name="deploy.dir" value="dist"/>
 
+  <!-- these are only used if we're going to sign things -->
+  <property file="build.properties"/>
+  <property file="${cert_dir}/certificate.properties"/>
+
   <!-- used when generating javadocs -->
   <property name="javadoc.dir"  value="${deploy.dir}/docs"/>
   <property name="doc.packages" value="com.threerings.getdown.*"/>
@@ -82,5 +86,18 @@
              classpath="lib/retroweaver-all-1.2.2.jar"/>
     <weave inputjar="${deploy.dir}/${app.name}-pro.jar"
            outputjar="${deploy.dir}/${app.name}-retro-pro.jar"/>
+    <!-- now combine the retroweaved jar file with the retroweaver runtime -->
+    <unjar src="${deploy.dir}/${app.name}-retro-pro.jar"
+           dest="${deploy.dir}/rptmp"/>
+    <unjar src="lib/retroweaver-rt-1.2.2.jar" dest="${deploy.dir}/rptmp"/>
+    <jar destfile="${deploy.dir}/${app.name}-retro-pro.jar"
+         manifest="lib/manifest.mf" basedir="${deploy.dir}/rptmp"/>
+    <delete dir="${deploy.dir}/rptmp"/>
+  </target>
+
+  <target name="sign" depends="proguard">
+    <signjar jar="${deploy.dir}/${app.name}-retro-pro.jar" lazy="true"
+      keystore="${cert_dir}/lib/keystore.dat" storepass="${sign.storepass}"
+      alias="${sign.alias}" keypass="${sign.keypass}"/>
   </target>
 </project>

@@ -4,6 +4,7 @@
 package com.threerings.getdown.launcher;
 
 import java.awt.BorderLayout;
+import java.awt.Container;
 import java.awt.EventQueue;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -52,9 +53,15 @@ import com.threerings.getdown.util.ProgressObserver;
  * Manages the main control for the Getdown application updater and
  * deployment system.
  */
-public class Getdown extends Thread
+public abstract class Getdown extends Thread
     implements Application.StatusDisplay
 {
+    public static void main (String[] args)
+    {
+        // legacy support
+        GetdownApp.main(args);
+    }
+
     public Getdown (File appDir, String appId)
     {
         super("Getdown");
@@ -76,6 +83,19 @@ public class Getdown extends Thread
         }
         _app = new Application(appDir, appId);
         _startup = System.currentTimeMillis();
+    }
+
+    /**
+     * This is used by the applet which always needs a user interface and wants
+     * to load it as soon as possible.
+     */
+    public void preInit ()
+    {
+        try {
+            _ifc = _app.init(true);
+        } catch (Exception e) {
+            Log.warning("Failed to preinit: " + e);
+        }
     }
 
     public void run ()
@@ -104,12 +124,10 @@ public class Getdown extends Thread
                 getdown();
             } else {
                 // create a panel they can use to configure the proxy settings
-                _frame.getContentPane().removeAll();
-                _frame.getContentPane().add(
+                _container = createContainer();
+                _container.add(
                     new ProxyPanel(this, _msgs), BorderLayout.CENTER);
-                _frame.pack();
-                SwingUtil.centerWindow(_frame);
-                _frame.setVisible(true);
+                showContainer();
                 // allow them to close the window to abort the proxy
                 // configuration
                 _dead = true;
@@ -164,9 +182,8 @@ public class Getdown extends Thread
         }
 
         // clear out our UI
-        _frame.dispose();
+        disposeContainer();
         _status = null;
-        _frame = null;
 
         // fire up a new thread
         new Thread(this).start();
@@ -477,40 +494,40 @@ public class Getdown extends Thread
         setStatus("m.launching", 100, -1L, false);
 
         try {
-            Process proc = _app.createProcess();
+            if (invokeDirect()) {
+                _app.invokeDirect();
 
-            // on Windows 98 and ME we need to stick around and read the
-            // output of stderr lest the process fill its output buffer
-            // and choke, yay!
-            if (LaunchUtil.mustMonitorChildren()) {
-                // close our window if it's around
-                if (_frame != null) {
-                    _frame.dispose();
+            } else {
+                Process proc = _app.createProcess();
+
+                // on Windows 98 and ME we need to stick around and read the
+                // output of stderr lest the process fill its output buffer and
+                // choke, yay!
+                if (LaunchUtil.mustMonitorChildren()) {
+                    // close our window if it's around
+                    disposeContainer();
                     _status = null;
-                    _frame = null;
+                    InputStream stderr = proc.getErrorStream();
+                    BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(stderr));
+                    while (reader.readLine() != null) {
+                        // nothing doing!
+                    }
+                    Log.info("Process exited: " + proc.waitFor());
                 }
-                Log.info("Sticking around to read stderr...");
-                InputStream stderr = proc.getErrorStream();
-                BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(stderr));
-                while (reader.readLine() != null) {
-                    // nothing doing!
-                }
-                Log.info("Process exited: " + proc.waitFor());
             }
 
-            // if we have a UI open and we haven't been around for at
-            // least 5 seconds, don't stick a fork in ourselves straight
-            // away but give our lovely user a chance to see what we're
-            // doing
+            // if we have a UI open and we haven't been around for at least 5
+            // seconds, don't stick a fork in ourselves straight away but give
+            // our lovely user a chance to see what we're doing
             long uptime = System.currentTimeMillis() - _startup;
-            if (_frame != null && uptime < MIN_EXIST_TIME) {
+            if (_container != null && uptime < MIN_EXIST_TIME) {
                 try {
                     Thread.sleep(MIN_EXIST_TIME - uptime);
                 } catch (Exception e) {
                 }
             }
-            System.exit(0);
+            exit(0);
 
         } catch (Exception e) {
             Log.logStackTrace(e);
@@ -523,7 +540,7 @@ public class Getdown extends Thread
      */
     protected void createInterface (boolean force)
     {
-        if (_frame != null && !force) {
+        if (_container != null && !force) {
             return;
         }
 
@@ -531,38 +548,26 @@ public class Getdown extends Thread
         BufferedImage bgimg = loadImage(_ifc.backgroundImage);
         BufferedImage barimg = loadImage(_ifc.progressImage);
 
-        // create our user interface, and display it
-        String title = StringUtil.isBlank(_ifc.name) ? "" : _ifc.name;
-        if (_frame == null) {
-            _frame = new JFrame(title);
-            _frame.addWindowListener(new WindowAdapter() {
-                public void windowClosing (WindowEvent evt) {
-                    if (_dead) {
-                        System.exit(0);
-                    } else {
-                        if (_abort == null) {
-                            _abort = new AbortPanel(Getdown.this, _msgs);
-                        }
-                        _abort.pack();
-                        SwingUtil.centerWindow(_abort);
-                        _abort.setVisible(true);
-                        _abort.setState(JFrame.NORMAL);
-                        _abort.requestFocus();
-                    }
-                }
-            });
-            _frame.setResizable(false);
-
-        } else {
-            _frame.setTitle(title);
-            _frame.getContentPane().removeAll();
-        }
-        _frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        _container = createContainer(); 
         _status = new StatusPanel(_msgs, _ifc, bgimg, barimg);
-        _frame.getContentPane().add(_status, BorderLayout.CENTER);
-        _frame.pack();
-        SwingUtil.centerWindow(_frame);
-        _frame.setVisible(true);
+        _container.add(_status, BorderLayout.CENTER);
+        showContainer();
+    }
+
+    protected void handleWindowClose ()
+    {
+        if (_dead) {
+            exit(0);
+        } else {
+            if (_abort == null) {
+                _abort = new AbortPanel(Getdown.this, _msgs);
+            }
+            _abort.pack();
+            SwingUtil.centerWindow(_abort);
+            _abort.setVisible(true);
+            _abort.setState(JFrame.NORMAL);
+            _abort.requestFocus();
+        }
     }
 
     protected void setStatus (final String message, final int percent,
@@ -575,6 +580,10 @@ public class Getdown extends Thread
         if (_status != null) {
             EventQueue.invokeLater(new Runnable() {
                 public void run () {
+                    if (_status == null) {
+                        Log.info("Dropping status '" + message + "'.");
+                        return;
+                    }
                     if (message != null) {
                         _status.setStatus(message);
                     }
@@ -601,67 +610,32 @@ public class Getdown extends Thread
         }
     }
 
-    public static void main (String[] args)
-    {
-        // maybe they specified the appdir in a system property
-        int aidx = 0;
-        String adarg = System.getProperty("appdir");
-        // if not, check for a command line argument
-        if (StringUtil.isBlank(adarg)) {
-            if (args.length < 1) {
-                System.err.println(
-                    "Usage: java -jar getdown.jar app_dir [app_id]");
-                System.exit(-1);
-            }
-            adarg = args[aidx++];
-        }
+    /**
+     * Creates the container in which our user interface will be displayed.
+     */
+    protected abstract Container createContainer ();
 
-        // look for a specific app identifier
-        String appId = null;
-        if (args.length > aidx) {
-            appId = args[aidx++];
-        }
+    /**
+     * Shows the container in which our user interface will be displayed.
+     */
+    protected abstract void showContainer ();
 
-        // ensure a valid directory was supplied
-        File appDir = new File(adarg);
-        if (!appDir.exists() || !appDir.isDirectory()) {
-            Log.warning("Invalid app_dir '" + adarg + "'.");
-            System.exit(-1);
-        }
+    /**
+     * Disposes the container in which we have our user interface.
+     */
+    protected abstract void disposeContainer ();
 
-        // pipe our output into a file in the application directory
-        if (System.getProperty("no_log_redir") == null) {
-            File log = new File(appDir, "launcher.log");
-            try {
-                PrintStream logOut = new PrintStream(
-                    new BufferedOutputStream(new FileOutputStream(log)), true);
-                System.setOut(logOut);
-                System.setErr(logOut);
-            } catch (IOException ioe) {
-                Log.warning("Unable to redirect output to '" + log +
-                            "': " + ioe);
-            }
-        }
+    /**
+     * If this method returns true we will run the application in the same JVM,
+     * otherwise we will fork off a new JVM. Some options are not supported if
+     * we do not fork off a new JVM.
+     */
+    protected abstract boolean invokeDirect ();
 
-        // record a few things for posterity
-        Log.info("------------------ VM Info ------------------");
-        Log.info("-- OS Name: " + System.getProperty("os.name"));
-        Log.info("-- OS Arch: " + System.getProperty("os.arch"));
-        Log.info("-- OS Vers: " + System.getProperty("os.version"));
-        Log.info("-- Java Vers: " + System.getProperty("java.version"));
-        Log.info("-- Java Home: " + System.getProperty("java.home"));
-        Log.info("-- User Name: " + System.getProperty("user.name"));
-        Log.info("-- User Home: " + System.getProperty("user.home"));
-        Log.info("-- Cur dir: " + System.getProperty("user.dir"));
-        Log.info("---------------------------------------------");
-
-        try {
-            Getdown app = new Getdown(appDir, appId);
-            app.start();
-        } catch (Exception e) {
-            Log.logStackTrace(e);
-        }
-    }
+    /**
+     * Requests that Getdown exit. In applet mode this does nothing.
+     */
+    protected abstract void exit (int exitCode);
 
     /** Used to pass progress on to our user interface. */
     protected ProgressObserver _progobs = new ProgressObserver() {
@@ -675,7 +649,7 @@ public class Getdown extends Thread
         new Application.UpdateInterface();
 
     protected ResourceBundle _msgs;
-    protected JFrame _frame;
+    protected Container _container;
     protected StatusPanel _status;
     protected AbortPanel _abort;
 

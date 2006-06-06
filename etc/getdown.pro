@@ -23,3 +23,11 @@
 -keep public class com.threerings.getdown.launcher.Getdown {
     public static void main (java.lang.String[]);
 }
+
+-keep public class com.threerings.getdown.launcher.GetdownApp {
+    public static void main (java.lang.String[]);
+}
+
+-keep public class com.threerings.getdown.launcher.GetdownApplet {
+    *;
+}

@@ -6,6 +6,12 @@ package com.threerings.getdown.data;
 import java.awt.Color;
 import java.awt.Rectangle;
 
+import java.lang.reflect.Method;
+import java.security.AllPermission;
+import java.security.CodeSource;
+import java.security.PermissionCollection;
+import java.security.Permissions;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,6 +23,7 @@ import java.io.InputStreamReader;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLClassLoader;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -488,6 +495,54 @@ public class Application
         return Runtime.getRuntime().exec(sargs, null);
     }
 
+    /**
+     * Runs this application directly in the current VM.
+     */
+    public void invokeDirect ()
+    {
+        // create a custom class loader
+        ArrayList<URL> jars = new ArrayList<URL>();
+        for (Resource rsrc : _codes) {
+            try {
+                jars.add(
+                    new URL("file", "", rsrc.getLocal().getAbsolutePath()));
+            } catch (Exception e) {
+                e.printStackTrace(System.err);
+            }
+        }
+        URLClassLoader loader = new URLClassLoader(
+            jars.toArray(new URL[jars.size()]),
+            ClassLoader.getSystemClassLoader()) {
+            protected PermissionCollection getPermissions (CodeSource code) {
+                Permissions perms = new Permissions();
+                perms.add(new AllPermission());
+                return perms;
+            }
+        };
+
+        for (String jvmarg : _jvmargs) {
+            if (jvmarg.startsWith("-D")) {
+                jvmarg = processArg(jvmarg.substring(2));
+                int eqidx = jvmarg.indexOf("=");
+                if (eqidx == -1) {
+                    Log.warning("Bogus system property: '" + jvmarg + "'?");
+                } else {
+                    System.setProperty(jvmarg.substring(0, eqidx),
+                                       jvmarg.substring(eqidx+1));
+                }
+            }
+        }
+
+        try {
+            Class<?> appclass = loader.loadClass(_class);
+            Method main = appclass.getMethod("main", SA_PROTO.getClass());
+            String[] args = _appargs.toArray(new String[_appargs.size()]);
+            main.invoke(null, new Object[] { args });
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+        }
+    }
+
     /** Replaces the application directory and version in any argument. */
     protected String processArg (String arg)
     {
@@ -813,4 +868,6 @@ public class Application
 
     protected ArrayList<String> _jvmargs = new ArrayList<String>();
     protected ArrayList<String> _appargs = new ArrayList<String>();
+
+    protected static final String[] SA_PROTO = new String[0];
 }
