@@ -6,6 +6,8 @@ package com.threerings.getdown.data;
 import java.awt.Color;
 import java.awt.Rectangle;
 
+import javax.swing.JApplet;
+
 import java.lang.reflect.Method;
 import java.security.AllPermission;
 import java.security.CodeSource;
@@ -508,7 +510,7 @@ public class Application
     /**
      * Runs this application directly in the current VM.
      */
-    public void invokeDirect ()
+    public void invokeDirect (JApplet applet)
     {
         // create a custom class loader
         ArrayList<URL> jars = new ArrayList<URL>();
@@ -558,9 +560,17 @@ public class Application
 
         try {
             Class<?> appclass = loader.loadClass(_class);
-            Method main = appclass.getMethod("main", SA_PROTO.getClass());
             String[] args = _appargs.toArray(new String[_appargs.size()]);
-            main.invoke(null, new Object[] { args });
+            Method main;
+            try {
+                // first see if the class has a special applet-aware main
+                main = appclass.getMethod(
+                    "main", JApplet.class, SA_PROTO.getClass());
+                main.invoke(null, new Object[] { applet, args });
+            } catch (NoSuchMethodException nsme) {
+                main = appclass.getMethod("main", SA_PROTO.getClass());
+                main.invoke(null, new Object[] { args });
+            }
         } catch (Exception e) {
             e.printStackTrace(System.err);
         }

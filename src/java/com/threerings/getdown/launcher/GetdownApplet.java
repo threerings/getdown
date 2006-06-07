@@ -3,6 +3,7 @@
 
 package com.threerings.getdown.launcher;
 
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.EventQueue;
 import java.awt.Image;
@@ -114,6 +115,9 @@ public class GetdownApplet extends JApplet
                 }
                 protected boolean invokeDirect () {
                     return true;
+                }
+                protected JApplet getApplet () {
+                    return GetdownApplet.this;
                 }
                 protected Image getBackgroundImage () {
                     return _bgimage == null ?

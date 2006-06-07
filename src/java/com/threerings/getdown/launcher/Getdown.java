@@ -12,6 +12,7 @@ import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 
 import javax.imageio.ImageIO;
+import javax.swing.JApplet;
 import javax.swing.JFrame;
 
 import java.io.BufferedOutputStream;
@@ -497,7 +498,7 @@ public abstract class Getdown extends Thread
 
         try {
             if (invokeDirect()) {
-                _app.invokeDirect();
+                _app.invokeDirect(getApplet());
 
             } else {
                 Process proc = _app.createProcess();
@@ -646,7 +647,19 @@ public abstract class Getdown extends Thread
      * otherwise we will fork off a new JVM. Some options are not supported if
      * we do not fork off a new JVM.
      */
-    protected abstract boolean invokeDirect ();
+    protected boolean invokeDirect ()
+    {
+        return false;
+    }
+
+    /**
+     * Provides access to the applet that we'll pass on to our application when
+     * we're in "invoke direct" mode.
+     */
+    protected JApplet getApplet ()
+    {
+        return null;
+    }
 
     /**
      * Requests that Getdown exit. In applet mode this does nothing.

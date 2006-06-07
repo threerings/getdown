@@ -112,9 +112,6 @@ public class GetdownApp
                         _frame = null;
                     }
                 }
-                protected boolean invokeDirect () {
-                    return false;
-                }
                 protected void exit (int exitCode) {
                     System.exit(exitCode);
                 }
