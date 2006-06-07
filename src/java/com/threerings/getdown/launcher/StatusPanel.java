@@ -7,6 +7,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Graphics;
+import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 
@@ -30,10 +31,13 @@ import com.threerings.getdown.data.Application.UpdateInterface;
  */
 public class StatusPanel extends JComponent
 {
-    public StatusPanel (ResourceBundle msgs, UpdateInterface ifc,
-                        BufferedImage bgimg, BufferedImage barimg)
+    public StatusPanel (ResourceBundle msgs)
     {
         _msgs = msgs;
+    }
+
+    public void init (UpdateInterface ifc, Image bgimg, Image barimg)
+    {
         _ifc = ifc;
         _bgimg = bgimg;
         if (bgimg == null) {
@@ -41,7 +45,7 @@ public class StatusPanel extends JComponent
             bounds.grow(5, 5);
             _psize = bounds.getSize();
         } else {
-            _psize = new Dimension(bgimg.getWidth(), bgimg.getHeight());
+            _psize = new Dimension(bgimg.getWidth(null), bgimg.getHeight(null));
         }
         _barimg = barimg;
     }
@@ -236,7 +240,7 @@ public class StatusPanel extends JComponent
         }
     }
 
-    protected BufferedImage _bgimg, _barimg;
+    protected Image _bgimg, _barimg;
     protected Dimension _psize;
 
     protected ResourceBundle _msgs;

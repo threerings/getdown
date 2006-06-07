@@ -93,6 +93,16 @@ public class Application
         
         /** Where to point the user for help with install errors. */
         public String installError;
+
+        /** Generates a string representation of this instance. */
+        public String toString ()
+        {
+            return "[name=" + name + ", bg=" + backgroundImage +
+                ", pi=" + progressImage + ", prect=" + progress +
+                ", pt=" + progressText + ", pb=" + progressBar +
+                ", srect=" + status + ", st=" + statusText +
+                ", shadow=" + textShadow + ", err=" + installError + "]";
+        }
     }
 
     /** Used by {@link #verifyMetadata} to communicate status in
@@ -520,6 +530,7 @@ public class Application
             }
         };
 
+        // configure any system properties that we can
         for (String jvmarg : _jvmargs) {
             if (jvmarg.startsWith("-D")) {
                 jvmarg = processArg(jvmarg.substring(2));
@@ -532,6 +543,18 @@ public class Application
                 }
             }
         }
+
+        // pass along any pass-through arguments
+        for (Map.Entry entry : System.getProperties().entrySet()) {
+            String key = (String)entry.getKey();
+            if (key.startsWith(PROP_PASSTHROUGH_PREFIX)) {
+                key = key.substring(PROP_PASSTHROUGH_PREFIX.length());
+                System.setProperty(key, (String)entry.getValue());
+            }
+        }
+
+        // make a note that we're running in "applet" mode
+        System.setProperty("applet", "true");
 
         try {
             Class<?> appclass = loader.loadClass(_class);

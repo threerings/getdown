@@ -4,8 +4,12 @@
 package com.threerings.getdown.launcher;
 
 import java.awt.Container;
+import java.awt.EventQueue;
+import java.awt.Image;
+import java.net.URL;
 
 import javax.swing.JApplet;
+import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import java.io.IOException;
@@ -73,6 +77,17 @@ public class GetdownApplet extends JApplet
             }
         }
 
+        // if a background image was specified, grabbit
+        String imgpath = getParameter("bgimage");
+        try {
+            if (!StringUtil.isBlank(imgpath)) {
+                _bgimage = getImage(new URL(getDocumentBase(), imgpath));
+            }
+        } catch (Exception e) {
+            Log.info("Failed to load background image [path=" + imgpath + "].");
+            Log.logStackTrace(e);
+        }
+
         // record a few things for posterity
         Log.info("------------------ VM Info ------------------");
         Log.info("-- OS Name: " + System.getProperty("os.name"));
@@ -92,25 +107,25 @@ public class GetdownApplet extends JApplet
                     return getContentPane();
                 }
                 protected void showContainer () {
-                    invalidate();
+                    ((JPanel)getContentPane()).revalidate();
                 }
                 protected void disposeContainer () {
+                    // nothing to do as we're in an applet
                 }
                 protected boolean invokeDirect () {
                     return true;
                 }
+                protected Image getBackgroundImage () {
+                    return _bgimage == null ?
+                        super.getBackgroundImage() : _bgimage;
+                }
                 protected void exit (int exitCode) {
-                    Log.info("Applet \"exiting\".");
                     // don't exit as we're in an applet
                 }
             };
 
-            SwingUtilities.invokeAndWait(new Runnable() {
-                public void run () {
-                    _getdown.preInit();
-                    _getdown.createInterface(false);
-                }
-            });
+            // set up our user interface immediately
+            _getdown.preInit();
 
         } catch (Exception e) {
             Log.logStackTrace(e);
@@ -134,4 +149,5 @@ public class GetdownApplet extends JApplet
     }
 
     protected Getdown _getdown;
+    protected Image _bgimage;
 }

@@ -6,6 +6,7 @@ package com.threerings.getdown.launcher;
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.EventQueue;
+import java.awt.Image;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
@@ -93,6 +94,7 @@ public abstract class Getdown extends Thread
     {
         try {
             _ifc = _app.init(true);
+            createInterface(true);
         } catch (Exception e) {
             Log.warning("Failed to preinit: " + e);
         }
@@ -544,14 +546,28 @@ public abstract class Getdown extends Thread
             return;
         }
 
-        // load up our background and progress bar images
-        BufferedImage bgimg = loadImage(_ifc.backgroundImage);
-        BufferedImage barimg = loadImage(_ifc.progressImage);
+        EventQueue.invokeLater(new Runnable() {
+            public void run () {
+                if (_status == null) {
+                    _container = createContainer(); 
+                    _status = new StatusPanel(_msgs);
+                    _container.add(_status, BorderLayout.CENTER);
+                }
+                _status.init(_ifc, getBackgroundImage(),
+                             getProgressImage());
+                showContainer();
+            }
+        });
+    }
 
-        _container = createContainer(); 
-        _status = new StatusPanel(_msgs, _ifc, bgimg, barimg);
-        _container.add(_status, BorderLayout.CENTER);
-        showContainer();
+    protected Image getBackgroundImage ()
+    {
+        return loadImage(_ifc.backgroundImage);
+    }
+
+    protected Image getProgressImage ()
+    {
+        return loadImage(_ifc.progressImage);
     }
 
     protected void handleWindowClose ()
