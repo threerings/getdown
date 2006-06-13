@@ -40,7 +40,7 @@ public class Digest
         throws IOException
     {
         // parse and validate our digest file contents
-        StringBuffer data = new StringBuffer();
+        StringBuilder data = new StringBuilder();
         File dfile = new File(appdir, DIGEST_FILE);
         List pairs = ConfigUtil.parsePairs(dfile, false);
         for (Iterator iter = pairs.iterator(); iter.hasNext(); ) {
@@ -106,7 +106,7 @@ public class Digest
         throws IOException
     {
         MessageDigest md = getMessageDigest();
-        StringBuffer data = new StringBuffer();
+        StringBuilder data = new StringBuilder();
         PrintWriter pout = new PrintWriter(
             new OutputStreamWriter(new FileOutputStream(output), "UTF-8"));
 
@@ -147,7 +147,7 @@ public class Digest
     }
 
     /** Used by {@link #createDigest} and {@link Digest}. */
-    protected static void note (StringBuffer data, String path, String digest)
+    protected static void note (StringBuilder data, String path, String digest)
     {
         data.append(path).append(" = ").append(digest).append("\n");
     }

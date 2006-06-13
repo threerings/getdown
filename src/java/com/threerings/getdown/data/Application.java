@@ -442,7 +442,7 @@ public class Application
         throws IOException
     {
         // create our classpath
-        StringBuffer cpbuf = new StringBuffer();
+        StringBuilder cpbuf = new StringBuilder();
         for (Iterator<Resource> iter = _codes.iterator(); iter.hasNext(); ) {
             if (cpbuf.length() > 0) {
                 cpbuf.append(File.pathSeparator);

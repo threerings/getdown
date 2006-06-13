@@ -1,5 +1,5 @@
 //
-// $Id: ProgressObserver.java,v 1.1 2004/07/14 13:44:49 mdb Exp $
+// $Id$
 
 package com.threerings.getdown.util;
 

@@ -1,5 +1,5 @@
 //
-// $Id: ProxyPanel.java,v 1.1 2004/07/30 21:45:28 mdb Exp $
+// $Id$
 
 package com.threerings.getdown.launcher;
 

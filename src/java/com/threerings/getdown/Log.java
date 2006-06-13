@@ -1,5 +1,5 @@
 //
-// $Id: Log.java,v 1.1 2004/07/02 11:01:21 mdb Exp $
+// $Id$
 
 package com.threerings.getdown;
 
