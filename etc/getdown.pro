@@ -11,6 +11,7 @@
 -injars lib/commons-io.jar(!META-INF/*)
 
 -libraryjars <java.home>/lib/rt.jar
+-dontskipnonpubliclibraryclasses
 
 -outjars dist/getdown-pro.jar
 -printseeds dist/proguard.seeds
