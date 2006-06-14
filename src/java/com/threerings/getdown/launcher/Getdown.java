@@ -506,17 +506,36 @@ public abstract class Getdown extends Thread
                 // on Windows 98 and ME we need to stick around and read the
                 // output of stderr lest the process fill its output buffer and
                 // choke, yay!
+                final InputStream stderr = proc.getErrorStream();
                 if (LaunchUtil.mustMonitorChildren()) {
                     // close our window if it's around
                     disposeContainer();
                     _status = null;
-                    InputStream stderr = proc.getErrorStream();
                     BufferedReader reader = new BufferedReader(
                         new InputStreamReader(stderr));
                     while (reader.readLine() != null) {
                         // nothing doing!
                     }
                     Log.info("Process exited: " + proc.waitFor());
+                } else {
+                    // spawn a daemon thread that will catch the early bits of
+                    // stderr in case the launch fails
+                    Thread t = new Thread() {
+                        public void run () {
+                            try {
+                                BufferedReader reader = new BufferedReader(
+                                    new InputStreamReader(stderr));
+                                String line;
+                                while ((line = reader.readLine()) != null) {
+                                    Log.warning(line);
+                                }
+                            } catch (IOException ioe) {
+                                // oh well
+                            }
+                        }
+                    };
+                    t.setDaemon(true);
+                    t.start();
                 }
             }
 
