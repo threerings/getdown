@@ -56,6 +56,15 @@ public class GetdownApplet extends JApplet
             }
         }
 
+        // if an installer.txt file is desired, create that
+        String inststr = getParameter("installer");
+        if (!StringUtil.isBlank(inststr)) {
+            File infile = new File(appDir, "installer.txt");
+            if (!infile.exists()) {
+                writeToFile(infile, inststr);
+            }
+        }
+
         // if our getdown.txt file does not exist, auto-create it
         File gdfile = new File(appDir, "getdown.txt");
         if (!gdfile.exists()) {
@@ -66,14 +75,8 @@ public class GetdownApplet extends JApplet
                 // TODO: report
                 return;
             }
-            try {
-                PrintStream out = new PrintStream(new FileOutputStream(gdfile));
-                out.println("appbase = " + appbase);
-                out.close();
-            } catch (IOException ioe) {
-                Log.warning("Failed to create '" + gdfile + "'.");
-                Log.logStackTrace(ioe);
-                // TODO: report
+            if (!writeToFile(gdfile, "appbase = " + appbase)) {
+                // TODO: report the error
                 return;
             }
         }
@@ -150,6 +153,23 @@ public class GetdownApplet extends JApplet
     public void stop ()
     {
         // TODO
+    }
+
+    /**
+     * Creates the specified file and writes the supplied contents to it.
+     */
+    protected boolean writeToFile (File tofile, String contents)
+    {
+        try {
+            PrintStream out = new PrintStream(new FileOutputStream(tofile));
+            out.println(contents);
+            out.close();
+            return true;
+        } catch (IOException ioe) {
+            Log.warning("Failed to create '" + tofile + "'.");
+            Log.logStackTrace(ioe);
+            return false;
+        }
     }
 
     protected Getdown _getdown;
