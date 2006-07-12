@@ -1,0 +1,75 @@
+What is it?
+-----------
+
+Getdown (yes, it's the funky stuff) aims to provide a system for downloading
+and installing a collection of files on a user's machine and upgrading those
+files as needed. Though just any collection of files would do, Getdown is
+mainly intended for the distribution and maintenance of the collection of files
+that make up an application.
+
+It was designed as a replacement for Java Web Start due to limitations in Java
+Web Start's architecture which are outlined in the rationale section.
+
+How does it work?
+-----------------
+The main design and operation of Getdown is detailed on the design page:
+
+http://www.threerings.net/code/getdown/design.html
+
+You can also browse the javadoc documentation if you're interested in
+implementation details.
+
+How do I use it?
+----------------
+Tutorials for creating a sample project will be made available shortly. For
+now, check the examples on the design page (URL above) and post questions to
+the Game Gardens forums:
+
+http://forums.gamegardens.com/discussion/mvnforum/listthreads?forum=4
+
+How do I compile it?
+--------------------
+You will need to download the library dependencies which are enumerated in
+lib/LIBS. And then you can use Ant to build Getdown like so:
+
+% ant dist (builds the main jar file)
+% ant proguard (builds the dependency includede, deployment jar file)
+
+Is it free?
+-----------
+Yes! Getdown is released under the GPL. Stop whining, it's good for you. The
+most recent version should always be available here:
+
+http://www.threerings.net/code/getdown/
+
+Where can I see it in action?
+-----------------------------
+Getdown was originally written by developers at Three Rings Design for the
+deployment of their Java-based massively multiplayer game Puzzle Pirates. You
+can download and install Puzzle Pirates or Bang! Howdy to see Getdown in use in
+a production environment.
+
+Getting Getdown
+---------------
+Getdown is available in source code form via Subversion:
+
+% svn checkout svn://code.threerings.net/getdown/trunk getdown
+
+Precompiled jar files are also available:
+
+* http://www.threerings.net/code/getdown/getdown/dist/getdown-pro.jar
+
+  This version contains all dependencies and has been reduced in size using
+  Proguard. You can stick this into a distribution that uses JDK 1.5 and use it
+  directly.
+
+* http://www.threerings.net/code/getdown/getdown/dist/getdown-retro-pro.jar
+
+  This version contains all dependencies and has been modified to be backwards
+  compatible with JDK 1.4 using Retroweaver. You can stick this into a
+  distribution that uses JDK 1.4 and use it directly.
+
+Getting Involved
+----------------
+Check the forums listed above, or send email to Michael Bayne
+<mdb@threerings.net>. Contributions and bug fixes are always welcome.
