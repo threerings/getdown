@@ -83,20 +83,36 @@ public class Differ
         nrsrcs.addAll(napp.getCodeResources());
         nrsrcs.addAll(napp.getResources());
 
-        MessageDigest md = Digest.getMessageDigest();
+        // first create a patch for the main application
         File patch = new File(nvdir, "patch" + overs + ".dat");
+        createPatch(patch, orsrcs, nrsrcs, verbose);
+
+        // next create patches for any auxiliary resource groups
+        for (String auxgroup : napp.getAuxGroups()) {
+            orsrcs = new ArrayList<Resource>();
+            orsrcs.addAll(oapp.getResources(auxgroup));
+            nrsrcs = new ArrayList<Resource>();
+            nrsrcs.addAll(napp.getResources(auxgroup));
+            patch = new File(nvdir, "patch-" + auxgroup + overs + ".dat");
+            createPatch(patch, orsrcs, nrsrcs, verbose);
+        }
+    }
+
+    protected void createPatch (File patch, ArrayList<Resource> orsrcs,
+                                ArrayList<Resource> nrsrcs, boolean verbose)
+        throws IOException
+    {
+        MessageDigest md = Digest.getMessageDigest();
         JarOutputStream jout = null;
         try {
             jout = new JarOutputStream(
                 new BufferedOutputStream(new FileOutputStream(patch)));
 
-            // for each file in the new application, it either already
-            // exists in the old application, or it is new
-            for (int ii = 0; ii < nrsrcs.size(); ii++) {
-                Resource rsrc = nrsrcs.get(ii);
+            // for each file in the new application, it either already exists
+            // in the old application, or it is new
+            for (Resource rsrc : nrsrcs) {
                 int oidx = orsrcs.indexOf(rsrc);
-                Resource orsrc = (oidx == -1) ?
-                    null : (Resource)orsrcs.remove(oidx);
+                Resource orsrc = (oidx == -1) ? null : orsrcs.remove(oidx);
                 if (orsrc != null) {
                     // first see if they are the same
                     String odig = orsrc.computeDigest(md, null);
@@ -105,8 +121,8 @@ public class Differ
                         if (verbose) {
                             System.out.println("Unchanged: " + rsrc.getPath());
                         }
-                        // by leaving it out, it will be left as is during
-                        // the patching process
+                        // by leaving it out, it will be left as is during the
+                        // patching process
                         continue;
                     } 
 
@@ -115,17 +131,16 @@ public class Differ
                         if (verbose) {
                             System.out.println("JarDiff: " + rsrc.getPath());
                         }
-                        // here's a juicy one: JarDiff blindly pulls
-                        // ZipEntry objects out of one jar file and stuffs
-                        // them into another without clearing out things
-                        // like the compressed size, so if, for whatever
-                        // reason (like different JRE versions or phase of
-                        // the moon) the compressed size in the old jar
-                        // file is different than the compressed size
-                        // generated when creating the jardiff jar file,
-                        // ZipOutputStream will choke and we'll be hosed;
-                        // so we recreate the jar files in their entirety
-                        // before running jardiff on 'em
+                        // here's a juicy one: JarDiff blindly pulls ZipEntry
+                        // objects out of one jar file and stuffs them into
+                        // another without clearing out things like the
+                        // compressed size, so if, for whatever reason (like
+                        // different JRE versions or phase of the moon) the
+                        // compressed size in the old jar file is different
+                        // than the compressed size generated when creating the
+                        // jardiff jar file, ZipOutputStream will choke and
+                        // we'll be hosed; so we recreate the jar files in
+                        // their entirety before running jardiff on 'em
                         File otemp = rebuildJar(orsrc.getLocal());
                         File temp = rebuildJar(rsrc.getLocal());
                         jout.putNextEntry(new ZipEntry(rsrc.getPath() + PATCH));
@@ -144,10 +159,8 @@ public class Differ
             }
 
             // now any file remaining in orsrcs needs to be removed
-            for (int ii = 0; ii < orsrcs.size(); ii++) {
-                Resource rsrc = orsrcs.get(ii);
-                // simply add an entry with the resource name and the
-                // deletion suffix
+            for (Resource rsrc : orsrcs) {
+                // add an entry with the resource name and the deletion suffix
                 if (verbose) {
                     System.out.println("Removal: " + rsrc.getPath());
                 }

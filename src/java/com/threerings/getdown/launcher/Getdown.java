@@ -404,31 +404,45 @@ public abstract class Getdown extends Thread
         // first clear all validation markers
         _app.clearValidationMarkers();
 
-        // attempt to download the patch file
-        final Resource patch = _app.getPatchResource();
+        // attempt to download the patch files
+        Resource patch = _app.getPatchResource(null);
         if (patch != null) {
-            // download the patch file...
             ArrayList<Resource> list = new ArrayList<Resource>();
             list.add(patch);
+
+            // add the auxiliary group patch files for activated groups
+            for (String auxgroup : _app.getAuxGroups()) {
+                if (_app.isAuxGroupActive(auxgroup)) {
+                    patch = _app.getPatchResource(auxgroup);
+                    if (patch != null) {
+                        list.add(patch);
+                    }
+                }
+            }
+
+            // download the patch files...
             download(list);
 
-            // and apply it...
+            // and apply them...
             updateStatus("m.patching");
-            try {
-                Patcher patcher = new Patcher();
-                patcher.patch(patch.getLocal().getParentFile(),
-                              patch.getLocal(), _progobs);
-            } catch (Exception e) {
-                Log.warning("Failed to apply patch.");
-                Log.logStackTrace(e);
-            }
+            for (Resource prsrc : list) {
+                try {
+                    Patcher patcher = new Patcher();
+                    patcher.patch(prsrc.getLocal().getParentFile(),
+                                  prsrc.getLocal(), _progobs);
+                } catch (Exception e) {
+                    Log.warning("Failed to apply patch [prsrc=" + prsrc + "].");
+                    Log.logStackTrace(e);
+                }
 
-            // lastly clean up the patch file
-            if (!patch.getLocal().delete()) {
-                Log.warning("Failed to delete '" + patch + "'.");
-                patch.getLocal().deleteOnExit();
+                // clean up the patch file
+                if (!prsrc.getLocal().delete()) {
+                    Log.warning("Failed to delete '" + prsrc + "'.");
+                    prsrc.getLocal().deleteOnExit();
+                }
             }
         }
+
         // if the patch resource is null, that means something was booched
         // in the application, so we skip the patching process but update
         // the metadata which will result in a "brute force" upgrade

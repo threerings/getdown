@@ -65,6 +65,9 @@ public class DigesterTask extends Task
         rsrcs.add(app.getConfigResource());
         rsrcs.addAll(app.getCodeResources());
         rsrcs.addAll(app.getResources());
+        for (String auxgroup : app.getAuxGroups()) {
+            rsrcs.addAll(app.getResources(auxgroup));
+        }
 
         // now generate the digest file
         Digest.createDigest(rsrcs, target);

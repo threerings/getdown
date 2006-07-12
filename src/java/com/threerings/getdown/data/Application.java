@@ -165,11 +165,69 @@ public class Application
     }
 
     /**
+     * Returns a list of all auxiliary resource groups defined by the
+     * application. An auxiliary resource group is a collection of resource
+     * files that are not downloaded unless a group token file is present in
+     * the application directory.
+     */
+    public List<String> getAuxGroups ()
+    {
+        return _auxgroups;
+    }
+
+    /**
+     * Returns true if the specified auxgroup has been "activated", false if
+     * not. Non-activated groups should be ignored, activated groups should be
+     * downloaded and patched along with the main resources.
+     */
+    public boolean isAuxGroupActive (String auxgroup)
+    {
+        Boolean active = _auxactive.get(auxgroup);
+        if (active == null) {
+            // TODO: compare the contents with the MD5 hash of the auxgroup
+            // name and the client's machine ident
+            active = getLocalPath(auxgroup + ".dat").exists();
+            _auxactive.put(auxgroup, active);
+        }
+        return active;
+    }
+
+    /**
+     * Returns a list of the non-code {@link Resource} objects included in the
+     * specified auxiliary resource group. If the group does not exist or has
+     * no resources, an empty list will be returned.
+     */
+    public List<Resource> getResources (String group)
+    {
+        ArrayList<Resource> auxrsrcs = _auxrsrcs.get(group);
+        return (auxrsrcs == null) ? new ArrayList<Resource>() : auxrsrcs;
+    }
+
+    /**
+     * Returns all non-code resources and all resources from active auxiliary
+     * resource groups.
+     */
+    public List<Resource> getActiveResources ()
+    {
+        ArrayList<Resource> rsrcs = new ArrayList<Resource>();
+        rsrcs.addAll(getResources());
+        for (String auxgroup : getAuxGroups()) {
+            if (isAuxGroupActive(auxgroup)) {
+                rsrcs.addAll(getResources(auxgroup));
+            }
+        }
+        return rsrcs;
+    }
+
+    /**
      * Returns a resource that can be used to download a patch file that
      * will bring this application from its current version to the target
      * version.
+     *
+     * @param auxgroup the auxiliary resource group for which a patch resource
+     * is desired or null for the main application patch resource.
      */
-    public Resource getPatchResource ()
+    public Resource getPatchResource (String auxgroup)
     {
         if (_targetVersion <= _version) {
             Log.warning("Requested patch resource for up-to-date or " +
@@ -178,7 +236,8 @@ public class Application
             return null;
         }
 
-        String pfile = "patch" + _version + ".dat";
+        String infix = (auxgroup == null) ? "" : ("-" + auxgroup);
+        String pfile = "patch" + infix + _version + ".dat";
         try {
             URL remote = new URL(createVAppBase(_targetVersion), pfile);
             return new Resource(pfile, remote, getLocalPath(pfile), false);
@@ -207,7 +266,7 @@ public class Application
         throws IOException
     {
         // parse our configuration file
-        HashMap<String, Object> cdata = null;
+        HashMap<String,Object> cdata = null;
         try {
             cdata = ConfigUtil.parseConfig(_config, checkPlatform);
         } catch (FileNotFoundException fnfe) {
@@ -268,44 +327,28 @@ public class Application
         // clear our arrays as we may be reinitializing
         _codes.clear();
         _resources.clear();
+        _auxgroups.clear();
+        _auxrsrcs.clear();
         _jvmargs.clear();
         _appargs.clear();
 
         // parse our code resources
-        String[] codes = ConfigUtil.getMultiValue(cdata, "code");
-        if (codes == null) {
+        if (ConfigUtil.getMultiValue(cdata, "code") == null) {
             throw new IOException("m.missing_code");
         }
-        for (int ii = 0; ii < codes.length; ii++) {
-            try {
-                _codes.add(createResource(codes[ii], false));
-            } catch (Exception e) {
-                Log.warning("Invalid code resource '" + codes[ii] + "'." + e);
-            }
-        }
+        parseResources(cdata, "code", false, _codes);
 
         // parse our non-code resources
-        String[] rsrcs = ConfigUtil.getMultiValue(cdata, "resource");
-        if (rsrcs != null) {
-            for (int ii = 0; ii < rsrcs.length; ii++) {
-                String rsrc = rsrcs[ii];
-                try {
-                    _resources.add(createResource(rsrc, false));
-                } catch (Exception e) {
-                    Log.warning("Invalid resource '" + rsrcs[ii] + "'. " + e);
-                }
-            }
-        }
-        rsrcs = ConfigUtil.getMultiValue(cdata, "uresource");
-        if (rsrcs != null) {
-            for (int ii = 0; ii < rsrcs.length; ii++) {
-                String rsrc = rsrcs[ii];
-                try {
-                    _resources.add(createResource(rsrc, true));
-                } catch (Exception e) {
-                    Log.warning("Invalid resource '" + rsrcs[ii] + "'. " + e);
-                }
-            }
+        parseResources(cdata, "resource", false, _resources);
+        parseResources(cdata, "uresource", true, _resources);
+
+        // parse our auxiliary resource groups
+        for (String auxgroup : parseList(cdata, "auxgroups")) {
+            ArrayList<Resource> rsrcs = new ArrayList<Resource>();
+            parseResources(cdata, auxgroup + ".resource", false, rsrcs);
+            parseResources(cdata, auxgroup + ".uresource", true, rsrcs);
+            _auxrsrcs.put(auxgroup, rsrcs);
+            _auxgroups.add(auxgroup);
         }
 
         // transfer our JVM arguments
@@ -322,16 +365,6 @@ public class Application
             for (int ii = 0; ii < appargs.length; ii++) {
                 _appargs.add(appargs[ii]);
             }
-        }
-
-        // TODO: make this less of a hack
-        String username = System.getProperty("username");
-        if (!StringUtil.isBlank(username)) {
-            _jvmargs.add("-Dusername=" + username);
-        }
-        String password = System.getProperty("password");
-        if (!StringUtil.isBlank(password)) {
-            _jvmargs.add("-Dpassword=" + password);
         }
 
         // look for custom arguments
@@ -477,10 +510,8 @@ public class Application
         }
 
         // pass along any pass-through arguments
-        for (Iterator itr = System.getProperties().entrySet().iterator();
-                itr.hasNext(); ) {
-            Map.Entry entry = (Map.Entry) itr.next();
-            String key = (String) entry.getKey();
+        for (Map.Entry entry : System.getProperties().entrySet()) {
+            String key = (String)entry.getKey();
             if (key.startsWith(PROP_PASSTHROUGH_PREFIX)) {
                 key = key.substring(PROP_PASSTHROUGH_PREFIX.length());
                 args.add("-D" + key + "=" + entry.getValue());
@@ -603,8 +634,10 @@ public class Application
         Log.info("Verifying application: " + _vappbase);
         Log.info("Version: " + _version);
         Log.info("Class: " + _class);
-//         Log.info("Code: " + StringUtil.toString(_codes.iterator()));
-//         Log.info("Resources: " + StringUtil.toString(_resources.iterator()));
+//         Log.info("Code: " +
+//                  StringUtil.toString(getCodeResources().iterator()));
+//         Log.info("Resources: " +
+//                  StringUtil.toString(getActiveResources().iterator()));
 //         Log.info("JVM Args: " + StringUtil.toString(_jvmargs.iterator()));
 //         Log.info("App Args: " + StringUtil.toString(_appargs.iterator()));
 
@@ -709,8 +742,8 @@ public class Application
     {
         ArrayList<Resource> rsrcs = new ArrayList<Resource>();
         ArrayList<Resource> failures = new ArrayList<Resource>();
-        rsrcs.addAll(_codes);
-        rsrcs.addAll(_resources);
+        rsrcs.addAll(getCodeResources());
+        rsrcs.addAll(getActiveResources());
 
         // total up the file size of the resources to validate
         long totalSize = 0L;
@@ -758,8 +791,8 @@ public class Application
      */
     public void clearValidationMarkers ()
     {
-        clearValidationMarkers(_codes.iterator());
-        clearValidationMarkers(_resources.iterator());
+        clearValidationMarkers(getCodeResources().iterator());
+        clearValidationMarkers(getActiveResources().iterator());
     }
 
     /**
@@ -850,9 +883,27 @@ public class Application
             path, getRemoteURL(path), getLocalPath(path), unpack);
     }
 
+    /** Used to parse resources with the specfied name. */
+    protected void parseResources (
+        HashMap<String,Object> cdata, String name, boolean unpack,
+        ArrayList<Resource> list)
+    {
+        String[] rsrcs = ConfigUtil.getMultiValue(cdata, name);
+        if (rsrcs == null) {
+            return;
+        }
+        for (String rsrc : rsrcs) {
+            try {
+                list.add(createResource(rsrc, unpack));
+            } catch (Exception e) {
+                Log.warning("Invalid resource '" + rsrc + "'. " + e);
+            }
+        }
+    }
+
     /** Used to parse rectangle specifications from the config file. */
-    protected Rectangle parseRect (HashMap<String, Object> cdata,
-        String name, Rectangle def)
+    protected Rectangle parseRect (
+        HashMap<String,Object> cdata, String name, Rectangle def)
     {
         String value = (String)cdata.get(name);
         if (!StringUtil.isBlank(value)) {
@@ -868,8 +919,8 @@ public class Application
     }
 
     /** Used to parse color specifications from the config file. */
-    protected Color parseColor (HashMap<String, Object> cdata, String name,
-            Color def)
+    protected Color parseColor (
+        HashMap<String,Object> cdata, String name, Color def)
     {
         String value = (String)cdata.get(name);
         if (!StringUtil.isBlank(value)) {
@@ -881,6 +932,14 @@ public class Application
             }
         }
         return def;
+    }
+
+    /** Parses a list of strings from the config file. */
+    protected String[] parseList (HashMap<String,Object> cdata, String name)
+    {
+        String value = (String)cdata.get(name);
+        return (value == null) ? new String[0] :
+            StringUtil.parseStringArray(value);
     }
 
     protected File _appdir;
@@ -898,6 +957,12 @@ public class Application
 
     protected ArrayList<Resource> _codes = new ArrayList<Resource>();
     protected ArrayList<Resource> _resources = new ArrayList<Resource>();
+
+    protected ArrayList<String> _auxgroups = new ArrayList<String>();
+    protected HashMap<String,ArrayList<Resource>> _auxrsrcs =
+        new HashMap<String,ArrayList<Resource>>();
+    protected HashMap<String,Boolean> _auxactive =
+        new HashMap<String,Boolean>();
 
     protected ArrayList<String> _jvmargs = new ArrayList<String>();
     protected ArrayList<String> _appargs = new ArrayList<String>();
