@@ -62,8 +62,8 @@
              bottom="${copy.pre} ${copyright.holder} ${copy.post}"
              destdir="${javadoc.dir}">
       <classpath refid="clazzpath"/>
-      <link href="http://www.samskivert.com/code/samskivert/javadoc"/>
-      <link href="http://java.sun.com/products/jdk/1.4/docs/api"/>
+      <link href="http://www.samskivert.com/code/samskivert/samskivert/docs/api"/>
+      <link href="http://java.sun.com/j2se/1.5/docs/api/"/>
     </javadoc>
   </target>
 
