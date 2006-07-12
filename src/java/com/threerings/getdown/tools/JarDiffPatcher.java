@@ -89,28 +89,26 @@ public class JarDiffPatcher
 
         // Files to implicit move
         Set<String> oldjarNames  = new HashSet<String>();
-	    
         Enumeration<JarEntry> oldEntries = oldJar.entries();
         if (oldEntries != null) {
             while  (oldEntries.hasMoreElements()) {
                 oldjarNames.add(oldEntries.nextElement().getName());
             }
         }
-	   
-        // size depends on the three parameters below, which is 
-        // basically the counter for each loop that do the actual
-        // writes to the output file
-        // since oldjarNames.size() changes in the first two loop
-        // below, we need to adjust the size accordingly also when
-        // oldjarNames.size() changes
-        double size = oldjarNames.size() + keys.length + jarDiff.size();   
+
+        // size depends on the three parameters below, which is basically the
+        // counter for each loop that do the actual writes to the output file
+        // since oldjarNames.size() changes in the first two loop below, we
+        // need to adjust the size accordingly also when oldjarNames.size()
+        // changes
+        double size = oldjarNames.size() + keys.length + jarDiff.size();
         double currentEntry = 0;
 
-        // Handle all remove commands	   
+        // Handle all remove commands
         oldjarNames.removeAll(ignoreSet);
         size -= ignoreSet.size();
 
-        // Add content from JARDiff 
+        // Add content from JARDiff
         Enumeration<JarEntry> entries = jarDiff.entries();
         if (entries != null) {
             while (entries.hasMoreElements()) {
@@ -120,19 +118,19 @@ public class JarDiffPatcher
                     currentEntry++;
                     writeEntry(jos, entry, jarDiff);
 
-                    // Remove entry from oldjarNames since no implicit 
-                    //move is needed
+                    // Remove entry from oldjarNames since no implicit move is
+                    // needed
                     boolean wasInOld = oldjarNames.remove(entry.getName());
 
-                    // Update progress counters. If it was in old, we do 
-                    // not need an implicit move, so adjust total size.
+                    // Update progress counters. If it was in old, we do not
+                    // need an implicit move, so adjust total size.
                     if (wasInOld) {
                         size--;
                     }
 
                 } else {
                     // no write is done, decrement size
-                    size--;		
+                    size--;
                 }
             }
         }
@@ -145,14 +143,13 @@ public class JarDiffPatcher
 
             // Get source JarEntry
             JarEntry oldEntry = oldJar.getJarEntry(oldName);
-			
             if (oldEntry == null) {
                 String moveCmd = MOVE_COMMAND + oldName + " " + newName;
                 throw new IOException("error.badmove: " + moveCmd);
-            } 
+            }
 
-            // Create dest JarEntry  
-            JarEntry newEntry = new JarEntry(newName);	
+            // Create dest JarEntry
+            JarEntry newEntry = new JarEntry(newName);
             newEntry.setTime(oldEntry.getTime());
             newEntry.setSize(oldEntry.getSize());
             newEntry.setCompressedSize(oldEntry.getCompressedSize());
@@ -161,39 +158,34 @@ public class JarDiffPatcher
             newEntry.setExtra(oldEntry.getExtra());
             newEntry.setComment(oldEntry.getComment());
 
-	
             updateObserver(observer, currentEntry, size);
             currentEntry++;
-	
+
             writeEntry(jos, newEntry, oldJar.getInputStream(oldEntry));
 
-            // Remove entry from oldjarNames since no implicit 
-            //move is needed
+            // Remove entry from oldjarNames since no implicit move is needed
             boolean wasInOld = oldjarNames.remove(oldName);
 
-            // Update progress counters. If it was in old, we do 
-            // not need an implicit move, so adjust total size.
-            if (wasInOld) size--;
-	
-        }	    
+            // Update progress counters. If it was in old, we do not need an
+            // implicit move, so adjust total size.
+            if (wasInOld) {
+                size--;
+            }
+        }
 
         // implicit move
         Iterator iEntries = oldjarNames.iterator();
         if (iEntries != null) {
             while (iEntries.hasNext()) {
-		   
                 String name = (String)iEntries.next();
                 JarEntry entry = oldJar.getJarEntry(name);
-		   
                 updateObserver(observer, currentEntry, size);
                 currentEntry++;
-                                                  
-                writeEntry(jos, entry, oldJar);                  
+                writeEntry(jos, entry, oldJar);
             }
         }
-            
         updateObserver(observer, currentEntry, size);
-          
+
         jos.finish();
     }
 
@@ -205,8 +197,8 @@ public class JarDiffPatcher
 	}
     }
 
-    protected void determineNameMapping (JarFile jarDiff, Set<String> ignoreSet,
-                                         Map<String, String> renameMap)
+    protected void determineNameMapping (
+        JarFile jarDiff, Set<String> ignoreSet, Map<String, String> renameMap)
         throws IOException
     {
         InputStream is = jarDiff.getInputStream(jarDiff.getEntry(INDEX_NAME));
@@ -225,37 +217,37 @@ public class JarDiffPatcher
             if (line.startsWith(REMOVE_COMMAND)) {
                 List<String> sub = getSubpaths(
                     line.substring(REMOVE_COMMAND.length()));
-                
+
                 if (sub.size() != 1) {
                     throw new IOException("error.badremove: " + line);
                 }
                 ignoreSet.add(sub.get(0));
 
             } else if (line.startsWith(MOVE_COMMAND)) {
-                List<String> sub = getSubpaths(line.substring(
-                    MOVE_COMMAND.length()));
+                List<String> sub = getSubpaths(
+                    line.substring(MOVE_COMMAND.length()));
                 if (sub.size() != 2) {
                     throw new IOException("error.badmove: " + line);
                 }
 
-        		// target of move should be the key
+                // target of move should be the key
                 if (renameMap.put(sub.get(1), sub.get(0)) != null) {
-        		    // invalid move - should not move to same target twice
-        		    throw new IOException("error.badmove: " + line);
-        		}
+                    // invalid move - should not move to same target twice
+                    throw new IOException("error.badmove: " + line);
+                }
 
             } else if (line.length() > 0) {
                 throw new IOException("error.badcommand: " + line);
             }
         }
     }
-    
+
     protected List<String> getSubpaths (String path)
     {
         int index = 0;
         int length = path.length();
         ArrayList<String> sub = new ArrayList<String>();
-        
+
         while (index < length) {
             while (index < length && Character.isWhitespace
                    (path.charAt(index))) {
@@ -265,21 +257,19 @@ public class JarDiffPatcher
                 int start = index;
                 int last = start;
                 String subString = null;
-                
+
                 while (index < length) {
                     char aChar = path.charAt(index);
                     if (aChar == '\\' && (index + 1) < length &&
                         path.charAt(index + 1) == ' ') {
-                        
+
                         if (subString == null) {
                             subString = path.substring(last, index);
-                        }
-                        else {
+                        } else {
                             subString += path.substring(last, index);
                         }
                         last = ++index;
-                    }
-                    else if (Character.isWhitespace(aChar)) {
+                    } else if (Character.isWhitespace(aChar)) {
                         break;
                     }
                     index++;
@@ -287,8 +277,7 @@ public class JarDiffPatcher
                 if (last != index) {
                     if (subString == null) {
                         subString = path.substring(last, index);
-                    }
-                    else {
+                    } else {
                         subString += path.substring(last, index);
                     }
                 }
@@ -310,7 +299,7 @@ public class JarDiffPatcher
         throws IOException
     {
         jos.putNextEntry(new JarEntry(entry.getName()));
-        
+
         // Read the entry
         int size = data.read(newBytes);
         while (size != -1) {
