@@ -9,7 +9,7 @@
 -injars lib/jRegistryKey.jar(!META-INF/*)
 -injars lib/samskivert.jar(!META-INF/*,!**/velocity/**,!**/xml/**)
 -injars lib/commons-io.jar(!META-INF/*)
--injars lib/snark.jar(!META-INF/*)
+# -injars lib/snark.jar(!META-INF/*)
 
 -libraryjars <java.home>/lib/rt.jar
 -dontskipnonpubliclibraryclasses
