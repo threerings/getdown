@@ -21,16 +21,9 @@
 package com.threerings.getdown.launcher;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
-import java.net.HttpURLConnection;
-
-import java.util.Iterator;
 import java.util.List;
-
-import com.samskivert.io.StreamUtil;
 
 import com.threerings.getdown.Log;
 import com.threerings.getdown.data.Resource;
@@ -40,7 +33,7 @@ import com.threerings.getdown.data.Resource;
  * requests to obtain size information and then downloading the files
  * individually, reporting progress back via a callback interface.
  */
-public class Downloader extends Thread
+public abstract class Downloader extends Thread
 {
     /**
      * An interface used to communicate status back to an external entity.
@@ -88,7 +81,7 @@ public class Downloader extends Thread
      * #start} method must be called on the downloader to initiate the
      * download process.
      */
-    public Downloader (List resources, Observer obs)
+    public Downloader (List<Resource> resources, Observer obs)
     {
         super("Downloader");
         _resources = resources;
@@ -109,8 +102,8 @@ public class Downloader extends Thread
             }
 
             // first compute the total size of our download
-            for (Iterator iter = _resources.iterator(); iter.hasNext(); ) {
-                discoverSize((Resource)iter.next());
+            for (Resource resource : _resources) {
+                discoverSize(resource);
             }
 
             Log.info("Downloading " + _totalSize + " bytes...");
@@ -119,9 +112,8 @@ public class Downloader extends Thread
             _start = System.currentTimeMillis();
 
             // now actually download the files
-            for (Iterator iter = _resources.iterator(); iter.hasNext(); ) {
-                current = (Resource)iter.next();
-                download(current);
+            for (Resource resource : _resources) {
+                download(resource);
             }
 
             // finally report our download completion if we did not
@@ -140,28 +132,16 @@ public class Downloader extends Thread
     }
 
     /**
-     * Issues a HEAD request for the specified resource and notes the
-     * amount of data we will be downloading to account for it.
+     * Notes the amount of data needed to download the given resource..
      */
     protected void discoverSize (Resource rsrc)
         throws IOException
     {
-        // read the file information via an HTTP HEAD request
-        HttpURLConnection ucon = (HttpURLConnection)
-            rsrc.getRemote().openConnection();
-        ucon.setRequestMethod("HEAD");
-        ucon.connect();
-
-        // make sure we got a satisfactory response code
-        if (ucon.getResponseCode() != HttpURLConnection.HTTP_OK) {
-            String errmsg = "Unable to check up-to-date for " +
-                rsrc.getRemote() + ": " + ucon.getResponseCode();
-            throw new IOException(errmsg);
-        }
-
         // add this resource's size to our total download size
-        _totalSize += ucon.getContentLength();
+        _totalSize += checkSize(rsrc);
     }
+
+    protected abstract long checkSize (Resource rsrc) throws IOException;
 
     /**
      * Downloads the specified resource from its remote location to its
@@ -179,79 +159,45 @@ public class Downloader extends Thread
                             "certainly fail.");
             }
         }
-
-        // download the resource from the specified URL
-        HttpURLConnection ucon = (HttpURLConnection)
-            rsrc.getRemote().openConnection();
-        ucon.connect();
-
-        // make sure we got a satisfactory response code
-        if (ucon.getResponseCode() != HttpURLConnection.HTTP_OK) {
-            String errmsg = "Unable to download resource " +
-                rsrc.getRemote() + ": " + ucon.getResponseCode();
-            throw new IOException(errmsg);
-        }
-
-        Log.info("Downloading resource [url=" + rsrc.getRemote() + "].");
-        InputStream in = null;
-        FileOutputStream out = null;
-        try {
-            in = ucon.getInputStream();
-            out = new FileOutputStream(rsrc.getLocal());
-            int read;
-
-            // TODO: look to see if we have a download info file
-            // containing info on potentially partially downloaded data;
-            // if so, use a "Range: bytes=HAVE-" header.
-
-            // read in the file data
-            while ((read = in.read(_buffer)) != -1) {
-                // write it out to our local copy
-                out.write(_buffer, 0, read);
-
-                // if we have no observer, then don't bother computing
-                // download statistics
-                if (_obs == null) {
-                    continue;
-                }
-
-                // note that we've downloaded some data
-                _currentSize += read;
-
-                // notify the observer if it's been sufficiently long
-                // since our last notification
-                long now = System.currentTimeMillis();
-                if ((now - _lastUpdate) >= UPDATE_DELAY) {
-                    _lastUpdate = now;
-
-                    // compute our bytes per second
-                    long secs = (now - _start) / 1000L;
-                    long bps = (secs == 0) ? 0 : (_currentSize / secs);
-
-                    // compute our percentage completion
-                    int pctdone = (int)(
-                        (_currentSize / (float)_totalSize) * 100f);
-
-                    // estimate our time remaining
-                    long remaining = (bps <= 0) ? -1 :
-                        (_totalSize - _currentSize) / bps;
-
-                    // make sure we only report 100% exactly once
-                    if (pctdone < 100 || !_complete) {
-                        _complete = (pctdone == 100);
-                        _obs.downloadProgress(pctdone, remaining);
-                    }
-                }
-            }
-
-        } finally {
-            StreamUtil.close(in);
-            StreamUtil.close(out);
-        }
+        doDownload(rsrc);
     }
 
+    protected void updateObserver ()
+    {
+        // notify the observer if it's been sufficiently long
+        // since our last notification
+        long now = System.currentTimeMillis();
+        if ((now - _lastUpdate) >= UPDATE_DELAY) {
+            _lastUpdate = now;
+
+            // compute our bytes per second
+            long secs = (now - _start) / 1000L;
+            long bps = (secs == 0) ? 0 : (_currentSize / secs);
+
+            // compute our percentage completion
+            int pctdone = (int)(
+                (_currentSize / (float)_totalSize) * 100f);
+
+            // estimate our time remaining
+            long remaining = (bps <= 0) ? -1 :
+                (_totalSize - _currentSize) / bps;
+
+            // make sure we only report 100% exactly once
+            if (pctdone < 100 || !_complete) {
+                _complete = (pctdone == 100);
+                _obs.downloadProgress(pctdone, remaining);
+            }
+        }   
+    }
+
+    /**
+     * Accomplishes the copying of the resource from remote location to
+     * local location using transport-specific code
+     */
+    protected abstract void doDownload (Resource rsrc) throws IOException;
+
     /** The list of resources to be downloaded. */
-    protected List _resources;
+    protected List<Resource> _resources;
 
     /** The observer with whom we are communicating. */
     protected Observer _obs;

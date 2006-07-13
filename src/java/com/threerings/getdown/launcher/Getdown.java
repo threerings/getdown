@@ -24,15 +24,12 @@ import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.EventQueue;
 import java.awt.Image;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 
 import javax.imageio.ImageIO;
 import javax.swing.JApplet;
 import javax.swing.JFrame;
 
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -370,7 +367,7 @@ public abstract class Getdown extends Thread
 
                 // now verify our resources...
                 setStatus("m.validating", -1, -1L, false);
-                List failures = _app.verifyResources(_progobs);
+                List<Resource> failures = _app.verifyResources(_progobs);
                 if (failures == null) {
                     Log.info("Resources verified.");
                     launch();
@@ -474,7 +471,7 @@ public abstract class Getdown extends Thread
      * Called if the application is determined to require resource
      * downloads.
      */
-    protected void download (List resources)
+    protected void download (List<Resource> resources)
     {
         final Object lock = new Object();
 
@@ -506,7 +503,14 @@ public abstract class Getdown extends Thread
                 }
             }
         };
-        Downloader dl = new Downloader(resources, obs);
+
+        // Torrent downloading is disabled by default until the kinks are out
+        Downloader dl;
+        if (false) {
+            dl = new TorrentDownloader(resources, obs);
+        } else {
+            dl = new HTTPDownloader(resources, obs);
+        }
         dl.start();
 
         // now wait for it to complete
