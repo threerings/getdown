@@ -20,15 +20,12 @@
 
 package com.threerings.getdown.launcher;
 
-import java.awt.Component;
 import java.awt.Container;
-import java.awt.EventQueue;
 import java.awt.Image;
 import java.net.URL;
 
 import javax.swing.JApplet;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 
 import java.io.IOException;
 import java.io.FileOutputStream;

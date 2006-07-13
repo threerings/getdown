@@ -755,7 +755,7 @@ public class Application
      * to go, null will be returned and the application is considered
      * ready to run.
      */
-    public List verifyResources (ProgressObserver obs)
+    public List<Resource> verifyResources (ProgressObserver obs)
     {
         ArrayList<Resource> rsrcs = new ArrayList<Resource>();
         ArrayList<Resource> failures = new ArrayList<Resource>();
@@ -764,14 +764,12 @@ public class Application
 
         // total up the file size of the resources to validate
         long totalSize = 0L;
-        for (Iterator<Resource> iter = rsrcs.iterator(); iter.hasNext(); ) {
-            Resource rsrc = iter.next();
+        for (Resource rsrc : rsrcs) {
             totalSize += rsrc.getLocal().length();
         }
 
         MetaProgressObserver mpobs = new MetaProgressObserver(obs, totalSize);
-        for (Iterator<Resource> iter = rsrcs.iterator(); iter.hasNext(); ) {
-            Resource rsrc = iter.next();
+        for (Resource rsrc : rsrcs) {
             mpobs.startElement(rsrc.getLocal().length());
 
             if (rsrc.isMarkedValid()) {
