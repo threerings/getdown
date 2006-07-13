@@ -506,11 +506,11 @@ public abstract class Getdown extends Thread
 
         // Torrent downloading is disabled by default until the kinks are out
         Downloader dl;
-        if (false) {
-            dl = new TorrentDownloader(resources, obs);
-        } else {
+//         if (false) {
+//             dl = new TorrentDownloader(resources, obs);
+//         } else {
             dl = new HTTPDownloader(resources, obs);
-        }
+//         }
         dl.start();
 
         // now wait for it to complete

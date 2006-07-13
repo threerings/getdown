@@ -24,8 +24,18 @@
     <pathelement location="${deploy.dir}/classes"/>
   </path>
 
+  <!-- checks the availability of certain libraries -->
+  <target name="check-available">
+    <available property="snark.present"
+     classname="org.klomp.snark.Snark" classpathref="clazzpath"/>
+    <echo message="Have Snark: ${snark.present}"/>
+    <condition property="build.torrent">
+      <isset property="snark.present"/>
+    </condition>
+  </target>
+
   <!-- prepares the application directories -->
-  <target name="prepare">
+  <target name="prepare" depends="check-available">
     <mkdir dir="${deploy.dir}"/>
     <mkdir dir="${deploy.dir}/classes"/>
     <mkdir dir="${javadoc.dir}"/>
@@ -48,6 +58,7 @@
            debug="on" optimize="off" deprecation="on"
            classpathref="clazzpath" includeAntRuntime="no"
            source="1.5" target="1.5">
+      <exclude name="**/TorrentDownloader*" unless="build.torrent"/>
       <compilerarg value="-Xlint:unchecked"/>
     </javac>
   </target>
@@ -62,7 +73,7 @@
              bottom="${copy.pre} ${copyright.holder} ${copy.post}"
              destdir="${javadoc.dir}">
       <classpath refid="clazzpath"/>
-      <link href="http://www.samskivert.com/code/samskivert/samskivert/docs/api"/>
+      <link href="http://samskivert.com/code/samskivert/samskivert/docs/api"/>
       <link href="http://java.sun.com/j2se/1.5/docs/api/"/>
     </javadoc>
   </target>
