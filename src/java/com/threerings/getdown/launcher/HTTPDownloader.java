@@ -10,6 +10,9 @@ import com.samskivert.io.StreamUtil;
 import com.threerings.getdown.Log;
 import com.threerings.getdown.data.Resource;
 
+/**
+ * Implements downloading files over HTTP
+ */
 public class HTTPDownloader extends Downloader
 {
     public HTTPDownloader (List<Resource> resources, Observer obs)
@@ -40,6 +43,7 @@ public class HTTPDownloader extends Downloader
         return ucon.getContentLength();
     }
 
+    // documentation inherited
     protected void doDownload (Resource rsrc)
         throws IOException
     {

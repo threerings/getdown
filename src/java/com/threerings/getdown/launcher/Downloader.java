@@ -141,6 +141,9 @@ public abstract class Downloader extends Thread
         _totalSize += checkSize(rsrc);
     }
 
+    /**
+     * Performs the protocol-specific portion of checking download size.
+     */
     protected abstract long checkSize (Resource rsrc) throws IOException;
 
     /**
@@ -162,6 +165,10 @@ public abstract class Downloader extends Thread
         doDownload(rsrc);
     }
 
+    /**
+     * Periodically called by the protocol-specific downloaders
+     * to update their progress.
+     */
     protected void updateObserver ()
     {
         // notify the observer if it's been sufficiently long
@@ -192,7 +199,7 @@ public abstract class Downloader extends Thread
 
     /**
      * Accomplishes the copying of the resource from remote location to
-     * local location using transport-specific code
+     * local location using protocol-specific code
      */
     protected abstract void doDownload (Resource rsrc) throws IOException;
 

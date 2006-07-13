@@ -10,6 +10,9 @@ import org.klomp.snark.SnarkShutdown;
 import com.threerings.getdown.Log;
 import com.threerings.getdown.data.Resource;
 
+/**
+ * Implements downloading data using BitTorrent
+ */
 public class TorrentDownloader extends Downloader
 {
     public TorrentDownloader (List<Resource> resources, Observer obs)
@@ -24,7 +27,7 @@ public class TorrentDownloader extends Downloader
         }
     }
 
-    @Override
+    // documentation inherited
     protected long checkSize(Resource rsrc)
         throws IOException
     {
@@ -44,7 +47,7 @@ public class TorrentDownloader extends Downloader
         return length;
     }
 
-    @Override
+    // documentation inherited
     protected void doDownload(Resource rsrc)
         throws IOException
     {
@@ -75,9 +78,19 @@ public class TorrentDownloader extends Downloader
         snark.shutdown();
     }
 
+    /** Keeps a mapping of resource names to torrent downloaders */
     protected HashMap<Resource, Snark> _torrentmap =
         new HashMap<Resource, Snark>();
+
+    /** If we fail, revert to using this HTTP download transport */
     protected HTTPDownloader _fallback = null;
+
+    /** The length of time before we check for adequate progress*/
     protected static final long TIME_THRESHOLD = 60 * 1000l;
+
+    /**
+     * The minimum amount of data that must be downloaded within the
+     * initial period in order to continue using BitTorrent
+     */
     protected static final long SIZE_THRESHOLD = 4000l;
 }
