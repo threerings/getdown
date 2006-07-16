@@ -504,13 +504,18 @@ public abstract class Getdown extends Thread
             }
         };
 
-        // Torrent downloading is disabled by default until the kinks are out
         Downloader dl;
-//         if (false) {
-//             dl = new TorrentDownloader(resources, obs);
-//         } else {
+        if (resources.equals(_app.getAllResources())) {
+            ArrayList<Resource> full = new ArrayList<Resource>();
+            full.add(_app.getFullResource());
+            full.addAll(resources);
+            dl = new TorrentDownloader(full, obs);
+        } else if (resources.size() == 1 &&
+                resources.get(0).getPath().startsWith("patch")) {
+            dl = new TorrentDownloader(resources, obs);
+        } else {
             dl = new HTTPDownloader(resources, obs);
-//         }
+        }
         dl.start();
 
         // now wait for it to complete

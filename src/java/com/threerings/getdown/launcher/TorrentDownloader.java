@@ -27,6 +27,10 @@ public class TorrentDownloader extends Downloader
             Runtime.getRuntime().addShutdownHook(snarkStopper);
             _torrentmap.put(resource, snark);
             _stoppermap.put(resource, snarkStopper);
+            if (resource.getPath().equals("full")) {
+                _metaDownload = true;
+                break;
+            }
         }
     }
 
@@ -34,6 +38,12 @@ public class TorrentDownloader extends Downloader
     protected long checkSize(Resource rsrc)
         throws IOException
     {
+        if (_metaDownload && !rsrc.getPath().equals("full")) {
+            return 0;
+        }
+        if (_fallback != null) {
+            return _fallback.checkSize(rsrc);
+        }
         Snark snark = _torrentmap.get(rsrc);
         long length = -1;
         try {
@@ -41,9 +51,16 @@ public class TorrentDownloader extends Downloader
             length = snark.meta.getTotalLength();
         } catch (IOException ioe) {
             Log.warning("Bittorrent failed, falling back to HTTP");
-            _stoppermap.get(rsrc).run();
+            SnarkShutdown stopper = _stoppermap.get(rsrc);
+            stopper.run();
+            Runtime.getRuntime().removeShutdownHook(stopper);
             _fallback = new HTTPDownloader(_resources, _obs);
-            length = _fallback.checkSize(rsrc);
+            if (_metaDownload && rsrc.getPath().equals("full")) {
+                length = 0;
+            } else {
+                length = _fallback.checkSize(rsrc);
+            }
+            _metaDownload = false;
         }
         return length;
     }
@@ -52,9 +69,16 @@ public class TorrentDownloader extends Downloader
     protected void doDownload(Resource rsrc)
         throws IOException
     {
-        if (_fallback != null) {
-            _fallback.doDownload(rsrc);
+        if (_metaDownload && !rsrc.getPath().equals("full")) {
             return;
+        }
+        if (_fallback != null) {
+            if (rsrc.getPath().equals("full")) {
+                return;
+            } else {
+                _fallback.doDownload(rsrc);
+                return;
+            }
         }
         Snark snark = _torrentmap.get(rsrc);
         SnarkShutdown snarkStopper = _stoppermap.get(rsrc);
@@ -67,6 +91,7 @@ public class TorrentDownloader extends Downloader
                     (now - _start) >= TIME_THRESHOLD) {
                     // The download isn't going as planned, abort;
                     snarkStopper.run();
+                    Runtime.getRuntime().removeShutdownHook(snarkStopper);
                     _fallback = new HTTPDownloader(_resources, _obs);
                     _fallback.doDownload(rsrc);   
                     return;
@@ -90,6 +115,12 @@ public class TorrentDownloader extends Downloader
 
     /** The length of time before we check for adequate progress*/
     protected static final long TIME_THRESHOLD = 60 * 1000l;
+
+    /**
+     * Whether we are downloading an artificially-generated metafile
+     * representing all of the {@link Resource}s at the end of the file.
+     */
+    protected boolean _metaDownload = false;
 
     /**
      * The minimum amount of data that must be downloaded within the

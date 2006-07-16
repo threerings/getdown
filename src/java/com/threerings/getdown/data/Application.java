@@ -182,6 +182,18 @@ public class Application
     }
 
     /**
+     * Returns a list of all the {@link Resource} objects used by
+     * this application.
+     */
+    public List<Resource> getAllResources ()
+    {
+        List<Resource> allResources = new ArrayList<Resource>();
+        allResources.addAll(getCodeResources());
+        allResources.addAll(getActiveResources());
+        return allResources;
+    }
+
+    /**
      * Returns a list of all auxiliary resource groups defined by the
      * application. An auxiliary resource group is a collection of resource
      * files that are not downloaded unless a group token file is present in
@@ -260,6 +272,24 @@ public class Application
             return new Resource(pfile, remote, getLocalPath(pfile), false);
         } catch (Exception e) {
             Log.warning("Failed to create patch resource path [pfile=" + pfile +
+                        ", appbase=" + _appbase + ", tvers=" + _targetVersion +
+                        ", error=" + e + "].");
+            return null;
+        }
+    }
+
+    /**
+     * Returns a resource that can be used to download an archive containing
+     * all files belonging to the application.
+     */
+    public Resource getFullResource ()
+    {
+        String file = "full";
+        try {
+            URL remote = new URL(createVAppBase(_targetVersion), file);
+            return new Resource(file, remote, getLocalPath(file), false);
+        } catch (Exception e) {
+            Log.warning("Failed to create full resource path [file=" + file +
                         ", appbase=" + _appbase + ", tvers=" + _targetVersion +
                         ", error=" + e + "].");
             return null;
@@ -757,10 +787,8 @@ public class Application
      */
     public List<Resource> verifyResources (ProgressObserver obs)
     {
-        ArrayList<Resource> rsrcs = new ArrayList<Resource>();
-        ArrayList<Resource> failures = new ArrayList<Resource>();
-        rsrcs.addAll(getCodeResources());
-        rsrcs.addAll(getActiveResources());
+        List<Resource> rsrcs = getAllResources();
+        List<Resource> failures = new ArrayList<Resource>();
 
         // total up the file size of the resources to validate
         long totalSize = 0L;
@@ -806,8 +834,7 @@ public class Application
      */
     public void clearValidationMarkers ()
     {
-        clearValidationMarkers(getCodeResources().iterator());
-        clearValidationMarkers(getActiveResources().iterator());
+        clearValidationMarkers(getAllResources().iterator());
     }
 
     /**
