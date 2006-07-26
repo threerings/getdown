@@ -151,6 +151,15 @@ public class Application
     }
 
     /**
+     * Indicates whether or not we support downloading of our resources using
+     * the Bittorrent protocol.
+     */
+    public boolean getUseTorrent ()
+    {
+        return _useTorrent;
+    }
+
+    /**
      * Returns a resource that refers to the application configuration
      * file itself.
      */
@@ -428,6 +437,9 @@ public class Application
                 Log.warning("Failed to parse '" + file + "': " + t);
             }
         }
+
+        // determine whether or not we should be using bit torrent
+        _useTorrent = Boolean.parseBoolean((String)cdata.get("torrent"));
 
         // look for a debug.txt file which causes us to run in java.exe on
         // Windows so that we can obtain a thread dump of the running JVM
@@ -996,6 +1008,7 @@ public class Application
     protected String _class;
     protected String _name;
     protected boolean _windebug;
+    protected boolean _useTorrent = false;
 
     protected ArrayList<Resource> _codes = new ArrayList<Resource>();
     protected ArrayList<Resource> _resources = new ArrayList<Resource>();

@@ -504,21 +504,26 @@ public abstract class Getdown extends Thread
             }
         };
 
-        Downloader dl;
-        if (resources.equals(_app.getAllResources())) {
-            ArrayList<Resource> full = new ArrayList<Resource>();
-            full.add(_app.getFullResource());
-            full.addAll(resources);
-            dl = new TorrentDownloader(full, obs);
-        } else if (resources.size() == 1 &&
-                resources.get(0).getPath().startsWith("patch")) {
-            dl = new TorrentDownloader(resources, obs);
-        } else {
-            dl = new HTTPDownloader(resources, obs);
-        }
-        dl.start();
+        // assume we're going to use an HTTP downloader
+        Downloader dl = new HTTPDownloader(resources, obs);
 
-        // now wait for it to complete
+        // if torrent downloading is enabled and we are downloading the right
+        // set of resources (a single patch file or the entire app from
+        // scratch), then use a torrent downloader instead
+        if (_app.getUseTorrent()) {
+            if (resources.equals(_app.getAllResources())) {
+                ArrayList<Resource> full = new ArrayList<Resource>();
+                full.add(_app.getFullResource());
+                full.addAll(resources);
+                dl = new TorrentDownloader(full, obs);
+            } else if (resources.size() == 1 &&
+                       resources.get(0).getPath().startsWith("patch")) {
+                dl = new TorrentDownloader(resources, obs);
+            }
+        }
+
+        // start the download and wait for it to complete
+        dl.start();
         synchronized (lock) {
             try {
                 lock.wait();
