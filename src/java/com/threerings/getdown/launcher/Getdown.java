@@ -509,9 +509,15 @@ public abstract class Getdown extends Thread
 
         // if torrent downloading is enabled and we are downloading the right
         // set of resources (a single patch file or the entire app from
-        // scratch), then use a torrent downloader instead
+        // scratch), then use a torrent downloader instead.
+        // Because many of our installers also bundle background.png,
+        // and might bundle more required files, we need to allow a 
+        // 'fudge factor' threshhold for determining at which point it is
+        // faster to torrent, and at which point we should use HTTP.
         if (_app.getUseTorrent()) {
-            if (resources.size() >= _app.getAllResources().size() - 1) {
+            int verifiedResources = _app.getAllResources().size() -
+                resources.size();
+            if (verifiedResources <= MAX_TORRENT_VERIFIED_RESOURCES) {
                 ArrayList<Resource> full = new ArrayList<Resource>();
                 full.add(_app.getFullResource());
                 full.addAll(resources);
@@ -748,6 +754,12 @@ public abstract class Getdown extends Thread
 
     protected boolean _dead;
     protected long _startup;
+
+    /**
+     * The maximum number of resources that can be already present for
+     * bittorrent to be used.
+     */
+    protected static final int MAX_TORRENT_VERIFIED_RESOURCES = 1;
 
     protected static final int MAX_LOOPS = 5;
     protected static final long MIN_EXIST_TIME = 5000L;
