@@ -511,7 +511,7 @@ public abstract class Getdown extends Thread
         // set of resources (a single patch file or the entire app from
         // scratch), then use a torrent downloader instead
         if (_app.getUseTorrent()) {
-            if (resources.equals(_app.getAllResources())) {
+            if (resources.size() >= _app.getAllResources().size() - 1) {
                 ArrayList<Resource> full = new ArrayList<Resource>();
                 full.add(_app.getFullResource());
                 full.addAll(resources);
