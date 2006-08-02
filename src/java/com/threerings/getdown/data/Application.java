@@ -439,7 +439,7 @@ public class Application
         }
 
         // determine whether or not we should be using bit torrent
-        _useTorrent = Boolean.parseBoolean((String)cdata.get("torrent"));
+        _useTorrent = (cdata.get("torrent") != null);
 
         // look for a debug.txt file which causes us to run in java.exe on
         // Windows so that we can obtain a thread dump of the running JVM
