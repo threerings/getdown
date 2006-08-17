@@ -54,7 +54,7 @@ public class TorrentDownloader extends Downloader
             SnarkShutdown stopper = _stoppermap.get(rsrc);
             stopper.run();
             Runtime.getRuntime().removeShutdownHook(stopper);
-            _fallback = new HTTPDownloader(_resources, _obs);
+            fallback();
             if (_metaDownload && rsrc.getPath().equals("full")) {
                 length = 0;
             } else {
@@ -87,19 +87,39 @@ public class TorrentDownloader extends Downloader
             long now = System.currentTimeMillis();
             if ((now - _lastUpdate) >= UPDATE_DELAY) {
                 _currentSize = snark.coordinator.getDownloaded();
-                if (_currentSize < SIZE_THRESHOLD &&
-                    (now - _start) >= TIME_THRESHOLD) {
+                if ((_currentSize < SIZE_THRESHOLD &&
+                        (now - _start) >= TIME_THRESHOLD) ||
+                        (_currentSize == 0 &&
+                            (now - _start) >= TIME_THRESHOLD / 4)) {
+                    Log.info("Torrenting too slow, falling back to HTTP.");
                     // The download isn't going as planned, abort;
                     snarkStopper.run();
                     Runtime.getRuntime().removeShutdownHook(snarkStopper);
-                    _fallback = new HTTPDownloader(_resources, _obs);
-                    _fallback.doDownload(rsrc);   
+                    snarkStopper = null;
+                    _stoppermap.remove(rsrc);
+                    if (_metaDownload) {
+                        _metaDownload = false;
+                    }
+                    fallback();
                     return;
                 }
             }
             updateObserver();
         }
-        snarkStopper.run();
+        if (snarkStopper != null) {
+            snarkStopper.run();
+            Runtime.getRuntime().removeShutdownHook(snarkStopper);
+            _stoppermap.remove(rsrc);
+        }
+    }
+
+    /**
+     * If torrent downloading either bugs out or is too slow, switch to a
+     * different method by creating the fallback downloader.
+     */
+    protected void fallback ()
+    {
+        _fallback = new HTTPDownloader(_resources, _obs, _totalSize);
     }
 
     /** Keeps a mapping of resource names to torrent downloaders */

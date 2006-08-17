@@ -21,6 +21,17 @@ public class HTTPDownloader extends Downloader
     }
 
     /**
+     * A method of instantiating a downloader to take over the job partway.
+     */
+    public HTTPDownloader (List<Resource> resources, Observer obs,
+        long totalSize)
+    {
+        super(resources, obs);
+        _totalSize = totalSize;
+        _start = System.currentTimeMillis();
+    }
+
+    /**
      * Issues a HEAD request for the specified resource and notes the
      * amount of data we will be downloading to account for it.
      */
