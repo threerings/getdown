@@ -81,10 +81,9 @@ public class GetdownApplet extends JApplet
                 try {
                     Signature sig = Signature.getInstance("SHA1withRSA");
                     sig.initVerify(cert);
-                    Log.info(params);
                     sig.update(params.getBytes());
-                    byte[] rawsig = Base64.decodeBase64(signature.getBytes());
-                    if (sig.verify(rawsig)) {
+                    if (sig.verify(Base64.decodeBase64(
+                            signature.getBytes()))) {
                         _safe = true;
                     }
                 } catch (GeneralSecurityException gse) {
