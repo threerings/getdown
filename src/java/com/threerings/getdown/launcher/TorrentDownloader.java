@@ -83,14 +83,15 @@ public class TorrentDownloader extends Downloader
         Snark snark = _torrentmap.get(rsrc);
         SnarkShutdown snarkStopper = _stoppermap.get(rsrc);
         snark.collectPieces();
+        // Override the start time, since Snark allocates storage prior to
+        // doing any downloading
+        _start = System.currentTimeMillis();
         while (_currentSize != snark.meta.getTotalLength()) {
             long now = System.currentTimeMillis();
             if ((now - _lastUpdate) >= UPDATE_DELAY) {
                 _currentSize = snark.coordinator.getDownloaded();
                 if ((_currentSize < SIZE_THRESHOLD &&
-                        (now - _start) >= TIME_THRESHOLD) ||
-                        (_currentSize == 0 &&
-                            (now - _start) >= TIME_THRESHOLD / 4)) {
+                        (now - _start) >= TIME_THRESHOLD)) {
                     Log.info("Torrenting too slow, falling back to HTTP.");
                     // The download isn't going as planned, abort;
                     snarkStopper.run();

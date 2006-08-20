@@ -1,5 +1,6 @@
 samskivert.jar
 ant.jar
+commons-codec.jar
 commons-io.jar
 javaws.jar
 snark.jar

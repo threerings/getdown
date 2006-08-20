@@ -23,6 +23,9 @@ package com.threerings.getdown.launcher;
 import java.awt.Container;
 import java.awt.Image;
 import java.net.URL;
+import java.security.GeneralSecurityException;
+import java.security.Signature;
+import java.security.cert.Certificate;
 
 import javax.swing.JApplet;
 import javax.swing.JPanel;
@@ -31,6 +34,8 @@ import java.io.IOException;
 import java.io.FileOutputStream;
 import java.io.File;
 import java.io.PrintStream;
+
+import org.apache.commons.codec.binary.Base64;
 
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
@@ -46,6 +51,54 @@ public class GetdownApplet extends JApplet
     @Override // documentation inherited
     public void init ()
     {
+        // First off, verify that we are not being hijacked to execute
+        // malicious code in the name of the signer.
+        String appbase = getParameter("appbase");
+        String appname = getParameter("appname");
+        String imgpath = getParameter("bgimage");
+        if (appbase == null) {
+            appbase = "";
+        }
+        if (appname == null) {
+            appname = "";
+        }
+        if (imgpath == null) {
+            imgpath = "";
+        }
+        String params = appbase + appname + imgpath;
+        String signature = getParameter("signature");
+        if (signature == null) {
+            signature = "";
+        }
+
+        Object[] signers = GetdownApplet.class.getSigners();
+        if (signers.length == 0) {
+            _safe = true;
+        }
+        for (Object signer : signers) {
+            if (!_safe && signer instanceof Certificate) {
+                Certificate cert = (Certificate)signer;
+                try {
+                    Signature sig = Signature.getInstance("SHA1withRSA");
+                    sig.initVerify(cert);
+                    Log.info(params);
+                    sig.update(params.getBytes());
+                    byte[] rawsig = Base64.decodeBase64(signature.getBytes());
+                    if (sig.verify(rawsig)) {
+                        _safe = true;
+                    }
+                } catch (GeneralSecurityException gse) {
+                    // ignore the error - the default is to not launch.
+                }
+            }
+        }
+
+        if (!_safe) {
+            Log.warning("Signed getdown invoked on unsigned application; " +
+                "aborting installation.");
+            return;
+        }
+
         // when run from an applet, we install 
         String root;
         if (RunAnywhere.isWindows()) {
@@ -56,7 +109,6 @@ public class GetdownApplet extends JApplet
             root = ".getdown";
         }
 
-        String appname = getParameter("appname");
         String appdir = System.getProperty("user.home") +
             File.separator + root + File.separator + appname;
 
@@ -82,7 +134,6 @@ public class GetdownApplet extends JApplet
         // if our getdown.txt file does not exist, auto-create it
         File gdfile = new File(appDir, "getdown.txt");
         if (!gdfile.exists()) {
-            String appbase = getParameter("appbase");
             if (StringUtil.isBlank(appbase)) {
                 Log.warning("Missing 'appbase' cannot auto-create " +
                             "application directory.");
@@ -96,7 +147,6 @@ public class GetdownApplet extends JApplet
         }
 
         // if a background image was specified, grabbit
-        String imgpath = getParameter("bgimage");
         try {
             if (!StringUtil.isBlank(imgpath)) {
                 _bgimage = getImage(new URL(getDocumentBase(), imgpath));
@@ -156,6 +206,10 @@ public class GetdownApplet extends JApplet
     @Override // documentation inherited
     public void start ()
     {
+        if (!_safe) {
+            return;
+        }
+
         try {
             _getdown.start();
         } catch (Exception e) {
@@ -188,4 +242,10 @@ public class GetdownApplet extends JApplet
 
     protected Getdown _getdown;
     protected Image _bgimage;
+
+    /**
+     * Getdown will refuse to initialize if the jar is signed but the
+     * parameters are not validated to prevent malicious code from being run.
+     */
+    protected boolean _safe = false;
 }
