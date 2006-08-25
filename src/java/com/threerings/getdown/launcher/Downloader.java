@@ -182,11 +182,11 @@ public abstract class Downloader extends Thread
             long bps = (secs == 0) ? 0 : (_currentSize / secs);
 
             // compute our percentage completion
-            int pctdone = (int)(
-                (_currentSize / (float)_totalSize) * 100f);
+            int pctdone = (_totalSize == 0) ? 0 :
+                (int)((_currentSize * 100f) / _totalSize);
 
             // estimate our time remaining
-            long remaining = (bps <= 0) ? -1 :
+            long remaining = (bps <= 0 || _totalSize == 0) ? -1 :
                 (_totalSize - _currentSize) / bps;
 
             // make sure we only report 100% exactly once
