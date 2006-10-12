@@ -55,7 +55,7 @@ if (defined $libpath) {
 my $classpath = "-classpath $root/dist/classes";
 
 # add zip and jar files from our lib/ directory and the system lib/ directory
-my @dirs = ( "$root/lib", $ENV{"JAVA_LIBS"} );
+my @dirs = ( "$root/dist/lib", $ENV{"JAVA_LIBS"} );
 foreach $dir (@dirs) {
     next unless (defined $dir);
     if (opendir(DIR, $dir)) {
