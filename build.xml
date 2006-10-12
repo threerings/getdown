@@ -20,8 +20,8 @@
 
   <!-- declare our classpath -->
   <path id="clazzpath">
-    <fileset dir="lib" includes="**/*.jar"/>
     <pathelement location="${deploy.dir}/classes"/>
+    <fileset dir="${deploy.dir}/lib" includes="*.jar"/>
   </path>
 
   <!-- checks the availability of certain libraries -->
@@ -36,7 +36,7 @@
 
   <!-- prepares the application directories -->
   <target name="prepare" depends="check-available">
-    <mkdir dir="${deploy.dir}"/>
+    <mkdir dir="${deploy.dir}/lib"/>
     <mkdir dir="${deploy.dir}/classes"/>
     <mkdir dir="${javadoc.dir}"/>
     <!-- copy media and properties into the target directory -->
@@ -44,6 +44,9 @@
       <fileset dir="${src.dir}" includes="**/*.jpg"/>
       <fileset dir="${src.dir}" includes="**/*.png"/>
       <fileset dir="${src.dir}" includes="**/*.properties"/>
+    </copy>
+    <copy todir="${deploy.dir}/lib">
+      <fileset dir="lib" includes="**/*.jar"/>
     </copy>
   </target>
 
