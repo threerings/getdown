@@ -50,8 +50,14 @@
     </copy>
   </target>
 
-  <!-- cleans out the built application -->
+  <!-- cleans out the intermediate build files -->
   <target name="clean">
+    <delete dir="${deploy.dir}/classes"/>
+    <delete dir="${deploy.dir}/docs"/>
+  </target>
+
+  <!-- wipes the entire build directory clean -->
+  <target name="distclean" depends="clean">
     <delete dir="${deploy.dir}"/>
   </target>
 
