@@ -18,6 +18,11 @@
   <property name="copyright.holder" value="Three Rings Design, Inc."/>
   <property name="copy.post"    value="All Rights Reserved."/>
 
+  <!-- import some targets to enumerate library dependencies -->
+  <property name="projects.root" value="."/>
+  <property name="libs.dir" value="lib"/>
+  <import file="libs-incl.xml"/>
+
   <!-- declare our classpath -->
   <path id="clazzpath">
     <pathelement location="${deploy.dir}/classes"/>
@@ -25,7 +30,7 @@
   </path>
 
   <!-- checks the availability of certain libraries -->
-  <target name="check-available">
+  <target name="check-available" depends="prepare">
     <available property="snark.present"
      classname="org.klomp.snark.Snark" classpathref="clazzpath"/>
     <echo message="Have Snark: ${snark.present}"/>
@@ -35,7 +40,7 @@
   </target>
 
   <!-- prepares the application directories -->
-  <target name="prepare" depends="check-available">
+  <target name="prepare">
     <mkdir dir="${deploy.dir}/lib"/>
     <mkdir dir="${deploy.dir}/classes"/>
     <mkdir dir="${javadoc.dir}"/>
@@ -47,6 +52,9 @@
     </copy>
     <copy todir="${deploy.dir}/lib">
       <fileset dir="lib" includes="**/*.jar"/>
+    </copy>
+    <copy todir="${deploy.dir}/lib" flatten="true">
+      <fileset refid="${app.name}.libs"/>
     </copy>
   </target>
 
@@ -62,7 +70,7 @@
   </target>
 
   <!-- build the java class files -->
-  <target name="compile" depends="prepare">
+  <target name="compile" depends="check-available">
     <javac srcdir="${src.dir}" destdir="${deploy.dir}/classes"
            debug="on" optimize="off" deprecation="on"
            classpathref="clazzpath" includeAntRuntime="no"
@@ -88,10 +96,10 @@
   </target>
 
   <!-- a target for rebuilding everything -->
-  <target name="all" depends="clean,prepare,compile,javadoc,dist"/>
+  <target name="all" depends="clean,check-available,compile,javadoc,dist"/>
 
   <!-- builds our distribution files -->
-  <target name="dist" depends="prepare,compile">
+  <target name="dist" depends="check-available,compile">
     <jar destfile="${deploy.dir}/${app.name}.jar" manifest="lib/manifest.mf"
          basedir="${deploy.dir}/classes"/>
   </target>
