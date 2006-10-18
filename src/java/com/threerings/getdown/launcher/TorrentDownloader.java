@@ -22,8 +22,7 @@ public class TorrentDownloader extends Downloader
         for (Resource resource : resources) {
             String url = resource.getRemote().toString() + ".torrent";
             Snark snark = new Snark(url, null, -1, null, null);
-            SnarkShutdown snarkStopper = new SnarkShutdown(snark.storage,
-                snark.coordinator, snark.acceptor, snark.trackerclient, null);
+            SnarkShutdown snarkStopper = new SnarkShutdown(snark, null);
             Runtime.getRuntime().addShutdownHook(snarkStopper);
             _torrentmap.put(resource, snark);
             _stoppermap.put(resource, snarkStopper);
