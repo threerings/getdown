@@ -71,6 +71,7 @@ public class GetdownApplet extends JApplet
             signature = "";
         }
 
+        /*
         Object[] signers = GetdownApplet.class.getSigners();
         if (signers.length == 0) {
             _safe = true;
@@ -97,6 +98,7 @@ public class GetdownApplet extends JApplet
                 "aborting installation.");
             return;
         }
+        */
 
         // Pass through properties parameter.
         String properties = getParameter("properties");
