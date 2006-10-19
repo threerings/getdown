@@ -85,7 +85,7 @@ public class TorrentDownloader extends Downloader
         // Override the start time, since Snark allocates storage prior to
         // doing any downloading
         _start = System.currentTimeMillis();
-        while (_currentSize != snark.meta.getTotalLength()) {
+        while (!snark.coordinator.completed()) {
             long now = System.currentTimeMillis();
             if ((now - _lastUpdate) >= UPDATE_DELAY) {
                 _currentSize = snark.coordinator.getDownloaded();
@@ -106,6 +106,10 @@ public class TorrentDownloader extends Downloader
             }
             updateObserver();
         }
+        // Manually set completion, just to be extra-safe.
+        _currentSize = _totalSize;
+        updateObserver();
+
         if (snarkStopper != null) {
             snarkStopper.run();
             Runtime.getRuntime().removeShutdownHook(snarkStopper);

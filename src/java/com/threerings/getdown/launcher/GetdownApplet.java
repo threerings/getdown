@@ -98,6 +98,15 @@ public class GetdownApplet extends JApplet
             return;
         }
 
+        // Pass through properties parameter.
+        String[] properties = getParameter("properties").split(" ");
+        for (String property : properties) {
+            String key = property.substring(property.indexOf("-D") + 2,
+                property.indexOf("="));
+            String value = property.substring(property.indexOf("=") + 1);
+            System.setProperty(key, value);
+        }
+
         // when run from an applet, we install 
         String root;
         if (RunAnywhere.isWindows()) {
