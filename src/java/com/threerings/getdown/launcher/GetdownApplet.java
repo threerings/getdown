@@ -260,5 +260,5 @@ public class GetdownApplet extends JApplet
      * Getdown will refuse to initialize if the jar is signed but the
      * parameters are not validated to prevent malicious code from being run.
      */
-    protected boolean _safe = false;
+    protected boolean _safe = true;
 }
