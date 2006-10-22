@@ -71,7 +71,6 @@ public class GetdownApplet extends JApplet
             signature = "";
         }
 
-        /*
         Object[] signers = GetdownApplet.class.getSigners();
         if (signers.length == 0) {
             _safe = true;
@@ -98,7 +97,6 @@ public class GetdownApplet extends JApplet
                 "aborting installation.");
             return;
         }
-        */
 
         // Pass through properties parameter.
         String properties = getParameter("properties");
@@ -260,5 +258,5 @@ public class GetdownApplet extends JApplet
      * Getdown will refuse to initialize if the jar is signed but the
      * parameters are not validated to prevent malicious code from being run.
      */
-    protected boolean _safe = true;
+    protected boolean _safe = false;
 }
