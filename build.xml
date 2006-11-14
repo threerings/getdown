@@ -107,17 +107,18 @@
   <!-- optimizes, combines and removes dead code -->
   <target name="proguard" depends="dist">
     <taskdef resource="proguard/ant/task.properties"
-             classpath="lib/proguard.jar"/>
+             classpath="${deploy.dir}/lib/proguard.jar"/>
     <proguard configuration="etc/getdown.pro"/>
 
     <taskdef name="weave" classname="com.rc.retroweaver.ant.RetroWeaverTask"
-             classpath="lib/retroweaver-all-1.2.2.jar"/>
+             classpath="${deploy.dir}/lib/retroweaver-all-1.2.2.jar"/>
     <weave inputjar="${deploy.dir}/${app.name}-pro.jar"
            outputjar="${deploy.dir}/${app.name}-retro-pro.jar"/>
     <!-- now combine the retroweaved jar file with the retroweaver runtime -->
     <unjar src="${deploy.dir}/${app.name}-retro-pro.jar"
            dest="${deploy.dir}/rptmp"/>
-    <unjar src="lib/retroweaver-rt-1.2.2.jar" dest="${deploy.dir}/rptmp"/>
+    <unjar src="${deploy.dir}/lib/retroweaver-rt-1.2.2.jar"
+           dest="${deploy.dir}/rptmp"/>
     <jar destfile="${deploy.dir}/${app.name}-retro-pro.jar"
          manifest="lib/manifest.mf" basedir="${deploy.dir}/rptmp"/>
     <delete dir="${deploy.dir}/rptmp"/>
