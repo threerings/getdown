@@ -1,15 +1,15 @@
 <?xml version="1.0"?>
 <!-- declares the libraries needed to build getdown -->
 <project name="library-dependencies">
-  <fileset dir="${projects.root}" id="getdown.libs">
-    <include name="${libs.dir}/ant.jar"/>
-    <include name="${libs.dir}/commons-codec.jar"/>
-    <include name="${libs.dir}/commons-io.jar"/>
-    <include name="${libs.dir}/proguard.jar"/>
-    <include name="${libs.dir}/retroweaver-all-1.2.2.jar"/>
-    <include name="${libs.dir}/retroweaver-rt-1.2.2.jar"/>
-    <include name="${distlib.dir}/snark.jar"/>
-    <include name="${distlib.dir}/samskivert.jar"/>
-    <include name="lib/javaws.jar"/>
+  <fileset dir="${libs.dir}" id="getdown.libs">
+    <include name="ant.jar"/>
+    <include name="commons-codec.jar"/>
+    <include name="commons-io.jar"/>
+    <include name="javaws.jar"/>
+    <include name="proguard.jar"/>
+    <include name="retroweaver-all-1.2.2.jar"/>
+    <include name="retroweaver-rt-1.2.2.jar"/>
+    <include name="samskivert.jar"/>
+    <include name="snark.jar"/>
   </fileset>
 </project>

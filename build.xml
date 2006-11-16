@@ -5,6 +5,8 @@
   <property name="app.name" value="getdown"/>
   <property name="src.dir" value="src/java"/>
   <property name="deploy.dir" value="dist"/>
+  <property name="libs.dir" value="lib"/>
+  <import file="libs-incl.xml"/>
 
   <!-- these are only used if we're going to sign things -->
   <property file="build.properties"/>
@@ -17,12 +19,6 @@
   <property name="copy.pre"     value="Copyright &#169; 2004"/>
   <property name="copyright.holder" value="Three Rings Design, Inc."/>
   <property name="copy.post"    value="All Rights Reserved."/>
-
-  <!-- import some targets to enumerate library dependencies -->
-  <property name="projects.root" value="."/>
-  <property name="libs.dir"      value="lib"/>
-  <property name="distlib.dir"   value="lib"/>
-  <import file="libs-incl.xml"/>
 
   <!-- declare our classpath -->
   <path id="clazzpath">
