@@ -8,11 +8,8 @@
     <include name="${libs.dir}/proguard.jar"/>
     <include name="${libs.dir}/retroweaver-all-1.2.2.jar"/>
     <include name="${libs.dir}/retroweaver-rt-1.2.2.jar"/>
-    <include name="${libs.dir}/samskivert.jar"/>
-    <include name="${project.dir}/samskivert/dist/samskivert.jar"/>
-    <include name="${libs.dir}/snark.jar"/>
-    <include name="${project.dir}/snark/dist/snark.jar"/>
-    <include name="${libs.dir}/javaws.jar"/>
+    <include name="${distlib.dir}/snark.jar"/>
+    <include name="${distlib.dir}/samskivert.jar"/>
     <include name="lib/javaws.jar"/>
   </fileset>
 </project>

@@ -20,7 +20,8 @@
 
   <!-- import some targets to enumerate library dependencies -->
   <property name="projects.root" value="."/>
-  <property name="libs.dir" value="lib"/>
+  <property name="libs.dir"      value="lib"/>
+  <property name="distlib.dir"   value="lib"/>
   <import file="libs-incl.xml"/>
 
   <!-- declare our classpath -->
