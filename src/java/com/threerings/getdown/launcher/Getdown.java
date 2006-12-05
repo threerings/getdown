@@ -20,6 +20,8 @@
 
 package com.threerings.getdown.launcher;
 
+import java.util.Locale;
+
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.EventQueue;
@@ -682,18 +684,35 @@ public abstract class Getdown extends Thread
         }
     }
 
+    /**
+     * Load the image at the path.  Before trying the exact path/file specified
+     *  we will look to see if we can find a localized version by sticking a
+     *  _<language> in front of the "." in the filename.
+     */
     protected BufferedImage loadImage (String path)
     {
+        String localeStr = Locale.getDefault().getLanguage();
+
         if (StringUtil.isBlank(path)) {
             return null;
         }
-        File imgpath = _app.getLocalPath(path);
+        
+        File imgpath = null;
         try {
+            // First try for a localized image.
+            imgpath =
+                _app.getLocalPath(path.replace(".", "_" + localeStr + "."));
             return ImageIO.read(imgpath);
         } catch (IOException ioe) {
-            Log.warning("Failed to load image [path=" + imgpath +
-                        ", error=" + ioe + "].");
-            return null;
+            // If that didn't work, try a generic one.
+            try {
+                imgpath = _app.getLocalPath(path);
+                return ImageIO.read(imgpath);
+            } catch (IOException ioe2) {
+                Log.warning("Failed to load image [path=" + imgpath +
+                    ", error=" + ioe2 + "].");
+                return null;
+            }
         }
     }
 
