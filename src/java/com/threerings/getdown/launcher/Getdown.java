@@ -700,19 +700,20 @@ public abstract class Getdown extends Thread
         File imgpath = null;
         try {
             // First try for a localized image.
-            imgpath =
-                _app.getLocalPath(path.replace(".", "_" + localeStr + "."));
+            imgpath = _app.getLocalPath(path.replace(".", "_" + localeStr + "."));
             return ImageIO.read(imgpath);
         } catch (IOException ioe) {
-            // If that didn't work, try a generic one.
-            try {
-                imgpath = _app.getLocalPath(path);
-                return ImageIO.read(imgpath);
-            } catch (IOException ioe2) {
-                Log.warning("Failed to load image [path=" + imgpath +
-                    ", error=" + ioe2 + "].");
-                return null;
-            }
+            // No biggie, we'll try the generic one.
+        }
+
+        // If that didn't work, try a generic one.
+        try {
+            imgpath = _app.getLocalPath(path);
+            return ImageIO.read(imgpath);
+        } catch (IOException ioe2) {
+            Log.warning("Failed to load image [path=" + imgpath +
+                ", error=" + ioe2 + "].");
+            return null;
         }
     }
 
