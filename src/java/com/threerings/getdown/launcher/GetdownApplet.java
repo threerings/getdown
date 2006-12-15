@@ -35,6 +35,8 @@ import java.io.FileOutputStream;
 import java.io.File;
 import java.io.PrintStream;
 
+import netscape.javascript.JSObject;
+
 import org.apache.commons.codec.binary.Base64;
 
 import com.samskivert.util.RunAnywhere;
@@ -203,6 +205,14 @@ public class GetdownApplet extends JApplet
                 }
                 protected void exit (int exitCode) {
                     // don't exit as we're in an applet
+                }
+                @Override // documentation inherited
+                protected void setStatus (final String message, final int percent,
+                    final long remaining, boolean createUI)
+                {
+                    super.setStatus(message, percent, remaining, createUI);
+                    JSObject.getWindow(GetdownApplet.this).call("getdownStatus",
+                        new Object[] {message, percent, remaining});
                 }
             };
 
