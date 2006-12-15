@@ -98,7 +98,7 @@
   <!-- builds our distribution files -->
   <target name="dist" depends="check-available,compile">
     <jar destfile="${deploy.dir}/${app.name}.jar" manifest="lib/manifest.mf"
-         basedir="${deploy.dir}/classes"/>
+         basedir="${deploy.dir}/classes" excludes="**/netscape/**"/>
   </target>
 
   <!-- optimizes, combines and removes dead code -->
