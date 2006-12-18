@@ -231,8 +231,12 @@ public class GetdownApplet extends JApplet
                     final long remaining, boolean createUI)
                 {
                     super.setStatus(message, percent, remaining, createUI);
-                    JSObject.getWindow(GetdownApplet.this).call("getdownStatus",
-                        new Object[] {message, percent, remaining});
+                    try {
+                        JSObject.getWindow(GetdownApplet.this).call("getdownStatus",
+                            new Object[] {message, percent, remaining});
+                    } catch (JSException jse) {
+                        // don't sweat it.
+                    }
                 }
             };
 
