@@ -114,6 +114,7 @@ public abstract class Getdown extends Thread
             createInterface(true);
         } catch (Exception e) {
             Log.warning("Failed to preinit: " + e);
+            createInterface(true);
         }
     }
 

@@ -53,6 +53,21 @@ public class GetdownApplet extends JApplet
     @Override // documentation inherited
     public void init ()
     {
+        // Getdown absolutely requires full read/write permissions to the system.  If we don't
+        // have this, then we need to not do anything unsafe, and display a message to the user
+        // telling them they need to (groan) close out of the web browser entirely and re-launch
+        // the browser, go to our site, and accept the certificate.
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null) {
+            try {
+                sm.checkWrite("getdown");
+                sm.checkPropertiesAccess();
+            } catch (SecurityException se) {
+                Log.warning("Signed applet rejected by user [se=" + se + "].");
+                _permissioned = false;
+            }
+        }
+
         // First off, verify that we are not being hijacked to execute
         // malicious code in the name of the signer.
         String appbase = getParameter("appbase");
@@ -97,12 +112,11 @@ public class GetdownApplet extends JApplet
         if (!_safe) {
             Log.warning("Signed getdown invoked on unsigned application; " +
                 "aborting installation.");
-            return;
         }
 
         // Pass through properties parameter.
         String properties = getParameter("properties");
-        if (properties != null) {
+        if (properties != null && _permissioned) {
             String[] proparray = properties.split(" ");
             for (String property : proparray) {
                 String key = property.substring(property.indexOf("-D") + 2,
@@ -122,12 +136,14 @@ public class GetdownApplet extends JApplet
             root = ".getdown";
         }
 
-        String appdir = System.getProperty("user.home") +
-            File.separator + root + File.separator + appname;
+        String appdir = root + File.separator + appname;
+        if (_permissioned) {
+            appdir = System.getProperty("user.home") + File.separator + appdir;
+        }
 
         // if our application directory does not exist, auto-create it
         File appDir = new File(appdir);
-        if (!appDir.exists() || !appDir.isDirectory()) {
+        if (_permissioned && (!appDir.exists() || !appDir.isDirectory())) {
             if (!appDir.mkdirs()) {
                 Log.warning("Unable to create app_dir '" + appdir + "'.");
                 // TODO: report error
@@ -137,7 +153,7 @@ public class GetdownApplet extends JApplet
 
         // if an installer.txt file is desired, create that
         String inststr = getParameter("installer");
-        if (!StringUtil.isBlank(inststr)) {
+        if (_permissioned && !StringUtil.isBlank(inststr)) {
             File infile = new File(appDir, "installer.txt");
             if (!infile.exists()) {
                 writeToFile(infile, inststr);
@@ -145,17 +161,19 @@ public class GetdownApplet extends JApplet
         }
 
         // if our getdown.txt file does not exist, auto-create it
-        File gdfile = new File(appDir, "getdown.txt");
-        if (!gdfile.exists()) {
-            if (StringUtil.isBlank(appbase)) {
-                Log.warning("Missing 'appbase' cannot auto-create " +
-                            "application directory.");
-                // TODO: report
-                return;
-            }
-            if (!writeToFile(gdfile, "appbase = " + appbase)) {
-                // TODO: report the error
-                return;
+        if (_permissioned) {
+            File gdfile = new File(appDir, "getdown.txt");
+            if (!gdfile.exists()) {
+                if (StringUtil.isBlank(appbase)) {
+                    Log.warning("Missing 'appbase' cannot auto-create " +
+                                "application directory.");
+                    // TODO: report
+                    return;
+                }
+                if (!writeToFile(gdfile, "appbase = " + appbase)) {
+                    // TODO: report the error
+                    return;
+                }
             }
         }
 
@@ -175,10 +193,12 @@ public class GetdownApplet extends JApplet
         Log.info("-- OS Arch: " + System.getProperty("os.arch"));
         Log.info("-- OS Vers: " + System.getProperty("os.version"));
         Log.info("-- Java Vers: " + System.getProperty("java.version"));
-        Log.info("-- Java Home: " + System.getProperty("java.home"));
-        Log.info("-- User Name: " + System.getProperty("user.name"));
-        Log.info("-- User Home: " + System.getProperty("user.home"));
-        Log.info("-- Cur dir: " + System.getProperty("user.dir"));
+        if (_permissioned) {
+            Log.info("-- Java Home: " + System.getProperty("java.home"));
+            Log.info("-- User Name: " + System.getProperty("user.name"));
+            Log.info("-- User Home: " + System.getProperty("user.home"));
+            Log.info("-- Cur dir: " + System.getProperty("user.dir"));
+        }
         Log.info("---------------------------------------------");
 
         try {
@@ -228,9 +248,13 @@ public class GetdownApplet extends JApplet
     public void start ()
     {
         if (!_safe) {
+            _getdown.updateStatus("m.corrupt_param_signature_error");
             return;
         }
-
+        if (!_permissioned) {
+            _getdown.updateStatus("m.insufficient_permissions_error");
+            return;
+        }
         try {
             _getdown.start();
         } catch (Exception e) {
@@ -269,4 +293,7 @@ public class GetdownApplet extends JApplet
      * parameters are not validated to prevent malicious code from being run.
      */
     protected boolean _safe = false;
+
+    /** Whether Getdown has been trusted by the user with system access */
+    protected boolean _permissioned = true;
 }
