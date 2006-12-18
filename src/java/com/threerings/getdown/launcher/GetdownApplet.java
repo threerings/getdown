@@ -36,6 +36,7 @@ import java.io.File;
 import java.io.PrintStream;
 
 import netscape.javascript.JSObject;
+import netscape.javascript.JSException;
 
 import org.apache.commons.codec.binary.Base64;
 
