@@ -123,7 +123,7 @@
 
   <target name="sign" depends="proguard">
     <signjar jar="${deploy.dir}/${app.name}-retro-pro.jar" lazy="true"
-      keystore="${cert_dir}/lib/keystore.dat" storepass="${sign.storepass}"
+      keystore="${sign.keystore}" storepass="${sign.storepass}"
       alias="${sign.alias}" keypass="${sign.keypass}"/>
   </target>
 </project>
