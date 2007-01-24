@@ -110,8 +110,8 @@
 
     <taskdef name="weave" classname="com.rc.retroweaver.ant.RetroWeaverTask"
              classpath="${deploy.dir}/lib/retroweaver-all-1.2.2.jar"/>
-    <weave inputjar="${deploy.dir}/${app.name}-pro.jar"
-           outputjar="${deploy.dir}/${app.name}-retro-pro.jar"/>
+    <weave inputjar="${basedir}/${deploy.dir}/${app.name}-pro.jar"
+           outputjar="${basedir}/${deploy.dir}/${app.name}-retro-pro.jar"/>
     <!-- now combine the retroweaved jar file with the retroweaver runtime -->
     <unjar src="${deploy.dir}/${app.name}-retro-pro.jar"
            dest="${deploy.dir}/rptmp"/>
