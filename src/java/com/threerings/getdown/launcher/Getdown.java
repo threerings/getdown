@@ -68,8 +68,7 @@ import com.threerings.getdown.util.LaunchUtil;
 import com.threerings.getdown.util.ProgressObserver;
 
 /**
- * Manages the main control for the Getdown application updater and
- * deployment system.
+ * Manages the main control for the Getdown application updater and deployment system.
  */
 public abstract class Getdown extends Thread
     implements Application.StatusDisplay
@@ -86,16 +85,14 @@ public abstract class Getdown extends Thread
         try {
             _msgs = ResourceBundle.getBundle("com.threerings.getdown.messages");
         } catch (Exception e) {
-            // welcome to hell, where java can't cope with a classpath
-            // that contains jars that live in a directory that contains a
-            // !, at least the same bug happens on all platforms
+            // welcome to hell, where java can't cope with a classpath that contains jars that live
+            // in a directory that contains a !, at least the same bug happens on all platforms
             String dir = appDir.toString();
             if (dir.equals(".")) {
                 dir = System.getProperty("user.dir");
             }
-            String errmsg = "The directory in which this application is " +
-                "installed:\n" + dir + "\nis invalid. The directory " +
-                "must not contain the '!' character. Please reinstall.";
+            String errmsg = "The directory in which this application is installed:\n" + dir +
+                "\nis invalid. The directory must not contain the '!' character. Please reinstall.";
             updateStatus(errmsg);
             _dead = true;
         }
@@ -104,8 +101,8 @@ public abstract class Getdown extends Thread
     }
 
     /**
-     * This is used by the applet which always needs a user interface and wants
-     * to load it as soon as possible.
+     * This is used by the applet which always needs a user interface and wants to load it as soon
+     * as possible.
      */
     public void preInit ()
     {
@@ -120,8 +117,8 @@ public abstract class Getdown extends Thread
 
     public void run ()
     {
-        // if we have no messages, just bail because we're hosed; the
-        // error message will be displayed to the user already
+        // if we have no messages, just bail because we're hosed; the error message will be
+        // displayed to the user already
         if (_msgs == null) {
             return;
         }
@@ -145,11 +142,9 @@ public abstract class Getdown extends Thread
             } else {
                 // create a panel they can use to configure the proxy settings
                 _container = createContainer();
-                _container.add(
-                    new ProxyPanel(this, _msgs), BorderLayout.CENTER);
+                _container.add(new ProxyPanel(this, _msgs), BorderLayout.CENTER);
                 showContainer();
-                // allow them to close the window to abort the proxy
-                // configuration
+                // allow them to close the window to abort the proxy configuration
                 _dead = true;
             }
 
@@ -161,11 +156,11 @@ public abstract class Getdown extends Thread
             } else if (!msg.startsWith("m.")) {
                 // try to do something sensible based on the type of error
                 if (e instanceof FileNotFoundException) {
-                    msg = MessageUtil.compose("m.missing_resource",
-                        MessageUtil.taint(msg), _ifc.installError);
+                    msg = MessageUtil.compose(
+                        "m.missing_resource", MessageUtil.taint(msg), _ifc.installError);
                 } else {
-                    msg = MessageUtil.compose("m.init_error",
-                        MessageUtil.taint(msg), _ifc.installError);
+                    msg = MessageUtil.compose(
+                        "m.init_error", MessageUtil.taint(msg), _ifc.installError);
                 }
             }
             updateStatus(msg);
@@ -174,13 +169,11 @@ public abstract class Getdown extends Thread
     }
 
     /**
-     * Configures our proxy settings (called by {@link ProxyPanel}) and
-     * fires up the launcher.
+     * Configures our proxy settings (called by {@link ProxyPanel}) and fires up the launcher.
      */
     public void configureProxy (String host, String port)
     {
-        Log.info("User configured proxy [host=" + host +
-                 ", port=" + port + "].");
+        Log.info("User configured proxy [host=" + host + ", port=" + port + "].");
 
         // if we're provided with valid values, create a proxy.txt file
         if (!StringUtil.isBlank(host)) {
@@ -193,8 +186,7 @@ public abstract class Getdown extends Thread
                 }
                 pout.close();
             } catch (IOException ioe) {
-                Log.warning("Error creating proxy file '" + pfile +
-                            "': " + ioe);
+                Log.warning("Error creating proxy file '" + pfile + "': " + ioe);
             }
 
             // also configure them in the JVM
@@ -212,8 +204,8 @@ public abstract class Getdown extends Thread
     /**
      * Reads and/or autodetects our proxy settings.
      *
-     * @return true if we should proceed with running the launcher, false
-     * if we need to wait for the user to enter proxy settings.
+     * @return true if we should proceed with running the launcher, false if we need to wait for
+     * the user to enter proxy settings.
      */
     protected boolean detectProxy ()
     {
@@ -228,8 +220,7 @@ public abstract class Getdown extends Thread
                 String host = null, port = null;
                 boolean enabled = false;
                 RegistryKey.initialize();
-                RegistryKey r = new RegistryKey(
-                    RootKey.HKEY_CURRENT_USER, PROXY_REGISTRY);
+                RegistryKey r = new RegistryKey(RootKey.HKEY_CURRENT_USER, PROXY_REGISTRY);
                 for (Iterator iter = r.values(); iter.hasNext(); ) {
                     RegistryValue value = (RegistryValue)iter.next();
                     if (value.getName().equals("ProxyEnable")) {
@@ -254,8 +245,7 @@ public abstract class Getdown extends Thread
                 }
 
             } catch (Throwable t) {
-                Log.info("Failed to find proxy settings in Windows registry " +
-                         "[error=" + t + "].");
+                Log.info("Failed to find proxy settings in Windows registry [error=" + t + "].");
             }
         }
 
@@ -264,18 +254,15 @@ public abstract class Getdown extends Thread
         if (pfile.exists()) {
             try {
                 HashMap pconf = ConfigUtil.parseConfig(pfile, false);
-                setProxyProperties((String)pconf.get("host"),
-                                   (String)pconf.get("port"));
+                setProxyProperties((String)pconf.get("host"), (String)pconf.get("port"));
                 return true;
-
             } catch (IOException ioe) {
                 Log.warning("Failed to read '" + pfile + "': " + ioe);
             }
         }
 
-        // otherwise see if we actually need a proxy; first we have to
-        // initialize our application to get some sort of interface
-        // configuration and the appbase URL
+        // otherwise see if we actually need a proxy; first we have to initialize our application
+        // to get some sort of interface configuration and the appbase URL
         Log.info("Checking whether we need to use a proxy...");
         try {
             _ifc = _app.init(true);
@@ -287,26 +274,23 @@ public abstract class Getdown extends Thread
         URL rurl = _app.getConfigResource().getRemote();
         try {
             // try to make a HEAD request for this URL
-            HttpURLConnection ucon = (HttpURLConnection)
-                rurl.openConnection();
+            HttpURLConnection ucon = (HttpURLConnection)rurl.openConnection();
             ucon.setRequestMethod("HEAD");
             ucon.connect();
 
             // make sure we got a satisfactory response code
             if (ucon.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                Log.warning("Got a non-200 response but assuming we're OK " +
-                            "because we got something... [url=" + rurl +
-                            ", rsp=" + ucon.getResponseCode() + "].");
+                Log.warning("Got a non-200 response but assuming we're OK because we got " +
+                            "something... [url=" + rurl + ", rsp=" + ucon.getResponseCode() + "].");
             }
 
-            // we got through, so we appear not to require a proxy; make a
-            // blank proxy config and get on gettin' down
+            // we got through, so we appear not to require a proxy; make a blank proxy config and
+            // get on gettin' down
             Log.info("No proxy appears to be needed.");
             try {
                 pfile.createNewFile();
             } catch (IOException ioe) {
-                Log.warning("Failed to create blank proxy file '" +
-                            pfile + "': " + ioe);
+                Log.warning("Failed to create blank proxy file '" + pfile + "': " + ioe);
             }
             return true;
 
@@ -334,8 +318,7 @@ public abstract class Getdown extends Thread
     }
 
     /**
-     * Does the actual application validation, update and launching
-     * business.
+     * Does the actual application validation, update and launching business.
      */
     protected void getdown ()
     {
@@ -357,9 +340,11 @@ public abstract class Getdown extends Thread
                 createInterface(true);
             }
 
+            // if we aren't running in a JVM that meets our version requirements, either complain
+            // or attempt to download and install the appropriate version
+
             for (int ii = 0; ii < MAX_LOOPS; ii++) {
-                // make sure we have the desired version and that the
-                // metadata files are valid...
+                // make sure we have the desired version and that the metadata files are valid...
                 setStatus("m.validating", -1, -1L, false);
                 if (_app.verifyMetadata(this)) {
                     Log.info("Application requires update.");
@@ -394,11 +379,11 @@ public abstract class Getdown extends Thread
             } else if (!msg.startsWith("m.")) {
                 // try to do something sensible based on the type of error
                 if (e instanceof FileNotFoundException) {
-                    msg = MessageUtil.compose("m.missing_resource",
-                        MessageUtil.taint(msg), _ifc.installError);
+                    msg = MessageUtil.compose(
+                        "m.missing_resource", MessageUtil.taint(msg), _ifc.installError);
                 } else {
-                    msg = MessageUtil.compose("m.init_error", msg,
-                        MessageUtil.taint(msg), _ifc.installError);
+                    msg = MessageUtil.compose(
+                        "m.init_error", msg, MessageUtil.taint(msg), _ifc.installError);
                 }
             }
             updateStatus(msg);
@@ -445,8 +430,7 @@ public abstract class Getdown extends Thread
             for (Resource prsrc : list) {
                 try {
                     Patcher patcher = new Patcher();
-                    patcher.patch(prsrc.getLocal().getParentFile(),
-                                  prsrc.getLocal(), _progobs);
+                    patcher.patch(prsrc.getLocal().getParentFile(), prsrc.getLocal(), _progobs);
                 } catch (Exception e) {
                     Log.warning("Failed to apply patch [prsrc=" + prsrc + "].");
                     Log.logStackTrace(e);
@@ -460,9 +444,9 @@ public abstract class Getdown extends Thread
             }
         }
 
-        // if the patch resource is null, that means something was booched
-        // in the application, so we skip the patching process but update
-        // the metadata which will result in a "brute force" upgrade
+        // if the patch resource is null, that means something was booched in the application, so
+        // we skip the patching process but update the metadata which will result in a "brute
+        // force" upgrade
 
         // finally update our metadata files...
         _app.updateMetadata();
@@ -471,8 +455,7 @@ public abstract class Getdown extends Thread
     }
 
     /**
-     * Called if the application is determined to require resource
-     * downloads.
+     * Called if the application is determined to require resource downloads.
      */
     protected void download (List<Resource> resources)
     {
@@ -510,23 +493,19 @@ public abstract class Getdown extends Thread
         // assume we're going to use an HTTP downloader
         Downloader dl = new HTTPDownloader(resources, obs);
 
-        // if torrent downloading is enabled and we are downloading the right
-        // set of resources (a single patch file or the entire app from
-        // scratch), then use a torrent downloader instead.
-        // Because many of our installers also bundle background.png,
-        // and might bundle more required files, we need to allow a 
-        // 'fudge factor' threshhold for determining at which point it is
-        // faster to torrent, and at which point we should use HTTP.
+        // if torrent downloading is enabled and we are downloading the right set of resources (a
+        // single patch file or the entire app from scratch), then use a torrent downloader
+        // instead.  Because many of our installers also bundle background.png, and might bundle
+        // more required files, we need to allow a 'fudge factor' threshhold for determining at
+        // which point it is faster to torrent, and at which point we should use HTTP.
         if (_app.getUseTorrent()) {
-            int verifiedResources = _app.getAllResources().size() -
-                resources.size();
+            int verifiedResources = _app.getAllResources().size() - resources.size();
             if (verifiedResources <= MAX_TORRENT_VERIFIED_RESOURCES) {
                 ArrayList<Resource> full = new ArrayList<Resource>();
                 full.add(_app.getFullResource());
                 full.addAll(resources);
                 dl = new TorrentDownloader(full, obs);
-            } else if (resources.size() == 1 &&
-                       resources.get(0).getPath().startsWith("patch")) {
+            } else if (resources.size() == 1 && resources.get(0).getPath().startsWith("patch")) {
                 dl = new TorrentDownloader(resources, obs);
             }
         }
@@ -543,8 +522,7 @@ public abstract class Getdown extends Thread
     }
 
     /**
-     * Called to launch the application if everything is determined to be
-     * ready to go.
+     * Called to launch the application if everything is determined to be ready to go.
      */
     protected void launch ()
     {
@@ -557,28 +535,27 @@ public abstract class Getdown extends Thread
             } else {
                 Process proc = _app.createProcess();
 
-                // on Windows 98 and ME we need to stick around and read the
-                // output of stderr lest the process fill its output buffer and
-                // choke, yay!
+                // on Windows 98 and ME we need to stick around and read the output of stderr lest
+                // the process fill its output buffer and choke, yay!
                 final InputStream stderr = proc.getErrorStream();
                 if (LaunchUtil.mustMonitorChildren()) {
                     // close our window if it's around
                     disposeContainer();
                     _status = null;
-                    BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(stderr));
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(stderr));
                     while (reader.readLine() != null) {
                         // nothing doing!
                     }
                     Log.info("Process exited: " + proc.waitFor());
+
                 } else {
-                    // spawn a daemon thread that will catch the early bits of
-                    // stderr in case the launch fails
+                    // spawn a daemon thread that will catch the early bits of stderr in case the
+                    // launch fails
                     Thread t = new Thread() {
                         public void run () {
                             try {
-                                BufferedReader reader = new BufferedReader(
-                                    new InputStreamReader(stderr));
+                                BufferedReader reader =
+                                    new BufferedReader(new InputStreamReader(stderr));
                                 String line;
                                 while ((line = reader.readLine()) != null) {
                                     Log.warning(line);
@@ -593,9 +570,9 @@ public abstract class Getdown extends Thread
                 }
             }
 
-            // if we have a UI open and we haven't been around for at least 5
-            // seconds, don't stick a fork in ourselves straight away but give
-            // our lovely user a chance to see what we're doing
+            // if we have a UI open and we haven't been around for at least 5 seconds, don't stick
+            // a fork in ourselves straight away but give our lovely user a chance to see what
+            // we're doing
             long uptime = System.currentTimeMillis() - _startup;
             if (_container != null && uptime < MIN_EXIST_TIME) {
                 try {
@@ -611,8 +588,8 @@ public abstract class Getdown extends Thread
     }
 
     /**
-     * Creates our user interface, which we avoid doing unless we actually
-     * have to update something.
+     * Creates our user interface, which we avoid doing unless we actually have to update
+     * something.
      */
     protected void createInterface (boolean force)
     {
@@ -627,8 +604,7 @@ public abstract class Getdown extends Thread
                     _status = new StatusPanel(_msgs);
                     _container.add(_status, BorderLayout.CENTER);
                 }
-                _status.init(_ifc, getBackgroundImage(),
-                             getProgressImage());
+                _status.init(_ifc, getBackgroundImage(), getProgressImage());
                 showContainer();
             }
         });
@@ -660,8 +636,8 @@ public abstract class Getdown extends Thread
         }
     }
 
-    protected void setStatus (final String message, final int percent,
-                              final long remaining, boolean createUI)
+    protected void setStatus (
+        final String message, final int percent, final long remaining, boolean createUI)
     {
         if (_status == null && createUI) {
             createInterface(false);
@@ -712,8 +688,7 @@ public abstract class Getdown extends Thread
             imgpath = _app.getLocalPath(path);
             return ImageIO.read(imgpath);
         } catch (IOException ioe2) {
-            Log.warning("Failed to load image [path=" + imgpath +
-                ", error=" + ioe2 + "].");
+            Log.warning("Failed to load image [path=" + imgpath + ", error=" + ioe2 + "].");
             return null;
         }
     }
@@ -734,9 +709,8 @@ public abstract class Getdown extends Thread
     protected abstract void disposeContainer ();
 
     /**
-     * If this method returns true we will run the application in the same JVM,
-     * otherwise we will fork off a new JVM. Some options are not supported if
-     * we do not fork off a new JVM.
+     * If this method returns true we will run the application in the same JVM, otherwise we will
+     * fork off a new JVM. Some options are not supported if we do not fork off a new JVM.
      */
     protected boolean invokeDirect ()
     {
@@ -744,8 +718,8 @@ public abstract class Getdown extends Thread
     }
 
     /**
-     * Provides access to the applet that we'll pass on to our application when
-     * we're in "invoke direct" mode.
+     * Provides access to the applet that we'll pass on to our application when we're in "invoke
+     * direct" mode.
      */
     protected JApplet getApplet ()
     {
@@ -765,8 +739,7 @@ public abstract class Getdown extends Thread
     };
 
     protected Application _app;
-    protected Application.UpdateInterface _ifc =
-        new Application.UpdateInterface();
+    protected Application.UpdateInterface _ifc = new Application.UpdateInterface();
 
     protected ResourceBundle _msgs;
     protected Container _container;
@@ -776,10 +749,7 @@ public abstract class Getdown extends Thread
     protected boolean _dead;
     protected long _startup;
 
-    /**
-     * The maximum number of resources that can be already present for
-     * bittorrent to be used.
-     */
+    /** The maximum number of resources that can be already present for bittorrent to be used. */
     protected static final int MAX_TORRENT_VERIFIED_RESOURCES = 1;
 
     protected static final int MAX_LOOPS = 5;

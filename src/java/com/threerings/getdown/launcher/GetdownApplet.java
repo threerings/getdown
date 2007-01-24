@@ -54,23 +54,8 @@ public class GetdownApplet extends JApplet
     @Override // documentation inherited
     public void init ()
     {
-        // Getdown absolutely requires full read/write permissions to the system.  If we don't
-        // have this, then we need to not do anything unsafe, and display a message to the user
-        // telling them they need to (groan) close out of the web browser entirely and re-launch
-        // the browser, go to our site, and accept the certificate.
-        SecurityManager sm = System.getSecurityManager();
-        if (sm != null) {
-            try {
-                sm.checkWrite("getdown");
-                sm.checkPropertiesAccess();
-            } catch (SecurityException se) {
-                Log.warning("Signed applet rejected by user [se=" + se + "].");
-                _permissioned = false;
-            }
-        }
-
-        // First off, verify that we are not being hijacked to execute
-        // malicious code in the name of the signer.
+        // verify that we are not being hijacked to execute malicious code in the name of the
+        // signer
         String appbase = getParameter("appbase");
         String appname = getParameter("appname");
         String imgpath = getParameter("bgimage");
@@ -83,127 +68,39 @@ public class GetdownApplet extends JApplet
         if (imgpath == null) {
             imgpath = "";
         }
-        String params = appbase + appname + imgpath;
-        String signature = getParameter("signature");
-        if (signature == null) {
-            signature = "";
-        }
 
-        Object[] signers = GetdownApplet.class.getSigners();
-        if (signers.length == 0) {
-            _safe = true;
-        }
-        for (Object signer : signers) {
-            if (!_safe && signer instanceof Certificate) {
-                Certificate cert = (Certificate)signer;
-                try {
-                    Signature sig = Signature.getInstance("SHA1withRSA");
-                    sig.initVerify(cert);
-                    sig.update(params.getBytes());
-                    if (sig.verify(Base64.decodeBase64(
-                            signature.getBytes()))) {
-                        _safe = true;
-                    }
-                } catch (GeneralSecurityException gse) {
-                    // ignore the error - the default is to not launch.
-                }
-            }
-        }
-
-        if (!_safe) {
-            Log.warning("Signed getdown invoked on unsigned application; " +
-                "aborting installation.");
-        }
-
-        // Pass through properties parameter.
-        String properties = getParameter("properties");
-        if (properties != null && _permissioned) {
-            String[] proparray = properties.split(" ");
-            for (String property : proparray) {
-                String key = property.substring(property.indexOf("-D") + 2,
-                    property.indexOf("="));
-                String value = property.substring(property.indexOf("=") + 1);
-                System.setProperty(key, value);
-            }
-        }
-
-        // when run from an applet, we install 
-        String root;
-        if (RunAnywhere.isWindows()) {
-            root = "Application Data";
-        } else if (RunAnywhere.isMacOS()) {
-            root = "Library" + File.separator + "Application Support";
-        } else /* isLinux() or something wacky */ {
-            root = ".getdown";
-        }
-
-        String appdir = root + File.separator + appname;
-        if (_permissioned) {
-            appdir = System.getProperty("user.home") + File.separator + appdir;
-        }
-
-        // if our application directory does not exist, auto-create it
-        File appDir = new File(appdir);
-        if (_permissioned && (!appDir.exists() || !appDir.isDirectory())) {
-            if (!appDir.mkdirs()) {
-                Log.warning("Unable to create app_dir '" + appdir + "'.");
-                // TODO: report error
-                return;
-            }
-        }
-
-        // if an installer.txt file is desired, create that
-        String inststr = getParameter("installer");
-        if (_permissioned && !StringUtil.isBlank(inststr)) {
-            File infile = new File(appDir, "installer.txt");
-            if (!infile.exists()) {
-                writeToFile(infile, inststr);
-            }
-        }
-
-        // if our getdown.txt file does not exist, auto-create it
-        if (_permissioned) {
-            File gdfile = new File(appDir, "getdown.txt");
-            if (!gdfile.exists()) {
-                if (StringUtil.isBlank(appbase)) {
-                    Log.warning("Missing 'appbase' cannot auto-create " +
-                                "application directory.");
-                    // TODO: report
-                    return;
-                }
-                if (!writeToFile(gdfile, "appbase = " + appbase)) {
-                    // TODO: report the error
-                    return;
-                }
-            }
-        }
-
-        // if a background image was specified, grabbit
+        File appdir = null;
         try {
-            if (!StringUtil.isBlank(imgpath)) {
-                _bgimage = getImage(new URL(getDocumentBase(), imgpath));
-            }
-        } catch (Exception e) {
-            Log.info("Failed to load background image [path=" + imgpath + "].");
-            Log.logStackTrace(e);
-        }
+            appdir = initGetdown(appbase, appname, imgpath);
 
-        // record a few things for posterity
-        Log.info("------------------ VM Info ------------------");
-        Log.info("-- OS Name: " + System.getProperty("os.name"));
-        Log.info("-- OS Arch: " + System.getProperty("os.arch"));
-        Log.info("-- OS Vers: " + System.getProperty("os.version"));
-        Log.info("-- Java Vers: " + System.getProperty("java.version"));
-        if (_permissioned) {
+            // if a background image was specified, grabbit
+            try {
+                if (!StringUtil.isBlank(imgpath)) {
+                    _bgimage = getImage(new URL(getDocumentBase(), imgpath));
+                }
+            } catch (Exception e) {
+                Log.info("Failed to load background image [path=" + imgpath + "].");
+                Log.logStackTrace(e);
+            }
+
+            // record a few things for posterity
+            Log.info("------------------ VM Info ------------------");
+            Log.info("-- OS Name: " + System.getProperty("os.name"));
+            Log.info("-- OS Arch: " + System.getProperty("os.arch"));
+            Log.info("-- OS Vers: " + System.getProperty("os.version"));
+            Log.info("-- Java Vers: " + System.getProperty("java.version"));
             Log.info("-- Java Home: " + System.getProperty("java.home"));
             Log.info("-- User Name: " + System.getProperty("user.name"));
             Log.info("-- User Home: " + System.getProperty("user.home"));
             Log.info("-- Cur dir: " + System.getProperty("user.dir"));
+            Log.info("---------------------------------------------");
+
+        } catch (Exception e) {
+            _errmsg = e.getMessage();
         }
-        Log.info("---------------------------------------------");
 
         try {
-            _getdown = new Getdown(appDir, null) {
+            _getdown = new Getdown(appdir, null) {
                 protected Container createContainer () {
                     getContentPane().removeAll();
                     return getContentPane();
@@ -227,14 +124,13 @@ public class GetdownApplet extends JApplet
                 protected void exit (int exitCode) {
                     // don't exit as we're in an applet
                 }
-                @Override // documentation inherited
-                protected void setStatus (final String message, final int percent,
-                    final long remaining, boolean createUI)
+                @Override protected void setStatus (
+                    final String message, final int percent, final long remaining, boolean createUI)
                 {
                     super.setStatus(message, percent, remaining, createUI);
                     try {
-                        JSObject.getWindow(GetdownApplet.this).call("getdownStatus",
-                            new Object[] {message, percent, remaining});
+                        JSObject.getWindow(GetdownApplet.this).call(
+                            "getdownStatus", new Object[] { message, percent, remaining });
                     } catch (JSException jse) {
                         // don't sweat it.
                     }
@@ -252,18 +148,14 @@ public class GetdownApplet extends JApplet
     @Override // documentation inherited
     public void start ()
     {
-        if (!_safe) {
-            _getdown.updateStatus("m.corrupt_param_signature_error");
-            return;
-        }
-        if (!_permissioned) {
-            _getdown.updateStatus("m.insufficient_permissions_error");
-            return;
-        }
-        try {
-            _getdown.start();
-        } catch (Exception e) {
-            Log.logStackTrace(e);
+        if (_errmsg != null) {
+            _getdown.updateStatus(_errmsg);
+        } else {
+            try {
+                _getdown.start();
+            } catch (Exception e) {
+                Log.logStackTrace(e);
+            }
         }
     }
 
@@ -271,6 +163,110 @@ public class GetdownApplet extends JApplet
     public void stop ()
     {
         // TODO
+    }
+
+    /**
+     * Does all the fiddly initialization of Getdown and throws an exception if something goes
+     * horribly wrong. If an exception is thrown we will abort the whole process and display an
+     * error message to the user.
+     */
+    protected File initGetdown (String appbase, String appname, String imgpath)
+        throws Exception
+    {
+        // getdown requires full read/write permissions to the system; if we don't have this, then
+        // we need to not do anything unsafe, and display a message to the user telling them they
+        // need to (groan) close out of the web browser entirely and re-launch the browser, go to
+        // our site, and accept the certificate
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null) {
+            try {
+                sm.checkWrite("getdown");
+                sm.checkPropertiesAccess();
+            } catch (SecurityException se) {
+                Log.warning("Signed applet rejected by user [se=" + se + "].");
+                throw new Exception("m.insufficient_permissions_error");
+            }
+        }
+
+
+        Object[] signers = GetdownApplet.class.getSigners();
+        if (signers.length == 0) {
+            Log.info("No signers, not verifying param signature.");
+
+        } else {
+            String signature = getParameter("signature");
+            if (signature == null) {
+                signature = "";
+            }
+            String params = appbase + appname + imgpath;
+            for (Object signer : signers) {
+                if (signer instanceof Certificate) {
+                    Certificate cert = (Certificate)signer;
+                    try {
+                        Signature sig = Signature.getInstance("SHA1withRSA");
+                        sig.initVerify(cert);
+                        sig.update(params.getBytes());
+                        if (!sig.verify(Base64.decodeBase64(signature.getBytes()))) {
+                            throw new Exception("m.corrupt_param_signature_error");
+                        }
+                    } catch (GeneralSecurityException gse) {
+                        throw new Exception("m.corrupt_param_signature_error");
+                    }
+                }
+            }
+        }
+
+        // pass through properties parameters
+        String properties = getParameter("properties");
+        if (properties != null) {
+            String[] proparray = properties.split(" ");
+            for (String property : proparray) {
+                String key = property.substring(property.indexOf("-D") + 2, property.indexOf("="));
+                String value = property.substring(property.indexOf("=") + 1);
+                System.setProperty(key, value);
+            }
+        }
+
+        // when run from an applet, we install to the user's home directory
+        String root;
+        if (RunAnywhere.isWindows()) {
+            root = "Application Data";
+        } else if (RunAnywhere.isMacOS()) {
+            root = "Library" + File.separator + "Application Support";
+        } else /* isLinux() or something wacky */ {
+            root = ".getdown";
+        }
+        File appdir = new File(System.getProperty("user.home") + File.separator + root +
+                               File.separator + appname);
+
+        // if our application directory does not exist, auto-create it
+        if (!appdir.exists() || !appdir.isDirectory()) {
+            if (!appdir.mkdirs()) {
+                throw new Exception("m.create_appdir_failed");
+            }
+        }
+
+        // if an installer.txt file is desired, create that
+        String inststr = getParameter("installer");
+        if (!StringUtil.isBlank(inststr)) {
+            File infile = new File(appdir, "installer.txt");
+            if (!infile.exists()) {
+                writeToFile(infile, inststr);
+            }
+        }
+
+        // if our getdown.txt file does not exist, auto-create it
+        File gdfile = new File(appdir, "getdown.txt");
+        if (!gdfile.exists()) {
+            if (StringUtil.isBlank(appbase)) {
+                throw new Exception("m.missing_appbase");
+            }
+            if (!writeToFile(gdfile, "appbase = " + appbase)) {
+                throw new Exception("m.create_getdown_failed");
+            }
+        }
+
+        return appdir;
     }
 
     /**
@@ -290,15 +286,12 @@ public class GetdownApplet extends JApplet
         }
     }
 
+    /** Handles all the actual getting down. */
     protected Getdown _getdown;
+
+    /** A background image drawn to make things look purdy. */
     protected Image _bgimage;
 
-    /**
-     * Getdown will refuse to initialize if the jar is signed but the
-     * parameters are not validated to prevent malicious code from being run.
-     */
-    protected boolean _safe = false;
-
-    /** Whether Getdown has been trusted by the user with system access */
-    protected boolean _permissioned = true;
+    /** An error encountered during initialization. */
+    protected String _errmsg;
 }

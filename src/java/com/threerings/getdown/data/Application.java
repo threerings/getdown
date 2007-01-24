@@ -64,8 +64,8 @@ import com.threerings.getdown.util.MetaProgressObserver;
 import com.threerings.getdown.util.ProgressObserver;
 
 /**
- * Parses and provide access to the information contained in the
- * <code>getdown.txt</code> configuration file.
+ * Parses and provide access to the information contained in the <code>getdown.txt</code>
+ * configuration file.
  */
 public class Application
 {
@@ -75,12 +75,11 @@ public class Application
     /** The name of our target version file. */
     public static final String VERSION_FILE = "version.txt";
 
-    /** System properties that are prefixed with this string will be
-     * passed through to our application (minus this prefix). */
+    /** System properties that are prefixed with this string will be passed through to our
+     * application (minus this prefix). */
     public static final String PROP_PASSTHROUGH_PREFIX = "app.";
 
-    /** Used to communicate information about the UI displayed when
-     * updating the application. */
+    /** Used to communicate information about the UI displayed when updating the application. */
     public static class UpdateInterface
     {
         /** The human readable name of this application. */
@@ -116,16 +115,17 @@ public class Application
         /** Generates a string representation of this instance. */
         public String toString ()
         {
-            return "[name=" + name + ", bg=" + backgroundImage +
-                ", pi=" + progressImage + ", prect=" + progress +
-                ", pt=" + progressText + ", pb=" + progressBar +
-                ", srect=" + status + ", st=" + statusText +
-                ", shadow=" + textShadow + ", err=" + installError + "]";
+            return "[name=" + name + ", bg=" + backgroundImage + ", pi=" + progressImage +
+                ", prect=" + progress + ", pt=" + progressText + ", pb=" + progressBar +
+                ", srect=" + status + ", st=" + statusText + ", shadow=" + textShadow +
+                ", err=" + installError + "]";
         }
     }
 
-    /** Used by {@link #verifyMetadata} to communicate status in
-     * circumstances where it needs to take network actions. */
+    /**
+     * Used by {@link #verifyMetadata} to communicate status in circumstances where it needs to
+     * take network actions.
+     */
     public static interface StatusDisplay
     {
         /** Requests that the specified status message be displayed. */
@@ -133,15 +133,13 @@ public class Application
     }
 
     /**
-     * Creates an application instance which records the location of the
-     * <code>getdown.txt</code> configuration file from the supplied
-     * application directory.
+     * Creates an application instance which records the location of the <code>getdown.txt</code>
+     * configuration file from the supplied application directory.
      *
-     * @param appid usually null but a string identifier if a secondary
-     * application is desired to be launched. That application will use *
-     * <code>appid.class</code> and <code>appid.apparg</code> to configure
-     * itself but all other parameters will be the same as the primary
-     * application.
+     * @param appid usually null but a string identifier if a secondary application is desired to
+     * be launched. That application will use <code>appid.class</code> and
+     * <code>appid.apparg</code> to configure itself but all other parameters will be the same as
+     * the primary application.
      */
     public Application (File appdir, String appid)
     {
@@ -151,8 +149,8 @@ public class Application
     }
 
     /**
-     * Indicates whether or not we support downloading of our resources using
-     * the Bittorrent protocol.
+     * Indicates whether or not we support downloading of our resources using the Bittorrent
+     * protocol.
      */
     public boolean getUseTorrent ()
     {
@@ -160,8 +158,7 @@ public class Application
     }
 
     /**
-     * Returns a resource that refers to the application configuration
-     * file itself.
+     * Returns a resource that refers to the application configuration file itself.
      */
     public Resource getConfigResource ()
     {
@@ -173,8 +170,7 @@ public class Application
     }
 
     /**
-     * Returns a list of the code {@link Resource} objects used by this
-     * application.
+     * Returns a list of the code {@link Resource} objects used by this application.
      */
     public List<Resource> getCodeResources ()
     {
@@ -182,8 +178,7 @@ public class Application
     }
 
     /**
-     * Returns a list of the non-code {@link Resource} objects used by
-     * this application.
+     * Returns a list of the non-code {@link Resource} objects used by this application.
      */
     public List<Resource> getResources ()
     {
@@ -191,8 +186,7 @@ public class Application
     }
 
     /**
-     * Returns a list of all the {@link Resource} objects used by
-     * this application.
+     * Returns a list of all the {@link Resource} objects used by this application.
      */
     public List<Resource> getAllResources ()
     {
@@ -203,10 +197,9 @@ public class Application
     }
 
     /**
-     * Returns a list of all auxiliary resource groups defined by the
-     * application. An auxiliary resource group is a collection of resource
-     * files that are not downloaded unless a group token file is present in
-     * the application directory.
+     * Returns a list of all auxiliary resource groups defined by the application. An auxiliary
+     * resource group is a collection of resource files that are not downloaded unless a group
+     * token file is present in the application directory.
      */
     public List<String> getAuxGroups ()
     {
@@ -214,16 +207,16 @@ public class Application
     }
 
     /**
-     * Returns true if the specified auxgroup has been "activated", false if
-     * not. Non-activated groups should be ignored, activated groups should be
-     * downloaded and patched along with the main resources.
+     * Returns true if the specified auxgroup has been "activated", false if not. Non-activated
+     * groups should be ignored, activated groups should be downloaded and patched along with the
+     * main resources.
      */
     public boolean isAuxGroupActive (String auxgroup)
     {
         Boolean active = _auxactive.get(auxgroup);
         if (active == null) {
-            // TODO: compare the contents with the MD5 hash of the auxgroup
-            // name and the client's machine ident
+            // TODO: compare the contents with the MD5 hash of the auxgroup name and the client's
+            // machine ident
             active = getLocalPath(auxgroup + ".dat").exists();
             _auxactive.put(auxgroup, active);
         }
@@ -231,9 +224,9 @@ public class Application
     }
 
     /**
-     * Returns a list of the non-code {@link Resource} objects included in the
-     * specified auxiliary resource group. If the group does not exist or has
-     * no resources, an empty list will be returned.
+     * Returns a list of the non-code {@link Resource} objects included in the specified auxiliary
+     * resource group. If the group does not exist or has no resources, an empty list will be
+     * returned.
      */
     public List<Resource> getResources (String group)
     {
@@ -242,8 +235,7 @@ public class Application
     }
 
     /**
-     * Returns all non-code resources and all resources from active auxiliary
-     * resource groups.
+     * Returns all non-code resources and all resources from active auxiliary resource groups.
      */
     public List<Resource> getActiveResources ()
     {
@@ -258,19 +250,17 @@ public class Application
     }
 
     /**
-     * Returns a resource that can be used to download a patch file that
-     * will bring this application from its current version to the target
-     * version.
+     * Returns a resource that can be used to download a patch file that will bring this
+     * application from its current version to the target version.
      *
-     * @param auxgroup the auxiliary resource group for which a patch resource
-     * is desired or null for the main application patch resource.
+     * @param auxgroup the auxiliary resource group for which a patch resource is desired or null
+     * for the main application patch resource.
      */
     public Resource getPatchResource (String auxgroup)
     {
         if (_targetVersion <= _version) {
-            Log.warning("Requested patch resource for up-to-date or " +
-                        "non-versioned application [cvers=" + _version +
-                        ", tvers=" + _targetVersion + "].");
+            Log.warning("Requested patch resource for up-to-date or non-versioned application " +
+                        "[cvers=" + _version + ", tvers=" + _targetVersion + "].");
             return null;
         }
 
@@ -288,8 +278,8 @@ public class Application
     }
 
     /**
-     * Returns a resource that can be used to download an archive containing
-     * all files belonging to the application.
+     * Returns a resource that can be used to download an archive containing all files belonging to
+     * the application.
      */
     public Resource getFullResource ()
     {
@@ -306,17 +296,15 @@ public class Application
     }
 
     /**
-     * Instructs the application to parse its <code>getdown.txt</code>
-     * configuration and prepare itself for operation. The application
-     * base URL will be parsed first so that if there are errors
-     * discovered later, the caller can use the application base to
-     * download a new <code>config.txt</code> file and try again.
+     * Instructs the application to parse its <code>getdown.txt</code> configuration and prepare
+     * itself for operation. The application base URL will be parsed first so that if there are
+     * errors discovered later, the caller can use the application base to download a new
+     * <code>config.txt</code> file and try again.
      *
-     * @return a configured UpdateInterface instance that will be used to
-     * configure the update UI.
+     * @return a configured UpdateInterface instance that will be used to configure the update UI.
      *
-     * @exception IOException thrown if there is an error reading the file
-     * or an error encountered during its parsing.
+     * @exception IOException thrown if there is an error reading the file or an error encountered
+     * during its parsing.
      */
     public UpdateInterface init (boolean checkPlatform)
         throws IOException
@@ -326,9 +314,8 @@ public class Application
         try {
             cdata = ConfigUtil.parseConfig(_config, checkPlatform);
         } catch (FileNotFoundException fnfe) {
-            // thanks to funny windows bullshit, we have to do this backup
-            // file fiddling in case we got screwed while updating our
-            // very critical getdown config file
+            // thanks to funny windows bullshit, we have to do this backup file fiddling in case we
+            // got screwed while updating our very critical getdown config file
             File cbackup = getLocalPath(CONFIG_FILE + "_old");
             if (cbackup.exists()) {
                 cdata = ConfigUtil.parseConfig(cbackup, checkPlatform);
@@ -337,9 +324,8 @@ public class Application
             }
         }
 
-        // first determine our application base, this way if anything goes
-        // wrong later in the process, our caller can use the appbase to
-        // download a new configuration file
+        // first determine our application base, this way if anything goes wrong later in the
+        // process, our caller can use the appbase to download a new configuration file
         _appbase = (String)cdata.get("appbase");
         if (_appbase == null) {
             throw new IOException("m.missing_appbase");
@@ -379,6 +365,18 @@ public class Application
         if (_class == null) {
             throw new IOException("m.missing_class");
         }
+
+        // check to see if we require a particular JVM version and have a supplied JVM
+        vstr = (String)cdata.get("java_version");
+        if (vstr != null) {
+            try {
+                _javaVersion = Integer.parseInt(vstr);
+            } catch (Exception e) {
+                String err = MessageUtil.tcompose("m.invalid_java_version", vstr);
+                throw (IOException) new IOException(err).initCause(e);
+            }
+        }
+        _javaLocation = (String)cdata.get("java_location");
 
         // clear our arrays as we may be reinitializing
         _codes.clear();
@@ -428,8 +426,7 @@ public class Application
         if (file.exists()) {
             try {
                 List<String[]> args = ConfigUtil.parsePairs(file, false);
-                for (Iterator<String[]> iter = args.iterator();
-                        iter.hasNext();) {
+                for (Iterator<String[]> iter = args.iterator(); iter.hasNext();) {
                     String[] pair = iter.next();
                     _jvmargs.add(pair[0] + "=" + pair[1]);
                 }
@@ -439,21 +436,18 @@ public class Application
         }
 
         // determine whether or not we should be using bit torrent
-        _useTorrent = (cdata.get("torrent") != null) ||
-            (System.getProperty("torrent") != null);
+        _useTorrent = (cdata.get("torrent") != null) || (System.getProperty("torrent") != null);
 
-        // look for a debug.txt file which causes us to run in java.exe on
-        // Windows so that we can obtain a thread dump of the running JVM
+        // look for a debug.txt file which causes us to run in java.exe on Windows so that we can
+        // obtain a thread dump of the running JVM
         _windebug = getLocalPath("debug.txt").exists();
 
         // parse and return our application config
         UpdateInterface ui = new UpdateInterface();
         _name = ui.name = (String)cdata.get("ui.name");
         ui.progress = parseRect(cdata, "ui.progress", ui.progress);
-        ui.progressText = parseColor(
-            cdata, "ui.progress_text", ui.progressText);
-        ui.progressBar = parseColor(
-            cdata, "ui.progress_bar", ui.progressBar);
+        ui.progressText = parseColor(cdata, "ui.progress_text", ui.progressText);
+        ui.progressBar = parseColor(cdata, "ui.progress_bar", ui.progressBar);
         ui.status = parseRect(cdata, "ui.status", ui.status);
         ui.statusText = parseColor(cdata, "ui.status_text", ui.statusText);
         ui.textShadow = parseColor(cdata, "ui.text_shadow", ui.textShadow);
@@ -475,9 +469,8 @@ public class Application
     }
 
     /**
-     * Returns a URL from which the specified path can be fetched. Our
-     * application base URL is properly versioned and combined with the
-     * supplied path.
+     * Returns a URL from which the specified path can be fetched. Our application base URL is
+     * properly versioned and combined with the supplied path.
      */
     public URL getRemoteURL (String path)
         throws MalformedURLException
@@ -494,8 +487,18 @@ public class Application
     }
 
     /**
-     * Attempts to redownload the <code>getdown.txt</code> file based on
-     * information parsed from a previous call to {@link #init}.
+     * Returns true if we either have no version requirement, are running in a JVM that meets our
+     * version requirements or have what appears to be a version of the JVM that meets our
+     * requirements.
+     */
+    public boolean haveValidJavaVersion ()
+    {
+        return true; // TODO
+    }
+
+    /**
+     * Attempts to redownload the <code>getdown.txt</code> file based on information parsed from a
+     * previous call to {@link #init}.
      */
     public void attemptRecovery (StatusDisplay status)
         throws IOException
@@ -505,9 +508,8 @@ public class Application
     }
 
     /**
-     * Downloads and replaces the <code>getdown.txt</code> and
-     * <code>digest.txt</code> files with those for the target version of
-     * our application.
+     * Downloads and replaces the <code>getdown.txt</code> and <code>digest.txt</code> files with
+     * those for the target version of our application.
      */
     public void updateMetadata ()
         throws IOException
@@ -520,10 +522,9 @@ public class Application
             throw (IOException) new IOException(err).initCause(mue);
         }
 
-        // now re-download our control files; we download the digest first
-        // so that if it fails, our config file will still reference the
-        // old version and re-running the updater will start the whole
-        // process over again
+        // now re-download our control files; we download the digest first so that if it fails, our
+        // config file will still reference the old version and re-running the updater will start
+        // the whole process over again
         downloadControlFile(Digest.DIGEST_FILE);
         downloadControlFile(CONFIG_FILE);
     }
@@ -553,11 +554,9 @@ public class Application
         args.add("-classpath");
         args.add(cpbuf.toString());
 
-        // we love our Mac users, so we do nice things to preserve our
-        // application identity
+        // we love our Mac users, so we do nice things to preserve our application identity
         if (RunAnywhere.isMacOS()) {
-            args.add("-Xdock:icon=" + _appdir.getAbsolutePath() +
-                "/../desktop.icns");
+            args.add("-Xdock:icon=" + _appdir.getAbsolutePath() + "/../desktop.icns");
             args.add("-Xdock:name=" + _name);
         }
 
@@ -565,8 +564,7 @@ public class Application
         String proxyHost;
         if ((proxyHost = System.getProperty("http.proxyHost")) != null) {
             args.add("-Dhttp.proxyHost=" + proxyHost);
-            args.add("-Dhttp.proxyPort=" +
-                     System.getProperty("http.proxyPort"));
+            args.add("-Dhttp.proxyPort=" + System.getProperty("http.proxyPort"));
         }
 
         // pass along any pass-through arguments
@@ -607,8 +605,7 @@ public class Application
         ArrayList<URL> jars = new ArrayList<URL>();
         for (Resource rsrc : _codes) {
             try {
-                jars.add(
-                    new URL("file", "", rsrc.getLocal().getAbsolutePath()));
+                jars.add(new URL("file", "", rsrc.getLocal().getAbsolutePath()));
             } catch (Exception e) {
                 e.printStackTrace(System.err);
             }
@@ -631,8 +628,7 @@ public class Application
                 if (eqidx == -1) {
                     Log.warning("Bogus system property: '" + jvmarg + "'?");
                 } else {
-                    System.setProperty(jvmarg.substring(0, eqidx),
-                                       jvmarg.substring(eqidx+1));
+                    System.setProperty(jvmarg.substring(0, eqidx), jvmarg.substring(eqidx+1));
                 }
             }
         }
@@ -655,8 +651,7 @@ public class Application
             Method main;
             try {
                 // first see if the class has a special applet-aware main
-                main = appclass.getMethod(
-                    "main", JApplet.class, SA_PROTO.getClass());
+                main = appclass.getMethod("main", JApplet.class, SA_PROTO.getClass());
                 main.invoke(null, new Object[] { applet, args });
             } catch (NoSuchMethodException nsme) {
                 main = appclass.getMethod("main", SA_PROTO.getClass());
@@ -676,17 +671,16 @@ public class Application
     }
 
     /**
-     * Loads the <code>digest.txt</code> file and verifies the contents of
-     * both that file and the <code>getdown.text</code> file. Then it
-     * loads the <code>version.txt</code> and decides whether or not the
-     * application needs to be updated or whether we can proceed to
-     * verification and execution.
+     * Loads the <code>digest.txt</code> file and verifies the contents of both that file and the
+     * <code>getdown.text</code> file. Then it loads the <code>version.txt</code> and decides
+     * whether or not the application needs to be updated or whether we can proceed to verification
+     * and execution.
      *
-     * @return true if the application needs to be updated, false if it is
-     * up to date and can be verified and executed.
+     * @return true if the application needs to be updated, false if it is up to date and can be
+     * verified and executed.
      *
-     * @exception IOException thrown if we encounter an unrecoverable
-     * error while verifying the metadata.
+     * @exception IOException thrown if we encounter an unrecoverable error while verifying the
+     * metadata.
      */
     public boolean verifyMetadata (StatusDisplay status)
         throws IOException
@@ -701,21 +695,18 @@ public class Application
 //         Log.info("JVM Args: " + StringUtil.toString(_jvmargs.iterator()));
 //         Log.info("App Args: " + StringUtil.toString(_appargs.iterator()));
 
-        // create our digester which will read in the contents of the
-        // digest file and validate itself
+        // this will read in the contents of the digest file and validate itself
         try {
             _digest = new Digest(_appdir);
         } catch (IOException ioe) {
-            Log.info("Failed to load digest: " + ioe.getMessage() + ". " +
-                     "Attempting recovery...");
+            Log.info("Failed to load digest: " + ioe.getMessage() + ". Attempting recovery...");
         }
 
-        // if we have no version, then we are running in unversioned mode
-        // so we need to download our digest.txt file on every invocation
+        // if we have no version, then we are running in unversioned mode so we need to download
+        // our digest.txt file on every invocation
         if (_version == -1) {
-            // make a note of the old meta-digest, if this changes we need
-            // to revalidate all of our resources as one or more of them
-            // have also changed
+            // make a note of the old meta-digest, if this changes we need to revalidate all of our
+            // resources as one or more of them have also changed
             String olddig = (_digest == null) ? "" : _digest.getMetaDigest();
             try {
                 status.updateStatus("m.checking");
@@ -732,10 +723,9 @@ public class Application
             }
         }
 
-        // regardless of whether we're versioned, if we failed to read the
-        // digest from disk, try to redownload the digest file and give it
-        // another good college try; this time we allow exceptions to
-        // propagate up to the caller as there is nothing else we can do
+        // regardless of whether we're versioned, if we failed to read the digest from disk, try to
+        // redownload the digest file and give it another good college try; this time we allow
+        // exceptions to propagate up to the caller as there is nothing else we can do
         if (_digest == null) {
             status.updateStatus("m.updating_metadata");
             downloadControlFile(Digest.DIGEST_FILE);
@@ -746,16 +736,14 @@ public class Application
         Resource crsrc = getConfigResource();
         if (!_digest.validateResource(crsrc, null)) {
             status.updateStatus("m.updating_metadata");
-            // attempt to redownload both of our metadata files; again we
-            // pass errors up to our caller because there's nothing we can
-            // do to automatically recover
+            // attempt to redownload both of our metadata files; again we pass errors up to our
+            // caller because there's nothing we can do to automatically recover
             downloadControlFile(CONFIG_FILE);
             downloadControlFile(Digest.DIGEST_FILE);
             _digest = new Digest(_appdir);
             // revalidate everything if we end up downloading new metadata
             clearValidationMarkers();
-            // if the new copy validates, reinitialize ourselves;
-            // otherwise report baffling hoseage
+            // if the new copy validates, reinitialize ourselves; otherwise report baffling hoseage
             if (_digest.validateResource(crsrc, null)) {
                 init(true);
             } else {
@@ -767,15 +755,13 @@ public class Application
         // start by assuming we are happy with our version
         _targetVersion = _version;
 
-        // if we are a versioned application, read in the contents of the
-        // version.txt file
+        // if we are a versioned application, read in the contents of the version.txt file
         if (_version != -1) {
             File vfile = getLocalPath(VERSION_FILE);
             FileInputStream fin = null;
             try {
                 fin = new FileInputStream(vfile);
-                BufferedReader bin = new BufferedReader(
-                    new InputStreamReader(fin));
+                BufferedReader bin = new BufferedReader(new InputStreamReader(fin));
                 String vstr = bin.readLine();
                 if (!StringUtil.isBlank(vstr)) {
                     _targetVersion = Long.parseLong(vstr);
@@ -792,11 +778,9 @@ public class Application
     }
 
     /**
-     * Verifies the code and media resources associated with this
-     * application. A list of resources that do not exist or fail the
-     * verification process will be returned. If all resources are ready
-     * to go, null will be returned and the application is considered
-     * ready to run.
+     * Verifies the code and media resources associated with this application. A list of resources
+     * that do not exist or fail the verification process will be returned. If all resources are
+     * ready to go, null will be returned and the application is considered ready to run.
      */
     public List<Resource> verifyResources (ProgressObserver obs)
     {
@@ -830,8 +814,8 @@ public class Application
                 }
 
             } catch (Exception e) {
-                Log.info("Failure validating resource [rsrc=" + rsrc +
-                         ", error=" + e + "]. Requesting redownload...");
+                Log.info("Failure validating resource [rsrc=" + rsrc + ", error=" + e + "]. " +
+                         "Requesting redownload...");
 
             } finally {
                 mpobs.progress(100);
@@ -856,12 +840,12 @@ public class Application
     protected URL createVAppBase (long version)
         throws MalformedURLException
     {
-        return new URL(
-            StringUtil.replace(_appbase, "%VERSION%", "" + version));
+        return new URL(StringUtil.replace(_appbase, "%VERSION%", "" + version));
     }
 
-    /** Clears all validation marker files for the resources in the
-     * supplied iterator. */
+    /**
+     * Clears all validation marker files for the resources in the supplied iterator.
+     */
     protected void clearValidationMarkers (Iterator<Resource> iter)
     {
         while (iter.hasNext()) {
@@ -870,9 +854,8 @@ public class Application
     }
 
     /**
-     * Downloads a new copy of the specified control file and, if the
-     * download is successful, moves it over the old file on the
-     * filesystem.
+     * Downloads a new copy of the specified control file and, if the download is successful, moves
+     * it over the old file on the filesystem.
      */
     protected void downloadControlFile (String path)
         throws IOException
@@ -882,15 +865,12 @@ public class Application
         try {
             targetURL = getRemoteURL(path);
         } catch (Exception e) {
-            Log.warning("Requested to download invalid control file " +
-                        "[appbase=" + _vappbase + ", path=" + path +
-                        ", error=" + e + "].");
-            String msg = "Invalid path '" + path + "'.";
-            throw (IOException) new IOException(msg).initCause(e);
+            Log.warning("Requested to download invalid control file [appbase=" + _vappbase +
+                        ", path=" + path + ", error=" + e + "].");
+            throw (IOException) new IOException("Invalid path '" + path + "'.").initCause(e);
         }
 
-        Log.info("Attempting to refetch '" + path + "' from '" +
-                 targetURL + "'.");
+        Log.info("Attempting to refetch '" + path + "' from '" + targetURL + "'.");
 
         // stream the URL into our temporary file
         InputStream fin = null;
@@ -904,12 +884,10 @@ public class Application
             StreamUtil.close(fout);
         }
 
-        // Windows is a wonderful operating system, it won't let you
-        // rename a file overtop of another one; thus to avoid running the
-        // risk of getting royally fucked, we have to do this complicated
-        // backup bullshit; this way if the shit hits the fan before we
-        // get the new copy into place, we should be able to read from the
-        // backup copy; yay!
+        // Windows is a wonderful operating system, it won't let you rename a file overtop of
+        // another one; thus to avoid running the risk of getting royally fucked, we have to do
+        // this complicated backup bullshit; this way if the shit hits the fan before we get the
+        // new copy into place, we should be able to read from the backup copy; yay!
         File original = getLocalPath(path);
         if (RunAnywhere.isWindows() && original.exists()) {
             File backup = getLocalPath(path + "_old");
@@ -917,16 +895,14 @@ public class Application
                 Log.warning("Failed to delete " + backup + ".");
             }
             if (!original.renameTo(backup)) {
-                Log.warning("Failed to move " + original + " to backup. " +
-                            "We will likely fail to replace it with " +
-                            target + ".");
+                Log.warning("Failed to move " + original + " to backup. We will likely fail " +
+                            "to replace it with " + target + ".");
             }
         }
 
         // now attempt to replace the current file with the new one
         if (!target.renameTo(original)) {
-            throw new IOException(
-                "Failed to rename(" + target + ", " + original + ")");
+            throw new IOException("Failed to rename(" + target + ", " + original + ")");
         }
     }
 
@@ -934,14 +910,12 @@ public class Application
     protected Resource createResource (String path, boolean unpack)
         throws MalformedURLException
     {
-        return new Resource(
-            path, getRemoteURL(path), getLocalPath(path), unpack);
+        return new Resource(path, getRemoteURL(path), getLocalPath(path), unpack);
     }
 
     /** Used to parse resources with the specfied name. */
-    protected void parseResources (
-        HashMap<String,Object> cdata, String name, boolean unpack,
-        ArrayList<Resource> list)
+    protected void parseResources (HashMap<String,Object> cdata, String name, boolean unpack,
+                                   ArrayList<Resource> list)
     {
         String[] rsrcs = ConfigUtil.getMultiValue(cdata, name);
         if (rsrcs == null) {
@@ -957,8 +931,7 @@ public class Application
     }
 
     /** Used to parse rectangle specifications from the config file. */
-    protected Rectangle parseRect (
-        HashMap<String,Object> cdata, String name, Rectangle def)
+    protected Rectangle parseRect (HashMap<String,Object> cdata, String name, Rectangle def)
     {
         String value = (String)cdata.get(name);
         if (!StringUtil.isBlank(value)) {
@@ -966,24 +939,21 @@ public class Application
             if (v != null && v.length == 4) {
                 return new Rectangle(v[0], v[1], v[2], v[3]);
             } else {
-                Log.warning("Ignoring invalid '" + name + "' config '" +
-                            value + "'.");
+                Log.warning("Ignoring invalid '" + name + "' config '" + value + "'.");
             }
         }
         return def;
     }
 
     /** Used to parse color specifications from the config file. */
-    protected Color parseColor (
-        HashMap<String,Object> cdata, String name, Color def)
+    protected Color parseColor (HashMap<String,Object> cdata, String name, Color def)
     {
         String value = (String)cdata.get(name);
         if (!StringUtil.isBlank(value)) {
             try {
                 return new Color(Integer.parseInt(value, 16));
             } catch (Exception e) {
-                Log.warning("Ignoring invalid '" + name + "' config '" +
-                            value + "'.");
+                Log.warning("Ignoring invalid '" + name + "' config '" + value + "'.");
             }
         }
         return def;
@@ -993,8 +963,7 @@ public class Application
     protected String[] parseList (HashMap<String,Object> cdata, String name)
     {
         String value = (String)cdata.get(name);
-        return (value == null) ? new String[0] :
-            StringUtil.parseStringArray(value);
+        return (value == null) ? new String[0] : StringUtil.parseStringArray(value);
     }
 
     protected File _appdir;
@@ -1011,14 +980,16 @@ public class Application
     protected boolean _windebug;
     protected boolean _useTorrent = false;
 
+    protected int _javaVersion;
+    protected String _javaLocation;
+
     protected ArrayList<Resource> _codes = new ArrayList<Resource>();
     protected ArrayList<Resource> _resources = new ArrayList<Resource>();
 
     protected ArrayList<String> _auxgroups = new ArrayList<String>();
     protected HashMap<String,ArrayList<Resource>> _auxrsrcs =
         new HashMap<String,ArrayList<Resource>>();
-    protected HashMap<String,Boolean> _auxactive =
-        new HashMap<String,Boolean>();
+    protected HashMap<String,Boolean> _auxactive = new HashMap<String,Boolean>();
 
     protected ArrayList<String> _jvmargs = new ArrayList<String>();
     protected ArrayList<String> _appargs = new ArrayList<String>();
