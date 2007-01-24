@@ -53,6 +53,7 @@
     <copy todir="${deploy.dir}/lib" flatten="true">
       <fileset refid="${app.name}.libs"/>
     </copy>
+    <copy todir="${deploy.dir}/lib" file="${java.home}/lib/javaws.jar"/>
   </target>
 
   <!-- cleans out the intermediate build files -->
