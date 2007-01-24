@@ -127,4 +127,30 @@
       keystore="${sign.keystore}" storepass="${sign.storepass}"
       alias="${sign.alias}" keypass="${sign.keypass}"/>
   </target>
+
+  <!-- creates a zipfile with our source distribution -->
+  <target name="snapshot" depends="proguard">
+     <echo message="You may want to stop and run 'ant savedoc' first."/>
+     <delete file="${deploy.dir}/${app.name}-snapshot.zip"/>
+     <mkdir dir="${deploy.dir}/snapshot/${app.name}"/>
+     <copy todir="${deploy.dir}/snapshot/${app.name}">
+       <fileset dir=".">
+         <include name="**"/>
+         <exclude name="${deploy.dir}/**"/>
+         <exclude name="tests/dist/**"/>
+         <exclude name="${app.name}-*.zip"/>
+       </fileset>
+     </copy>
+     <copy todir="${deploy.dir}/snapshot/${app.name}" file="${deploy.dir}/${app.name}-pro.jar"/>
+     <copy todir="${deploy.dir}/snapshot/${app.name}"
+           file="${deploy.dir}/${app.name}-retro-pro.jar"/>
+     <copy todir="${deploy.dir}/snapshot/${app.name}/lib">
+       <fileset dir="${deploy.dir}/lib" includes="*.jar"/>
+     </copy>
+     <copy todir="${deploy.dir}/snapshot/${app.name}/docs/api">
+       <fileset dir="${deploy.dir}/docs" includes="**"/>
+     </copy>
+     <zip destfile="${deploy.dir}/${app.name}-snapshot.zip" basedir="${deploy.dir}/snapshot"/>
+     <delete dir="${deploy.dir}/snapshot"/>
+  </target>
 </project>
