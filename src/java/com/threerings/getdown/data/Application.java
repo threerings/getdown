@@ -55,7 +55,7 @@ import com.samskivert.text.MessageUtil;
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
 
-import org.apache.commons.io.CopyUtils;
+import org.apache.commons.io.IOUtils;
 
 import com.threerings.getdown.Log;
 import com.threerings.getdown.util.ConfigUtil;
@@ -878,7 +878,7 @@ public class Application
         try {
             fin = targetURL.openStream();
             fout = new FileOutputStream(target);
-            CopyUtils.copy(fin, fout);
+            IOUtils.copy(fin, fout);
         } finally {
             StreamUtil.close(fin);
             StreamUtil.close(fout);

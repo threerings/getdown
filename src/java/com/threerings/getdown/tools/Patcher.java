@@ -30,7 +30,7 @@ import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
 import com.samskivert.io.StreamUtil;
-import org.apache.commons.io.CopyUtils;
+import org.apache.commons.io.IOUtils;
 
 import com.threerings.getdown.Log;
 import com.threerings.getdown.util.ProgressObserver;
@@ -43,6 +43,15 @@ import com.threerings.getdown.util.ProgressObserver;
  */
 public class Patcher
 {
+    /** A suffix appended to file names to indicate that a file should be newly created. */
+    public static final String CREATE = ".create";
+
+    /** A suffix appended to file names to indicate that a file should be patched. */
+    public static final String PATCH = ".patch";
+
+    /** A suffix appended to file names to indicate that a file should be deleted. */
+    public static final String DELETE = ".delete";
+
     /**
      * Applies the specified patch file to the application living in the
      * specified application directory. The supplied observer, if
@@ -68,18 +77,18 @@ public class Patcher
             long elength = entry.getCompressedSize();
 
             // depending on the suffix, we do The Right Thing (tm)
-            if (path.endsWith(Differ.CREATE)) {
-                path = strip(path, Differ.CREATE);
+            if (path.endsWith(CREATE)) {
+                path = strip(path, CREATE);
                 System.out.println("Creating " + path + "...");
                 createFile(file, entry, new File(appdir, path));
 
-            } else if (path.endsWith(Differ.PATCH)) {
-                path = strip(path, Differ.PATCH);
+            } else if (path.endsWith(PATCH)) {
+                path = strip(path, PATCH);
                 System.out.println("Patching " + path + "...");
                 patchFile(file, entry, appdir, path);
 
-            } else if (path.endsWith(Differ.DELETE)) {
-                path = strip(path, Differ.DELETE);
+            } else if (path.endsWith(DELETE)) {
+                path = strip(path, DELETE);
                 System.out.println("Removing " + path + "...");
                 File target = new File(appdir, path);
                 if (!target.delete()) {
@@ -152,8 +161,7 @@ public class Patcher
         InputStream in = null;
         FileOutputStream fout = null;
         try {
-            CopyUtils.copy(in = file.getInputStream(entry),
-                           fout = new FileOutputStream(patch));
+            IOUtils.copy(in = file.getInputStream(entry), fout = new FileOutputStream(patch));
             StreamUtil.close(fout);
             fout = null;
 

@@ -37,7 +37,7 @@ import java.util.zip.ZipEntry;
 import java.security.MessageDigest;
 
 import com.sun.javaws.jardiff.JarDiff;
-import org.apache.commons.io.CopyUtils;
+import org.apache.commons.io.IOUtils;
 
 import com.samskivert.io.StreamUtil;
 
@@ -53,18 +53,6 @@ import com.threerings.getdown.data.Resource;
  */
 public class Differ
 {
-    /** A suffix appended to file names to indicate that a file should be
-     * newly created. */
-    public static final String CREATE = ".create";
-
-    /** A suffix appended to file names to indicate that a file should be
-     * patched. */
-    public static final String PATCH = ".patch";
-
-    /** A suffix appended to file names to indicate that a file should be
-     * deleted. */
-    public static final String DELETE = ".delete";
-
     /**
      * Creates a single patch file that contains the differences between
      * the two specified application directories. The patch file will be
@@ -160,7 +148,7 @@ public class Differ
                         // their entirety before running jardiff on 'em
                         File otemp = rebuildJar(orsrc.getLocal());
                         File temp = rebuildJar(rsrc.getLocal());
-                        jout.putNextEntry(new ZipEntry(rsrc.getPath() + PATCH));
+                        jout.putNextEntry(new ZipEntry(rsrc.getPath() + Patcher.PATCH));
                         jarDiff(otemp, temp, jout);
                         otemp.delete();
                         temp.delete();
@@ -171,7 +159,7 @@ public class Differ
                 if (verbose) {
                     System.out.println("Addition: " + rsrc.getPath());
                 }
-                jout.putNextEntry(new ZipEntry(rsrc.getPath() + CREATE));
+                jout.putNextEntry(new ZipEntry(rsrc.getPath() + Patcher.CREATE));
                 pipe(rsrc.getLocal(), jout);
             }
 
@@ -181,7 +169,7 @@ public class Differ
                 if (verbose) {
                     System.out.println("Removal: " + rsrc.getPath());
                 }
-                jout.putNextEntry(new ZipEntry(rsrc.getPath() + DELETE));
+                jout.putNextEntry(new ZipEntry(rsrc.getPath() + Patcher.DELETE));
             }
 
             StreamUtil.close(jout);
@@ -252,7 +240,7 @@ public class Differ
     {
         FileInputStream fin = null;
         try {
-            CopyUtils.copy(fin = new FileInputStream(file), jout);
+            IOUtils.copy(fin = new FileInputStream(file), jout);
         } finally {
             StreamUtil.close(fin);
         }
