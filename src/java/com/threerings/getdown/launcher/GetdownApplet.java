@@ -69,6 +69,9 @@ public class GetdownApplet extends JApplet
             imgpath = "";
         }
 
+        Log.info("App Base: " + appbase);
+        Log.info("App Name: " + appname);
+
         File appdir = null;
         try {
             appdir = initGetdown(appbase, appname, imgpath);
@@ -198,7 +201,10 @@ public class GetdownApplet extends JApplet
             if (signature == null) {
                 signature = "";
             }
+
+            Log.info("Verifying signature '" + signature + "'.");
             String params = appbase + appname + imgpath;
+            int validated = 0;
             for (Object signer : signers) {
                 if (signer instanceof Certificate) {
                     Certificate cert = (Certificate)signer;
@@ -207,12 +213,17 @@ public class GetdownApplet extends JApplet
                         sig.initVerify(cert);
                         sig.update(params.getBytes());
                         if (!sig.verify(Base64.decodeBase64(signature.getBytes()))) {
-                            throw new Exception("m.corrupt_param_signature_error");
+                            Log.info("Signature does not match '" + cert.getPublicKey() + "'.");
                         }
+                        validated++;
                     } catch (GeneralSecurityException gse) {
-                        throw new Exception("m.corrupt_param_signature_error");
+                        // no problem!
                     }
                 }
+            }
+            // if we couldn't find a key that validates our parameters, we are the hosed!
+            if (validated == 0) {
+                throw new Exception("m.corrupt_param_signature_error");
             }
         }
 
