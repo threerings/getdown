@@ -443,6 +443,15 @@ public abstract class Getdown extends Thread
                 // we should do something like tell the user or something but fucking fuck
             }
         }
+
+        // lastly regenerate the .jsa dump file that helps Java to start up faster
+        String vmpath = LaunchUtil.getJVMPath(_app.getLocalPath(""));
+        try {
+            Log.info("Regenerating classes.jsa for " + vmpath + "...");
+            Runtime.getRuntime().exec(vmpath + " -Xshare:dump");
+        } catch (Exception e) {
+            Log.warning("Failed to regenerate .jsa dum file [error=" + e + "].");
+        }
     }
 
     /**
