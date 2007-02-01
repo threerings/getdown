@@ -49,6 +49,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.samskivert.io.StreamUtil;
 import com.samskivert.text.MessageUtil;
@@ -278,6 +280,29 @@ public class Application
     }
 
     /**
+     * Returns a resource for a zip file containing a Java VM that can be downloaded to use in
+     * place of the installed VM (in the case where the VM that launched Getdown does not meet the
+     * application's version requirements) or null if no VM is available for this platform.
+     */
+    public Resource getJavaVMResource ()
+    {
+        if (StringUtil.isBlank(_javaLocation)) {
+            return null;
+        }
+
+        String vmfile = LaunchUtil.LOCAL_JAVA_DIR + ".jar";
+        try {
+            URL remote = new URL(createVAppBase(_targetVersion), _javaLocation);
+            return new Resource(vmfile, remote, getLocalPath(vmfile), true);
+        } catch (Exception e) {
+            Log.warning("Failed to create VM resource [vmfile=" + vmfile + ", appbase=" + _appbase +
+                        ", tvers=" + _targetVersion + ", javaloc=" + _javaLocation +
+                        ", error=" + e + "].");
+            return null;
+        }
+    }
+
+    /**
      * Returns a resource that can be used to download an archive containing all files belonging to
      * the application.
      */
@@ -493,7 +518,34 @@ public class Application
      */
     public boolean haveValidJavaVersion ()
     {
-        return true; // TODO
+        // if we're doing no version checking, then yay!
+        if (_javaVersion <= 0) {
+            return true;
+        }
+
+        // if we have a fully unpacked VM assume it is the right version (TODO: don't)
+        Resource vmjar = getJavaVMResource();
+        if (vmjar != null && vmjar.isMarkedValid()) {
+            return true;
+        }
+
+        // parse the version out of the java.version system property
+        String verstr = System.getProperty("java.version");
+        Matcher m = Pattern.compile("(\\d+)\\.(\\d+)\\.(\\d+)_(\\d+)").matcher(verstr);
+        if (!m.matches()) {
+            // if we can't parse the java version we're in weird land and should probably just try
+            // our luck with what we've got rather than try to download a new jvm
+            Log.warning("Unable to parse VM version, hoping for the best [version=" + verstr +
+                        ", needed=" + _javaVersion + "].");
+            return true;
+        }
+
+        int one = Integer.parseInt(m.group(1)); // will there ever be a two?
+        int major = Integer.parseInt(m.group(2));
+        int minor = Integer.parseInt(m.group(3));
+        int patch = Integer.parseInt(m.group(4));
+        int version = patch + 100 * (minor + 100 * (major + 100 * one));
+        return version >= _javaVersion;
     }
 
     /**
@@ -548,7 +600,7 @@ public class Application
         ArrayList<String> args = new ArrayList<String>();
 
         // reconstruct the path to the JVM
-        args.add(LaunchUtil.getJVMPath(_windebug));
+        args.add(LaunchUtil.getJVMPath(_appdir, _windebug));
 
         // add the classpath arguments
         args.add("-classpath");

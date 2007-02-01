@@ -340,10 +340,17 @@ public abstract class Getdown extends Thread
                 createInterface(true);
             }
 
-            // if we aren't running in a JVM that meets our version requirements, either complain
-            // or attempt to download and install the appropriate version
-
             for (int ii = 0; ii < MAX_LOOPS; ii++) {
+                // if we aren't running in a JVM that meets our version requirements, either
+                // complain or attempt to download and install the appropriate version
+                if (!_app.haveValidJavaVersion()) {
+                    // download and install the necessary version of java, then loop back again and
+                    // reverify everything; if we can't download java; we'll throw an exception
+                    Log.info("Attempting to update Java VM...");
+                    updateJava();
+                    continue;
+                }
+
                 // make sure we have the desired version and that the metadata files are valid...
                 setStatus("m.validating", -1, -1L, false);
                 if (_app.verifyMetadata(this)) {
@@ -395,6 +402,47 @@ public abstract class Getdown extends Thread
     public void updateStatus (String message)
     {
         setStatus(message, -1, -1L, true);
+    }
+
+    /**
+     * Downloads and installs an Java VM bundled with the application. This is called if we are not
+     * running with the necessary Java version.
+     */
+    protected void updateJava ()
+        throws IOException
+    {
+        Resource vmjar = _app.getJavaVMResource();
+        if (vmjar == null) {
+            throw new IOException("m.java_download_failed");
+        }
+
+        updateStatus("m.downloading_java");
+        ArrayList<Resource> list = new ArrayList<Resource>();
+        list.add(vmjar);
+        download(list);
+
+        updateStatus("m.unpacking_java");
+        if (!vmjar.unpack()) {
+            throw new IOException("m.java_unpack_failed");
+        }
+        vmjar.markAsValid();
+
+        // Sun, why dost thou spite me? Java doesn't know anything about file permissions (and by
+        // extension then, neither does Jar), so on Joonix we have to hackily make java_vm/bin/java
+        // executable by execing chmod; a pox on their children!
+        if (RunAnywhere.isLinux()) {
+            String vmbin = LaunchUtil.LOCAL_JAVA_DIR + File.separator + "bin" +
+                File.separator + "java";
+            String cmd = "chmod a+rx " + _app.getLocalPath(vmbin);
+            try {
+                Log.info("Please smack a Java engineer. Running: " + cmd);
+                Runtime.getRuntime().exec(cmd);
+            } catch (Exception e) {
+                Log.warning("Failed to mark VM binary as executable [cmd=" + cmd +
+                            ", error=" + e + "].");
+                // we should do something like tell the user or something but fucking fuck
+            }
+        }
     }
 
     /**
@@ -480,8 +528,7 @@ public abstract class Getdown extends Thread
             }
 
             public void downloadFailed (Resource rsrc, Exception e) {
-                updateStatus(
-                    MessageUtil.tcompose("m.failure", e.getMessage()));
+                updateStatus(MessageUtil.tcompose("m.failure", e.getMessage()));
                 Log.warning("Download failed [rsrc=" + rsrc + "].");
                 Log.logStackTrace(e);
                 synchronized (lock) {
@@ -643,22 +690,20 @@ public abstract class Getdown extends Thread
             createInterface(false);
         }
 
-        if (_status != null) {
-            EventQueue.invokeLater(new Runnable() {
-                public void run () {
-                    if (_status == null) {
-                        Log.info("Dropping status '" + message + "'.");
-                        return;
-                    }
-                    if (message != null) {
-                        _status.setStatus(message);
-                    }
-                    if (percent >= 0) {
-                        _status.setProgress(percent, remaining);
-                    }
+        EventQueue.invokeLater(new Runnable() {
+            public void run () {
+                if (_status == null) {
+                    Log.info("Dropping status '" + message + "'.");
+                    return;
                 }
-            });
-        }
+                if (message != null) {
+                    _status.setStatus(message);
+                }
+                if (percent >= 0) {
+                    _status.setProgress(percent, remaining);
+                }
+            }
+        });
     }
 
     /**

@@ -152,11 +152,9 @@ public class Resource
             return false;
         }
         try {
-            return FileUtil.unpackJar(
-                new JarFile(_local), _local.getParentFile());
+            return FileUtil.unpackJar(new JarFile(_local), _local.getParentFile());
         } catch (IOException ioe) {
-            Log.warning("Failed to create JarFile from '" +
-                        _local + "': " + ioe);
+            Log.warning("Failed to create JarFile from '" + _local + "': " + ioe);
             return false;
         }
     }

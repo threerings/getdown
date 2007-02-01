@@ -35,43 +35,40 @@ import com.threerings.getdown.Log;
  */
 public class LaunchUtil
 {
+    /** The directory into which a local VM installation should be unpacked. */
+    public static final String LOCAL_JAVA_DIR = "java_vm";
+
     /**
      * Reconstructs the path to the JVM used to launch this process.
      */
-    public static String getJVMPath ()
+    public static String getJVMPath (File appdir)
     {
-        return getJVMPath(false);
+        return getJVMPath(appdir, false);
     }
 
     /**
      * Reconstructs the path to the JVM used to launch this process.
      *
-     * @param windebug if true we will use java.exe instead of javaw.exe on
-     * Windows.
+     * @param windebug if true we will use java.exe instead of javaw.exe on Windows.
      */
-    public static String getJVMPath (boolean windebug)
+    public static String getJVMPath (File appdir, boolean windebug)
     {
-        String apbase = System.getProperty("java.home") +
-            File.separator + "bin" + File.separator;
-        String apath = apbase + "java";
-        if (new File(apath).exists()) {
-            return apath;
+        // first look in our application directory for an installed VM
+        String vmpath = checkJVMPath(new File(appdir, LOCAL_JAVA_DIR).getPath(), windebug);
+        if (vmpath != null) {
+            return vmpath;
         }
 
-        if (!windebug) {
-            apath = apbase + "javaw.exe";
-            if (new File(apath).exists()) {
-                return apath;
-            }
+        // then fall back to the VM in which we're already running
+        vmpath = checkJVMPath(System.getProperty("java.home"), windebug);
+        if (vmpath != null) {
+            return vmpath;
         }
 
-        apath = apbase + "java.exe";
-        if (new File(apath).exists()) {
-            return apath;
-        }
-
-        Log.warning("Unable to find java! [jhome=" + apbase + "].");
-        return apbase + "java";
+        // then throw up our hands and hope for the best
+        Log.warning("Unable to find java [appdir=" + appdir +
+                    ", java.home=" + System.getProperty("java.home") + "]!");
+        return "java";
     }
 
     /**
@@ -141,5 +138,31 @@ public class LaunchUtil
         String osname = System.getProperty("os.name").toLowerCase();
         return (osname.indexOf("windows 98") != -1 ||
                 osname.indexOf("windows me") != -1);
+    }
+
+    /**
+     * Checks whether a Java Virtual Machine can be located in the supplied path.
+     */
+    protected static String checkJVMPath (String vmhome, boolean windebug)
+    {
+        String vmbase = vmhome + File.separator + "bin" + File.separator;
+        String vmpath = vmbase + "java";
+        if (new File(vmpath).exists()) {
+            return vmpath;
+        }
+
+        if (!windebug) {
+            vmpath = vmbase + "javaw.exe";
+            if (new File(vmpath).exists()) {
+                return vmpath;
+            }
+        }
+
+        vmpath = vmbase + "java.exe";
+        if (new File(vmpath).exists()) {
+            return vmpath;
+        }
+
+        return null;
     }
 }
