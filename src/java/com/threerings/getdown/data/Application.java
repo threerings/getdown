@@ -401,7 +401,14 @@ public class Application
                 throw (IOException) new IOException(err).initCause(e);
             }
         }
-        _javaLocation = (String)cdata.get("java_location");
+
+        // this is a little weird, but when we're run from the digester, we see a String[] which
+        // contains java locations for all platforms which we can't grok, but the digester doesn't
+        // need to know about that; when we're run in a real application there will be only one!
+        Object javaloc = cdata.get("java_location");
+        if (javaloc instanceof String) {
+            _javaLocation = (String)javaloc;
+        }
 
         // clear our arrays as we may be reinitializing
         _codes.clear();
