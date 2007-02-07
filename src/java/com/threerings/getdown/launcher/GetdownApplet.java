@@ -134,8 +134,8 @@ public class GetdownApplet extends JApplet
                     try {
                         JSObject.getWindow(GetdownApplet.this).call(
                             "getdownStatus", new Object[] { message, percent, remaining });
-                    } catch (JSException jse) {
-                        // don't sweat it.
+                    } catch (Throwable t) {
+                        Log.warning("Failed to communicate status to JavaScript: " + t);
                     }
                 }
             };
