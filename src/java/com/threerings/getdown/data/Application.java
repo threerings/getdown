@@ -110,7 +110,7 @@ public class Application
 
         /** The color of the text shadow. */
         public Color textShadow;
-        
+
         /** Where to point the user for help with install errors. */
         public String installError;
 
@@ -538,7 +538,7 @@ public class Application
 
         // parse the version out of the java.version system property
         String verstr = System.getProperty("java.version");
-        Matcher m = Pattern.compile("(\\d+)\\.(\\d+)\\.(\\d+)_(\\d+)").matcher(verstr);
+        Matcher m = Pattern.compile("(\\d+)\\.(\\d+)\\.(\\d+)(_\\d+)?").matcher(verstr);
         if (!m.matches()) {
             // if we can't parse the java version we're in weird land and should probably just try
             // our luck with what we've got rather than try to download a new jvm
@@ -550,7 +550,7 @@ public class Application
         int one = Integer.parseInt(m.group(1)); // will there ever be a two?
         int major = Integer.parseInt(m.group(2));
         int minor = Integer.parseInt(m.group(3));
-        int patch = Integer.parseInt(m.group(4));
+        int patch = m.group(4) == null ? 0 : Integer.parseInt(m.group(4).substring(1));
         int version = patch + 100 * (minor + 100 * (major + 100 * one));
         return version >= _javaVersion;
     }
