@@ -241,16 +241,15 @@ public class GetdownApplet extends JApplet
         // when run from an applet, we install to the user's home directory
         String root;
         if (RunAnywhere.isWindows()) {
-            String verStr = System.getProperty("os.version");
             root = "Application Data";
+            String verStr = System.getProperty("os.version");
             try {
-                float version = Float.parseFloat(verStr);
-                if (version >= 6.0) {
+                if (Float.parseFloat(verStr) >= 6.0f) {
                     // Vista makes us write it here....  Yay.
                     root = "AppData" + File.separator + "LocalLow";
                 }
             } catch (Exception e) {
-                Log.warning("Couldn't parse OS version: " +verStr);
+                Log.warning("Couldn't parse OS version [vers=" + verStr + ", error=" + e + "].");
             }
         } else if (RunAnywhere.isMacOS()) {
             root = "Library" + File.separator + "Application Support";
