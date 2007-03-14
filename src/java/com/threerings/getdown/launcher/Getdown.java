@@ -340,6 +340,14 @@ public abstract class Getdown extends Thread
                 createInterface(true);
             }
 
+            // we create this tracking counter here so that we properly note the first time through
+            // the update process whether we previously had validated resources (which means this
+            // is not a first time install); we may, in the course of updating, wipe out our
+            // validation markers and revalidate which would make us think we were doing a fresh
+            // install if we didn't specifically remember that we had validated resources the first
+            // time through
+            int[] alreadyValid = new int[1];
+
             for (int ii = 0; ii < MAX_LOOPS; ii++) {
                 // if we aren't running in a JVM that meets our version requirements, either
                 // complain or attempt to download and install the appropriate version
@@ -367,7 +375,7 @@ public abstract class Getdown extends Thread
 
                 // now verify our resources...
                 setStatus("m.validating", -1, -1L, false);
-                List<Resource> failures = _app.verifyResources(_progobs);
+                List<Resource> failures = _app.verifyResources(_progobs, alreadyValid);
                 if (failures == null) {
                     Log.info("Resources verified.");
                     launch();
@@ -375,12 +383,14 @@ public abstract class Getdown extends Thread
                 }
 
                 try {
-                    int rcount = _app.getAllResources().size();
-                    _enableTracking = (failures.size() == rcount);
+                    // if any of our resources have already been marked valid this is not a first
+                    // time install and we don't want to enable tracking
+                    _enableTracking = (alreadyValid[0] == 0);
                     reportTrackingEvent("app_start", -1);
 
                     // redownload any that are corrupt or invalid...
-                    Log.info(failures.size() + " of " + rcount + " rsrcs require update.");
+                    Log.info(failures.size() + " of " + _app.getAllResources().size() +
+                             " rsrcs require update (" + alreadyValid[0] + " assumed valid).");
                     download(failures);
 
                     reportTrackingEvent("app_complete", -1);
@@ -747,12 +757,12 @@ public abstract class Getdown extends Thread
 
         } else if (progress > 0) {
             // we need to make sure we do the right thing if we skip over progress levels
-            for (int ii = _reportedProgress+1; ii <= progress; ii++) {
-                URL url = _app.getTrackingProgressURL(progress);
+            do {
+                URL url = _app.getTrackingProgressURL(++_reportedProgress);
                 if (url != null) {
                     new ProgressReporter(url).start();
                 }
-            }
+            } while (_reportedProgress <= progress);
 
         } else {
             URL url = _app.getTrackingURL(event);

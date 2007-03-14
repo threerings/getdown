@@ -882,8 +882,11 @@ public class Application
      * Verifies the code and media resources associated with this application. A list of resources
      * that do not exist or fail the verification process will be returned. If all resources are
      * ready to go, null will be returned and the application is considered ready to run.
+     *
+     * @param alreadyValid if non-null a 1 element array that will have the number of "already
+     * validated" resources filled in.
      */
-    public List<Resource> verifyResources (ProgressObserver obs)
+    public List<Resource> verifyResources (ProgressObserver obs, int[] alreadyValid)
     {
         List<Resource> rsrcs = getAllResources();
         List<Resource> failures = new ArrayList<Resource>();
@@ -899,6 +902,9 @@ public class Application
             mpobs.startElement(rsrc.getLocal().length());
 
             if (rsrc.isMarkedValid()) {
+                if (alreadyValid != null) {
+                    alreadyValid[0]++;
+                }
                 mpobs.progress(100);
                 continue;
             }
