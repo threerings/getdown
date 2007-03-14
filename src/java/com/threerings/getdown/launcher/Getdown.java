@@ -347,7 +347,12 @@ public abstract class Getdown extends Thread
                     // download and install the necessary version of java, then loop back again and
                     // reverify everything; if we can't download java; we'll throw an exception
                     Log.info("Attempting to update Java VM...");
-                    updateJava();
+                    _enableTracking = true; // always track JVM downloads
+                    try {
+                        updateJava();
+                    } finally {
+                        _enableTracking = false;
+                    }
                     continue;
                 }
 
@@ -369,9 +374,20 @@ public abstract class Getdown extends Thread
                     return;
                 }
 
-                // redownload any that are corrupt or invalid...
-                Log.info(failures.size() + " rsrcs require update.");
-                download(failures);
+                try {
+                    int rcount = _app.getAllResources().size();
+                    _enableTracking = (failures.size() == rcount);
+                    reportTrackingEvent("app_start", -1);
+
+                    // redownload any that are corrupt or invalid...
+                    Log.info(failures.size() + " of " + rcount + " rsrcs require update.");
+                    download(failures);
+
+                    reportTrackingEvent("app_complete", -1);
+                } finally {
+                    _enableTracking = false;
+                }
+
                 // now we'll loop back and try it all again
             }
 
@@ -416,10 +432,14 @@ public abstract class Getdown extends Thread
             throw new IOException("m.java_download_failed");
         }
 
+        reportTrackingEvent("jvm_start", -1);
+
         updateStatus("m.downloading_java");
         ArrayList<Resource> list = new ArrayList<Resource>();
         list.add(vmjar);
         download(list);
+
+        reportTrackingEvent("jvm_unpack", -1);
 
         updateStatus("m.unpacking_java");
         if (!vmjar.unpack()) {
@@ -452,6 +472,8 @@ public abstract class Getdown extends Thread
         } catch (Exception e) {
             Log.warning("Failed to regenerate .jsa dum file [error=" + e + "].");
         }
+
+        reportTrackingEvent("jvm_complete", -1);
     }
 
     /**
@@ -529,6 +551,9 @@ public abstract class Getdown extends Thread
 
             public void downloadProgress (int percent, long remaining) {
                 setStatus("m.downloading", percent, remaining, true);
+                if (percent > 0) {
+                    reportTrackingEvent("progress", percent);
+                }
                 if (percent == 100) {
                     synchronized (lock) {
                         lock.notify();
@@ -715,6 +740,28 @@ public abstract class Getdown extends Thread
         });
     }
 
+    protected void reportTrackingEvent (String event, int progress)
+    {
+        if (!_enableTracking) {
+            return;
+
+        } else if (progress > 0) {
+            // we need to make sure we do the right thing if we skip over progress levels
+            for (int ii = _reportedProgress+1; ii <= progress; ii++) {
+                URL url = _app.getTrackingProgressURL(progress);
+                if (url != null) {
+                    new ProgressReporter(url).start();
+                }
+            }
+
+        } else {
+            URL url = _app.getTrackingURL(event);
+            if (url != null) {
+                new ProgressReporter(url).start();
+            }
+        }
+    }
+
     /**
      * Load the image at the path.  Before trying the exact path/file specified
      *  we will look to see if we can find a localized version by sticking a
@@ -785,6 +832,35 @@ public abstract class Getdown extends Thread
      */
     protected abstract void exit (int exitCode);
 
+    /** Used to fetch a progress report URL. */
+    protected static class ProgressReporter extends Thread
+    {
+        public ProgressReporter (URL url) {
+            setDaemon(true);
+            _url = url;
+        }
+
+        public void run () {
+            try {
+                HttpURLConnection ucon = (HttpURLConnection)_url.openConnection();
+                ucon.connect();
+                try {
+                    if (ucon.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                        Log.warning("Failed to report tracking event [url=" + _url +
+                                    ", rcode=" + ucon.getResponseCode() + "].");
+                    }
+                } finally {
+                    ucon.disconnect();
+                }
+            } catch (IOException ioe) {
+                Log.warning("Failed to report tracking event [url=" + _url +
+                            ", error=" + ioe + "].");
+            }
+        }
+
+        protected URL _url;
+    }
+
     /** Used to pass progress on to our user interface. */
     protected ProgressObserver _progobs = new ProgressObserver() {
         public void progress (final int percent) {
@@ -802,6 +878,9 @@ public abstract class Getdown extends Thread
 
     protected boolean _dead;
     protected long _startup;
+
+    protected boolean _enableTracking = true;
+    protected int _reportedProgress = 0;
 
     /** The maximum number of resources that can be already present for bittorrent to be used. */
     protected static final int MAX_TORRENT_VERIFIED_RESOURCES = 1;

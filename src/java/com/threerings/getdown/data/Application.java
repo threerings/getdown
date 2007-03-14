@@ -54,6 +54,7 @@ import java.util.regex.Pattern;
 
 import com.samskivert.io.StreamUtil;
 import com.samskivert.text.MessageUtil;
+import com.samskivert.util.ArrayIntSet;
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
 
@@ -321,6 +322,36 @@ public class Application
     }
 
     /**
+     * Returns the URL to use to report an initial download event. Returns null if no tracking
+     * start URL was configured for this application.
+     *
+     * @param event the event to be reported: start, jvm_start, jvm_complete, complete.
+     */
+    public URL getTrackingURL (String event)
+    {
+        try {
+            return _trackingURL == null ? null : new URL(_trackingURL + event);
+        } catch (MalformedURLException mue) {
+            Log.warning("Invalid tracking URL [path=" + _trackingURL + ", event=" + event +
+                        ", error=" + mue + "].");
+            return null;
+        }
+    }
+
+    /**
+     * Returns the URL to request to report that we have reached the specified percentage of our
+     * initial download. Returns null if no tracking request was configured for the specified
+     * percentage.
+     */
+    public URL getTrackingProgressURL (int percent)
+    {
+        if (_trackingPcts == null || !_trackingPcts.contains(percent)) {
+            return null;
+        }
+        return getTrackingURL("pct" + percent);
+    }
+
+    /**
      * Instructs the application to parse its <code>getdown.txt</code> configuration and prepare
      * itself for operation. The application base URL will be parsed first so that if there are
      * errors discovered later, the caller can use the application base to download a new
@@ -408,6 +439,17 @@ public class Application
         Object javaloc = cdata.get("java_location");
         if (javaloc instanceof String) {
             _javaLocation = (String)javaloc;
+        }
+
+        // determine whether we have any tracking configuration
+        _trackingURL = (String)cdata.get("tracking_url");
+
+        // check for tracking progress percent configuration
+        String trackPcts = (String)cdata.get("tracking_percents");
+        if (!StringUtil.isBlank(trackPcts)) {
+            _trackingPcts = new ArrayIntSet(StringUtil.parseIntArray(trackPcts));
+        } else if (!StringUtil.isBlank(_trackingURL)) {
+            _trackingPcts = new ArrayIntSet(new int[] { 50 });
         }
 
         // clear our arrays as we may be reinitializing
@@ -1038,6 +1080,9 @@ public class Application
     protected String _name;
     protected boolean _windebug;
     protected boolean _useTorrent = false;
+
+    protected String _trackingURL;
+    protected ArrayIntSet _trackingPcts;
 
     protected int _javaVersion;
     protected String _javaLocation;
