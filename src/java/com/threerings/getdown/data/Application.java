@@ -43,6 +43,7 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.net.URLConnection;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -352,6 +353,20 @@ public class Application
     }
 
     /**
+     * Sets a cookie for a tracking URL if we have an appropriate property to fetch it from,
+     *  an appropriate cookie name to assign, and the property is set to non-null.
+     */
+    public void maybeSetTrackingCookie (URLConnection conn)
+    {
+        if (_trackingCookieName != null && _trackingCookieProperty != null) {
+            String val = System.getProperty(_trackingCookieProperty);
+            if (val != null) {
+                conn.setRequestProperty("Cookie", _trackingCookieName + "=" + val);
+            }
+        }
+    }
+
+    /**
      * Instructs the application to parse its <code>getdown.txt</code> configuration and prepare
      * itself for operation. The application base URL will be parsed first so that if there are
      * errors discovered later, the caller can use the application base to download a new
@@ -451,6 +466,10 @@ public class Application
         } else if (!StringUtil.isBlank(_trackingURL)) {
             _trackingPcts = new ArrayIntSet(new int[] { 50 });
         }
+
+        // Check for tracking cookie configuration
+        _trackingCookieName = (String)cdata.get("tracking_cookie_name");
+        _trackingCookieProperty = (String)cdata.get("tracking_cookie_property");
 
         // clear our arrays as we may be reinitializing
         _codes.clear();
@@ -1089,6 +1108,8 @@ public class Application
 
     protected String _trackingURL;
     protected ArrayIntSet _trackingPcts;
+    protected String _trackingCookieName;
+    protected String _trackingCookieProperty;
 
     protected int _javaVersion;
     protected String _javaLocation;

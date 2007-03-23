@@ -691,7 +691,7 @@ public abstract class Getdown extends Thread
         EventQueue.invokeLater(new Runnable() {
             public void run () {
                 if (_status == null) {
-                    _container = createContainer(); 
+                    _container = createContainer();
                     _status = new StatusPanel(_msgs);
                     _container.add(_status, BorderLayout.CENTER);
                 }
@@ -784,7 +784,7 @@ public abstract class Getdown extends Thread
         if (StringUtil.isBlank(path)) {
             return null;
         }
-        
+
         File imgpath = null;
         try {
             // First try for a localized image.
@@ -843,7 +843,7 @@ public abstract class Getdown extends Thread
     protected abstract void exit (int exitCode);
 
     /** Used to fetch a progress report URL. */
-    protected static class ProgressReporter extends Thread
+    protected class ProgressReporter extends Thread
     {
         public ProgressReporter (URL url) {
             setDaemon(true);
@@ -853,6 +853,7 @@ public abstract class Getdown extends Thread
         public void run () {
             try {
                 HttpURLConnection ucon = (HttpURLConnection)_url.openConnection();
+                _app.maybeSetTrackingCookie(ucon);
                 ucon.connect();
                 try {
                     if (ucon.getResponseCode() != HttpURLConnection.HTTP_OK) {
