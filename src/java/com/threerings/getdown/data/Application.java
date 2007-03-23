@@ -43,7 +43,6 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.net.URLConnection;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -353,17 +352,19 @@ public class Application
     }
 
     /**
-     * Sets a cookie for a tracking URL if we have an appropriate property to fetch it from,
-     *  an appropriate cookie name to assign, and the property is set to non-null.
+     * Returns the name of our tracking cookie or null if it was not set.
      */
-    public void maybeSetTrackingCookie (URLConnection conn)
+    public String getTrackingCookieName ()
     {
-        if (_trackingCookieName != null && _trackingCookieProperty != null) {
-            String val = System.getProperty(_trackingCookieProperty);
-            if (val != null) {
-                conn.setRequestProperty("Cookie", _trackingCookieName + "=" + val);
-            }
-        }
+        return _trackingCookieName;
+    }
+
+    /**
+     * Returns the name of our tracking cookie system property or null if it was not set.
+     */
+    public String getTrackingCookieProperty ()
+    {
+        return _trackingCookieProperty;
     }
 
     /**

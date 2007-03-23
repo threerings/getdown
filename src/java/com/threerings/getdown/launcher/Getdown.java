@@ -853,7 +853,17 @@ public abstract class Getdown extends Thread
         public void run () {
             try {
                 HttpURLConnection ucon = (HttpURLConnection)_url.openConnection();
-                _app.maybeSetTrackingCookie(ucon);
+
+                // if we have a tracking cookie configured, configure the request with it
+                if (_app.getTrackingCookieName() != null &&
+                    _app.getTrackingCookieProperty() != null) {
+                    String val = System.getProperty(_app.getTrackingCookieProperty());
+                    if (val != null) {
+                        ucon.setRequestProperty("Cookie", _app.getTrackingCookieName() + "=" + val);
+                    }
+                }
+
+                // now request our tracking URL and ensure that we get a non-error response
                 ucon.connect();
                 try {
                     if (ucon.getResponseCode() != HttpURLConnection.HTTP_OK) {
@@ -863,6 +873,7 @@ public abstract class Getdown extends Thread
                 } finally {
                     ucon.disconnect();
                 }
+
             } catch (IOException ioe) {
                 Log.warning("Failed to report tracking event [url=" + _url +
                             ", error=" + ioe + "].");
