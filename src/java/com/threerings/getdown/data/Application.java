@@ -330,7 +330,8 @@ public class Application
     public URL getTrackingURL (String event)
     {
         try {
-            return _trackingURL == null ? null : new URL(_trackingURL + event);
+            String suffix = _trackingURLSuffix == null ? "" : _trackingURLSuffix;
+            return _trackingURL == null ? null : new URL(_trackingURL + event + suffix);
         } catch (MalformedURLException mue) {
             Log.warning("Invalid tracking URL [path=" + _trackingURL + ", event=" + event +
                         ", error=" + mue + "].");
@@ -471,6 +472,9 @@ public class Application
         // Check for tracking cookie configuration
         _trackingCookieName = (String)cdata.get("tracking_cookie_name");
         _trackingCookieProperty = (String)cdata.get("tracking_cookie_property");
+
+        // Some app may need an extra suffix added to the tracking URL
+        _trackingURLSuffix = (String)cdata.get("tracking_url_suffix");
 
         // clear our arrays as we may be reinitializing
         _codes.clear();
@@ -1111,6 +1115,7 @@ public class Application
     protected ArrayIntSet _trackingPcts;
     protected String _trackingCookieName;
     protected String _trackingCookieProperty;
+    protected String _trackingURLSuffix;
 
     protected int _javaVersion;
     protected String _javaLocation;
