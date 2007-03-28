@@ -416,7 +416,7 @@ public abstract class Getdown extends Thread
                         "m.missing_resource", MessageUtil.taint(msg), _ifc.installError);
                 } else {
                     msg = MessageUtil.compose(
-                        "m.init_error", msg, MessageUtil.taint(msg), _ifc.installError);
+                        "m.init_error", MessageUtil.taint(msg), _ifc.installError);
                 }
             }
             updateStatus(msg);
