@@ -81,6 +81,11 @@ public abstract class Getdown extends Thread
 
     public Getdown (File appDir, String appId)
     {
+        this(appDir, appId, null);
+    }
+
+    public Getdown (File appDir, String appId, Object[] signers)
+    {
         super("Getdown");
         try {
             _msgs = ResourceBundle.getBundle("com.threerings.getdown.messages");
@@ -96,7 +101,7 @@ public abstract class Getdown extends Thread
             updateStatus(errmsg);
             _dead = true;
         }
-        _app = new Application(appDir, appId);
+        _app = new Application(appDir, appId, signers);
         _startup = System.currentTimeMillis();
     }
 

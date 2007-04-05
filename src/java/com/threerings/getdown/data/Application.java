@@ -36,6 +36,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -43,6 +44,9 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.security.GeneralSecurityException;
+import java.security.Signature;
+import java.security.cert.Certificate;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -58,6 +62,7 @@ import com.samskivert.util.ArrayIntSet;
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 
 import com.threerings.getdown.Log;
@@ -81,6 +86,9 @@ public class Application
     /** System properties that are prefixed with this string will be passed through to our
      * application (minus this prefix). */
     public static final String PROP_PASSTHROUGH_PREFIX = "app.";
+
+    /** Suffix used for control file signatures. */
+    public static final String SIGNATURE_SUFFIX = ".sig";
 
     /** Used to communicate information about the UI displayed when updating the application. */
     public static class UpdateInterface
@@ -136,6 +144,16 @@ public class Application
     }
 
     /**
+     * Creates an application instance with no signers.
+     *
+     * @see #Application(File, String, Object[])
+     */
+    public Application (File appdir, String appid)
+    {
+        this(appdir, appid, null);
+    }
+
+    /**
      * Creates an application instance which records the location of the <code>getdown.txt</code>
      * configuration file from the supplied application directory.
      *
@@ -143,11 +161,13 @@ public class Application
      * be launched. That application will use <code>appid.class</code> and
      * <code>appid.apparg</code> to configure itself but all other parameters will be the same as
      * the primary application.
+     * @param signers an array of possible signers of this application. Used to verify the digest.
      */
-    public Application (File appdir, String appid)
+    public Application (File appdir, String appid, Object[] signers)
     {
         _appdir = appdir;
         _appid = appid;
+        _signers = signers;
         _config = getLocalPath(CONFIG_FILE);
     }
 
@@ -650,7 +670,7 @@ public class Application
         // now re-download our control files; we download the digest first so that if it fails, our
         // config file will still reference the old version and re-running the updater will start
         // the whole process over again
-        downloadControlFile(Digest.DIGEST_FILE);
+        downloadControlFile(Digest.DIGEST_FILE, true);
         downloadControlFile(CONFIG_FILE);
     }
 
@@ -835,7 +855,7 @@ public class Application
             String olddig = (_digest == null) ? "" : _digest.getMetaDigest();
             try {
                 status.updateStatus("m.checking");
-                downloadControlFile(Digest.DIGEST_FILE);
+                downloadControlFile(Digest.DIGEST_FILE, true);
                 _digest = new Digest(_appdir);
                 if (!olddig.equals(_digest.getMetaDigest())) {
                     Log.info("Unversioned digest changed. Revalidating...");
@@ -853,7 +873,7 @@ public class Application
         // exceptions to propagate up to the caller as there is nothing else we can do
         if (_digest == null) {
             status.updateStatus("m.updating_metadata");
-            downloadControlFile(Digest.DIGEST_FILE);
+            downloadControlFile(Digest.DIGEST_FILE, true);
             _digest = new Digest(_appdir);
         }
 
@@ -864,7 +884,7 @@ public class Application
             // attempt to redownload both of our metadata files; again we pass errors up to our
             // caller because there's nothing we can do to automatically recover
             downloadControlFile(CONFIG_FILE);
-            downloadControlFile(Digest.DIGEST_FILE);
+            downloadControlFile(Digest.DIGEST_FILE, true);
             _digest = new Digest(_appdir);
             // revalidate everything if we end up downloading new metadata
             clearValidationMarkers();
@@ -985,13 +1005,114 @@ public class Application
     }
 
     /**
-     * Downloads a new copy of the specified control file and, if the download is successful, moves
-     * it over the old file on the filesystem.
+     * Downloads a new copy of the specified control file and does not check any signature.
      */
     protected void downloadControlFile (String path)
         throws IOException
     {
+        downloadControlFile(path, false);
+    }
+
+    /**
+     * Downloads a new copy of the specified control file, optionally validating its signature. 
+     * If the download is successful, moves it over the old file on the filesystem.
+     *
+     * <p> We implement simple signing of the digest.txt file for use with the Getdown applet, but
+     * this should never be used as-is with a non-applet getdown installation, as the signing
+     * format has no provisions for declaring arbitrary signing key IDs, signature algorithm, et al
+     * -- it is entirely reliant on the ability to upgrade the Getdown applet, and its signature
+     * validation implementation, at-will (ie, via an Applet).
+     *
+     * <p> TODO: Switch to PKCS #7 or CMS.
+     */
+    protected void downloadControlFile (String path, boolean validateSignature)
+        throws IOException
+    {
+        File target = downloadFile(path);
+
+        if (validateSignature) {
+            if (_signers == null) {
+                Log.info("No signers, not verifying file [path=" + path + "].");
+
+            } else {
+                File signatureFile = downloadFile(path + SIGNATURE_SUFFIX);
+                byte[] signature = null;
+                try {
+                    signature = IOUtils.toByteArray(new FileReader(signatureFile), "utf8");
+                } finally {
+                    // delete the file regardless
+                    signatureFile.delete();
+                }
+
+                FileInputStream dataInput = new FileInputStream(target);
+                byte[] buffer = new byte[8192];
+                int length, validated = 0;
+                for (Object signer : _signers) {
+                    if (!(signer instanceof Certificate)) {
+                        continue;
+                    }
+
+                    Certificate cert = (Certificate)signer;
+                    try {
+                        Signature sig = Signature.getInstance("SHA1withRSA");
+                        sig.initVerify(cert);
+                        while ((length = dataInput.read(buffer)) != -1) {
+                            sig.update(buffer, 0, length);
+                        }
+
+                        if (!sig.verify(Base64.decodeBase64(signature))) {
+                            Log.info("Signature does not match [cert=" + cert.getPublicKey() + "]");
+                            continue;
+                        } else {
+                            Log.info("Signature matches [cert=" + cert.getPublicKey() + "]");
+                            validated++;
+                        }
+
+                    } catch (GeneralSecurityException gse) {
+                        // no problem!
+                    }
+                }
+
+                // if we couldn't find a key that validates our digest, we are the hosed!
+                if (validated == 0) {
+                    // delete the temporary digest file as we know it is invalid
+                    target.delete();
+                    throw new IOException("m.corrupt_digest_signature_error");
+                }
+            }
+        }
+
+        // Windows is a wonderful operating system, it won't let you rename a file overtop of
+        // another one; thus to avoid running the risk of getting royally fucked, we have to do
+        // this complicated backup bullshit; this way if the shit hits the fan before we get the
+        // new copy into place, we should be able to read from the backup copy; yay!
+        File original = getLocalPath(path);
+        if (RunAnywhere.isWindows() && original.exists()) {
+            File backup = getLocalPath(path + "_old");
+            if (backup.exists() && !backup.delete()) {
+                Log.warning("Failed to delete " + backup + ".");
+            }
+            if (!original.renameTo(backup)) {
+                Log.warning("Failed to move " + original + " to backup. We will likely fail " +
+                            "to replace it with " + target + ".");
+            }
+        }
+
+        // now attempt to replace the current file with the new one
+        if (!target.renameTo(original)) {
+            throw new IOException("Failed to rename(" + target + ", " + original + ")");
+        }
+    }
+
+    /** 
+     * Download a path to a temporary file, returning a {@link File} instance with the path
+     * contents.
+     */
+    protected File downloadFile (String path)
+        throws IOException
+    {
         File target = getLocalPath(path + "_new");
+
         URL targetURL = null;
         try {
             targetURL = getRemoteURL(path);
@@ -1015,26 +1136,7 @@ public class Application
             StreamUtil.close(fout);
         }
 
-        // Windows is a wonderful operating system, it won't let you rename a file overtop of
-        // another one; thus to avoid running the risk of getting royally fucked, we have to do
-        // this complicated backup bullshit; this way if the shit hits the fan before we get the
-        // new copy into place, we should be able to read from the backup copy; yay!
-        File original = getLocalPath(path);
-        if (RunAnywhere.isWindows() && original.exists()) {
-            File backup = getLocalPath(path + "_old");
-            if (backup.exists() && !backup.delete()) {
-                Log.warning("Failed to delete " + backup + ".");
-            }
-            if (!original.renameTo(backup)) {
-                Log.warning("Failed to move " + original + " to backup. We will likely fail " +
-                            "to replace it with " + target + ".");
-            }
-        }
-
-        // now attempt to replace the current file with the new one
-        if (!target.renameTo(original)) {
-            throw new IOException("Failed to rename(" + target + ", " + original + ")");
-        }
+        return target;
     }
 
     /** Helper function for creating {@link Resource} instances. */
@@ -1130,6 +1232,8 @@ public class Application
 
     protected ArrayList<String> _jvmargs = new ArrayList<String>();
     protected ArrayList<String> _appargs = new ArrayList<String>();
+
+    protected Object[] _signers;
 
     protected static final String[] SA_PROTO = new String[0];
 }

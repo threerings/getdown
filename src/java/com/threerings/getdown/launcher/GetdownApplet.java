@@ -23,9 +23,6 @@ package com.threerings.getdown.launcher;
 import java.awt.Container;
 import java.awt.Image;
 import java.net.URL;
-import java.security.GeneralSecurityException;
-import java.security.Signature;
-import java.security.cert.Certificate;
 
 import javax.swing.JApplet;
 import javax.swing.JPanel;
@@ -37,8 +34,6 @@ import java.io.PrintStream;
 
 import netscape.javascript.JSObject;
 import netscape.javascript.JSException;
-
-import org.apache.commons.codec.binary.Base64;
 
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
@@ -103,7 +98,10 @@ public class GetdownApplet extends JApplet
         }
 
         try {
-            _getdown = new Getdown(appdir, null) {
+            // XXX getSigners() returns all certificates used to sign this applet which may allow
+            // a third party to insert a trusted certificate. This should be replaced with 
+            // statically included trusted keys.
+            _getdown = new Getdown(appdir, null, GetdownApplet.class.getSigners()) {
                 protected Container createContainer () {
                     getContentPane().removeAll();
                     return getContentPane();
@@ -188,42 +186,6 @@ public class GetdownApplet extends JApplet
             } catch (SecurityException se) {
                 Log.warning("Signed applet rejected by user [se=" + se + "].");
                 throw new Exception("m.insufficient_permissions_error");
-            }
-        }
-
-
-        Object[] signers = GetdownApplet.class.getSigners();
-        if (signers.length == 0) {
-            Log.info("No signers, not verifying param signature.");
-
-        } else {
-            String signature = getParameter("signature");
-            if (signature == null) {
-                signature = "";
-            }
-
-            Log.info("Verifying signature '" + signature + "'.");
-            String params = appbase + appname + imgpath;
-            int validated = 0;
-            for (Object signer : signers) {
-                if (signer instanceof Certificate) {
-                    Certificate cert = (Certificate)signer;
-                    try {
-                        Signature sig = Signature.getInstance("SHA1withRSA");
-                        sig.initVerify(cert);
-                        sig.update(params.getBytes());
-                        if (!sig.verify(Base64.decodeBase64(signature.getBytes()))) {
-                            Log.info("Signature does not match '" + cert.getPublicKey() + "'.");
-                        }
-                        validated++;
-                    } catch (GeneralSecurityException gse) {
-                        // no problem!
-                    }
-                }
-            }
-            // if we couldn't find a key that validates our parameters, we are the hosed!
-            if (validated == 0) {
-                throw new Exception("m.corrupt_param_signature_error");
             }
         }
 
