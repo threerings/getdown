@@ -1,5 +1,5 @@
 //
-// $Id: ProxyPanel.java 60 2004-07-30 21:45:28Z mdb $
+// $Id$
 //
 // Getdown - application installer, patcher and launcher
 // Copyright (C) 2004-2006 Three Rings Design, Inc.
