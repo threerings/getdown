@@ -893,8 +893,8 @@ public class Application
             if (_digest.validateResource(crsrc, null)) {
                 init(true);
             } else {
-                Log.warning(CONFIG_FILE + " failed to validate even after " +
-                            "redownloading. Blindly forging onward.");
+                Log.warning(CONFIG_FILE + " failed to validate even after redownloading. " +
+                            "Blindly forging onward.");
             }
         }
 
@@ -1038,14 +1038,15 @@ public class Application
             } else {
                 File signatureFile = downloadFile(path + SIGNATURE_SUFFIX);
                 byte[] signature = null;
+                FileReader reader = null;
                 try {
-                    signature = IOUtils.toByteArray(new FileReader(signatureFile), "utf8");
+                    reader = new FileReader(signatureFile);
+                    signature = IOUtils.toByteArray(reader, "utf8");
                 } finally {
-                    // delete the file regardless
-                    signatureFile.delete();
+                    StreamUtil.close(reader);
+                    signatureFile.delete(); // delete the file regardless
                 }
 
-                FileInputStream dataInput = new FileInputStream(target);
                 byte[] buffer = new byte[8192];
                 int length, validated = 0;
                 for (Object signer : _signers) {
@@ -1054,7 +1055,9 @@ public class Application
                     }
 
                     Certificate cert = (Certificate)signer;
+                    FileInputStream dataInput = null;
                     try {
+                        dataInput = new FileInputStream(target);
                         Signature sig = Signature.getInstance("SHA1withRSA");
                         sig.initVerify(cert);
                         while ((length = dataInput.read(buffer)) != -1) {
@@ -1069,8 +1072,15 @@ public class Application
                             validated++;
                         }
 
+                    } catch (IOException ioe) {
+                        Log.warning("Failure validating signature of " + target + ": " + ioe);
+
                     } catch (GeneralSecurityException gse) {
                         // no problem!
+
+                    } finally {
+                        StreamUtil.close(dataInput);
+                        dataInput = null;
                     }
                 }
 
@@ -1083,15 +1093,8 @@ public class Application
             }
         }
 
-        // move the old file to a _old version
-        File original = getLocalPath(path);
-        if (original.exists()) {
-            if (!FileUtil.renameTo(original, getLocalPath(path + "_old"))) {
-                Log.warning("Failed to move " + original + " to backup.");
-            }
-        }
-
         // now move the temporary file over the original
+        File original = getLocalPath(path);
         if (!FileUtil.renameTo(target, original)) {
             throw new IOException("Failed to rename(" + target + ", " + original + ")");
         }
