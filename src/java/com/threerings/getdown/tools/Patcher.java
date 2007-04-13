@@ -33,6 +33,7 @@ import com.samskivert.io.StreamUtil;
 import org.apache.commons.io.IOUtils;
 
 import com.threerings.getdown.Log;
+import com.threerings.getdown.util.FileUtil;
 import com.threerings.getdown.util.ProgressObserver;
 
 /**
@@ -166,7 +167,7 @@ public class Patcher
             fout = null;
 
             // move the current version of the jar to .old
-            if (!target.renameTo(otarget)) {
+            if (!FileUtil.renameTo(target, otarget)) {
                 System.err.println("Failed to .oldify '" + target + "'.");
                 return;
             }
@@ -186,8 +187,7 @@ public class Patcher
 
         } catch (IOException ioe) {
             if (patcher == null) {
-                System.err.println("Failed to write patch file '" + patch +
-                                   "': " + ioe);
+                System.err.println("Failed to write patch file '" + patch + "': " + ioe);
             } else {
                 System.err.println("Error patching '" + target + "': " + ioe);
             }

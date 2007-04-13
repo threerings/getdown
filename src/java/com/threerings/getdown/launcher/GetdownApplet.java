@@ -32,9 +32,6 @@ import java.io.FileOutputStream;
 import java.io.File;
 import java.io.PrintStream;
 
-import netscape.javascript.JSObject;
-import netscape.javascript.JSException;
-
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
 
@@ -124,17 +121,6 @@ public class GetdownApplet extends JApplet
                 }
                 protected void exit (int exitCode) {
                     // don't exit as we're in an applet
-                }
-                @Override protected void setStatus (
-                    final String message, final int percent, final long remaining, boolean createUI)
-                {
-                    super.setStatus(message, percent, remaining, createUI);
-                    try {
-                        JSObject.getWindow(GetdownApplet.this).call(
-                            "getdownStatus", new Object[] { message, percent, remaining });
-                    } catch (Throwable t) {
-                        Log.warning("Failed to communicate status to JavaScript: " + t);
-                    }
                 }
             };
 

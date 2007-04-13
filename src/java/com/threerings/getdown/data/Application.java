@@ -67,6 +67,7 @@ import org.apache.commons.io.IOUtils;
 
 import com.threerings.getdown.Log;
 import com.threerings.getdown.util.ConfigUtil;
+import com.threerings.getdown.util.FileUtil;
 import com.threerings.getdown.util.LaunchUtil;
 import com.threerings.getdown.util.MetaProgressObserver;
 import com.threerings.getdown.util.ProgressObserver;
@@ -1082,24 +1083,16 @@ public class Application
             }
         }
 
-        // Windows is a wonderful operating system, it won't let you rename a file overtop of
-        // another one; thus to avoid running the risk of getting royally fucked, we have to do
-        // this complicated backup bullshit; this way if the shit hits the fan before we get the
-        // new copy into place, we should be able to read from the backup copy; yay!
+        // move the old file to a _old version
         File original = getLocalPath(path);
-        if (RunAnywhere.isWindows() && original.exists()) {
-            File backup = getLocalPath(path + "_old");
-            if (backup.exists() && !backup.delete()) {
-                Log.warning("Failed to delete " + backup + ".");
-            }
-            if (!original.renameTo(backup)) {
-                Log.warning("Failed to move " + original + " to backup. We will likely fail " +
-                            "to replace it with " + target + ".");
+        if (original.exists()) {
+            if (!FileUtil.renameTo(original, getLocalPath(path + "_old"))) {
+                Log.warning("Failed to move " + original + " to backup.");
             }
         }
 
-        // now attempt to replace the current file with the new one
-        if (!target.renameTo(original)) {
+        // now move the temporary file over the original
+        if (!FileUtil.renameTo(target, original)) {
             throw new IOException("Failed to rename(" + target + ", " + original + ")");
         }
     }
