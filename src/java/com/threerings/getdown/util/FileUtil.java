@@ -49,14 +49,37 @@ public class FileUtil
             return true;
         }
 
-        // otherwise try copying the old data over the new
+        // fall back to trying to rename the old file out of the way, rename the new file into
+        // place and then delete the old file
+        if (dest.exists()) {
+            File temp = new File(dest.getPath() + "_old");
+            if (temp.exists()) {
+                if (!temp.delete()) {
+                    Log.warning("Failed to delete old intermediate file " + temp + ".");
+                    // the subsequent code will probably fail
+                }
+            }
+            if (dest.renameTo(temp)) {
+                if (source.renameTo(dest)) {
+                    if (temp.delete()) {
+                        Log.warning("Failed to delete intermediate file " + temp + ".");
+                    }
+                    return true;
+                }
+            }
+        }
+
+        // as a last resort, try copying the old data over the new
         FileInputStream fin = null;
         FileOutputStream fout = null;
         try {
             fin = new FileInputStream(source);
             fout = new FileOutputStream(dest);
             IOUtils.copy(fin, fout);
-            source.delete();
+            if (!source.delete()) {
+                Log.warning("Failed to delete " + source +
+                            " after brute force copy to " + dest + ".");
+            }
             return true;
 
         } catch (IOException ioe) {
