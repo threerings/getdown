@@ -24,8 +24,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.util.logging.Level;
 
 import org.apache.commons.io.IOUtils;
+
+import com.samskivert.util.StringUtil;
 
 import com.threerings.getdown.Log;
 
@@ -37,6 +41,58 @@ public class LaunchUtil
 {
     /** The directory into which a local VM installation should be unpacked. */
     public static final String LOCAL_JAVA_DIR = "java_vm";
+
+    /**
+     * Writes a <code>version.txt</code> file into the specified application directory and
+     * attempts to relaunch Getdown in that directory which will cause it to upgrade to the newly
+     * specified version and relaunch the application.
+     *
+     * @param appdir the directory in which the application is installed.
+     * @param getdownJarName the name of the getdown jar file in the application directory. This is
+     * probably <code>getdown-pro.jar</code> or <code>getdown-retro-pro.jar</code> if you are using
+     * the results of the standard build.
+     * @param newVersion the new version to which Getdown will update when it is executed.
+     *
+     * @return true if the relaunch succeeded, false if we were unable to relaunch due to being on
+     * Windows 9x where we cannot launch subprocesses without waiting around for them to exit,
+     * reading their stdout and stderr all the while. If true is returned, the application may exit
+     * after making this call as it will be upgraded and restarted. If false is returned, the
+     * application should tell the user that they must restart the application manually.
+     *
+     * @exception IOException thrown if we were unable to create the <code>version.txt</code> file
+     * in the supplied application directory. If the version.txt file cannot be created, restarting
+     * Getdown will not cause the application to be upgraded, so the application will have to
+     * resort to telling the user that it is in a bad way.
+     */
+    public static boolean updateVersionAndRelaunch (
+            File appdir, String getdownJarName, String newVersion)
+        throws IOException
+    {
+        // create the file that instructs Getdown to upgrade
+        File vfile = new File(appdir, "version.txt");
+        PrintStream ps = new PrintStream(new FileOutputStream(vfile));
+        ps.println(newVersion);
+        ps.close();
+
+        // make sure that we can find our getdown.jar file and can safely launch children
+        File pro = new File(appdir, getdownJarName);
+        if (mustMonitorChildren() || !pro.exists()) {
+            return false;
+        }
+
+        // do the deed
+        String[] args = new String[] {
+            getJVMPath(appdir), "-jar", pro.toString(), appdir.getPath()
+        };
+        Log.info("Running " + StringUtil.join(args, "\n  "));
+        try {
+            Runtime.getRuntime().exec(args, null);
+            return true;
+        } catch (IOException ioe) {
+            Log.log.log(Level.WARNING, "Failed to run getdown", ioe);
+            return false;
+        }
+    }
 
     /**
      * Reconstructs the path to the JVM used to launch this process.
@@ -72,20 +128,17 @@ public class LaunchUtil
     }
 
     /**
-     * Upgrades Getdown by moving an installation managed copy of the Getdown
-     * jar file over the non-managed copy (which would be used to run Getdown
-     * itself).
+     * Upgrades Getdown by moving an installation managed copy of the Getdown jar file over the
+     * non-managed copy (which would be used to run Getdown itself).
      *
-     * <p> If the upgrade fails for a variety of reasons, warnings are logged
-     * but no other actions are taken. There's not much else one can do other
-     * than try again next time around.
+     * <p> If the upgrade fails for a variety of reasons, warnings are logged but no other actions
+     * are taken. There's not much else one can do other than try again next time around.
      */
     public static void upgradeGetdown (File oldgd, File curgd, File newgd)
     {
-        // we assume getdown's jar file size changes with every upgrade, this
-        // is not guaranteed, but in reality it will, and it allows us to avoid
-        // pointlessly upgrading getdown every time the client is updated which
-        // is unnecessarily flirting with danger
+        // we assume getdown's jar file size changes with every upgrade, this is not guaranteed,
+        // but in reality it will, and it allows us to avoid pointlessly upgrading getdown every
+        // time the client is updated which is unnecessarily flirting with danger
         if (!newgd.exists() || newgd.length() == curgd.length()) {
             return;
         }
@@ -129,15 +182,13 @@ public class LaunchUtil
     }
 
     /**
-     * Returns true if, on this operating system, we have to stick around
-     * and read the stderr from our children processes to prevent them
-     * from filling their output buffers and hanging.
+     * Returns true if, on this operating system, we have to stick around and read the stderr from
+     * our children processes to prevent them from filling their output buffers and hanging.
      */
     public static boolean mustMonitorChildren ()
     {
         String osname = System.getProperty("os.name").toLowerCase();
-        return (osname.indexOf("windows 98") != -1 ||
-                osname.indexOf("windows me") != -1);
+        return (osname.indexOf("windows 98") != -1 || osname.indexOf("windows me") != -1);
     }
 
     /**
