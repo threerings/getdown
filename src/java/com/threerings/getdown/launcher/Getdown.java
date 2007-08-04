@@ -631,6 +631,11 @@ public abstract class Getdown extends Thread
             } else {
                 Process proc = _app.createProcess();
 
+                // close standard in to avoid choking standard out of the launched process
+                proc.getInputStream().close();
+                // close standard out, since we're not going to write to anything to it anyway
+                proc.getOutputStream().close();
+
                 // on Windows 98 and ME we need to stick around and read the output of stderr lest
                 // the process fill its output buffer and choke, yay!
                 final InputStream stderr = proc.getErrorStream();
