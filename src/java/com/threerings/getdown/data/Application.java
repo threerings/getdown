@@ -780,12 +780,17 @@ public class Application
         }
 
         // pass along any pass-through arguments
+        Map<String, String> passProps = new HashMap<String, String>();
         for (Map.Entry entry : System.getProperties().entrySet()) {
             String key = (String)entry.getKey();
             if (key.startsWith(PROP_PASSTHROUGH_PREFIX)) {
                 key = key.substring(PROP_PASSTHROUGH_PREFIX.length());
-                System.setProperty(key, (String)entry.getValue());
+                passProps.put(key, (String)entry.getValue());
             }
+        }
+        // we can't set these in the above loop lest we get a ConcurrentModificationException
+        for (Map.Entry<String, String> entry : passProps.entrySet()) {
+            System.setProperty(entry.getKey(), entry.getValue());
         }
 
         // make a note that we're running in "applet" mode
