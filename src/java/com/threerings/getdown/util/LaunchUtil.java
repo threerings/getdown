@@ -29,9 +29,10 @@ import java.util.logging.Level;
 
 import org.apache.commons.io.IOUtils;
 
+import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
 
-import com.threerings.getdown.Log;
+import static com.threerings.getdown.Log.log;
 
 /**
  * Useful routines for launching Java applications from within other Java
@@ -84,12 +85,12 @@ public class LaunchUtil
         String[] args = new String[] {
             getJVMPath(appdir), "-jar", pro.toString(), appdir.getPath()
         };
-        Log.info("Running " + StringUtil.join(args, "\n  "));
+        log.info("Running " + StringUtil.join(args, "\n  "));
         try {
             Runtime.getRuntime().exec(args, null);
             return true;
         } catch (IOException ioe) {
-            Log.log.log(Level.WARNING, "Failed to run getdown", ioe);
+            log.log(Level.WARNING, "Failed to run getdown", ioe);
             return false;
         }
     }
@@ -111,20 +112,35 @@ public class LaunchUtil
     {
         // first look in our application directory for an installed VM
         String vmpath = checkJVMPath(new File(appdir, LOCAL_JAVA_DIR).getPath(), windebug);
-        if (vmpath != null) {
-            return vmpath;
-        }
 
         // then fall back to the VM in which we're already running
-        vmpath = checkJVMPath(System.getProperty("java.home"), windebug);
-        if (vmpath != null) {
-            return vmpath;
+        if (vmpath == null) {
+            vmpath = checkJVMPath(System.getProperty("java.home"), windebug);
         }
 
         // then throw up our hands and hope for the best
-        Log.warning("Unable to find java [appdir=" + appdir +
-                    ", java.home=" + System.getProperty("java.home") + "]!");
-        return "java";
+        if (vmpath == null) {
+            log.warning("Unable to find java [appdir=" + appdir +
+                        ", java.home=" + System.getProperty("java.home") + "]!");
+            vmpath = "java";
+        }
+
+        // Oddly, the Mac OS X specific java flag -Xdock:name will only work if java is launched
+        // from /usr/bin/java, and not if launched by directly referring to <java.home>/bin/java,
+        // even though the former is a symlink to the latter! To work around this, see if the
+        // desired jvm is in fact pointed to by /usr/bin/java and, if so, use that instead.
+        if (RunAnywhere.isMacOS()) {
+            try {
+                File localVM = new File("/usr/bin/java").getCanonicalFile();
+                if (localVM.equals(new File(vmpath).getCanonicalFile())) {
+                    vmpath = "/usr/bin/java";
+                }
+            } catch (IOException ioe) {
+                log.log(Level.WARNING, "Failed to check Mac OS canonical VM path.", ioe);
+            }
+        }
+
+        return vmpath;
     }
 
     /**
@@ -143,7 +159,7 @@ public class LaunchUtil
             return;
         }
 
-        Log.info("Updating Getdown with " + newgd + "...");
+        log.info("Updating Getdown with " + newgd + "...");
 
         // clear out any old getdown
         if (oldgd.exists()) {
@@ -159,25 +175,24 @@ public class LaunchUtil
                     // downloading another copy next time
                     IOUtils.copy(new FileInputStream(curgd), new FileOutputStream(newgd));
                 } catch (IOException e) {
-                    Log.warning("Error copying updated Getdown back: " + e);
+                    log.warning("Error copying updated Getdown back: " + e);
                 }
                 return;
             }
 
-            Log.warning("Unable to renameTo(" + oldgd + ").");
+            log.warning("Unable to renameTo(" + oldgd + ").");
             // try to unfuck ourselves
             if (!oldgd.renameTo(curgd)) {
-                Log.warning("Oh God, why dost thee scorn me so.");
+                log.warning("Oh God, why dost thee scorn me so.");
             }
         }
 
         // that didn't work, let's try copying it
-        Log.info("Attempting to upgrade by copying over " + curgd + "...");
+        log.info("Attempting to upgrade by copying over " + curgd + "...");
         try {
             IOUtils.copy(new FileInputStream(newgd), new FileOutputStream(curgd));
         } catch (IOException ioe) {
-            Log.warning("Mayday! Brute force copy method also failed.");
-            Log.logStackTrace(ioe);
+            log.log(Level.WARNING, "Mayday! Brute force copy method also failed.", ioe);
         }
     }
 
