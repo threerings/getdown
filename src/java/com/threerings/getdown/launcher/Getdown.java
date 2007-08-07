@@ -835,7 +835,8 @@ public abstract class Getdown extends Thread
      */
     protected boolean invokeDirect ()
     {
-        return false;
+        // allow passing -Ddirect=true to force direct invocation
+        return Boolean.getBoolean("direct");
     }
 
     /**
