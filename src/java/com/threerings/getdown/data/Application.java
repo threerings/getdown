@@ -576,6 +576,11 @@ public class Application
         }
         ui.progressImage = (String)cdata.get("ui.progress_image");
 
+        _dockIconPath = (String)cdata.get("ui.mac_dock_icon");
+        if (_dockIconPath == null) {
+            _dockIconPath = "../desktop.icns"; // use a sensible default
+        }
+
         // On an installation error, where do we point the user.
         ui.installError = (String)cdata.get("ui.install_error");
         if (ui.installError == null) {
@@ -702,7 +707,7 @@ public class Application
 
         // we love our Mac users, so we do nice things to preserve our application identity
         if (RunAnywhere.isMacOS()) {
-            args.add("-Xdock:icon=" + _appdir.getAbsolutePath() + "/../desktop.icns");
+            args.add("-Xdock:icon=" + getLocalPath(_dockIconPath).getAbsolutePath());
             args.add("-Xdock:name=" + _name);
         }
 
@@ -1211,6 +1216,7 @@ public class Application
     protected URL _vappbase;
     protected String _class;
     protected String _name;
+    protected String _dockIconPath;
     protected boolean _windebug;
     protected boolean _useTorrent = false;
 
