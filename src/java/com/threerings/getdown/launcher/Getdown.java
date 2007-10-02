@@ -397,7 +397,11 @@ public abstract class Getdown extends Thread
                 List<Resource> failures = _app.verifyResources(_progobs, alreadyValid);
                 if (failures == null) {
                     Log.info("Resources verified.");
-                    launch();
+                    // Only launch if we aren't in silent mode. Some mystery program starting out
+                    // of the blue would be disconcerting.
+                    if (!_silent) {
+                        launch();
+                    }
                     return;
                 }
 
