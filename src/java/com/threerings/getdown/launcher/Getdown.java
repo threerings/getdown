@@ -88,6 +88,7 @@ public abstract class Getdown extends Thread
     {
         super("Getdown");
         _silent = Boolean.getBoolean("silent");
+        _delay = Integer.getInteger("delay", 0);
         try {
             _msgs = ResourceBundle.getBundle("com.threerings.getdown.messages");
         } catch (Exception e) {
@@ -346,6 +347,16 @@ public abstract class Getdown extends Thread
                 _ifc = _app.init(true);
                 // now force our UI to be recreated with the updated info
                 createInterface(true);
+            }
+
+            if (_delay > 0) {
+                try {
+                    Log.info("Waiting " + _delay + " minutes before beginning actual work");
+                    Thread.sleep(_delay * 60 * 1000);
+                } catch (InterruptedException ie) {
+                    Log.warning("Who dares disturb my slumber?");
+                    Log.logStackTrace(ie);
+                }
             }
 
             // we create this tracking counter here so that we properly note the first time through
@@ -918,6 +929,9 @@ public abstract class Getdown extends Thread
 
     protected boolean _enableTracking = true;
     protected int _reportedProgress = 0;
+    
+    /** Number of minutes to wait after startup before beginning any real heavy lifting. */
+    protected int _delay;
 
     /** The maximum number of resources that can be already present for bittorrent to be used. */
     protected static final int MAX_TORRENT_VERIFIED_RESOURCES = 1;
