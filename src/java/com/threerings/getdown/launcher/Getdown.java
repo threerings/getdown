@@ -87,6 +87,7 @@ public abstract class Getdown extends Thread
     public Getdown (File appDir, String appId, Object[] signers)
     {
         super("Getdown");
+        _silent = Boolean.getBoolean("silent");
         try {
             _msgs = ResourceBundle.getBundle("com.threerings.getdown.messages");
         } catch (Exception e) {
@@ -144,6 +145,8 @@ public abstract class Getdown extends Thread
             _dead = false;
             if (detectProxy()) {
                 getdown();
+            } else if (_silent) {
+                Log.warning("Need a proxy, but we don't want to bother anyone.  Exiting");
             } else {
                 // create a panel they can use to configure the proxy settings
                 _container = createContainer();
@@ -301,7 +304,7 @@ public abstract class Getdown extends Thread
 
         } catch (IOException ioe) {
             Log.info("Failed to HEAD " + rurl + ": " + ioe);
-            Log.info("We probably need a proxy. Attempting to auto-detect...");
+            Log.info("We probably need a proxy, but auto-detection failed.");
         }
 
         // let the caller know that we need a proxy but can't detect it
@@ -694,7 +697,7 @@ public abstract class Getdown extends Thread
      */
     protected void createInterface (boolean force)
     {
-        if (_container != null && !force) {
+        if (_silent || (_container != null && !force)) {
             return;
         }
 
@@ -910,6 +913,7 @@ public abstract class Getdown extends Thread
     protected AbortPanel _abort;
 
     protected boolean _dead;
+    protected boolean _silent;
     protected long _startup;
 
     protected boolean _enableTracking = true;
