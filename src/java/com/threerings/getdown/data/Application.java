@@ -66,6 +66,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 
 import com.threerings.getdown.Log;
+import com.threerings.getdown.launcher.RotatingBackgrounds;
 import com.threerings.getdown.util.ConfigUtil;
 import com.threerings.getdown.util.FileUtil;
 import com.threerings.getdown.util.LaunchUtil;
@@ -97,7 +98,10 @@ public class Application
         /** The human readable name of this application. */
         public String name;
 
-        /** The path (relative to the appdir) to the background image. */
+        /** Background image specifiers for {@link RotatingBackgrounds}. */
+        public String[] rotatingBackgrounds;
+
+        /** The path (relative to the appdir) to a single background image. */
         public String backgroundImage;
 
         /** The path (relative to the appdir) to the progress bar image. */
@@ -575,7 +579,7 @@ public class Application
             ui.backgroundImage = (String)cdata.get("ui.background");
         }
         ui.progressImage = (String)cdata.get("ui.progress_image");
-
+        ui.rotatingBackgrounds = ConfigUtil.getMultiValue(cdata, "ui.rotating_background");
         _dockIconPath = (String)cdata.get("ui.mac_dock_icon");
         if (_dockIconPath == null) {
             _dockIconPath = "../desktop.icns"; // use a sensible default

@@ -22,23 +22,21 @@ package com.threerings.getdown.launcher;
 
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.Graphics2D;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Rectangle;
-
-import javax.swing.JComponent;
-
 import java.text.MessageFormat;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+
+import javax.swing.JComponent;
 
 import com.samskivert.swing.Label;
 import com.samskivert.swing.util.SwingUtil;
 import com.samskivert.text.MessageUtil;
 import com.samskivert.util.StringUtil;
 import com.samskivert.util.Throttle;
-
 import com.threerings.getdown.Log;
 import com.threerings.getdown.data.Application.UpdateInterface;
 
@@ -52,16 +50,17 @@ public class StatusPanel extends JComponent
         _msgs = msgs;
     }
 
-    public void init (UpdateInterface ifc, Image bgimg, Image barimg)
+    public void init (UpdateInterface ifc, RotatingBackgrounds bg, Image barimg)
     {
         _ifc = ifc;
-        _bgimg = bgimg;
-        if (bgimg == null) {
+        _bg = bg;
+        Image img = _bg.getImage(_progress);
+        if (img == null) {
             Rectangle bounds = ifc.progress.union(ifc.status);
             bounds.grow(5, 5);
             _psize = bounds.getSize();
         } else {
-            _psize = new Dimension(bgimg.getWidth(null), bgimg.getHeight(null));
+            _psize = new Dimension(img.getWidth(null), img.getHeight(null));
         }
         _barimg = barimg;
     }
@@ -132,8 +131,9 @@ public class StatusPanel extends JComponent
         super.paintComponent(g);
         Graphics2D gfx = (Graphics2D)g;
 
-        if (_bgimg != null) {
-            gfx.drawImage(_bgimg, 0, 0, null);
+        Image img = _bg.getImage(_progress);
+        if (img != null) {
+            gfx.drawImage(img, 0, 0, null);
         } else {
             gfx.setColor(getBackground());
             gfx.fillRect(0, 0, getWidth(), getHeight());
@@ -256,7 +256,8 @@ public class StatusPanel extends JComponent
         }
     }
 
-    protected Image _bgimg, _barimg;
+    protected Image _barimg;
+    protected RotatingBackgrounds _bg;
     protected Dimension _psize;
 
     protected ResourceBundle _msgs;

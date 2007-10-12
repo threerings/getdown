@@ -22,19 +22,18 @@ package com.threerings.getdown.launcher;
 
 import java.awt.Container;
 import java.awt.Image;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 
 import javax.swing.JApplet;
 import javax.swing.JPanel;
 
-import java.io.IOException;
-import java.io.FileOutputStream;
-import java.io.File;
-import java.io.PrintStream;
-
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
-
 import com.threerings.getdown.Log;
 
 /**
@@ -42,6 +41,7 @@ import com.threerings.getdown.Log;
  * given privileges).
  */
 public class GetdownApplet extends JApplet
+    implements ImageLoader
 {
     @Override // documentation inherited
     public void init ()
@@ -50,16 +50,22 @@ public class GetdownApplet extends JApplet
         // signer
         String appbase = getParameter("appbase");
         String appname = getParameter("appname");
-        String imgpath = getParameter("bgimage");
+        String imgpath = getParameter("bgimage");;
         if (appbase == null) {
             appbase = "";
         }
         if (appname == null) {
             appname = "";
         }
-        if (imgpath == null) {
-            imgpath = "";
+        final RotatingBackgrounds bgimages;
+        if(imgpath == null) {
+            bgimages = new RotatingBackgrounds();
+        } else if(imgpath.contains(",")) {
+            bgimages = new RotatingBackgrounds(imgpath.split(","), this);
+        } else {
+            bgimages = new RotatingBackgrounds(loadImage(imgpath));
         }
+        
 
         Log.info("App Base: " + appbase);
         Log.info("App Name: " + appname);
@@ -67,16 +73,6 @@ public class GetdownApplet extends JApplet
         File appdir = null;
         try {
             appdir = initGetdown(appbase, appname, imgpath);
-
-            // if a background image was specified, grabbit
-            try {
-                if (!StringUtil.isBlank(imgpath)) {
-                    _bgimage = getImage(new URL(getDocumentBase(), imgpath));
-                }
-            } catch (Exception e) {
-                Log.info("Failed to load background image [path=" + imgpath + "].");
-                Log.logStackTrace(e);
-            }
 
             // record a few things for posterity
             Log.info("------------------ VM Info ------------------");
@@ -103,6 +99,9 @@ public class GetdownApplet extends JApplet
                     getContentPane().removeAll();
                     return getContentPane();
                 }
+                protected RotatingBackgrounds getBackground () {
+                    return bgimages;
+                }
                 protected void showContainer () {
                     ((JPanel)getContentPane()).revalidate();
                 }
@@ -115,10 +114,6 @@ public class GetdownApplet extends JApplet
                 protected JApplet getApplet () {
                     return GetdownApplet.this;
                 }
-                protected Image getBackgroundImage () {
-                    return _bgimage == null ?
-                        super.getBackgroundImage() : _bgimage;
-                }
                 protected void exit (int exitCode) {
                     // don't exit as we're in an applet
                 }
@@ -129,6 +124,17 @@ public class GetdownApplet extends JApplet
 
         } catch (Exception e) {
             Log.logStackTrace(e);
+        }
+    }
+
+    public Image loadImage (String path)
+    {
+        try {
+            return getImage(new URL(getDocumentBase(), path));
+        } catch (MalformedURLException e) {
+            Log.warning("Failed to load background image [path=" + path + "].");
+            Log.logStackTrace(e);
+            return null;
         }
     }
 
@@ -256,9 +262,6 @@ public class GetdownApplet extends JApplet
 
     /** Handles all the actual getting down. */
     protected Getdown _getdown;
-
-    /** A background image drawn to make things look purdy. */
-    protected Image _bgimage;
 
     /** An error encountered during initialization. */
     protected String _errmsg;

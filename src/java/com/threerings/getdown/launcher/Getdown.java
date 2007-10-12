@@ -71,7 +71,7 @@ import com.threerings.getdown.util.ProgressObserver;
  * Manages the main control for the Getdown application updater and deployment system.
  */
 public abstract class Getdown extends Thread
-    implements Application.StatusDisplay
+    implements Application.StatusDisplay, ImageLoader
 {
     public static void main (String[] args)
     {
@@ -717,23 +717,35 @@ public abstract class Getdown extends Thread
         }
 
         EventQueue.invokeLater(new Runnable() {
+
             public void run () {
                 if (_status == null) {
                     _container = createContainer();
                     _status = new StatusPanel(_msgs);
                     _container.add(_status, BorderLayout.CENTER);
+                    _background = getBackground();
                 }
-                _status.init(_ifc, getBackgroundImage(), getProgressImage());
+                _status.init(_ifc, _background, getProgressImage());
                 showContainer();
             }
         });
     }
 
-    protected Image getBackgroundImage ()
+    protected RotatingBackgrounds getBackground ()
     {
-        return loadImage(_ifc.backgroundImage);
+        if (_ifc.rotatingBackgrounds != null) {
+            if (_ifc.backgroundImage != null) {
+                Log.warning("ui.background_image and ui.rotating_background were "
+                    + " both specified.  The rotating images are being used.");
+            }
+            return new RotatingBackgrounds(_ifc.rotatingBackgrounds, Getdown.this);
+        } else if (_ifc.backgroundImage != null) {
+            return new RotatingBackgrounds(loadImage(_ifc.backgroundImage));
+        } else {
+            return new RotatingBackgrounds();
+        }
     }
-
+    
     protected Image getProgressImage ()
     {
         return loadImage(_ifc.progressImage);
@@ -805,7 +817,7 @@ public abstract class Getdown extends Thread
      *  we will look to see if we can find a localized version by sticking a
      *  _<language> in front of the "." in the filename.
      */
-    protected BufferedImage loadImage (String path)
+    public BufferedImage loadImage (String path)
     {
         String localeStr = Locale.getDefault().getLanguage();
 
@@ -926,6 +938,7 @@ public abstract class Getdown extends Thread
     protected Container _container;
     protected StatusPanel _status;
     protected AbortPanel _abort;
+    protected RotatingBackgrounds _background;
 
     protected boolean _dead;
     protected boolean _silent;
