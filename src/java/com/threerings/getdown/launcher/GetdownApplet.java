@@ -57,15 +57,15 @@ public class GetdownApplet extends JApplet
         if (appname == null) {
             appname = "";
         }
+
         final RotatingBackgrounds bgimages;
-        if(imgpath == null) {
+        if (imgpath == null) {
             bgimages = new RotatingBackgrounds();
-        } else if(imgpath.contains(",")) {
+        } else if (imgpath.contains(",")) {
             bgimages = new RotatingBackgrounds(imgpath.split(","), this);
         } else {
             bgimages = new RotatingBackgrounds(loadImage(imgpath));
         }
-        
 
         Log.info("App Base: " + appbase);
         Log.info("App Name: " + appname);
@@ -92,7 +92,7 @@ public class GetdownApplet extends JApplet
 
         try {
             // XXX getSigners() returns all certificates used to sign this applet which may allow
-            // a third party to insert a trusted certificate. This should be replaced with 
+            // a third party to insert a trusted certificate. This should be replaced with
             // statically included trusted keys.
             _getdown = new Getdown(appdir, null, GetdownApplet.class.getSigners()) {
                 protected Container createContainer () {

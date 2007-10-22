@@ -454,6 +454,37 @@ public abstract class Getdown extends Thread
     }
 
     /**
+     * Load the image at the path.  Before trying the exact path/file specified we will look to see
+     *  if we can find a localized version by sticking a _<language> in front of the "." in the
+     *  filename.
+     */
+    public BufferedImage loadImage (String path)
+    {
+        if (StringUtil.isBlank(path)) {
+            return null;
+        }
+
+        File imgpath = null;
+        try {
+            // First try for a localized image.
+            String localeStr = Locale.getDefault().getLanguage();
+            imgpath = _app.getLocalPath(StringUtil.replace(path, ".", "_" + localeStr + "."));
+            return ImageIO.read(imgpath);
+        } catch (IOException ioe) {
+            // No biggie, we'll try the generic one.
+        }
+
+        // If that didn't work, try a generic one.
+        try {
+            imgpath = _app.getLocalPath(path);
+            return ImageIO.read(imgpath);
+        } catch (IOException ioe2) {
+            Log.warning("Failed to load image [path=" + imgpath + ", error=" + ioe2 + "].");
+            return null;
+        }
+    }
+
+    /**
      * Downloads and installs an Java VM bundled with the application. This is called if we are not
      * running with the necessary Java version.
      */
@@ -717,7 +748,6 @@ public abstract class Getdown extends Thread
         }
 
         EventQueue.invokeLater(new Runnable() {
-
             public void run () {
                 if (_status == null) {
                     _container = createContainer();
@@ -735,8 +765,8 @@ public abstract class Getdown extends Thread
     {
         if (_ifc.rotatingBackgrounds != null) {
             if (_ifc.backgroundImage != null) {
-                Log.warning("ui.background_image and ui.rotating_background were "
-                    + " both specified.  The rotating images are being used.");
+                Log.warning("ui.background_image and ui.rotating_background were both specified. " +
+                            "The rotating images are being used.");
             }
             return new RotatingBackgrounds(_ifc.rotatingBackgrounds, Getdown.this);
         } else if (_ifc.backgroundImage != null) {
@@ -745,7 +775,7 @@ public abstract class Getdown extends Thread
             return new RotatingBackgrounds();
         }
     }
-    
+
     protected Image getProgressImage ()
     {
         return loadImage(_ifc.progressImage);
@@ -809,38 +839,6 @@ public abstract class Getdown extends Thread
             if (url != null) {
                 new ProgressReporter(url).start();
             }
-        }
-    }
-
-    /**
-     * Load the image at the path.  Before trying the exact path/file specified
-     *  we will look to see if we can find a localized version by sticking a
-     *  _<language> in front of the "." in the filename.
-     */
-    public BufferedImage loadImage (String path)
-    {
-        String localeStr = Locale.getDefault().getLanguage();
-
-        if (StringUtil.isBlank(path)) {
-            return null;
-        }
-
-        File imgpath = null;
-        try {
-            // First try for a localized image.
-            imgpath = _app.getLocalPath(StringUtil.replace(path, ".", "_" + localeStr + "."));
-            return ImageIO.read(imgpath);
-        } catch (IOException ioe) {
-            // No biggie, we'll try the generic one.
-        }
-
-        // If that didn't work, try a generic one.
-        try {
-            imgpath = _app.getLocalPath(path);
-            return ImageIO.read(imgpath);
-        } catch (IOException ioe2) {
-            Log.warning("Failed to load image [path=" + imgpath + ", error=" + ioe2 + "].");
-            return null;
         }
     }
 
@@ -946,7 +944,7 @@ public abstract class Getdown extends Thread
 
     protected boolean _enableTracking = true;
     protected int _reportedProgress = 0;
-    
+
     /** Number of minutes to wait after startup before beginning any real heavy lifting. */
     protected int _delay;
 
