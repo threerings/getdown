@@ -36,3 +36,5 @@
 -keep public class com.threerings.getdown.launcher.GetdownApplet {
     *;
 }
+
+-keepnames class com.samskivert.util.**
