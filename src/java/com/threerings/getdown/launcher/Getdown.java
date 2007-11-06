@@ -87,8 +87,13 @@ public abstract class Getdown extends Thread
     public Getdown (File appDir, String appId, Object[] signers)
     {
         super("Getdown");
-        _silent = Boolean.getBoolean("silent");
-        _delay = Integer.getInteger("delay", 0);
+        try {
+            _silent = Boolean.getBoolean("silent");
+            _delay = Integer.getInteger("delay", 0);
+        } catch (SecurityException se) {
+            // don't freak out, just assume non-silent and no delay; we're probably already
+            // recovering from a security failure
+        }
         try {
             _msgs = ResourceBundle.getBundle("com.threerings.getdown.messages");
         } catch (Exception e) {
