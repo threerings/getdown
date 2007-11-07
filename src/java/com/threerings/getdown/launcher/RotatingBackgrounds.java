@@ -75,6 +75,13 @@ public class RotatingBackgrounds
         return images[current];
     }
 
+    /**
+     * @return the number of images in this RotatingBackgrounds
+     */
+    public int getNumImages() {
+        return images.length;
+    }
+
     protected void makeEmpty ()
     {
         percentages = new int[] {};

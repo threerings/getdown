@@ -758,7 +758,12 @@ public abstract class Getdown extends Thread
                     _container = createContainer();
                     _status = new StatusPanel(_msgs);
                     _container.add(_status, BorderLayout.CENTER);
-                    _background = getBackground();
+                }
+                RotatingBackgrounds newBackgrounds = getBackground();
+                if (_background == null || newBackgrounds.getNumImages() > 0) {
+                    // Leave the old _background in place if there is an ond one to leave in place
+                    // and the new getdown.txt didn't yield any images.
+                    _background = newBackgrounds;
                 }
                 _status.init(_ifc, _background, getProgressImage());
                 showContainer();
