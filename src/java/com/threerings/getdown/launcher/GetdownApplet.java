@@ -115,7 +115,21 @@ public class GetdownApplet extends JApplet
                     return GetdownApplet.this;
                 }
                 protected void exit (int exitCode) {
-                    // don't exit as we're in an applet
+                    // Redirect to the URL in 'redirect_on_finish' if we completed successfully.
+                    // This allows us to use some javascript on that page to close Getdown's 
+                    // browser window.  I'd prefer to use the javascript bridge from the applet
+                    // rather than redirecting, but calling JSObject.getWindow(this).call("close") 
+                    // doesn't seem to do anything.
+                    if (getParameter("redirect_on_finish") != null && exitCode == 0) {
+                        URL dest;
+                        try {
+                            dest = new URL(getParameter("redirect_on_finish"));
+                        } catch (MalformedURLException e) {
+                            Log.warning("URL in redirect_on_finish param is malformed: " + e);
+                            return;
+                        }
+                        getAppletContext().showDocument(dest);
+                    }
                 }
             };
 
