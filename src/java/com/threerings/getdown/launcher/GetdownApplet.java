@@ -61,7 +61,7 @@ public class GetdownApplet extends JApplet
         final RotatingBackgrounds bgimages;
         if (imgpath == null) {
             bgimages = new RotatingBackgrounds();
-        } else if (imgpath.contains(",")) {
+        } else if (imgpath.indexOf(",") > -1) {
             bgimages = new RotatingBackgrounds(imgpath.split(","), this);
         } else {
             bgimages = new RotatingBackgrounds(loadImage(imgpath));
