@@ -88,7 +88,13 @@ public abstract class Getdown extends Thread
     {
         super("Getdown");
         try {
-            _silent = Boolean.getBoolean("silent");
+            // If the silent property exists, install without bringing up any gui. If it equals
+            // launch, start the application after installing. Otherwise, just install and exit.
+            String silent = System.getProperty("silent");
+            _silent = silent != null;
+            if (_silent) {
+                _launchInSilent = silent.equals("launch");
+            }
             _delay = Integer.getInteger("delay", 0);
         } catch (SecurityException se) {
             // don't freak out, just assume non-silent and no delay; we're probably already
@@ -406,7 +412,7 @@ public abstract class Getdown extends Thread
                     Log.info("Resources verified.");
                     // Only launch if we aren't in silent mode. Some mystery program starting out
                     // of the blue would be disconcerting.
-                    if (!_silent) {
+                    if (!_silent || _launchInSilent) {
                         _app.checkForAnotherGetdown();
                         launch();
                     }
@@ -956,6 +962,7 @@ public abstract class Getdown extends Thread
 
     protected boolean _dead;
     protected boolean _silent;
+    protected boolean _launchInSilent;
     protected long _startup;
 
     protected boolean _enableTracking = true;
