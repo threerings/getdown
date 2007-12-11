@@ -353,7 +353,9 @@ public abstract class Getdown extends Thread
                 // now force our UI to be recreated with the updated info
                 createInterface(true);
             }
-
+            _app.checkForAnotherGetdown();
+            // Update the modtime here to stake a claim that we're going to getdown eventually
+            _app.updateConfigModtime(); 
             if (_delay > 0) {
                 try {
                     Log.info("Waiting " + _delay + " minutes before beginning actual work");
@@ -405,6 +407,7 @@ public abstract class Getdown extends Thread
                     // Only launch if we aren't in silent mode. Some mystery program starting out
                     // of the blue would be disconcerting.
                     if (!_silent) {
+                        _app.checkForAnotherGetdown();
                         launch();
                     }
                     return;
@@ -447,7 +450,9 @@ public abstract class Getdown extends Thread
                         "m.init_error", MessageUtil.taint(msg), _ifc.installError);
                 }
             }
-            updateStatus(msg);
+            // Since we're dead, clear off the 'time remaining' label along with displaying the
+            // error message
+            setStatus(msg, 0, -1L, true);
             _dead = true;
         }
     }
@@ -606,9 +611,8 @@ public abstract class Getdown extends Thread
      * Called if the application is determined to require resource downloads.
      */
     protected void download (List<Resource> resources)
+        throws IOException
     {
-        final Object lock = new Object();
-
         // create our user interface
         createInterface(false);
 
@@ -618,26 +622,35 @@ public abstract class Getdown extends Thread
                 updateStatus("m.resolving");
             }
 
-            public void downloadProgress (int percent, long remaining) {
+            public void downloadProgress (int percent, long remaining)
+                throws IOException {
+                // Check for another getdown running at 0 and every 10% after that
+                if (_lastCheck == -1 || percent >= _lastCheck + 10) {
+                    _app.checkForAnotherGetdown();
+                    _lastCheck = percent;
+                }
                 setStatus("m.downloading", percent, remaining, true);
                 if (percent > 0) {
                     reportTrackingEvent("progress", percent);
                 }
-                if (percent == 100) {
-                    synchronized (lock) {
-                        lock.notify();
-                    }
-                }
             }
 
-            public void downloadFailed (Resource rsrc, Exception e) {
-                updateStatus(MessageUtil.tcompose("m.failure", e.getMessage()));
-                Log.warning("Download failed [rsrc=" + rsrc + "].");
-                Log.logStackTrace(e);
-                synchronized (lock) {
-                    lock.notify();
+            public void downloadFailed (Resource rsrc, Exception e)
+                throws IOException {
+                if (e instanceof MultipleGetdownRunning) {
+                    throw (IOException)e;
+                } else {
+                    updateStatus(MessageUtil.tcompose("m.failure", e.getMessage()));
+                    Log.warning("Download failed [rsrc=" + rsrc + "].");
+                    Log.logStackTrace(e);
                 }
             }
+            
+            /**
+             * The last percentage at which we checked for another getdown running, or -1 for not
+             * having checked at all.
+             */
+            protected int _lastCheck = -1;
         };
 
         // assume we're going to use an HTTP downloader
@@ -661,14 +674,7 @@ public abstract class Getdown extends Thread
         }
 
         // start the download and wait for it to complete
-        dl.start();
-        synchronized (lock) {
-            try {
-                lock.wait();
-            } catch (InterruptedException ie) {
-                Log.warning("Waitus interruptus " + ie + ".");
-            }
-        }
+        dl.download();
     }
 
     /**

@@ -57,6 +57,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.samskivert.io.StreamUtil;
+import com.samskivert.jdbc.depot.clause.UpdateClause;
 import com.samskivert.text.MessageUtil;
 import com.samskivert.util.ArrayIntSet;
 import com.samskivert.util.RunAnywhere;
@@ -66,6 +67,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 
 import com.threerings.getdown.Log;
+import com.threerings.getdown.launcher.MultipleGetdownRunning;
 import com.threerings.getdown.launcher.RotatingBackgrounds;
 import com.threerings.getdown.util.ConfigUtil;
 import com.threerings.getdown.util.FileUtil;
@@ -659,7 +661,7 @@ public class Application
         throws IOException
     {
         status.updateStatus("m.updating_metadata");
-        downloadControlFile(CONFIG_FILE);
+        downloadConfigFile();
     }
 
     /**
@@ -680,8 +682,8 @@ public class Application
         // now re-download our control files; we download the digest first so that if it fails, our
         // config file will still reference the old version and re-running the updater will start
         // the whole process over again
-        downloadControlFile(Digest.DIGEST_FILE, true);
-        downloadControlFile(CONFIG_FILE);
+        downloadDigestFile();
+        downloadConfigFile();
     }
 
     /**
@@ -870,7 +872,7 @@ public class Application
             String olddig = (_digest == null) ? "" : _digest.getMetaDigest();
             try {
                 status.updateStatus("m.checking");
-                downloadControlFile(Digest.DIGEST_FILE, true);
+                downloadDigestFile();
                 _digest = new Digest(_appdir);
                 if (!olddig.equals(_digest.getMetaDigest())) {
                     Log.info("Unversioned digest changed. Revalidating...");
@@ -888,7 +890,7 @@ public class Application
         // exceptions to propagate up to the caller as there is nothing else we can do
         if (_digest == null) {
             status.updateStatus("m.updating_metadata");
-            downloadControlFile(Digest.DIGEST_FILE, true);
+            downloadDigestFile();
             _digest = new Digest(_appdir);
         }
 
@@ -898,8 +900,8 @@ public class Application
             status.updateStatus("m.updating_metadata");
             // attempt to redownload both of our metadata files; again we pass errors up to our
             // caller because there's nothing we can do to automatically recover
-            downloadControlFile(CONFIG_FILE);
-            downloadControlFile(Digest.DIGEST_FILE, true);
+            downloadConfigFile();
+            downloadDigestFile();
             _digest = new Digest(_appdir);
             // revalidate everything if we end up downloading new metadata
             clearValidationMarkers();
@@ -1020,14 +1022,54 @@ public class Application
     }
 
     /**
-     * Downloads a new copy of the specified control file and does not check any signature.
+     * Downloads a new copy of CONFIG_FILE.
      */
-    protected void downloadControlFile (String path)
+    protected void downloadConfigFile ()
         throws IOException
     {
-        downloadControlFile(path, false);
+        checkForAnotherGetdown();
+        downloadControlFile(CONFIG_FILE, false);
+        updateConfigModtime();
     }
 
+    /**
+     * Checks the modtime on CONFIG_FILE and if it's changed since the last time this was called,
+     * raise a MultipleGetdownRunning exception
+     */
+    public void checkForAnotherGetdown ()
+        throws MultipleGetdownRunning
+    {
+        File config = getLocalPath(CONFIG_FILE);
+        if (_lastConfigModtime != -1 && _lastConfigModtime < config.lastModified()) {
+            throw new MultipleGetdownRunning();
+        }
+        _lastConfigModtime = config.lastModified();
+    }
+
+    /**
+     * Updates the modtime on CONFIG_FILE to now and notes that this application saw it at that
+     * time for use in checkForAnotherGetdown
+     */
+    public void updateConfigModtime ()
+    {
+        File config = getLocalPath(CONFIG_FILE);
+        _lastConfigModtime = System.currentTimeMillis();
+        if(!config.setLastModified(_lastConfigModtime) && !_warnedAboutSetLastModified){
+            Log.warning("Unable to set modtime on config file, will be unable to check for other instances of getdown running");
+            _warnedAboutSetLastModified = true;
+        }
+    }
+
+    /**
+     * Downloads a copy of Digest.DIGEST_FILE and validates its signature.
+     * @throws IOException
+     */
+    protected void downloadDigestFile ()
+        throws IOException
+    {
+        downloadControlFile(Digest.DIGEST_FILE, true);
+    }
+    
     /**
      * Downloads a new copy of the specified control file, optionally validating its signature. 
      * If the download is successful, moves it over the old file on the filesystem.
@@ -1106,6 +1148,11 @@ public class Application
                 }
             }
         }
+        
+        // Check that another getdown hasn't started running since we started downloading this
+        // file. The rename will obliterate the modtime we're tracking to keep multiple instances
+        // from running.
+        checkForAnotherGetdown(); 
 
         // now move the temporary file over the original
         File original = getLocalPath(path);
@@ -1245,6 +1292,12 @@ public class Application
     protected ArrayList<String> _appargs = new ArrayList<String>();
 
     protected Object[] _signers;
+    
+    /** If a warning has been issued about not being able to set modtimes. */
+    protected boolean _warnedAboutSetLastModified;
+    
+    /** The modtime on CONFIG_FILE last time it was checked, or -1 if it hasn't been checked. */
+    protected long _lastConfigModtime = -1;
 
     protected static final String[] SA_PROTO = new String[0];
 }

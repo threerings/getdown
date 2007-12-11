@@ -33,7 +33,7 @@ import com.threerings.getdown.data.Resource;
  * requests to obtain size information and then downloading the files
  * individually, reporting progress back via a callback interface.
  */
-public abstract class Downloader extends Thread
+public abstract class Downloader
 {
     /**
      * An interface used to communicate status back to an external entity.
@@ -60,8 +60,9 @@ public abstract class Downloader extends Thread
          * @param remaining the estimated download time remaining in
          * seconds, or <code>-1</code> if the time can not yet be
          * determined.
+         * @throws IOException if getdown shouldn't continue in its current state. 
          */
-        public void downloadProgress (int percent, long remaining);
+        public void downloadProgress (int percent, long remaining) throws IOException;
 
         /**
          * Called if a failure occurs while checking for an update or
@@ -71,28 +72,30 @@ public abstract class Downloader extends Thread
          * error occurred, or <code>null</code> if the failure occurred
          * while resolving downloads.
          * @param e the exception detailing the failure.
+         * @throws IOException if getdown shouldn't continue after this failure.
          */
-        public void downloadFailed (Resource rsrc, Exception e);
+        public void downloadFailed (Resource rsrc, Exception e) throws IOException;
     }
 
     /**
      * Creates a downloader that will download the supplied list of
      * resources and communicate with the specified observer. The {@link
-     * #start} method must be called on the downloader to initiate the
+     * #download} method must be called on the downloader to initiate the
      * download process.
      */
     public Downloader (List<Resource> resources, Observer obs)
     {
-        super("Downloader");
         _resources = resources;
         _obs = obs;
     }
 
     /**
-     * This method is invoked as the downloader thread and performs the
-     * actual downloading.
+     * Start downloading the resources in this Downloader.
+     * 
+     * @throws IOException if an unrecoverable error was discovered in dowloading. 
      */
-    public void run ()
+    public void download ()
+        throws IOException
     {
         Resource current = null;
         try {
@@ -168,8 +171,9 @@ public abstract class Downloader extends Thread
     /**
      * Periodically called by the protocol-specific downloaders
      * to update their progress.
+     * @throws IOException 
      */
-    protected void updateObserver ()
+    protected void updateObserver () throws IOException
     {
         // notify the observer if it's been sufficiently long
         // since our last notification
