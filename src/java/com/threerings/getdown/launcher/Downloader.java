@@ -22,7 +22,6 @@ package com.threerings.getdown.launcher;
 
 import java.io.File;
 import java.io.IOException;
-
 import java.util.List;
 
 import com.threerings.getdown.Log;
@@ -33,7 +32,7 @@ import com.threerings.getdown.data.Resource;
  * requests to obtain size information and then downloading the files
  * individually, reporting progress back via a callback interface.
  */
-public abstract class Downloader
+public abstract class Downloader extends Thread
 {
     /**
      * An interface used to communicate status back to an external entity.
@@ -85,8 +84,22 @@ public abstract class Downloader
      */
     public Downloader (List<Resource> resources, Observer obs)
     {
+        super("Downloader");
         _resources = resources;
         _obs = obs;
+    }
+
+    /**
+     * This method is invoked as the downloader thread and performs the actual downloading.
+     */
+    @Override
+    public void run ()
+    {
+        try {
+            download();
+        } catch (IOException e) {
+            // This was either logged or reported to our observer in download, so we're good.
+        }
     }
 
     /**
