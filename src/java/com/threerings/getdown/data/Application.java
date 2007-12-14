@@ -1027,23 +1027,35 @@ public class Application
     protected void downloadConfigFile ()
         throws IOException
     {
-        checkForAnotherGetdown();
+        requireNoOtherGetdownRunning();
         downloadControlFile(CONFIG_FILE, false);
         updateConfigModtime();
     }
 
     /**
-     * Checks the modtime on CONFIG_FILE and if it's changed since the last time this was called,
-     * raise a MultipleGetdownRunning exception
+     * Checks the modtime on CONFIG_FILE and returns whether it has changed since the last time
+     * this method was called.
      */
-    public void checkForAnotherGetdown ()
-        throws MultipleGetdownRunning
+    public boolean checkForAnotherGetdown ()
     {
         File config = getLocalPath(CONFIG_FILE);
         if (_lastConfigModtime != -1 && _lastConfigModtime < config.lastModified()) {
-            throw new MultipleGetdownRunning();
+            return true;
         }
         _lastConfigModtime = config.lastModified();
+        return false;
+    }
+
+    /**
+     * Calls {@link #checkForAnotherGetdown} and throws a {@link MultipleGetdownRunning} if it
+     * detects that another Getdown instance is running.
+     */
+    public void requireNoOtherGetdownRunning ()
+        throws MultipleGetdownRunning
+    {
+        if (checkForAnotherGetdown()) {
+            throw new MultipleGetdownRunning();
+        }
     }
 
     /**
@@ -1054,8 +1066,9 @@ public class Application
     {
         File config = getLocalPath(CONFIG_FILE);
         _lastConfigModtime = System.currentTimeMillis();
-        if(!config.setLastModified(_lastConfigModtime) && !_warnedAboutSetLastModified){
-            Log.warning("Unable to set modtime on config file, will be unable to check for other instances of getdown running");
+        if (!config.setLastModified(_lastConfigModtime) && !_warnedAboutSetLastModified) {
+            Log.warning("Unable to set modtime on config file, will be unable to check for " +
+                        "other instances of getdown running.");
             _warnedAboutSetLastModified = true;
         }
     }
@@ -1152,7 +1165,7 @@ public class Application
         // Check that another getdown hasn't started running since we started downloading this
         // file. The rename will obliterate the modtime we're tracking to keep multiple instances
         // from running.
-        checkForAnotherGetdown(); 
+        requireNoOtherGetdownRunning(); 
 
         // now move the temporary file over the original
         File original = getLocalPath(path);

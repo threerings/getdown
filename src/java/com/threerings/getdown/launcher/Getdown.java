@@ -62,6 +62,9 @@ import com.samskivert.util.StringUtil;
 import com.threerings.getdown.Log;
 import com.threerings.getdown.data.Application;
 import com.threerings.getdown.data.Resource;
+import com.threerings.getdown.net.Downloader;
+import com.threerings.getdown.net.HTTPDownloader;
+import com.threerings.getdown.net.TorrentDownloader;
 import com.threerings.getdown.tools.Patcher;
 import com.threerings.getdown.util.ConfigUtil;
 import com.threerings.getdown.util.LaunchUtil;
@@ -359,9 +362,9 @@ public abstract class Getdown extends Thread
                 // now force our UI to be recreated with the updated info
                 createInterface(true);
             }
-            _app.checkForAnotherGetdown();
+            _app.requireNoOtherGetdownRunning();
             // Update the modtime here to stake a claim that we're going to getdown eventually
-            _app.updateConfigModtime(); 
+            _app.updateConfigModtime();
             if (_delay > 0) {
                 try {
                     Log.info("Waiting " + _delay + " minutes before beginning actual work");
@@ -413,7 +416,7 @@ public abstract class Getdown extends Thread
                     // Only launch if we aren't in silent mode. Some mystery program starting out
                     // of the blue would be disconcerting.
                     if (!_silent || _launchInSilent) {
-                        _app.checkForAnotherGetdown();
+                        _app.requireNoOtherGetdownRunning();
                         launch();
                     }
                     return;
@@ -628,34 +631,29 @@ public abstract class Getdown extends Thread
                 updateStatus("m.resolving");
             }
 
-            public void downloadProgress (int percent, long remaining)
-                throws IOException {
-                // Check for another getdown running at 0 and every 10% after that
+            public boolean downloadProgress (int percent, long remaining) {
+                // check for another getdown running at 0 and every 10% after that
                 if (_lastCheck == -1 || percent >= _lastCheck + 10) {
-                    _app.checkForAnotherGetdown();
+                    if (_app.checkForAnotherGetdown()) {
+                        return false;
+                    }
                     _lastCheck = percent;
                 }
                 setStatus("m.downloading", percent, remaining, true);
                 if (percent > 0) {
                     reportTrackingEvent("progress", percent);
                 }
+                return true;
             }
 
-            public void downloadFailed (Resource rsrc, Exception e)
-                throws IOException {
-                if (e instanceof MultipleGetdownRunning) {
-                    throw (IOException)e;
-                } else {
-                    updateStatus(MessageUtil.tcompose("m.failure", e.getMessage()));
-                    Log.warning("Download failed [rsrc=" + rsrc + "].");
-                    Log.logStackTrace(e);
-                }
+            public void downloadFailed (Resource rsrc, Exception e) {
+                updateStatus(MessageUtil.tcompose("m.failure", e.getMessage()));
+                Log.warning("Download failed [rsrc=" + rsrc + "].");
+                Log.logStackTrace(e);
             }
-            
-            /**
-             * The last percentage at which we checked for another getdown running, or -1 for not
-             * having checked at all.
-             */
+
+            /** The last percentage at which we checked for another getdown running, or -1 for not
+             * having checked at all. */
             protected int _lastCheck = -1;
         };
 
@@ -680,7 +678,9 @@ public abstract class Getdown extends Thread
         }
 
         // start the download and wait for it to complete
-        dl.download();
+        if (!dl.download()) {
+            throw new MultipleGetdownRunning();
+        }
     }
 
     /**

@@ -18,69 +18,63 @@
 // this program; if not, write to the: Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 
-package com.threerings.getdown.launcher;
+package com.threerings.getdown.net;
 
 import java.io.File;
 import java.io.IOException;
+
 import java.util.List;
 
 import com.threerings.getdown.Log;
 import com.threerings.getdown.data.Resource;
 
 /**
- * Handles the download of a collection of files, first issuing HTTP head
- * requests to obtain size information and then downloading the files
- * individually, reporting progress back via a callback interface.
+ * Handles the download of a collection of files, first issuing HTTP head requests to obtain size
+ * information and then downloading the files individually, reporting progress back via a callback
+ * interface.
  */
 public abstract class Downloader extends Thread
 {
     /**
-     * An interface used to communicate status back to an external entity.
-     * <em>Note:</em> these methods are all called on the download thread,
-     * so implementors must take care to only execute thread-safe code or
-     * simply pass a message to the AWT thread, for example.
+     * An interface used to communicate status back to an external entity.  <em>Note:</em> these
+     * methods are all called on the download thread, so implementors must take care to only
+     * execute thread-safe code or simply pass a message to the AWT thread, for example.
      */
     public interface Observer
     {
         /**
-         * Called before the downloader begins the series of HTTP head
-         * requests to determine the size of the files it needs to
-         * download.
+         * Called before the downloader begins the series of HTTP head requests to determine the
+         * size of the files it needs to download.
          */
         public void resolvingDownloads ();
 
         /**
-         * Called to inform the observer of ongoing progress toward
-         * completion of the overall downloading task.  The caller is
-         * guaranteed to get at least one call reporting 100% completion.
+         * Called to inform the observer of ongoing progress toward completion of the overall
+         * downloading task. The caller is guaranteed to get at least one call reporting 100%
+         * completion.
          *
-         * @param percent the percent completion, in terms of total file
-         * size, of the downloads.
-         * @param remaining the estimated download time remaining in
-         * seconds, or <code>-1</code> if the time can not yet be
-         * determined.
-         * @throws IOException if getdown shouldn't continue in its current state. 
+         * @param percent the percent completion, in terms of total file size, of the downloads.
+         * @param remaining the estimated download time remaining in seconds, or <code>-1</code> if
+         * the time can not yet be determined.
+         *
+         * @return true if the download should continue, false if it should be aborted.
          */
-        public void downloadProgress (int percent, long remaining) throws IOException;
+        public boolean downloadProgress (int percent, long remaining);
 
         /**
-         * Called if a failure occurs while checking for an update or
-         * downloading a file.
+         * Called if a failure occurs while checking for an update or downloading a file.
          *
-         * @param rsrc the resource that was being downloaded when the
-         * error occurred, or <code>null</code> if the failure occurred
-         * while resolving downloads.
+         * @param rsrc the resource that was being downloaded when the error occurred, or
+         * <code>null</code> if the failure occurred while resolving downloads.
          * @param e the exception detailing the failure.
-         * @throws IOException if getdown shouldn't continue after this failure.
          */
-        public void downloadFailed (Resource rsrc, Exception e) throws IOException;
+        public void downloadFailed (Resource rsrc, Exception e);
     }
 
     /**
-     * Creates a downloader that will download the supplied list of
-     * resources and communicate with the specified observer. The {@link
-     * #download} method must be called on the downloader to initiate the
-     * download process.
+     * Creates a downloader that will download the supplied list of resources and communicate with
+     * the specified observer. The {@link #download} method must be called on the downloader to
+     * initiate the download process.
      */
     public Downloader (List<Resource> resources, Observer obs)
     {
@@ -95,20 +89,16 @@ public abstract class Downloader extends Thread
     @Override
     public void run ()
     {
-        try {
-            download();
-        } catch (IOException e) {
-            // This was either logged or reported to our observer in download, so we're good.
-        }
+        download();
     }
 
     /**
-     * Start downloading the resources in this Downloader.
-     * 
-     * @throws IOException if an unrecoverable error was discovered in dowloading. 
+     * Start downloading the resources in this downloader.
+     *
+     * @return true if the download completed or failed for unexpected reasons (in which case the
+     * observer will have been notified), false if it was aborted by the observer.
      */
-    public void download ()
-        throws IOException
+    public boolean download ()
     {
         Resource current = null;
         try {
@@ -132,11 +122,16 @@ public abstract class Downloader extends Thread
                 download(resource);
             }
 
-            // finally report our download completion if we did not
-            // already do so when downloading our final resource
+            // finally report our download completion if we did not already do so when downloading
+            // our final resource
             if (_obs != null && !_complete) {
-                _obs.downloadProgress(100, 0);
+                if (!_obs.downloadProgress(100, 0)) {
+                    return false;
+                }
             }
+
+        } catch (DownloadAbortedException e) {
+            return false;
 
         } catch (Exception e) {
             if (_obs != null) {
@@ -145,6 +140,7 @@ public abstract class Downloader extends Thread
                 Log.logStackTrace(e);
             }
         }
+        return true;
     }
 
     /**
@@ -163,8 +159,7 @@ public abstract class Downloader extends Thread
     protected abstract long checkSize (Resource rsrc) throws IOException;
 
     /**
-     * Downloads the specified resource from its remote location to its
-     * local location.
+     * Downloads the specified resource from its remote location to its local location.
      */
     protected void download (Resource rsrc)
         throws IOException
@@ -173,23 +168,20 @@ public abstract class Downloader extends Thread
         File parent = new File(rsrc.getLocal().getParent());
         if (!parent.exists()) {
             if (!parent.mkdirs()) {
-                Log.warning("Failed to create target directory for " +
-                            "resource '" + rsrc + "'. Download will " +
-                            "certainly fail.");
+                Log.warning("Failed to create target directory for resource '" + rsrc + "'. " +
+                            "Download will certainly fail.");
             }
         }
         doDownload(rsrc);
     }
 
     /**
-     * Periodically called by the protocol-specific downloaders
-     * to update their progress.
-     * @throws IOException 
+     * Periodically called by the protocol-specific downloaders to update their progress.
      */
-    protected void updateObserver () throws IOException
+    protected void updateObserver ()
+        throws IOException
     {
-        // notify the observer if it's been sufficiently long
-        // since our last notification
+        // notify the observer if it's been sufficiently long since our last notification
         long now = System.currentTimeMillis();
         if ((now - _lastUpdate) >= UPDATE_DELAY) {
             _lastUpdate = now;
@@ -199,24 +191,24 @@ public abstract class Downloader extends Thread
             long bps = (secs == 0) ? 0 : (_currentSize / secs);
 
             // compute our percentage completion
-            int pctdone = (_totalSize == 0) ? 0 :
-                (int)((_currentSize * 100f) / _totalSize);
+            int pctdone = (_totalSize == 0) ? 0 : (int)((_currentSize * 100f) / _totalSize);
 
             // estimate our time remaining
-            long remaining = (bps <= 0 || _totalSize == 0) ? -1 :
-                (_totalSize - _currentSize) / bps;
+            long remaining = (bps <= 0 || _totalSize == 0) ? -1 : (_totalSize - _currentSize) / bps;
 
             // make sure we only report 100% exactly once
             if (pctdone < 100 || !_complete) {
                 _complete = (pctdone == 100);
-                _obs.downloadProgress(pctdone, remaining);
+                if (!_obs.downloadProgress(pctdone, remaining)) {
+                    throw new DownloadAbortedException();
+                }
             }
         }   
     }
 
     /**
-     * Accomplishes the copying of the resource from remote location to
-     * local location using protocol-specific code
+     * Accomplishes the copying of the resource from remote location to local location using
+     * protocol-specific code
      */
     protected abstract void doDownload (Resource rsrc) throws IOException;
 
@@ -241,15 +233,13 @@ public abstract class Downloader extends Thread
     /** The current transfer rate in bytes per second. */
     protected long _bytesPerSecond;
 
-    /** The time at which the last progress update was posted to the
-     * progress observer. */
+    /** The time at which the last progress update was posted to the progress observer. */
     protected long _lastUpdate;
 
-    /** Whether the download has completed and the progress observer
-     * notified. */
+    /** Whether the download has completed and the progress observer notified. */
     protected boolean _complete;
 
-    /** The delay in milliseconds between notifying progress observers of
-     * file download progress. */
+    /** The delay in milliseconds between notifying progress observers of file download
+     * progress. */
     protected static final long UPDATE_DELAY = 500L;
 }
