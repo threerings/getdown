@@ -709,10 +709,7 @@ public abstract class Getdown extends Thread
                     // close our window if it's around
                     disposeContainer();
                     _status = null;
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(stderr));
-                    while (reader.readLine() != null) {
-                        // nothing doing!
-                    }
+                    copyStream(stderr, System.err);
                     Log.info("Process exited: " + proc.waitFor());
 
                 } else {
@@ -720,16 +717,7 @@ public abstract class Getdown extends Thread
                     // launch fails
                     Thread t = new Thread() {
                         public void run () {
-                            try {
-                                BufferedReader reader =
-                                    new BufferedReader(new InputStreamReader(stderr));
-                                String line;
-                                while ((line = reader.readLine()) != null) {
-                                    Log.warning(line);
-                                }
-                            } catch (IOException ioe) {
-                                // oh well
-                            }
+                            copyStream(stderr, System.err);
                         }
                     };
                     t.setDaemon(true);
@@ -902,6 +890,24 @@ public abstract class Getdown extends Thread
      * Requests that Getdown exit. In applet mode this does nothing.
      */
     protected abstract void exit (int exitCode);
+
+    /**
+     * Copies the supplied stream from the specified input to the specified output. Used to copy
+     * our child processes stderr and stdout to our own stderr and stdout.
+     */
+    protected static void copyStream (InputStream in, PrintStream out)
+    {
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                out.print(line);
+                out.flush();
+            }
+        } catch (IOException ioe) {
+            Log.warning("Failure copying [in=" + in + ", out=" + out + ", error=" + ioe + "].");
+        }
+    }
 
     /** Used to fetch a progress report URL. */
     protected class ProgressReporter extends Thread
