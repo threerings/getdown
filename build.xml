@@ -59,6 +59,8 @@
     <copy todir="${deploy.dir}/lib" flatten="true">
       <fileset refid="${app.name}.libs"/>
     </copy>
+    <!-- first look in libs.dir for javaws.jar then try java.home -->
+    <copy todir="${deploy.dir}/lib" file="${libs.dir}/javaws.jar" failonerror="false"/>
     <copy todir="${deploy.dir}/lib" file="${java.home}/lib/javaws.jar" failonerror="false"/>
   </target>
 
