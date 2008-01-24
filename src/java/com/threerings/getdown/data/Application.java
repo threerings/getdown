@@ -22,15 +22,6 @@ package com.threerings.getdown.data;
 
 import java.awt.Color;
 import java.awt.Rectangle;
-
-import javax.swing.JApplet;
-
-import java.lang.reflect.Method;
-import java.security.AllPermission;
-import java.security.CodeSource;
-import java.security.PermissionCollection;
-import java.security.Permissions;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -40,14 +31,20 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-
+import java.io.RandomAccessFile;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
+import java.security.AllPermission;
+import java.security.CodeSource;
 import java.security.GeneralSecurityException;
+import java.security.PermissionCollection;
+import java.security.Permissions;
 import java.security.Signature;
 import java.security.cert.Certificate;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -56,16 +53,16 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.samskivert.io.StreamUtil;
-import com.samskivert.jdbc.depot.clause.UpdateClause;
-import com.samskivert.text.MessageUtil;
-import com.samskivert.util.ArrayIntSet;
-import com.samskivert.util.RunAnywhere;
-import com.samskivert.util.StringUtil;
+import javax.swing.JApplet;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 
+import com.samskivert.io.StreamUtil;
+import com.samskivert.text.MessageUtil;
+import com.samskivert.util.ArrayIntSet;
+import com.samskivert.util.RunAnywhere;
+import com.samskivert.util.StringUtil;
 import com.threerings.getdown.Log;
 import com.threerings.getdown.launcher.MultipleGetdownRunning;
 import com.threerings.getdown.launcher.RotatingBackgrounds;
@@ -1027,49 +1024,53 @@ public class Application
     protected void downloadConfigFile ()
         throws IOException
     {
-        requireNoOtherGetdownRunning();
         downloadControlFile(CONFIG_FILE, false);
-        updateConfigModtime();
     }
 
     /**
-     * Checks the modtime on CONFIG_FILE and returns whether it has changed since the last time
-     * this method was called.
+     * @return true if gettingdown.lock was locked or was already locked by this application.
      */
-    public boolean checkForAnotherGetdown ()
+    public synchronized boolean lockForUpdates ()
     {
-        File config = getLocalPath(CONFIG_FILE);
-        if (_lastConfigModtime != -1 && _lastConfigModtime < config.lastModified()) {
+        if (_lock != null && _lock.isValid()) {
             return true;
         }
-        _lastConfigModtime = config.lastModified();
-        return false;
-    }
-
-    /**
-     * Calls {@link #checkForAnotherGetdown} and throws a {@link MultipleGetdownRunning} if it
-     * detects that another Getdown instance is running.
-     */
-    public void requireNoOtherGetdownRunning ()
-        throws MultipleGetdownRunning
-    {
-        if (checkForAnotherGetdown()) {
-            throw new MultipleGetdownRunning();
+        try {
+            _lockChannel = new RandomAccessFile(getLocalPath("gettingdown.lock"), "rw").getChannel();
+        } catch (FileNotFoundException e) {
+            Log.warning("Unable to create lock file[message=" + e.getMessage() + "]");
+            Log.logStackTrace(e);
+            return false;
         }
+        try {
+            _lock = _lockChannel.tryLock();
+        } catch (IOException e) {
+            Log.warning("Unable to create lock[message=" + e.getMessage() + "]");
+            Log.logStackTrace(e);
+        }
+        return _lock != null;
     }
 
     /**
-     * Updates the modtime on CONFIG_FILE to now and notes that this application saw it at that
-     * time for use in checkForAnotherGetdown
+     * Release gettingdown.lock
      */
-    public void updateConfigModtime ()
+    public synchronized void releaseLock ()
     {
-        File config = getLocalPath(CONFIG_FILE);
-        _lastConfigModtime = System.currentTimeMillis();
-        if (!config.setLastModified(_lastConfigModtime) && !_warnedAboutSetLastModified) {
-            Log.warning("Unable to set modtime on config file, will be unable to check for " +
-                        "other instances of getdown running.");
-            _warnedAboutSetLastModified = true;
+        if (_lock != null) {
+            try {
+                _lock.release();
+            } catch (IOException e) {
+                Log.warning("Unable to release lock[message=" + e.getMessage() + "]");
+                Log.logStackTrace(e);
+            }
+            try {
+                _lockChannel.close();
+            } catch (IOException e) {
+                Log.warning("Unable to close lock channel[message=" + e.getMessage() + "]");
+                Log.logStackTrace(e);
+            }
+            _lockChannel = null;
+            _lock = null;
         }
     }
 
@@ -1162,11 +1163,6 @@ public class Application
             }
         }
         
-        // Check that another getdown hasn't started running since we started downloading this
-        // file. The rename will obliterate the modtime we're tracking to keep multiple instances
-        // from running.
-        requireNoOtherGetdownRunning(); 
-
         // now move the temporary file over the original
         File original = getLocalPath(path);
         if (!FileUtil.renameTo(target, original)) {
@@ -1309,8 +1305,11 @@ public class Application
     /** If a warning has been issued about not being able to set modtimes. */
     protected boolean _warnedAboutSetLastModified;
     
-    /** The modtime on CONFIG_FILE last time it was checked, or -1 if it hasn't been checked. */
-    protected long _lastConfigModtime = -1;
-
     protected static final String[] SA_PROTO = new String[0];
+    
+    /** Locks gettingdown.lock in the app dir. Held the entire time updating is going on.*/
+    protected FileLock _lock;
+
+    /** Channel to the file underying _lock.  Kept around solely so the lock doesn't close. */
+    protected FileChannel _lockChannel;
 }

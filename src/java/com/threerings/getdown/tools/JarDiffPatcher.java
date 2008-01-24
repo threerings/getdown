@@ -139,7 +139,7 @@ public class JarDiffPatcher
         for (int j = 0; j < keys.length; j++) {
             // Apply move <oldName> <newName> command
             String newName = (String)keys[j];
-            String oldName = (String)renameMap.get(newName);
+            String oldName = renameMap.get(newName);
 
             // Get source JarEntry
             JarEntry oldEntry = oldJar.getJarEntry(oldName);

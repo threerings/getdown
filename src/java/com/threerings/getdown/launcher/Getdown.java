@@ -362,16 +362,31 @@ public abstract class Getdown extends Thread
                 // now force our UI to be recreated with the updated info
                 createInterface(true);
             }
-            _app.requireNoOtherGetdownRunning();
-            // Update the modtime here to stake a claim that we're going to getdown eventually
-            _app.updateConfigModtime();
+            if (!_app.lockForUpdates()) {
+                throw new MultipleGetdownRunning();
+            }
+            
+            // Update the config modtime so a sleeping getdown will notice the change.
+            File config = _app.getLocalPath(Application.CONFIG_FILE);
+            if (!config.setLastModified(System.currentTimeMillis())) {
+                Log.warning("Unable to set modtime on config file, will be unable to check for "
+                    + "another instance of getdown running while this one waits.");
+            }
             if (_delay > 0) {
+                // don't hold the lock while waiting, let another getdown proceed if it starts.
+                _app.releaseLock();
+                // Store the config modtime before waiting the delay amount of time
+                long lastConfigModtime = config.lastModified();
                 try {
                     Log.info("Waiting " + _delay + " minutes before beginning actual work");
-                    Thread.sleep(_delay * 60 * 1000);
+                    Thread.sleep(_delay * 15 * 1000);
                 } catch (InterruptedException ie) {
                     Log.warning("Who dares disturb my slumber?");
                     Log.logStackTrace(ie);
+                }
+                if (lastConfigModtime < config.lastModified()) {
+                    Log.warning("getdown.txt was modified while getdown was waiting");
+                    throw new MultipleGetdownRunning();
                 }
             }
 
@@ -416,7 +431,9 @@ public abstract class Getdown extends Thread
                     // Only launch if we aren't in silent mode. Some mystery program starting out
                     // of the blue would be disconcerting.
                     if (!_silent || _launchInSilent) {
-                        _app.requireNoOtherGetdownRunning();
+                        // One last check for the lock before launching. It'll already be held
+                        // unless we're in silent mode.
+                        _app.lockForUpdates();
                         launch();
                     }
                     return;
@@ -634,8 +651,11 @@ public abstract class Getdown extends Thread
             public boolean downloadProgress (int percent, long remaining) {
                 // check for another getdown running at 0 and every 10% after that
                 if (_lastCheck == -1 || percent >= _lastCheck + 10) {
-                    if (_app.checkForAnotherGetdown()) {
-                        return false;
+                    if (_delay > 0){
+                        // Stop the presses if something else is holding the lock.
+                        boolean locked = _app.lockForUpdates();
+                        _app.releaseLock();
+                        return locked;
                     }
                     _lastCheck = percent;
                 }
