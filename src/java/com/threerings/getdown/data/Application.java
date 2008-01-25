@@ -1038,14 +1038,14 @@ public class Application
         try {
             _lockChannel = new RandomAccessFile(getLocalPath("gettingdown.lock"), "rw").getChannel();
         } catch (FileNotFoundException e) {
-            Log.warning("Unable to create lock file[message=" + e.getMessage() + "]");
+            Log.warning("Unable to create lock file [message=" + e.getMessage() + "]");
             Log.logStackTrace(e);
             return false;
         }
         try {
             _lock = _lockChannel.tryLock();
         } catch (IOException e) {
-            Log.warning("Unable to create lock[message=" + e.getMessage() + "]");
+            Log.warning("Unable to create lock [message=" + e.getMessage() + "]");
             Log.logStackTrace(e);
         }
         return _lock != null;
@@ -1060,13 +1060,13 @@ public class Application
             try {
                 _lock.release();
             } catch (IOException e) {
-                Log.warning("Unable to release lock[message=" + e.getMessage() + "]");
+                Log.warning("Unable to release lock [message=" + e.getMessage() + "]");
                 Log.logStackTrace(e);
             }
             try {
                 _lockChannel.close();
             } catch (IOException e) {
-                Log.warning("Unable to close lock channel[message=" + e.getMessage() + "]");
+                Log.warning("Unable to close lock channel [message=" + e.getMessage() + "]");
                 Log.logStackTrace(e);
             }
             _lockChannel = null;

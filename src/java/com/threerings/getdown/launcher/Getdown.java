@@ -651,7 +651,7 @@ public abstract class Getdown extends Thread
             public boolean downloadProgress (int percent, long remaining) {
                 // check for another getdown running at 0 and every 10% after that
                 if (_lastCheck == -1 || percent >= _lastCheck + 10) {
-                    if (_delay > 0){
+                    if (_delay > 0) {
                         // Stop the presses if something else is holding the lock.
                         boolean locked = _app.lockForUpdates();
                         _app.releaseLock();
