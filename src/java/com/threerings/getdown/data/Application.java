@@ -1032,6 +1032,7 @@ public class Application
      */
     public synchronized boolean lockForUpdates ()
     {
+        /* TEMP disable locking
         if (_lock != null && _lock.isValid()) {
             return true;
         }
@@ -1049,6 +1050,8 @@ public class Application
             Log.logStackTrace(e);
         }
         return _lock != null;
+        */
+        return true;
     }
 
     /**
@@ -1056,6 +1059,7 @@ public class Application
      */
     public synchronized void releaseLock ()
     {
+        /* TEMP disable locking
         if (_lock != null) {
             try {
                 _lock.release();
@@ -1072,6 +1076,7 @@ public class Application
             _lockChannel = null;
             _lock = null;
         }
+        */
     }
 
     /**
@@ -1083,9 +1088,9 @@ public class Application
     {
         downloadControlFile(Digest.DIGEST_FILE, true);
     }
-    
+
     /**
-     * Downloads a new copy of the specified control file, optionally validating its signature. 
+     * Downloads a new copy of the specified control file, optionally validating its signature.
      * If the download is successful, moves it over the old file on the filesystem.
      *
      * <p> We implement simple signing of the digest.txt file for use with the Getdown applet, but
@@ -1162,7 +1167,7 @@ public class Application
                 }
             }
         }
-        
+
         // now move the temporary file over the original
         File original = getLocalPath(path);
         if (!FileUtil.renameTo(target, original)) {
@@ -1170,7 +1175,7 @@ public class Application
         }
     }
 
-    /** 
+    /**
      * Download a path to a temporary file, returning a {@link File} instance with the path
      * contents.
      */
@@ -1301,12 +1306,12 @@ public class Application
     protected ArrayList<String> _appargs = new ArrayList<String>();
 
     protected Object[] _signers;
-    
+
     /** If a warning has been issued about not being able to set modtimes. */
     protected boolean _warnedAboutSetLastModified;
-    
+
     protected static final String[] SA_PROTO = new String[0];
-    
+
     /** Locks gettingdown.lock in the app dir. Held the entire time updating is going on.*/
     protected FileLock _lock;
 
