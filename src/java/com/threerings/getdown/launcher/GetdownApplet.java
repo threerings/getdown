@@ -111,6 +111,9 @@ public class GetdownApplet extends JApplet
                 protected boolean invokeDirect () {
                     return "true".equalsIgnoreCase(getParameter("direct"));
                 }
+                protected boolean useLocks () {
+                    return "true".equalsIgnoreCase(getParameter("lock"));
+                }
                 protected JApplet getApplet () {
                     return GetdownApplet.this;
                 }
@@ -169,7 +172,8 @@ public class GetdownApplet extends JApplet
     @Override // documentation inherited
     public void stop ()
     {
-        // TODO
+        // release the lock if the applet window is closed or replaced
+        _getdown._app.releaseLock();
     }
 
     /**

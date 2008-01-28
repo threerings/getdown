@@ -154,7 +154,7 @@ public class Application
      */
     public Application (File appdir, String appid)
     {
-        this(appdir, appid, null);
+        this(appdir, appid, null, false);
     }
 
     /**
@@ -166,13 +166,15 @@ public class Application
      * <code>appid.apparg</code> to configure itself but all other parameters will be the same as
      * the primary application.
      * @param signers an array of possible signers of this application. Used to verify the digest.
+     * @param useLock - if true, attempt to acquire a lockfile while active updating is occuring.
      */
-    public Application (File appdir, String appid, Object[] signers)
+    public Application (File appdir, String appid, Object[] signers, boolean useLock)
     {
         _appdir = appdir;
         _appid = appid;
         _signers = signers;
         _config = getLocalPath(CONFIG_FILE);
+        _locking = useLock;
     }
 
     /**
@@ -1028,12 +1030,12 @@ public class Application
     }
 
     /**
-     * @return true if gettingdown.lock was locked or was already locked by this application.
+     * @return true if gettingdown.lock was unlocked, already locked by this application or if
+     * we're not locking at all.
      */
     public synchronized boolean lockForUpdates ()
     {
-        /* TEMP disable locking
-        if (_lock != null && _lock.isValid()) {
+        if (!_locking || (_lock != null && _lock.isValid())) {
             return true;
         }
         try {
@@ -1049,9 +1051,8 @@ public class Application
             Log.warning("Unable to create lock [message=" + e.getMessage() + "]");
             Log.logStackTrace(e);
         }
+        Log.info("Able to lock for updates: " + (_lock != null));
         return _lock != null;
-        */
-        return true;
     }
 
     /**
@@ -1059,8 +1060,8 @@ public class Application
      */
     public synchronized void releaseLock ()
     {
-        /* TEMP disable locking
         if (_lock != null) {
+            Log.info("Releasing lock");
             try {
                 _lock.release();
             } catch (IOException e) {
@@ -1076,7 +1077,6 @@ public class Application
             _lockChannel = null;
             _lock = null;
         }
-        */
     }
 
     /**
@@ -1317,4 +1317,7 @@ public class Application
 
     /** Channel to the file underying _lock.  Kept around solely so the lock doesn't close. */
     protected FileChannel _lockChannel;
+
+    /** True if we're using the locks, false means we're allowing multiple getdowns to run. */
+    protected boolean _locking;
 }

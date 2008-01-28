@@ -117,7 +117,7 @@ public abstract class Getdown extends Thread
             updateStatus(errmsg);
             _dead = true;
         }
-        _app = new Application(appDir, appId, signers);
+        _app = new Application(appDir, appId, signers, useLocks());
         _startup = System.currentTimeMillis();
     }
 
@@ -479,6 +479,7 @@ public abstract class Getdown extends Thread
             // Since we're dead, clear off the 'time remaining' label along with displaying the
             // error message
             setStatus(msg, 0, -1L, true);
+            _app.releaseLock();
             _dead = true;
         }
     }
@@ -712,6 +713,7 @@ public abstract class Getdown extends Thread
 
         try {
             if (invokeDirect()) {
+                _app.releaseLock();
                 _app.invokeDirect(getApplet());
 
             } else {
@@ -895,6 +897,16 @@ public abstract class Getdown extends Thread
     {
         // allow passing -Ddirect=true to force direct invocation
         return Boolean.getBoolean("direct");
+    }
+
+    /**
+     * If this method returns true we will acquire a lock when starting to update files to prevent
+     * other instances of getdown from running.
+     */
+    protected boolean useLocks ()
+    {
+        // allow passing -Dlock=true to turn on lock usage
+        return Boolean.getBoolean("lock");
     }
 
     /**
