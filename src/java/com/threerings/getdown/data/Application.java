@@ -38,6 +38,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.nio.channels.OverlappingFileLockException;
 import java.security.AllPermission;
 import java.security.CodeSource;
 import java.security.GeneralSecurityException;
@@ -1050,6 +1051,11 @@ public class Application
         } catch (IOException e) {
             Log.warning("Unable to create lock [message=" + e.getMessage() + "]");
             Log.logStackTrace(e);
+            return false;
+        } catch (OverlappingFileLockException e) {
+            Log.warning("The lock is held elsewhere in this JVM");
+            Log.logStackTrace(e);
+            return false;
         }
         Log.info("Able to lock for updates: " + (_lock != null));
         return _lock != null;
