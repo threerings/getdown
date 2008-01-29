@@ -377,13 +377,8 @@ public abstract class Getdown extends Thread
                 _app.releaseLock();
                 // Store the config modtime before waiting the delay amount of time
                 long lastConfigModtime = config.lastModified();
-                try {
-                    Log.info("Waiting " + _delay + " minutes before beginning actual work");
-                    Thread.sleep(_delay * 15 * 1000);
-                } catch (InterruptedException ie) {
-                    Log.warning("Who dares disturb my slumber?");
-                    Log.logStackTrace(ie);
-                }
+                Log.info("Waiting " + _delay + " minutes before beginning actual work");
+                Thread.sleep(_delay * 15 * 1000);
                 if (lastConfigModtime < config.lastModified()) {
                     Log.warning("getdown.txt was modified while getdown was waiting");
                     throw new MultipleGetdownRunning();
@@ -431,8 +426,12 @@ public abstract class Getdown extends Thread
                     // Only launch if we aren't in silent mode. Some mystery program starting out
                     // of the blue would be disconcerting.
                     if (!_silent || _launchInSilent) {
-                        // One last check for the lock before launching. It'll already be held
-                        // unless we're in silent mode.
+                        if (Thread.interrupted()) {
+                            // One last interrupted check so we don't launch as the applet aborts
+                            throw new InterruptedException("m.applet_stopped");
+                        }
+                        // And another final check for the lock. It'll already be held unless
+                        // we're in silent mode.
                         _app.lockForUpdates();
                         launch();
                     }
@@ -526,7 +525,7 @@ public abstract class Getdown extends Thread
      * running with the necessary Java version.
      */
     protected void updateJava ()
-        throws IOException
+        throws IOException, InterruptedException
     {
         Resource vmjar = _app.getJavaVMResource();
         if (vmjar == null) {
@@ -581,7 +580,7 @@ public abstract class Getdown extends Thread
      * Called if the application is determined to be of an old version.
      */
     protected void update ()
-        throws IOException
+        throws IOException, InterruptedException
     {
         // first clear all validation markers
         _app.clearValidationMarkers();
@@ -638,7 +637,7 @@ public abstract class Getdown extends Thread
      * Called if the application is determined to require resource downloads.
      */
     protected void download (List<Resource> resources)
-        throws IOException
+        throws IOException, InterruptedException
     {
         // create our user interface
         createInterface(false);
@@ -659,6 +658,12 @@ public abstract class Getdown extends Thread
                         return locked;
                     }
                     _lastCheck = percent;
+                }
+                if (Thread.currentThread().isInterrupted()) {
+                    // The applet interrupts when it stops, so abort the download and quit. Use
+                    // isInterrupted so the containing code can call interrupted outside of here
+                    // to check if this was the reason for aborting.
+                    return false;
                 }
                 setStatus("m.downloading", percent, remaining, true);
                 if (percent > 0) {
@@ -700,6 +705,9 @@ public abstract class Getdown extends Thread
 
         // start the download and wait for it to complete
         if (!dl.download()) {
+            if (Thread.interrupted()) {
+                throw new InterruptedException("m.applet_stopped");
+            }
             throw new MultipleGetdownRunning();
         }
     }

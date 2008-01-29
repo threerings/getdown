@@ -172,6 +172,9 @@ public class GetdownApplet extends JApplet
     @Override // documentation inherited
     public void stop ()
     {
+        // Interrupt the getdown thread to tell it to kill its current downloading or verifying
+        // before launching
+        _getdown.interrupt();
         // release the lock if the applet window is closed or replaced
         _getdown._app.releaseLock();
     }

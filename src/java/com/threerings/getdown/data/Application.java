@@ -948,6 +948,7 @@ public class Application
      * validated" resources filled in.
      */
     public List<Resource> verifyResources (ProgressObserver obs, int[] alreadyValid)
+        throws InterruptedException
     {
         List<Resource> rsrcs = getAllResources();
         List<Resource> failures = new ArrayList<Resource>();
@@ -960,6 +961,9 @@ public class Application
 
         MetaProgressObserver mpobs = new MetaProgressObserver(obs, totalSize);
         for (Resource rsrc : rsrcs) {
+            if (Thread.interrupted()) {
+                throw new InterruptedException("m.applet_stopped");
+            }
             mpobs.startElement(rsrc.getLocal().length());
 
             if (rsrc.isMarkedValid()) {
