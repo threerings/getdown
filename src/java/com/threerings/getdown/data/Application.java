@@ -157,7 +157,7 @@ public class Application
      */
     public Application (File appdir, String appid)
     {
-        this(appdir, appid, null, false);
+        this(appdir, appid, null);
     }
 
     /**
@@ -169,15 +169,13 @@ public class Application
      * <code>appid.apparg</code> to configure itself but all other parameters will be the same as
      * the primary application.
      * @param signers an array of possible signers of this application. Used to verify the digest.
-     * @param useLock - if true, attempt to acquire a lockfile while active updating is occuring.
      */
-    public Application (File appdir, String appid, Object[] signers, boolean useLock)
+    public Application (File appdir, String appid, Object[] signers)
     {
         _appdir = appdir;
         _appid = appid;
         _signers = signers;
         _config = getLocalPath(CONFIG_FILE);
-        _locking = useLock;
     }
 
     /**
@@ -1043,7 +1041,7 @@ public class Application
      */
     public synchronized boolean lockForUpdates ()
     {
-        if (!_locking || (_lock != null && _lock.isValid())) {
+        if (_lock != null && _lock.isValid()) {
             return true;
         }
         try {
@@ -1330,7 +1328,4 @@ public class Application
 
     /** Channel to the file underying _lock.  Kept around solely so the lock doesn't close. */
     protected FileChannel _lockChannel;
-
-    /** True if we're using the locks, false means we're allowing multiple getdowns to run. */
-    protected boolean _locking;
 }

@@ -116,7 +116,7 @@ public abstract class Getdown extends Thread
                 "\nis invalid. The directory must not contain the '!' character. Please reinstall.";
             fail(errmsg);
         }
-        _app = new Application(appDir, appId, signers, useLocks());
+        _app = new Application(appDir, appId, signers);
         _startup = System.currentTimeMillis();
     }
 
@@ -926,16 +926,6 @@ public abstract class Getdown extends Thread
     {
         // allow passing -Ddirect=true to force direct invocation
         return Boolean.getBoolean("direct");
-    }
-
-    /**
-     * If this method returns true we will acquire a lock when starting to update files to prevent
-     * other instances of getdown from running.
-     */
-    protected boolean useLocks ()
-    {
-        // allow passing -Dlock=true to turn on lock usage
-        return Boolean.getBoolean("lock");
     }
 
     /**

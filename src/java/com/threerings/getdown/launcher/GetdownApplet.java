@@ -112,9 +112,6 @@ public class GetdownApplet extends JApplet
                 protected boolean invokeDirect () {
                     return "true".equalsIgnoreCase(getParameter("direct"));
                 }
-                protected boolean useLocks () {
-                    return "true".equalsIgnoreCase(getParameter("lock"));
-                }
                 protected JApplet getApplet () {
                     return GetdownApplet.this;
                 }
