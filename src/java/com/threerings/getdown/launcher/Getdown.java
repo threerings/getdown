@@ -114,8 +114,7 @@ public abstract class Getdown extends Thread
             }
             String errmsg = "The directory in which this application is installed:\n" + dir +
                 "\nis invalid. The directory must not contain the '!' character. Please reinstall.";
-            updateStatus(errmsg);
-            _dead = true;
+            fail(errmsg);
         }
         _app = new Application(appDir, appId, signers, useLocks());
         _startup = System.currentTimeMillis();
@@ -151,8 +150,7 @@ public abstract class Getdown extends Thread
             if (path.equals(".")) {
                 path = System.getProperty("user.dir");
             }
-            updateStatus(MessageUtil.tcompose("m.readonly_error", path));
-            _dead = true;
+            fail(MessageUtil.tcompose("m.readonly_error", path));
             return;
         }
 
@@ -186,8 +184,7 @@ public abstract class Getdown extends Thread
                         "m.init_error", MessageUtil.taint(msg), _ifc.installError);
                 }
             }
-            updateStatus(msg);
-            _dead = true;
+            fail(msg);
         }
     }
 
@@ -477,9 +474,8 @@ public abstract class Getdown extends Thread
             }
             // Since we're dead, clear off the 'time remaining' label along with displaying the
             // error message
-            setStatus(msg, 0, -1L, true);
+            fail(msg);
             _app.releaseLock();
-            _dead = true;
         }
     }
 
@@ -775,10 +771,12 @@ public abstract class Getdown extends Thread
     /**
      * Creates our user interface, which we avoid doing unless we actually have to update
      * something.
+     * 
+     * @param reinit - if the interface should be reinitialized if it already exists.
      */
-    protected void createInterface (boolean force)
+    protected void createInterface (final boolean reinit)
     {
-        if (_silent || (_container != null && !force)) {
+        if (_silent || (_container != null && !reinit)) {
             return;
         }
 
@@ -788,19 +786,29 @@ public abstract class Getdown extends Thread
                     _container = createContainer();
                     _status = new StatusPanel(_msgs);
                     _container.add(_status, BorderLayout.CENTER);
+                    initInterface();
+                } else if (reinit) {
+                    initInterface();
                 }
-                RotatingBackgrounds newBackgrounds = getBackground();
-                if (_background == null || newBackgrounds.getNumImages() > 0) {
-                    // Leave the old _background in place if there is an ond one to leave in place
-                    // and the new getdown.txt didn't yield any images.
-                    _background = newBackgrounds;
-                }
-                _status.init(_ifc, _background, getProgressImage());
                 showContainer();
             }
         });
     }
 
+    /**
+     * Initializes the interface with the current UpdateInterface and backgrounds. 
+     */
+    protected void initInterface ()
+    {
+        RotatingBackgrounds newBackgrounds = getBackground();
+        if (_background == null || newBackgrounds.getNumImages() > 0) {
+            // Leave the old _background in place if there is an old one to leave in place
+            // and the new getdown.txt didn't yield any images.
+            _background = newBackgrounds;
+        }
+        _status.init(_ifc, _background, getProgressImage());
+    }
+    
     protected RotatingBackgrounds getBackground ()
     {
         if (_ifc.rotatingBackgrounds != null) {
@@ -808,7 +816,8 @@ public abstract class Getdown extends Thread
                 Log.warning("ui.background_image and ui.rotating_background were both specified. " +
                             "The rotating images are being used.");
             }
-            return new RotatingBackgrounds(_ifc.rotatingBackgrounds, Getdown.this);
+            return new RotatingBackgrounds(_ifc.rotatingBackgrounds, _ifc.errorBackground,
+                Getdown.this);
         } else if (_ifc.backgroundImage != null) {
             return new RotatingBackgrounds(loadImage(_ifc.backgroundImage));
         } else {
@@ -836,6 +845,14 @@ public abstract class Getdown extends Thread
             _abort.requestFocus();
         }
     }
+    
+    /** 
+     * Update the status to indicate getdown has failed for the reason in <code>message</code>. 
+     */
+    protected void fail(String message){
+        _dead = true;
+        setStatus(message, 0, -1L, true);
+    }
 
     protected void setStatus (
         final String message, final int percent, final long remaining, boolean createUI)
@@ -847,15 +864,19 @@ public abstract class Getdown extends Thread
         EventQueue.invokeLater(new Runnable() {
             public void run () {
                 if (_status == null) {
-                    Log.info("Dropping status '" + message + "'.");
+                    if (message != null) {
+                        Log.info("Dropping status '" + message + "'.");
+                    }
                     return;
                 }
                 if (message != null) {
-                    _status.setStatus(message);
+                    _status.setStatus(message, _dead);
                 }
-                if (percent >= 0) {
+                if (_dead) {
+                    _status.setProgress(0, -1L);
+                } else if (percent >= 0) {
                     _status.setProgress(percent, remaining);
-                }
+                } 
             }
         });
     }

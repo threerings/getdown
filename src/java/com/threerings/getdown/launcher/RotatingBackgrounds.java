@@ -21,6 +21,7 @@ public class RotatingBackgrounds
         percentages = new int[] { 0 };
         minDisplayTime = new int[] { 0 };
         images = new Image[] { background };
+        errorImage = images[0];
     }
 
     /**
@@ -32,7 +33,7 @@ public class RotatingBackgrounds
      * time when the next should be shown. In that case, it's left up until its been there for its
      * minimum display time and then the next one gets to come up.
      */
-    public RotatingBackgrounds (String[] backgrounds, ImageLoader loader)
+    public RotatingBackgrounds (String[] backgrounds, String errorBackground, ImageLoader loader)
     {
         percentages = new int[backgrounds.length];
         minDisplayTime = new int[backgrounds.length];
@@ -55,6 +56,11 @@ public class RotatingBackgrounds
             }
             percentages[ii] = (int)((ii/(float)backgrounds.length) * 100);
         }
+        if (errorBackground == null) {
+            errorImage = images[0];
+        } else {
+            errorImage = loader.loadImage(errorBackground);
+        }
     }
 
     /**
@@ -73,6 +79,14 @@ public class RotatingBackgrounds
             currentDisplayStart = now;
         }
         return images[current];
+    }
+
+    /**
+     * Returns the image to display if an error has caused getdown to fail.
+     */
+    public Image getErrorImage ()
+    {
+        return errorImage;
     }
 
     /**
@@ -96,6 +110,9 @@ public class RotatingBackgrounds
     protected int current = -1;
     
     protected Image[] images;
+    
+    /** The image to display if getdown has failed due to an error. */
+    protected Image errorImage;
     
     /** Percentage at which each image should be displayed. */
     protected int[] percentages;

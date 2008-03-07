@@ -65,7 +65,6 @@ import com.samskivert.util.ArrayIntSet;
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
 import com.threerings.getdown.Log;
-import com.threerings.getdown.launcher.MultipleGetdownRunning;
 import com.threerings.getdown.launcher.RotatingBackgrounds;
 import com.threerings.getdown.util.ConfigUtil;
 import com.threerings.getdown.util.FileUtil;
@@ -100,6 +99,9 @@ public class Application
 
         /** Background image specifiers for {@link RotatingBackgrounds}. */
         public String[] rotatingBackgrounds;
+        
+        /** The error background image for {@link RotatingBackgrounds}. */
+        public String errorBackground;
 
         /** The path (relative to the appdir) to a single background image. */
         public String backgroundImage;
@@ -582,6 +584,7 @@ public class Application
         }
         ui.progressImage = (String)cdata.get("ui.progress_image");
         ui.rotatingBackgrounds = ConfigUtil.getMultiValue(cdata, "ui.rotating_background");
+        ui.errorBackground = (String)cdata.get("ui.error_background");
         _dockIconPath = (String)cdata.get("ui.mac_dock_icon");
         if (_dockIconPath == null) {
             _dockIconPath = "../desktop.icns"; // use a sensible default

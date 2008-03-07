@@ -113,8 +113,9 @@ public class StatusPanel extends JComponent
     /**
      * Displays the specified status string.
      */
-    public void setStatus (String status)
+    public void setStatus (String status, boolean displayError)
     {
+        _displayError = displayError;
         status = xlate(status);
         _newlab = new Label(status, _ifc.statusText, _font);
         _newlab.setTargetWidth(Math.min(_ifc.status.width, getWidth() - _ifc.status.x*2));
@@ -131,7 +132,12 @@ public class StatusPanel extends JComponent
         super.paintComponent(g);
         Graphics2D gfx = (Graphics2D)g;
 
-        Image img = _bg.getImage(_progress);
+        Image img;
+        if (_displayError) {
+            img = _bg.getErrorImage();
+        } else {
+            img = _bg.getImage(_progress);
+        }
         if (img != null) {
             gfx.drawImage(img, 0, 0, null);
         } else {
@@ -263,6 +269,7 @@ public class StatusPanel extends JComponent
     protected ResourceBundle _msgs;
 
     protected int _progress = 0;
+    protected boolean _displayError;
     protected Label _label, _newlab;
     protected Label _plabel, _newplab;
 

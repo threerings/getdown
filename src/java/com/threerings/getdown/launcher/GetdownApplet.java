@@ -50,7 +50,8 @@ public class GetdownApplet extends JApplet
         // signer
         String appbase = getParameter("appbase");
         String appname = getParameter("appname");
-        String imgpath = getParameter("bgimage");;
+        String imgpath = getParameter("bgimage");
+        String errorimgpath = getParameter("errorbgimage");
         if (appbase == null) {
             appbase = "";
         }
@@ -62,7 +63,7 @@ public class GetdownApplet extends JApplet
         if (imgpath == null) {
             bgimages = new RotatingBackgrounds();
         } else if (imgpath.indexOf(",") > -1) {
-            bgimages = new RotatingBackgrounds(imgpath.split(","), this);
+            bgimages = new RotatingBackgrounds(imgpath.split(","), errorimgpath, this);
         } else {
             bgimages = new RotatingBackgrounds(loadImage(imgpath));
         }
@@ -159,7 +160,7 @@ public class GetdownApplet extends JApplet
     public void start ()
     {
         if (_errmsg != null) {
-            _getdown.updateStatus(_errmsg);
+            _getdown.fail(_errmsg);
         } else {
             try {
                 _getdown.start();
