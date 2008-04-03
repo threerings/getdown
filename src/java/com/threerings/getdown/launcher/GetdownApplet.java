@@ -129,7 +129,12 @@ public class GetdownApplet extends JApplet
                             Log.warning("URL in redirect_on_finish param is malformed: " + e);
                             return;
                         }
-                        getAppletContext().showDocument(dest);
+                        String target = getParameter("redirect_on_finish_target");
+                        if (target == null) {
+                            getAppletContext().showDocument(dest);
+                        } else {
+                            getAppletContext().showDocument(dest, target);
+                        }
                     }
                 }
             };
