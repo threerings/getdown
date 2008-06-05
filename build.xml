@@ -113,9 +113,20 @@
 
   <!-- optimizes, combines and removes dead code -->
   <target name="proguard" depends="dist">
+    <!-- figure out where the Java rt.jar file lives -->
+    <if><and><os family="mac"/><os family="unix"/></and><then>
+      <property name="rtClasses" value="${java.home}/../Classes/classes.jar"/>
+    </then><else>
+      <property name="rtClasses" value="${java.home}/lib/rt.jar"/>
+    </else></if>
+
+    <mkdir dir="${deploy.dir}"/>
+
     <taskdef resource="proguard/ant/task.properties"
              classpath="${deploy.dir}/lib/proguard.jar"/>
-    <proguard configuration="etc/getdown.pro"/>
+    <proguard configuration="etc/getdown.pro">
+      <libraryjar name="${rtClasses}"/>
+    </proguard>
 
     <taskdef name="weave" classname="com.rc.retroweaver.ant.RetroWeaverTask"
              classpath="${deploy.dir}/lib/retroweaver-all-1.2.2.jar"/>

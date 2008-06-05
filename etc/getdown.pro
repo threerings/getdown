@@ -14,7 +14,6 @@
 -injars dist/lib/commons-io.jar(!META-INF/*)
 -injars dist/lib/snark.jar(!META-INF/*)
 
--libraryjars <java.home>/lib/rt.jar
 -dontskipnonpubliclibraryclasses
 
 -outjars dist/getdown-pro.jar
