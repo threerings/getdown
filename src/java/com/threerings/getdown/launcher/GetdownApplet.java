@@ -116,6 +116,7 @@ public class GetdownApplet extends JApplet
                     return GetdownApplet.this;
                 }
                 protected void exit (int exitCode) {
+                    _app.releaseLock();
                     // Redirect to the URL in 'redirect_on_finish' if we completed successfully.
                     // This allows us to use some javascript on that page to close Getdown's 
                     // browser window.  I'd prefer to use the javascript bridge from the applet
