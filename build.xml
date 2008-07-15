@@ -113,6 +113,13 @@
 
   <!-- optimizes, combines and removes dead code -->
   <target name="proguard" depends="dist">
+    <!-- we need ant-contrib for if -->
+    <taskdef resource="net/sf/antcontrib/antlib.xml">
+      <classpath>
+        <pathelement location="${deploy.dir}/lib/ant-contrib.jar"/>
+      </classpath>
+    </taskdef>
+
     <!-- figure out where the Java rt.jar file lives -->
     <if><and><os family="mac"/><os family="unix"/></and><then>
       <property name="rtClasses" value="${java.home}/../Classes/classes.jar"/>
