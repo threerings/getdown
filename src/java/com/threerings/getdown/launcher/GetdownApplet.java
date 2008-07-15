@@ -28,12 +28,12 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-
 import javax.swing.JApplet;
 import javax.swing.JPanel;
 
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
+
 import com.threerings.getdown.Log;
 
 /**
@@ -91,11 +91,23 @@ public class GetdownApplet extends JApplet
             _errmsg = e.getMessage();
         }
 
+        // Pull out system properties to pass through to the launched vm if they exist
+        String params = getParameter("app_properties");
+        String[] jvmargs;
+        if(params == null){
+            jvmargs = new String[0];
+        } else {
+            jvmargs = params.split(",");
+            for (int ii = 0; ii < jvmargs.length; ii++) {
+                jvmargs[ii] = "-D" + jvmargs[ii];
+            }    
+        }
+
         try {
             // XXX getSigners() returns all certificates used to sign this applet which may allow
             // a third party to insert a trusted certificate. This should be replaced with
             // statically included trusted keys.
-            _getdown = new Getdown(appdir, null, GetdownApplet.class.getSigners()) {
+            _getdown = new Getdown(appdir, null, GetdownApplet.class.getSigners(), jvmargs) {
                 protected Container createContainer () {
                     getContentPane().removeAll();
                     return getContentPane();

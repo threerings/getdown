@@ -84,10 +84,10 @@ public abstract class Getdown extends Thread
 
     public Getdown (File appDir, String appId)
     {
-        this(appDir, appId, null);
+        this(appDir, appId, null, null);
     }
 
-    public Getdown (File appDir, String appId, Object[] signers)
+    public Getdown (File appDir, String appId, Object[] signers, String[] jvmargs)
     {
         super("Getdown");
         try {
@@ -116,7 +116,7 @@ public abstract class Getdown extends Thread
                 "\nis invalid. The directory must not contain the '!' character. Please reinstall.";
             fail(errmsg);
         }
-        _app = new Application(appDir, appId, signers);
+        _app = new Application(appDir, appId, signers, jvmargs);
         _startup = System.currentTimeMillis();
     }
 
