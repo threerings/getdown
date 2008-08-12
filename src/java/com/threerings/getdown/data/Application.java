@@ -599,7 +599,7 @@ public class Application
 
         // On an installation error, where do we point the user.
         ui.installError = (String)cdata.get("ui.install_error");
-        if (ui.installError == null) {
+        if (StringUtil.isBlank(ui.installError)) {
             ui.installError = "m.default_install_error";
         } else {
             ui.installError = MessageUtil.taint(ui.installError);
