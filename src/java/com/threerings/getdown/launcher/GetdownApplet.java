@@ -31,6 +31,10 @@ import java.net.URL;
 import javax.swing.JApplet;
 import javax.swing.JPanel;
 
+import ca.beq.util.win32.registry.RegistryKey;
+import ca.beq.util.win32.registry.RegistryValue;
+import ca.beq.util.win32.registry.RootKey;
+
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
 
@@ -231,24 +235,36 @@ public class GetdownApplet extends JApplet
 
         // when run from an applet, we install to the user's home directory
         String root;
+        boolean includeHome = true;
         if (RunAnywhere.isWindows()) {
-            root = "Application Data";
-            String verStr = System.getProperty("os.version");
-            try {
-                if (Float.parseFloat(verStr) >= 6.0f) {
-                    // Vista makes us write it here....  Yay.
-                    root = "AppData" + File.separator + "LocalLow";
+            String propStr = System.getProperty("win_install_to_program_files");
+            boolean useProgFiles =
+                StringUtil.isBlank(propStr) ? false : propStr.equals("true");
+            if (useProgFiles) {
+                RegistryKey.initialize();
+                RegistryKey r = new RegistryKey(RootKey.HKEY_LOCAL_MACHINE, PROGRAM_FILES);
+                root = r.getValue("ProgramFilesDir").getStringValue();
+                includeHome = false;
+            } else {
+                root = "Application Data";
+                String verStr = System.getProperty("os.version");
+                try {
+                    if (Float.parseFloat(verStr) >= 6.0f) {
+                        // Vista makes us write it here....  Yay.
+                        root = "AppData" + File.separator + "LocalLow";
+                    }
+                } catch (Exception e) {
+                    Log.warning("Couldn't parse OS version [vers=" + verStr +
+                        ", error=" + e + "].");
                 }
-            } catch (Exception e) {
-                Log.warning("Couldn't parse OS version [vers=" + verStr + ", error=" + e + "].");
             }
         } else if (RunAnywhere.isMacOS()) {
             root = "Library" + File.separator + "Application Support";
         } else /* isLinux() or something wacky */ {
             root = ".getdown";
         }
-        File appdir = new File(System.getProperty("user.home") + File.separator + root +
-                               File.separator + appname);
+        String homePrefix = includeHome ? System.getProperty("user.home") + File.separator : "";
+        File appdir = new File(homePrefix + root + File.separator + appname);
 
         // if our application directory does not exist, auto-create it
         if (!appdir.exists() || !appdir.isDirectory()) {
@@ -302,4 +318,6 @@ public class GetdownApplet extends JApplet
 
     /** An error encountered during initialization. */
     protected String _errmsg;
+
+    protected static final String PROGRAM_FILES = "Software\\Microsoft\\Windows\\CurrentVersion";
 }
