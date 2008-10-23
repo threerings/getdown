@@ -39,8 +39,9 @@ import com.samskivert.util.FileUtil;
 import com.samskivert.util.SortableArrayList;
 import com.samskivert.util.StringUtil;
 
-import com.threerings.getdown.Log;
 import com.threerings.getdown.util.ProgressObserver;
+
+import static com.threerings.getdown.Log.log;
 
 /**
  * Models a single file resource used by an {@link Application}.
@@ -135,7 +136,7 @@ public class Resource
     {
         if (_marker.exists()) {
             if (!_marker.delete()) {
-                Log.warning("Failed to erase marker file '" + _marker + "'.");
+                log.warning("Failed to erase marker file '" + _marker + "'.");
             }
         }
     }
@@ -148,13 +149,13 @@ public class Resource
     {
         // sanity check
         if (!_local.getPath().endsWith(".jar")) {
-            Log.warning("Requested to unpack non-jar file '" + _local + "'.");
+            log.warning("Requested to unpack non-jar file '" + _local + "'.");
             return false;
         }
         try {
             return FileUtil.unpackJar(new JarFile(_local), _local.getParentFile());
         } catch (IOException ioe) {
-            Log.warning("Failed to create JarFile from '" + _local + "': " + ioe);
+            log.warning("Failed to create JarFile from '" + _local + "': " + ioe);
             return false;
         }
     }
@@ -168,7 +169,7 @@ public class Resource
         clearMarker();
         if (_local.exists()) {
             if (!_local.delete()) {
-                Log.warning("Failed to erase resource '" + _local + "'.");
+                log.warning("Failed to erase resource '" + _local + "'.");
             }
         }
     }
@@ -250,8 +251,7 @@ public class Resource
                 try {
                     jar.close();
                 } catch (IOException ioe) {
-                    Log.warning("Error closing jar [path=" + target +
-                                ", error=" + ioe + "].");
+                    log.warning("Error closing jar [path=" + target + ", error=" + ioe + "].");
                 }
             }
 

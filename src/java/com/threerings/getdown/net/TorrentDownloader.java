@@ -27,8 +27,9 @@ import java.util.List;
 import org.klomp.snark.Snark;
 import org.klomp.snark.SnarkShutdown;
 
-import com.threerings.getdown.Log;
 import com.threerings.getdown.data.Resource;
+
+import static com.threerings.getdown.Log.log;
 
 /**
  * Implements downloading data using BitTorrent
@@ -38,7 +39,7 @@ public class TorrentDownloader extends Downloader
     public TorrentDownloader (List<Resource> resources, Observer obs)
     {
         super(resources, obs);
-        Log.info("Using bittorrent to fetch files");
+        log.info("Using bittorrent to fetch files");
         for (Resource resource : resources) {
             String url = resource.getRemote().toString() + ".torrent";
             Snark snark = new Snark(url, null, -1, null, null);
@@ -69,7 +70,7 @@ public class TorrentDownloader extends Downloader
             snark.setupNetwork();
             length = snark.meta.getTotalLength();
         } catch (IOException ioe) {
-            Log.warning("Bittorrent failed, falling back to HTTP");
+            log.warning("Bittorrent failed, falling back to HTTP");
             SnarkShutdown stopper = _stoppermap.get(rsrc);
             stopper.run();
             Runtime.getRuntime().removeShutdownHook(stopper);
@@ -111,7 +112,7 @@ public class TorrentDownloader extends Downloader
                 _currentSize = snark.coordinator.getDownloaded();
                 if ((_currentSize < SIZE_THRESHOLD &&
                         (now - _start) >= TIME_THRESHOLD)) {
-                    Log.info("Torrenting too slow, falling back to HTTP.");
+                    log.info("Torrenting too slow, falling back to HTTP.");
                     // The download isn't going as planned, abort;
                     snarkStopper.run();
                     Runtime.getRuntime().removeShutdownHook(snarkStopper);

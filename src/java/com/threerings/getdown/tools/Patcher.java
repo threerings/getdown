@@ -32,9 +32,10 @@ import java.util.zip.ZipEntry;
 import com.samskivert.io.StreamUtil;
 import org.apache.commons.io.IOUtils;
 
-import com.threerings.getdown.Log;
 import com.threerings.getdown.util.FileUtil;
 import com.threerings.getdown.util.ProgressObserver;
+
+import static com.threerings.getdown.Log.log;
 
 /**
  * Applies a unified patch file to an application directory, providing
@@ -122,7 +123,7 @@ public class Patcher
         File pdir = target.getParentFile();
         if (!pdir.exists()) {
             if (!pdir.mkdirs()) {
-                Log.warning("Failed to create parent for '" + target + "'.");
+                log.warning("Failed to create parent for '" + target + "'.");
             }
         }
 

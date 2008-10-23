@@ -29,7 +29,7 @@ import com.samskivert.io.StreamUtil;
 
 import org.apache.commons.io.IOUtils;
 
-import com.threerings.getdown.Log;
+import static com.threerings.getdown.Log.log;
 
 /**
  * File related utilities.
@@ -55,14 +55,14 @@ public class FileUtil
             File temp = new File(dest.getPath() + "_old");
             if (temp.exists()) {
                 if (!temp.delete()) {
-                    Log.warning("Failed to delete old intermediate file " + temp + ".");
+                    log.warning("Failed to delete old intermediate file " + temp + ".");
                     // the subsequent code will probably fail
                 }
             }
             if (dest.renameTo(temp)) {
                 if (source.renameTo(dest)) {
                     if (temp.delete()) {
-                        Log.warning("Failed to delete intermediate file " + temp + ".");
+                        log.warning("Failed to delete intermediate file " + temp + ".");
                     }
                     return true;
                 }
@@ -77,13 +77,13 @@ public class FileUtil
             fout = new FileOutputStream(dest);
             IOUtils.copy(fin, fout);
             if (!source.delete()) {
-                Log.warning("Failed to delete " + source +
+                log.warning("Failed to delete " + source +
                             " after brute force copy to " + dest + ".");
             }
             return true;
 
         } catch (IOException ioe) {
-            Log.warning("Failed to copy " + source + " to " + dest + ": " + ioe);
+            log.warning("Failed to copy " + source + " to " + dest + ": " + ioe);
             return false;
 
         } finally {

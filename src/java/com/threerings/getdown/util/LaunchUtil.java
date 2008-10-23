@@ -90,7 +90,7 @@ public class LaunchUtil
             Runtime.getRuntime().exec(args, null);
             return true;
         } catch (IOException ioe) {
-            log.log(Level.WARNING, "Failed to run getdown", ioe);
+            log.warning("Failed to run getdown", ioe);
             return false;
         }
     }
@@ -136,7 +136,7 @@ public class LaunchUtil
                     vmpath = "/usr/bin/java";
                 }
             } catch (IOException ioe) {
-                log.log(Level.WARNING, "Failed to check Mac OS canonical VM path.", ioe);
+                log.warning("Failed to check Mac OS canonical VM path.", ioe);
             }
         }
 
@@ -192,7 +192,7 @@ public class LaunchUtil
         try {
             IOUtils.copy(new FileInputStream(newgd), new FileOutputStream(curgd));
         } catch (IOException ioe) {
-            log.log(Level.WARNING, "Mayday! Brute force copy method also failed.", ioe);
+            log.warning("Mayday! Brute force copy method also failed.", ioe);
         }
     }
 

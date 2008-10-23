@@ -1,8 +1,28 @@
+//
+// $Id$
+//
+// Getdown - application installer, patcher and launcher
+// Copyright (C) 2004-2006 Three Rings Design, Inc.
+//
+// This program is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation; either version 2 of the License, or (at your option)
+// any later version.
+//
+// This program is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+// more details.
+//
+// You should have received a copy of the GNU General Public License along with
+// this program; if not, write to the: Free Software Foundation, Inc.,
+// 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
+
 package com.threerings.getdown.launcher;
 
 import java.awt.Image;
 
-import com.threerings.getdown.Log;
+import static com.threerings.getdown.Log.log;
 
 public class RotatingBackgrounds
 {
@@ -41,7 +61,7 @@ public class RotatingBackgrounds
         for (int ii = 0; ii < backgrounds.length; ii++) {
             String[] pieces = backgrounds[ii].split(";");
             if (pieces.length != 2) {
-                Log.warning("Unable to parse background image '" + backgrounds[ii] + "'");
+                log.warning("Unable to parse background image '" + backgrounds[ii] + "'");
                 makeEmpty();
                 return;
             }
@@ -49,8 +69,8 @@ public class RotatingBackgrounds
             try {
                 minDisplayTime[ii] = Integer.parseInt(pieces[1]);
             } catch (NumberFormatException e) {
-                Log.warning("Unable to parse background image display time '"
-                    + backgrounds[ii] + "'");
+                log.warning("Unable to parse background image display time '" +
+                            backgrounds[ii] + "'");
                 makeEmpty();
                 return;
             }

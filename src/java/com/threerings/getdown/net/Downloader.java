@@ -25,8 +25,9 @@ import java.io.IOException;
 
 import java.util.List;
 
-import com.threerings.getdown.Log;
 import com.threerings.getdown.data.Resource;
+
+import static com.threerings.getdown.Log.log;
 
 /**
  * Handles the download of a collection of files, first issuing HTTP head requests to obtain size
@@ -112,7 +113,7 @@ public abstract class Downloader extends Thread
                 discoverSize(resource);
             }
 
-            Log.info("Downloading " + _totalSize + " bytes...");
+            log.info("Downloading " + _totalSize + " bytes...");
 
             // make a note of the time at which we started the download
             _start = System.currentTimeMillis();
@@ -137,7 +138,7 @@ public abstract class Downloader extends Thread
             if (_obs != null) {
                 _obs.downloadFailed(current, e);
             } else {
-                Log.logStackTrace(e);
+                log.warning("Observer failed.", e);
             }
         }
         return true;
@@ -168,7 +169,7 @@ public abstract class Downloader extends Thread
         File parent = new File(rsrc.getLocal().getParent());
         if (!parent.exists()) {
             if (!parent.mkdirs()) {
-                Log.warning("Failed to create target directory for resource '" + rsrc + "'. " +
+                log.warning("Failed to create target directory for resource '" + rsrc + "'. " +
                             "Download will certainly fail.");
             }
         }

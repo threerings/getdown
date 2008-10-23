@@ -37,8 +37,10 @@ import com.samskivert.swing.util.SwingUtil;
 import com.samskivert.text.MessageUtil;
 import com.samskivert.util.StringUtil;
 import com.samskivert.util.Throttle;
-import com.threerings.getdown.Log;
+
 import com.threerings.getdown.data.Application.UpdateInterface;
+
+import static com.threerings.getdown.Log.log;
 
 /**
  * Displays download and patching status.
@@ -257,7 +259,7 @@ public class StatusPanel extends JComponent
         try {
             return _msgs.getString(key);
         } catch (MissingResourceException mre) {
-            Log.warning("Missing translation message '" + key + "'.");
+            log.warning("Missing translation message '" + key + "'.");
             return key;
         }
     }

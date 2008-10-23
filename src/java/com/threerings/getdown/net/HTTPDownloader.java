@@ -27,8 +27,10 @@ import java.net.HttpURLConnection;
 import java.util.List;
 
 import com.samskivert.io.StreamUtil;
-import com.threerings.getdown.Log;
+
 import com.threerings.getdown.data.Resource;
+
+import static com.threerings.getdown.Log.log;
 
 /**
  * Implements downloading files over HTTP
@@ -89,7 +91,7 @@ public class HTTPDownloader extends Downloader
             throw new IOException(errmsg);
         }
 
-        Log.info("Downloading resource [url=" + rsrc.getRemote() + "].");
+        log.info("Downloading resource [url=" + rsrc.getRemote() + "].");
         InputStream in = null;
         FileOutputStream out = null;
         try {

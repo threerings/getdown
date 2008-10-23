@@ -31,10 +31,18 @@ import java.net.URL;
 import javax.swing.JApplet;
 import javax.swing.JPanel;
 
+import java.io.IOException;
+import java.io.FileOutputStream;
+import java.io.File;
+import java.io.PrintStream;
+import java.util.Map;
+
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
 
-import com.threerings.getdown.Log;
+import com.threerings.getdown.util.ConfigUtil;
+
+import static com.threerings.getdown.Log.log;
 
 /**
  * An applet that can be used to launch a Getdown application (when signed and
@@ -68,24 +76,24 @@ public class GetdownApplet extends JApplet
             bgimages = new RotatingBackgrounds(loadImage(imgpath));
         }
 
-        Log.info("App Base: " + appbase);
-        Log.info("App Name: " + appname);
+        log.info("App Base: " + appbase);
+        log.info("App Name: " + appname);
 
         File appdir = null;
         try {
             appdir = initGetdown(appbase, appname, imgpath);
 
             // record a few things for posterity
-            Log.info("------------------ VM Info ------------------");
-            Log.info("-- OS Name: " + System.getProperty("os.name"));
-            Log.info("-- OS Arch: " + System.getProperty("os.arch"));
-            Log.info("-- OS Vers: " + System.getProperty("os.version"));
-            Log.info("-- Java Vers: " + System.getProperty("java.version"));
-            Log.info("-- Java Home: " + System.getProperty("java.home"));
-            Log.info("-- User Name: " + System.getProperty("user.name"));
-            Log.info("-- User Home: " + System.getProperty("user.home"));
-            Log.info("-- Cur dir: " + System.getProperty("user.dir"));
-            Log.info("---------------------------------------------");
+            log.info("------------------ VM Info ------------------");
+            log.info("-- OS Name: " + System.getProperty("os.name"));
+            log.info("-- OS Arch: " + System.getProperty("os.arch"));
+            log.info("-- OS Vers: " + System.getProperty("os.version"));
+            log.info("-- Java Vers: " + System.getProperty("java.version"));
+            log.info("-- Java Home: " + System.getProperty("java.home"));
+            log.info("-- User Name: " + System.getProperty("user.name"));
+            log.info("-- User Home: " + System.getProperty("user.home"));
+            log.info("-- Cur dir: " + System.getProperty("user.dir"));
+            log.info("---------------------------------------------");
 
         } catch (Exception e) {
             _errmsg = e.getMessage();
@@ -139,7 +147,7 @@ public class GetdownApplet extends JApplet
                         try {
                             dest = new URL(getParameter("redirect_on_finish"));
                         } catch (MalformedURLException e) {
-                            Log.warning("URL in redirect_on_finish param is malformed: " + e);
+                            log.warning("URL in redirect_on_finish param is malformed: " + e);
                             return;
                         }
                         String target = getParameter("redirect_on_finish_target");
@@ -156,7 +164,7 @@ public class GetdownApplet extends JApplet
             _getdown.preInit();
 
         } catch (Exception e) {
-            Log.logStackTrace(e);
+            log.warning("init() failed.", e);
         }
     }
 
@@ -165,8 +173,7 @@ public class GetdownApplet extends JApplet
         try {
             return getImage(new URL(getDocumentBase(), path));
         } catch (MalformedURLException e) {
-            Log.warning("Failed to load background image [path=" + path + "].");
-            Log.logStackTrace(e);
+            log.warning("Failed to load background image", "path", path, e);
             return null;
         }
     }
@@ -180,7 +187,7 @@ public class GetdownApplet extends JApplet
             try {
                 _getdown.start();
             } catch (Exception e) {
-                Log.logStackTrace(e);
+                log.warning("start() failed.", e);
             }
         }
     }
@@ -213,7 +220,7 @@ public class GetdownApplet extends JApplet
                 sm.checkWrite("getdown");
                 sm.checkPropertiesAccess();
             } catch (SecurityException se) {
-                Log.warning("Signed applet rejected by user [se=" + se + "].");
+                log.warning("Signed applet rejected by user", "se", se);
                 throw new Exception("m.insufficient_permissions_error");
             }
         }
@@ -240,7 +247,7 @@ public class GetdownApplet extends JApplet
                     root = "AppData" + File.separator + "LocalLow";
                 }
             } catch (Exception e) {
-                Log.warning("Couldn't parse OS version [vers=" + verStr + ", error=" + e + "].");
+                log.warning("Couldn't parse OS version", "vers", verStr, "error", e);
             }
         } else if (RunAnywhere.isMacOS()) {
             root = "Library" + File.separator + "Application Support";
@@ -266,9 +273,25 @@ public class GetdownApplet extends JApplet
             }
         }
 
-        // if our getdown.txt file does not exist, auto-create it
+        // if our getdown.txt file does not exist, or it is corrupt, auto-/recreate it
         File gdfile = new File(appdir, "getdown.txt");
-        if (!gdfile.exists()) {
+        boolean createGetdown = !gdfile.exists();
+        if (!createGetdown) {
+            try {
+                Map<String,Object> cdata = ConfigUtil.parseConfig(gdfile, false);
+                String oappbase = StringUtil.trim((String)cdata.get("appbase"));
+                createGetdown = (appbase != null && !appbase.trim().equals(oappbase));
+                if (createGetdown) {
+                    log.warning("Recreating getdown.txt due to appbase mismatch",
+                                "nappbase", appbase, "oappbase", oappbase);
+                }
+            } catch (Exception e) {
+                log.warning("Failure checking validity of getdown.txt, forcing recreate.",
+                            "error", e);
+                createGetdown = true;
+            }
+        }
+        if (createGetdown) {
             if (StringUtil.isBlank(appbase)) {
                 throw new Exception("m.missing_appbase");
             }
@@ -291,8 +314,7 @@ public class GetdownApplet extends JApplet
             out.close();
             return true;
         } catch (IOException ioe) {
-            Log.warning("Failed to create '" + tofile + "'.");
-            Log.logStackTrace(ioe);
+            log.warning("Failed to create '" + tofile + "'.", ioe);
             return false;
         }
     }

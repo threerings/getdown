@@ -39,7 +39,7 @@ import com.samskivert.swing.Spacer;
 import com.samskivert.swing.VGroupLayout;
 import com.samskivert.text.MessageUtil;
 
-import com.threerings.getdown.Log;
+import static com.threerings.getdown.Log.log;
 
 /**
  * Displays an interface with which the user can configure their proxy
@@ -134,7 +134,7 @@ public class ProxyPanel extends JPanel
         try {
             return _msgs.getString(key);
         } catch (MissingResourceException mre) {
-            Log.warning("Missing translation message '" + key + "'.");
+            log.warning("Missing translation message '" + key + "'.");
             return key;
         }
     }

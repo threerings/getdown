@@ -59,7 +59,6 @@ import com.samskivert.text.MessageUtil;
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
 
-import com.threerings.getdown.Log;
 import com.threerings.getdown.data.Application;
 import com.threerings.getdown.data.Resource;
 import com.threerings.getdown.net.Downloader;
@@ -69,6 +68,8 @@ import com.threerings.getdown.tools.Patcher;
 import com.threerings.getdown.util.ConfigUtil;
 import com.threerings.getdown.util.LaunchUtil;
 import com.threerings.getdown.util.ProgressObserver;
+
+import static com.threerings.getdown.Log.log;
 
 /**
  * Manages the main control for the Getdown application updater and deployment system.
@@ -130,7 +131,7 @@ public abstract class Getdown extends Thread
             _ifc = _app.init(true);
             createInterface(true);
         } catch (Exception e) {
-            Log.warning("Failed to preinit: " + e);
+            log.warning("Failed to preinit: " + e);
             createInterface(true);
         }
     }
@@ -159,7 +160,7 @@ public abstract class Getdown extends Thread
             if (detectProxy()) {
                 getdown();
             } else if (_silent) {
-                Log.warning("Need a proxy, but we don't want to bother anyone.  Exiting");
+                log.warning("Need a proxy, but we don't want to bother anyone.  Exiting.");
             } else {
                 // create a panel they can use to configure the proxy settings
                 _container = createContainer();
@@ -170,7 +171,7 @@ public abstract class Getdown extends Thread
             }
 
         } catch (Exception e) {
-            Log.logStackTrace(e);
+            log.warning("run() failed.", e);
             String msg = e.getMessage();
             if (msg == null) {
                 msg = MessageUtil.compose("m.unknown_error", _ifc.installError);
@@ -193,7 +194,7 @@ public abstract class Getdown extends Thread
      */
     public void configureProxy (String host, String port)
     {
-        Log.info("User configured proxy [host=" + host + ", port=" + port + "].");
+        log.info("User configured proxy [host=" + host + ", port=" + port + "].");
 
         // if we're provided with valid values, create a proxy.txt file
         if (!StringUtil.isBlank(host)) {
@@ -206,7 +207,7 @@ public abstract class Getdown extends Thread
                 }
                 pout.close();
             } catch (IOException ioe) {
-                Log.warning("Error creating proxy file '" + pfile + "': " + ioe);
+                log.warning("Error creating proxy file '" + pfile + "': " + ioe);
             }
 
             // also configure them in the JVM
@@ -261,11 +262,11 @@ public abstract class Getdown extends Thread
                     setProxyProperties(host, port);
                     return true;
                 } else {
-                    Log.info("Detected no proxy settings in the registry.");
+                    log.info("Detected no proxy settings in the registry.");
                 }
 
             } catch (Throwable t) {
-                Log.info("Failed to find proxy settings in Windows registry [error=" + t + "].");
+                log.info("Failed to find proxy settings in Windows registry [error=" + t + "].");
             }
         }
 
@@ -277,13 +278,13 @@ public abstract class Getdown extends Thread
                 setProxyProperties((String)pconf.get("host"), (String)pconf.get("port"));
                 return true;
             } catch (IOException ioe) {
-                Log.warning("Failed to read '" + pfile + "': " + ioe);
+                log.warning("Failed to read '" + pfile + "': " + ioe);
             }
         }
 
         // otherwise see if we actually need a proxy; first we have to initialize our application
         // to get some sort of interface configuration and the appbase URL
-        Log.info("Checking whether we need to use a proxy...");
+        log.info("Checking whether we need to use a proxy...");
         try {
             _ifc = _app.init(true);
         } catch (IOException ioe) {
@@ -300,23 +301,23 @@ public abstract class Getdown extends Thread
 
             // make sure we got a satisfactory response code
             if (ucon.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                Log.warning("Got a non-200 response but assuming we're OK because we got " +
+                log.warning("Got a non-200 response but assuming we're OK because we got " +
                             "something... [url=" + rurl + ", rsp=" + ucon.getResponseCode() + "].");
             }
 
             // we got through, so we appear not to require a proxy; make a blank proxy config and
             // get on gettin' down
-            Log.info("No proxy appears to be needed.");
+            log.info("No proxy appears to be needed.");
             try {
                 pfile.createNewFile();
             } catch (IOException ioe) {
-                Log.warning("Failed to create blank proxy file '" + pfile + "': " + ioe);
+                log.warning("Failed to create blank proxy file '" + pfile + "': " + ioe);
             }
             return true;
 
         } catch (IOException ioe) {
-            Log.info("Failed to HEAD " + rurl + ": " + ioe);
-            Log.info("We probably need a proxy, but auto-detection failed.");
+            log.info("Failed to HEAD " + rurl + ": " + ioe);
+            log.info("We probably need a proxy, but auto-detection failed.");
         }
 
         // let the caller know that we need a proxy but can't detect it
@@ -333,7 +334,7 @@ public abstract class Getdown extends Thread
             if (!StringUtil.isBlank(port)) {
                 System.setProperty("http.proxyPort", port);
             }
-            Log.info("Using proxy [host=" + host + ", port=" + port + "].");
+            log.info("Using proxy [host=" + host + ", port=" + port + "].");
         }
     }
 
@@ -342,17 +343,17 @@ public abstract class Getdown extends Thread
      */
     protected void getdown ()
     {
-        Log.info("---------------- Proxy Info -----------------");
-        Log.info("-- Proxy Host: " + System.getProperty("http.proxyHost"));
-        Log.info("-- Proxy Port: " + System.getProperty("http.proxyPort"));
-        Log.info("---------------------------------------------");
+        log.info("---------------- Proxy Info -----------------");
+        log.info("-- Proxy Host: " + System.getProperty("http.proxyHost"));
+        log.info("-- Proxy Port: " + System.getProperty("http.proxyPort"));
+        log.info("---------------------------------------------");
 
         try {
             // first parses our application deployment file
             try {
                 _ifc = _app.init(true);
             } catch (IOException ioe) {
-                Log.warning("Failed to parse 'getdown.txt': " + ioe);
+                log.warning("Failed to parse 'getdown.txt': " + ioe);
                 _app.attemptRecovery(this);
                 // and re-initalize
                 _ifc = _app.init(true);
@@ -366,18 +367,18 @@ public abstract class Getdown extends Thread
             // Update the config modtime so a sleeping getdown will notice the change.
             File config = _app.getLocalPath(Application.CONFIG_FILE);
             if (!config.setLastModified(System.currentTimeMillis())) {
-                Log.warning("Unable to set modtime on config file, will be unable to check for "
-                    + "another instance of getdown running while this one waits.");
+                log.warning("Unable to set modtime on config file, will be unable to check for " +
+                            "another instance of getdown running while this one waits.");
             }
             if (_delay > 0) {
                 // don't hold the lock while waiting, let another getdown proceed if it starts.
                 _app.releaseLock();
                 // Store the config modtime before waiting the delay amount of time
                 long lastConfigModtime = config.lastModified();
-                Log.info("Waiting " + _delay + " minutes before beginning actual work");
+                log.info("Waiting " + _delay + " minutes before beginning actual work.");
                 Thread.sleep(_delay * 60 * 1000);
                 if (lastConfigModtime < config.lastModified()) {
-                    Log.warning("getdown.txt was modified while getdown was waiting");
+                    log.warning("getdown.txt was modified while getdown was waiting.");
                     throw new MultipleGetdownRunning();
                 }
             }
@@ -396,7 +397,7 @@ public abstract class Getdown extends Thread
                 if (!_app.haveValidJavaVersion()) {
                     // download and install the necessary version of java, then loop back again and
                     // reverify everything; if we can't download java; we'll throw an exception
-                    Log.info("Attempting to update Java VM...");
+                    log.info("Attempting to update Java VM...");
                     _enableTracking = true; // always track JVM downloads
                     try {
                         updateJava();
@@ -409,7 +410,7 @@ public abstract class Getdown extends Thread
                 // make sure we have the desired version and that the metadata files are valid...
                 setStatus("m.validating", -1, -1L, false);
                 if (_app.verifyMetadata(this)) {
-                    Log.info("Application requires update.");
+                    log.info("Application requires update.");
                     update();
                     // loop back again and reverify the metadata
                     continue;
@@ -419,7 +420,7 @@ public abstract class Getdown extends Thread
                 setStatus("m.validating", -1, -1L, false);
                 List<Resource> failures = _app.verifyResources(_progobs, alreadyValid);
                 if (failures == null) {
-                    Log.info("Resources verified.");
+                    log.info("Resources verified.");
                     // Only launch if we aren't in silent mode. Some mystery program starting out
                     // of the blue would be disconcerting.
                     if (!_silent || _launchInSilent) {
@@ -442,7 +443,7 @@ public abstract class Getdown extends Thread
                     reportTrackingEvent("app_start", -1);
 
                     // redownload any that are corrupt or invalid...
-                    Log.info(failures.size() + " of " + _app.getAllResources().size() +
+                    log.info(failures.size() + " of " + _app.getAllResources().size() +
                              " rsrcs require update (" + alreadyValid[0] + " assumed valid).");
                     download(failures);
 
@@ -454,11 +455,11 @@ public abstract class Getdown extends Thread
                 // now we'll loop back and try it all again
             }
 
-            Log.warning("Pants! We couldn't get the job done.");
+            log.warning("Pants! We couldn't get the job done.");
             throw new IOException("m.unable_to_repair");
 
         } catch (Exception e) {
-            Log.logStackTrace(e);
+            log.warning("getdown() failed.", e);
             String msg = e.getMessage();
             if (msg == null) {
                 msg = MessageUtil.compose("m.unknown_error", _ifc.installError);
@@ -511,7 +512,7 @@ public abstract class Getdown extends Thread
             imgpath = _app.getLocalPath(path);
             return ImageIO.read(imgpath);
         } catch (IOException ioe2) {
-            Log.warning("Failed to load image [path=" + imgpath + ", error=" + ioe2 + "].");
+            log.warning("Failed to load image [path=" + imgpath + ", error=" + ioe2 + "].");
             return null;
         }
     }
@@ -551,10 +552,10 @@ public abstract class Getdown extends Thread
                 File.separator + "java";
             String cmd = "chmod a+rx " + _app.getLocalPath(vmbin);
             try {
-                Log.info("Please smack a Java engineer. Running: " + cmd);
+                log.info("Please smack a Java engineer. Running: " + cmd);
                 Runtime.getRuntime().exec(cmd);
             } catch (Exception e) {
-                Log.warning("Failed to mark VM binary as executable [cmd=" + cmd +
+                log.warning("Failed to mark VM binary as executable [cmd=" + cmd +
                             ", error=" + e + "].");
                 // we should do something like tell the user or something but fucking fuck
             }
@@ -563,10 +564,10 @@ public abstract class Getdown extends Thread
         // lastly regenerate the .jsa dump file that helps Java to start up faster
         String vmpath = LaunchUtil.getJVMPath(_app.getLocalPath(""));
         try {
-            Log.info("Regenerating classes.jsa for " + vmpath + "...");
+            log.info("Regenerating classes.jsa for " + vmpath + "...");
             Runtime.getRuntime().exec(vmpath + " -Xshare:dump");
         } catch (Exception e) {
-            Log.warning("Failed to regenerate .jsa dum file [error=" + e + "].");
+            log.warning("Failed to regenerate .jsa dum file [error=" + e + "].");
         }
 
         reportTrackingEvent("jvm_complete", -1);
@@ -607,13 +608,12 @@ public abstract class Getdown extends Thread
                     Patcher patcher = new Patcher();
                     patcher.patch(prsrc.getLocal().getParentFile(), prsrc.getLocal(), _progobs);
                 } catch (Exception e) {
-                    Log.warning("Failed to apply patch [prsrc=" + prsrc + "].");
-                    Log.logStackTrace(e);
+                    log.warning("Failed to apply patch [prsrc=" + prsrc + "].", e);
                 }
 
                 // clean up the patch file
                 if (!prsrc.getLocal().delete()) {
-                    Log.warning("Failed to delete '" + prsrc + "'.");
+                    log.warning("Failed to delete '" + prsrc + "'.");
                     prsrc.getLocal().deleteOnExit();
                 }
             }
@@ -670,8 +670,7 @@ public abstract class Getdown extends Thread
 
             public void downloadFailed (Resource rsrc, Exception e) {
                 updateStatus(MessageUtil.tcompose("m.failure", e.getMessage()));
-                Log.warning("Download failed [rsrc=" + rsrc + "].");
-                Log.logStackTrace(e);
+                log.warning("Download failed [rsrc=" + rsrc + "].", e);
             }
 
             /** The last percentage at which we checked for another getdown running, or -1 for not
@@ -736,7 +735,7 @@ public abstract class Getdown extends Thread
                     disposeContainer();
                     _status = null;
                     copyStream(stderr, System.err);
-                    Log.info("Process exited: " + proc.waitFor());
+                    log.info("Process exited: " + proc.waitFor());
 
                 } else {
                     // spawn a daemon thread that will catch the early bits of stderr in case the
@@ -764,7 +763,7 @@ public abstract class Getdown extends Thread
             exit(0);
 
         } catch (Exception e) {
-            Log.logStackTrace(e);
+            log.warning("launch() failed.", e);
         }
     }
 
@@ -813,7 +812,7 @@ public abstract class Getdown extends Thread
     {
         if (_ifc.rotatingBackgrounds != null) {
             if (_ifc.backgroundImage != null) {
-                Log.warning("ui.background_image and ui.rotating_background were both specified. " +
+                log.warning("ui.background_image and ui.rotating_background were both specified. " +
                             "The rotating images are being used.");
             }
             return new RotatingBackgrounds(_ifc.rotatingBackgrounds, _ifc.errorBackground,
@@ -865,7 +864,7 @@ public abstract class Getdown extends Thread
             public void run () {
                 if (_status == null) {
                     if (message != null) {
-                        Log.info("Dropping status '" + message + "'.");
+                        log.info("Dropping status '" + message + "'.");
                     }
                     return;
                 }
@@ -956,7 +955,7 @@ public abstract class Getdown extends Thread
                 out.flush();
             }
         } catch (IOException ioe) {
-            Log.warning("Failure copying [in=" + in + ", out=" + out + ", error=" + ioe + "].");
+            log.warning("Failure copying [in=" + in + ", out=" + out + ", error=" + ioe + "].");
         }
     }
 
@@ -985,7 +984,7 @@ public abstract class Getdown extends Thread
                 ucon.connect();
                 try {
                     if (ucon.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                        Log.warning("Failed to report tracking event [url=" + _url +
+                        log.warning("Failed to report tracking event [url=" + _url +
                                     ", rcode=" + ucon.getResponseCode() + "].");
                     }
                 } finally {
@@ -993,7 +992,7 @@ public abstract class Getdown extends Thread
                 }
 
             } catch (IOException ioe) {
-                Log.warning("Failed to report tracking event [url=" + _url +
+                log.warning("Failed to report tracking event [url=" + _url +
                             ", error=" + ioe + "].");
             }
         }

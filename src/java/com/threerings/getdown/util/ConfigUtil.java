@@ -34,7 +34,7 @@ import java.util.List;
 import com.samskivert.io.StreamUtil;
 import com.samskivert.util.StringUtil;
 
-import com.threerings.getdown.Log;
+import static com.threerings.getdown.Log.log;
 
 /**
  * Parses a file containing key/value pairs and returns a {@link HashMap} with the values. Keys may
@@ -90,7 +90,7 @@ public class ConfigUtil
                 if (pair[1].startsWith("[")) {
                     cidx = pair[1].indexOf("]");
                     if (cidx == -1) {
-                        Log.warning("Bogus platform specifier [key=" + pair[0] +
+                        log.warning("Bogus platform specifier [key=" + pair[0] +
                                     ", value=" + pair[1] + "].");
                     } else {
                         String platform = pair[1].substring(1, cidx);
@@ -100,12 +100,12 @@ public class ConfigUtil
                             if (platform.startsWith("!")) {
                                 platform = platform.substring(1);
                                 if (osname.indexOf(platform) != -1) {
-                                    Log.info("Skipping [platform=!" + platform +
+                                    log.info("Skipping [platform=!" + platform +
                                              ", key=" + pair[0] + ", value=" + pair[1] + "].");
                                     continue;
                                 }
                             } else if (osname.indexOf(platform) == -1) {
-                                Log.info("Skipping [platform=" + platform +
+                                log.info("Skipping [platform=" + platform +
                                          ", key=" + pair[0] + ", value=" + pair[1] + "].");
                                 continue;
                             }

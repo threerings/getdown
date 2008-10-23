@@ -36,9 +36,10 @@ import java.util.List;
 import com.samskivert.text.MessageUtil;
 import com.samskivert.util.StringUtil;
 
-import com.threerings.getdown.Log;
 import com.threerings.getdown.util.ConfigUtil;
 import com.threerings.getdown.util.ProgressObserver;
+
+import static com.threerings.getdown.Log.log;
 
 /**
  * Manages the <code>digest.txt</code> file and the computing and
@@ -106,10 +107,10 @@ public class Digest
             if (cmd5.equals(emd5)) {
                 return true;
             }
-            Log.info("Resource failed digest check [rsrc=" + resource +
+            log.info("Resource failed digest check [rsrc=" + resource +
                      ", computed=" + cmd5 + ", expected=" + emd5 + "].");
         } catch (Throwable t) {
-            Log.info("Resource failed digest check [rsrc=" + resource +
+            log.info("Resource failed digest check [rsrc=" + resource +
                      ", error=" + t + "].");
         }
         return false;

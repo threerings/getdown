@@ -38,7 +38,7 @@ import com.samskivert.swing.Spacer;
 import com.samskivert.swing.VGroupLayout;
 import com.samskivert.text.MessageUtil;
 
-import com.threerings.getdown.Log;
+import static com.threerings.getdown.Log.log;
 
 /**
  * Displays a confirmation that the user wants to abort installation.
@@ -104,7 +104,7 @@ public class AbortPanel extends JFrame
         try {
             return _msgs.getString(key);
         } catch (MissingResourceException mre) {
-            Log.warning("Missing translation message '" + key + "'.");
+            log.warning("Missing translation message '" + key + "'.");
             return key;
         }
     }

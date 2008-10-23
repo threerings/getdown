@@ -34,7 +34,7 @@ import java.io.PrintStream;
 import com.samskivert.swing.util.SwingUtil;
 import com.samskivert.util.StringUtil;
 
-import com.threerings.getdown.Log;
+import static com.threerings.getdown.Log.log;
 
 /**
  * Does something extraordinary.
@@ -65,35 +65,34 @@ public class GetdownApp
         // ensure a valid directory was supplied
         File appDir = new File(adarg);
         if (!appDir.exists() || !appDir.isDirectory()) {
-            Log.warning("Invalid app_dir '" + adarg + "'.");
+            log.warning("Invalid app_dir '" + adarg + "'.");
             System.exit(-1);
         }
 
         // pipe our output into a file in the application directory
         if (System.getProperty("no_log_redir") == null) {
-            File log = new File(appDir, "launcher.log");
+            File logFile = new File(appDir, "launcher.log");
             try {
                 PrintStream logOut = new PrintStream(
-                    new BufferedOutputStream(new FileOutputStream(log)), true);
+                    new BufferedOutputStream(new FileOutputStream(logFile)), true);
                 System.setOut(logOut);
                 System.setErr(logOut);
             } catch (IOException ioe) {
-                Log.warning("Unable to redirect output to '" + log +
-                            "': " + ioe);
+                log.warning("Unable to redirect output to '" + logFile + "': " + ioe);
             }
         }
 
         // record a few things for posterity
-        Log.info("------------------ VM Info ------------------");
-        Log.info("-- OS Name: " + System.getProperty("os.name"));
-        Log.info("-- OS Arch: " + System.getProperty("os.arch"));
-        Log.info("-- OS Vers: " + System.getProperty("os.version"));
-        Log.info("-- Java Vers: " + System.getProperty("java.version"));
-        Log.info("-- Java Home: " + System.getProperty("java.home"));
-        Log.info("-- User Name: " + System.getProperty("user.name"));
-        Log.info("-- User Home: " + System.getProperty("user.home"));
-        Log.info("-- Cur dir: " + System.getProperty("user.dir"));
-        Log.info("---------------------------------------------");
+        log.info("------------------ VM Info ------------------");
+        log.info("-- OS Name: " + System.getProperty("os.name"));
+        log.info("-- OS Arch: " + System.getProperty("os.arch"));
+        log.info("-- OS Vers: " + System.getProperty("os.version"));
+        log.info("-- Java Vers: " + System.getProperty("java.version"));
+        log.info("-- Java Home: " + System.getProperty("java.home"));
+        log.info("-- User Name: " + System.getProperty("user.name"));
+        log.info("-- User Home: " + System.getProperty("user.home"));
+        log.info("-- Cur dir: " + System.getProperty("user.dir"));
+        log.info("---------------------------------------------");
 
         try {
             Getdown app = new Getdown(appDir, appId) {
@@ -135,8 +134,9 @@ public class GetdownApp
                 protected JFrame _frame;
             };
             app.start();
+
         } catch (Exception e) {
-            Log.logStackTrace(e);
+            log.warning("main() failed.", e);
         }
     }
 }

@@ -64,13 +64,15 @@ import com.samskivert.text.MessageUtil;
 import com.samskivert.util.ArrayIntSet;
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
-import com.threerings.getdown.Log;
+
 import com.threerings.getdown.launcher.RotatingBackgrounds;
 import com.threerings.getdown.util.ConfigUtil;
 import com.threerings.getdown.util.FileUtil;
 import com.threerings.getdown.util.LaunchUtil;
 import com.threerings.getdown.util.MetaProgressObserver;
 import com.threerings.getdown.util.ProgressObserver;
+
+import static com.threerings.getdown.Log.log;
 
 /**
  * Parses and provide access to the information contained in the <code>getdown.txt</code>
@@ -293,7 +295,7 @@ public class Application
     public Resource getPatchResource (String auxgroup)
     {
         if (_targetVersion <= _version) {
-            Log.warning("Requested patch resource for up-to-date or non-versioned application " +
+            log.warning("Requested patch resource for up-to-date or non-versioned application " +
                         "[cvers=" + _version + ", tvers=" + _targetVersion + "].");
             return null;
         }
@@ -304,7 +306,7 @@ public class Application
             URL remote = new URL(createVAppBase(_targetVersion), pfile);
             return new Resource(pfile, remote, getLocalPath(pfile), false);
         } catch (Exception e) {
-            Log.warning("Failed to create patch resource path [pfile=" + pfile +
+            log.warning("Failed to create patch resource path [pfile=" + pfile +
                         ", appbase=" + _appbase + ", tvers=" + _targetVersion +
                         ", error=" + e + "].");
             return null;
@@ -327,7 +329,7 @@ public class Application
             URL remote = new URL(createVAppBase(_targetVersion), _javaLocation);
             return new Resource(vmfile, remote, getLocalPath(vmfile), true);
         } catch (Exception e) {
-            Log.warning("Failed to create VM resource [vmfile=" + vmfile + ", appbase=" + _appbase +
+            log.warning("Failed to create VM resource [vmfile=" + vmfile + ", appbase=" + _appbase +
                         ", tvers=" + _targetVersion + ", javaloc=" + _javaLocation +
                         ", error=" + e + "].");
             return null;
@@ -345,7 +347,7 @@ public class Application
             URL remote = new URL(createVAppBase(_targetVersion), file);
             return new Resource(file, remote, getLocalPath(file), false);
         } catch (Exception e) {
-            Log.warning("Failed to create full resource path [file=" + file +
+            log.warning("Failed to create full resource path [file=" + file +
                         ", appbase=" + _appbase + ", tvers=" + _targetVersion +
                         ", error=" + e + "].");
             return null;
@@ -364,7 +366,7 @@ public class Application
             String suffix = _trackingURLSuffix == null ? "" : _trackingURLSuffix;
             return _trackingURL == null ? null : new URL(_trackingURL + event + suffix);
         } catch (MalformedURLException mue) {
-            Log.warning("Invalid tracking URL [path=" + _trackingURL + ", event=" + event +
+            log.warning("Invalid tracking URL [path=" + _trackingURL + ", event=" + event +
                         ", error=" + mue + "].");
             return null;
         }
@@ -565,7 +567,7 @@ public class Application
                     _jvmargs.add(pair[0] + "=" + pair[1]);
                 }
             } catch (Throwable t) {
-                Log.warning("Failed to parse '" + file + "': " + t);
+                log.warning("Failed to parse '" + file + "': " + t);
             }
         }
 
@@ -650,7 +652,7 @@ public class Application
         if (!m.matches()) {
             // if we can't parse the java version we're in weird land and should probably just try
             // our luck with what we've got rather than try to download a new jvm
-            Log.warning("Unable to parse VM version, hoping for the best [version=" + verstr +
+            log.warning("Unable to parse VM version, hoping for the best [version=" + verstr +
                         ", needed=" + _javaVersion + "].");
             return true;
         }
@@ -759,7 +761,7 @@ public class Application
         String[] sargs = new String[args.size()];
         args.toArray(sargs);
 
-        Log.info("Running " + StringUtil.join(sargs, "\n  "));
+        log.info("Running " + StringUtil.join(sargs, "\n  "));
         return Runtime.getRuntime().exec(sargs, null);
     }
 
@@ -793,7 +795,7 @@ public class Application
                 jvmarg = processArg(jvmarg.substring(2));
                 int eqidx = jvmarg.indexOf("=");
                 if (eqidx == -1) {
-                    Log.warning("Bogus system property: '" + jvmarg + "'?");
+                    log.warning("Bogus system property: '" + jvmarg + "'?");
                 } else {
                     System.setProperty(jvmarg.substring(0, eqidx), jvmarg.substring(eqidx+1));
                 }
@@ -857,21 +859,21 @@ public class Application
     public boolean verifyMetadata (StatusDisplay status)
         throws IOException
     {
-        Log.info("Verifying application: " + _vappbase);
-        Log.info("Version: " + _version);
-        Log.info("Class: " + _class);
-//         Log.info("Code: " +
+        log.info("Verifying application: " + _vappbase);
+        log.info("Version: " + _version);
+        log.info("Class: " + _class);
+//         log.info("Code: " +
 //                  StringUtil.toString(getCodeResources().iterator()));
-//         Log.info("Resources: " +
+//         log.info("Resources: " +
 //                  StringUtil.toString(getActiveResources().iterator()));
-//         Log.info("JVM Args: " + StringUtil.toString(_jvmargs.iterator()));
-//         Log.info("App Args: " + StringUtil.toString(_appargs.iterator()));
+//         log.info("JVM Args: " + StringUtil.toString(_jvmargs.iterator()));
+//         log.info("App Args: " + StringUtil.toString(_appargs.iterator()));
 
         // this will read in the contents of the digest file and validate itself
         try {
             _digest = new Digest(_appdir);
         } catch (IOException ioe) {
-            Log.info("Failed to load digest: " + ioe.getMessage() + ". Attempting recovery...");
+            log.info("Failed to load digest: " + ioe.getMessage() + ". Attempting recovery...");
         }
 
         // if we have no version, then we are running in unversioned mode so we need to download
@@ -885,12 +887,12 @@ public class Application
                 downloadDigestFile();
                 _digest = new Digest(_appdir);
                 if (!olddig.equals(_digest.getMetaDigest())) {
-                    Log.info("Unversioned digest changed. Revalidating...");
+                    log.info("Unversioned digest changed. Revalidating...");
                     status.updateStatus("m.validating");
                     clearValidationMarkers();
                 }
             } catch (IOException ioe) {
-                Log.warning("Failed to refresh non-versioned digest: " +
+                log.warning("Failed to refresh non-versioned digest: " +
                             ioe.getMessage() + ". Proceeding...");
             }
         }
@@ -919,7 +921,7 @@ public class Application
             if (_digest.validateResource(crsrc, null)) {
                 init(true);
             } else {
-                Log.warning(CONFIG_FILE + " failed to validate even after redownloading. " +
+                log.warning(CONFIG_FILE + " failed to validate even after redownloading. " +
                             "Blindly forging onward.");
             }
         }
@@ -939,7 +941,7 @@ public class Application
                     _targetVersion = Long.parseLong(vstr);
                 }
             } catch (Exception e) {
-                Log.info("Unable to read version file: " + e.getMessage());
+                log.info("Unable to read version file: " + e.getMessage());
             } finally {
                 StreamUtil.close(fin);
             }
@@ -992,11 +994,11 @@ public class Application
                         rsrc.markAsValid();
                         continue;
                     }
-                    Log.info("Failure unpacking resource [rsrc=" + rsrc + "].");
+                    log.info("Failure unpacking resource [rsrc=" + rsrc + "].");
                 }
 
             } catch (Exception e) {
-                Log.info("Failure validating resource [rsrc=" + rsrc + ", error=" + e + "]. " +
+                log.info("Failure validating resource [rsrc=" + rsrc + ", error=" + e + "]. " +
                          "Requesting redownload...");
 
             } finally {
@@ -1056,22 +1058,19 @@ public class Application
         try {
             _lockChannel = new RandomAccessFile(getLocalPath("gettingdown.lock"), "rw").getChannel();
         } catch (FileNotFoundException e) {
-            Log.warning("Unable to create lock file [message=" + e.getMessage() + "]");
-            Log.logStackTrace(e);
+            log.warning("Unable to create lock file [message=" + e.getMessage() + "]", e);
             return false;
         }
         try {
             _lock = _lockChannel.tryLock();
         } catch (IOException e) {
-            Log.warning("Unable to create lock [message=" + e.getMessage() + "]");
-            Log.logStackTrace(e);
+            log.warning("Unable to create lock [message=" + e.getMessage() + "]", e);
             return false;
         } catch (OverlappingFileLockException e) {
-            Log.warning("The lock is held elsewhere in this JVM");
-            Log.logStackTrace(e);
+            log.warning("The lock is held elsewhere in this JVM", e);
             return false;
         }
-        Log.info("Able to lock for updates: " + (_lock != null));
+        log.info("Able to lock for updates: " + (_lock != null));
         return _lock != null;
     }
 
@@ -1081,18 +1080,16 @@ public class Application
     public synchronized void releaseLock ()
     {
         if (_lock != null) {
-            Log.info("Releasing lock");
+            log.info("Releasing lock");
             try {
                 _lock.release();
             } catch (IOException e) {
-                Log.warning("Unable to release lock [message=" + e.getMessage() + "]");
-                Log.logStackTrace(e);
+                log.warning("Unable to release lock [message=" + e.getMessage() + "]", e);
             }
             try {
                 _lockChannel.close();
             } catch (IOException e) {
-                Log.warning("Unable to close lock channel [message=" + e.getMessage() + "]");
-                Log.logStackTrace(e);
+                log.warning("Unable to close lock channel [message=" + e.getMessage() + "]", e);
             }
             _lockChannel = null;
             _lock = null;
@@ -1128,7 +1125,7 @@ public class Application
 
         if (validateSignature) {
             if (_signers == null) {
-                Log.info("No signers, not verifying file [path=" + path + "].");
+                log.info("No signers, not verifying file [path=" + path + "].");
 
             } else {
                 File signatureFile = downloadFile(path + SIGNATURE_SUFFIX);
@@ -1160,15 +1157,15 @@ public class Application
                         }
 
                         if (!sig.verify(Base64.decodeBase64(signature))) {
-                            Log.info("Signature does not match [cert=" + cert.getPublicKey() + "]");
+                            log.info("Signature does not match [cert=" + cert.getPublicKey() + "]");
                             continue;
                         } else {
-                            Log.info("Signature matches [cert=" + cert.getPublicKey() + "]");
+                            log.info("Signature matches [cert=" + cert.getPublicKey() + "]");
                             validated++;
                         }
 
                     } catch (IOException ioe) {
-                        Log.warning("Failure validating signature of " + target + ": " + ioe);
+                        log.warning("Failure validating signature of " + target + ": " + ioe);
 
                     } catch (GeneralSecurityException gse) {
                         // no problem!
@@ -1208,12 +1205,12 @@ public class Application
         try {
             targetURL = getRemoteURL(path);
         } catch (Exception e) {
-            Log.warning("Requested to download invalid control file [appbase=" + _vappbase +
+            log.warning("Requested to download invalid control file [appbase=" + _vappbase +
                         ", path=" + path + ", error=" + e + "].");
             throw (IOException) new IOException("Invalid path '" + path + "'.").initCause(e);
         }
 
-        Log.info("Attempting to refetch '" + path + "' from '" + targetURL + "'.");
+        log.info("Attempting to refetch '" + path + "' from '" + targetURL + "'.");
 
         // stream the URL into our temporary file
         InputStream fin = null;
@@ -1249,7 +1246,7 @@ public class Application
             try {
                 list.add(createResource(rsrc, unpack));
             } catch (Exception e) {
-                Log.warning("Invalid resource '" + rsrc + "'. " + e);
+                log.warning("Invalid resource '" + rsrc + "'. " + e);
             }
         }
     }
@@ -1263,7 +1260,7 @@ public class Application
             if (v != null && v.length == 4) {
                 return new Rectangle(v[0], v[1], v[2], v[3]);
             } else {
-                Log.warning("Ignoring invalid '" + name + "' config '" + value + "'.");
+                log.warning("Ignoring invalid '" + name + "' config '" + value + "'.");
             }
         }
         return def;
@@ -1277,7 +1274,7 @@ public class Application
             try {
                 return new Color(Integer.parseInt(value, 16));
             } catch (Exception e) {
-                Log.warning("Ignoring invalid '" + name + "' config '" + value + "'.");
+                log.warning("Ignoring invalid '" + name + "' config '" + value + "'.");
             }
         }
         return def;
