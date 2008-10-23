@@ -37,8 +37,8 @@ lib/LIBS. And then you can use Ant to build Getdown like so:
 
 Is it free?
 -----------
-Yes! Getdown is released under the GPL. Stop whining, it's good for you. The
-most recent version should always be available here:
+Yes! Getdown is released under a BSD license. The most recent version should
+always be available here:
 
 http://www.threerings.net/code/getdown/
 
