@@ -6,13 +6,13 @@
 //
 // Redistribution and use in source and binary forms, with or without modification, are permitted
 // provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list of
 //    conditions and the following disclaimer in the documentation and/or other materials provided
 //    with the distribution.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
 // INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
 // PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
@@ -366,7 +366,7 @@ public abstract class Getdown extends Thread
             if (!_app.lockForUpdates()) {
                 throw new MultipleGetdownRunning();
             }
-            
+
             // Update the config modtime so a sleeping getdown will notice the change.
             File config = _app.getLocalPath(Application.CONFIG_FILE);
             if (!config.setLastModified(System.currentTimeMillis())) {
@@ -773,7 +773,7 @@ public abstract class Getdown extends Thread
     /**
      * Creates our user interface, which we avoid doing unless we actually have to update
      * something.
-     * 
+     *
      * @param reinit - if the interface should be reinitialized if it already exists.
      */
     protected void createInterface (final boolean reinit)
@@ -798,7 +798,7 @@ public abstract class Getdown extends Thread
     }
 
     /**
-     * Initializes the interface with the current UpdateInterface and backgrounds. 
+     * Initializes the interface with the current UpdateInterface and backgrounds.
      */
     protected void initInterface ()
     {
@@ -810,7 +810,7 @@ public abstract class Getdown extends Thread
         }
         _status.init(_ifc, _background, getProgressImage());
     }
-    
+
     protected RotatingBackgrounds getBackground ()
     {
         if (_ifc.rotatingBackgrounds != null) {
@@ -847,11 +847,12 @@ public abstract class Getdown extends Thread
             _abort.requestFocus();
         }
     }
-    
-    /** 
-     * Update the status to indicate getdown has failed for the reason in <code>message</code>. 
+
+    /**
+     * Update the status to indicate getdown has failed for the reason in <code>message</code>.
      */
-    protected void fail(String message){
+    protected void fail (String message)
+    {
         _dead = true;
         setStatus(message, 0, -1L, true);
     }
@@ -878,7 +879,7 @@ public abstract class Getdown extends Thread
                     _status.setProgress(0, -1L);
                 } else if (percent >= 0) {
                     _status.setProgress(percent, remaining);
-                } 
+                }
             }
         });
     }
