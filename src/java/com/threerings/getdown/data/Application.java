@@ -6,13 +6,13 @@
 //
 // Redistribution and use in source and binary forms, with or without modification, are permitted
 // provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list of
 //    conditions and the following disclaimer in the documentation and/or other materials provided
 //    with the distribution.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
 // INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
 // PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
@@ -104,7 +104,7 @@ public class Application
 
         /** Background image specifiers for {@link RotatingBackgrounds}. */
         public String[] rotatingBackgrounds;
-        
+
         /** The error background image for {@link RotatingBackgrounds}. */
         public String errorBackground;
 
@@ -546,7 +546,7 @@ public class Application
                 _jvmargs.add(jvmargs[ii]);
             }
         }
-        
+
         // Add the launch specific JVM arguments
         for (String arg : _baseJvmArgs) {
             _jvmargs.add(arg);
@@ -1258,29 +1258,49 @@ public class Application
     protected Rectangle parseRect (HashMap<String,Object> cdata, String name, Rectangle def)
     {
         String value = (String)cdata.get(name);
+        Rectangle rect = parseRect(value);
+        if (rect == null) {
+            log.warning("Ignoring invalid '" + name + "' config '" + value + "'.");
+        } else {
+            return rect;
+        }
+        return def;
+    }
+
+    public static Rectangle parseRect (String value)
+    {
         if (!StringUtil.isBlank(value)) {
             int[] v = StringUtil.parseIntArray(value);
             if (v != null && v.length == 4) {
                 return new Rectangle(v[0], v[1], v[2], v[3]);
-            } else {
-                log.warning("Ignoring invalid '" + name + "' config '" + value + "'.");
             }
         }
-        return def;
+        return null;
     }
 
     /** Used to parse color specifications from the config file. */
     protected Color parseColor (HashMap<String,Object> cdata, String name, Color def)
     {
         String value = (String)cdata.get(name);
-        if (!StringUtil.isBlank(value)) {
-            try {
-                return new Color(Integer.parseInt(value, 16));
-            } catch (Exception e) {
-                log.warning("Ignoring invalid '" + name + "' config '" + value + "'.");
-            }
+        Color color = parseColor(value);
+        if (color == null) {
+            log.warning("Ignoring invalid '" + name + "' config '" + value + "'.");
+        } else {
+            return color;
         }
         return def;
+    }
+
+    public static Color parseColor (String hexValue)
+    {
+        if (!StringUtil.isBlank(hexValue)) {
+            try {
+                return new Color(Integer.parseInt(hexValue, 16));
+            } catch (NumberFormatException e) {
+                log.warning("Ignoring invalid color", "hexValue", hexValue, "exception", e);
+            }
+        }
+        return null;
     }
 
     /** Parses a list of strings from the config file. */
@@ -1324,7 +1344,7 @@ public class Application
 
     protected ArrayList<String> _jvmargs = new ArrayList<String>();
     protected ArrayList<String> _appargs = new ArrayList<String>();
-    
+
     protected String[] _baseJvmArgs = new String[0];
 
     protected Object[] _signers;

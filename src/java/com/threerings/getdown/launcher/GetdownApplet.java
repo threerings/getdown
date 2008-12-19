@@ -6,13 +6,13 @@
 //
 // Redistribution and use in source and binary forms, with or without modification, are permitted
 // provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list of
 //    conditions and the following disclaimer in the documentation and/or other materials provided
 //    with the distribution.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
 // INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
 // PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
@@ -23,8 +23,10 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.threerings.getdown.launcher;
 
+import java.awt.Color;
 import java.awt.Container;
 import java.awt.Image;
+import java.awt.Rectangle;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -34,15 +36,12 @@ import java.net.URL;
 import javax.swing.JApplet;
 import javax.swing.JPanel;
 
-import java.io.IOException;
-import java.io.FileOutputStream;
-import java.io.File;
-import java.io.PrintStream;
 import java.util.Map;
 
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
 
+import com.threerings.getdown.data.Application;
 import com.threerings.getdown.util.ConfigUtil;
 
 import static com.threerings.getdown.Log.log;
@@ -111,7 +110,7 @@ public class GetdownApplet extends JApplet
             jvmargs = params.split(",");
             for (int ii = 0; ii < jvmargs.length; ii++) {
                 jvmargs[ii] = "-D" + jvmargs[ii];
-            }    
+            }
         }
 
         try {
@@ -141,9 +140,9 @@ public class GetdownApplet extends JApplet
                 protected void exit (int exitCode) {
                     _app.releaseLock();
                     // Redirect to the URL in 'redirect_on_finish' if we completed successfully.
-                    // This allows us to use some javascript on that page to close Getdown's 
+                    // This allows us to use some javascript on that page to close Getdown's
                     // browser window.  I'd prefer to use the javascript bridge from the applet
-                    // rather than redirecting, but calling JSObject.getWindow(this).call("close") 
+                    // rather than redirecting, but calling JSObject.getWindow(this).call("close")
                     // doesn't seem to do anything.
                     if (getParameter("redirect_on_finish") != null && exitCode == 0) {
                         URL dest;
@@ -162,6 +161,17 @@ public class GetdownApplet extends JApplet
                     }
                 }
             };
+
+            // configure the status/progress text in case something goes horribly wrong before we
+            // get a chance to read getdown.txt (like when the user rejects write permissions)
+            Rectangle statusBounds = Application.parseRect(getParameter("ui.status"));
+            if (statusBounds != null) {
+                _getdown._ifc.status = statusBounds;
+            }
+            Color statusColor = Application.parseColor(getParameter("ui.status_text"));
+            if (statusColor != null) {
+                _getdown._ifc.statusText = statusColor;
+            }
 
             // set up our user interface immediately
             _getdown.preInit();
