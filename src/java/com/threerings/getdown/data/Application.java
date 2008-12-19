@@ -1267,6 +1267,10 @@ public class Application
         return def;
     }
 
+    /**
+     * Takes a comma-separated String of four integers and returns a rectangle using those ints as
+     * the its x, y, width, and height.
+     */
     public static Rectangle parseRect (String value)
     {
         if (!StringUtil.isBlank(value)) {
@@ -1291,6 +1295,10 @@ public class Application
         return def;
     }
 
+    /**
+     * Parses the given hex color value (e.g. FFFFF) and returns a Color object with that value. If
+     * the given value is null of not a valid hexadecimal number, this will return null.
+     */
     public static Color parseColor (String hexValue)
     {
         if (!StringUtil.isBlank(hexValue)) {
