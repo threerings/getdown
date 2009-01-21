@@ -2,7 +2,7 @@
 // $Id$
 //
 // Getdown - application installer, patcher and launcher
-// Copyright (C) 2004-2008 Three Rings Design, Inc.
+// Copyright (C) 2004-2009 Three Rings Design, Inc.
 //
 // Redistribution and use in source and binary forms, with or without modification, are permitted
 // provided that the following conditions are met:
@@ -23,10 +23,8 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.threerings.getdown.launcher;
 
-import java.awt.Color;
 import java.awt.Container;
 import java.awt.Image;
-import java.awt.Rectangle;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -36,19 +34,10 @@ import java.net.URL;
 import javax.swing.JApplet;
 import javax.swing.JPanel;
 
-import java.util.Map;
-
-import com.samskivert.util.RunAnywhere;
-import com.samskivert.util.StringUtil;
-
-import com.threerings.getdown.data.Application;
-import com.threerings.getdown.util.ConfigUtil;
-
 import static com.threerings.getdown.Log.log;
 
 /**
- * An applet that can be used to launch a Getdown application (when signed and
- * given privileges).
+ * An applet that can be used to launch a Getdown application (when signed and given privileges).
  */
 public class GetdownApplet extends JApplet
     implements ImageLoader
@@ -56,74 +45,28 @@ public class GetdownApplet extends JApplet
     @Override // documentation inherited
     public void init ()
     {
-        // verify that we are not being hijacked to execute malicious code in the name of the
-        // signer
-        String appbase = getParameter("appbase");
-        String appname = getParameter("appname");
-        String imgpath = getParameter("bgimage");
-        String errorimgpath = getParameter("errorbgimage");
-        if (appbase == null) {
-            appbase = "";
-        }
-        if (appname == null) {
-            appname = "";
-        }
+        _config = new GetdownAppletConfig(this);
 
-        final RotatingBackgrounds bgimages;
-        if (imgpath == null) {
-            bgimages = new RotatingBackgrounds();
-        } else if (imgpath.indexOf(",") > -1) {
-            bgimages = new RotatingBackgrounds(imgpath.split(","), errorimgpath, this);
-        } else {
-            bgimages = new RotatingBackgrounds(loadImage(imgpath));
-        }
-
-        log.info("App Base: " + appbase);
-        log.info("App Name: " + appname);
-
-        File appdir = null;
         try {
-            appdir = initGetdown(appbase, appname, imgpath);
 
-            // record a few things for posterity
-            log.info("------------------ VM Info ------------------");
-            log.info("-- OS Name: " + System.getProperty("os.name"));
-            log.info("-- OS Arch: " + System.getProperty("os.arch"));
-            log.info("-- OS Vers: " + System.getProperty("os.version"));
-            log.info("-- Java Vers: " + System.getProperty("java.version"));
-            log.info("-- Java Home: " + System.getProperty("java.home"));
-            log.info("-- User Name: " + System.getProperty("user.name"));
-            log.info("-- User Home: " + System.getProperty("user.home"));
-            log.info("-- Cur dir: " + System.getProperty("user.dir"));
-            log.info("---------------------------------------------");
-
-        } catch (Exception e) {
-            _errmsg = e.getMessage();
-        }
-
-        // Pull out system properties to pass through to the launched vm if they exist
-        String params = getParameter("app_properties");
-        String[] jvmargs;
-        if(params == null){
-            jvmargs = new String[0];
-        } else {
-            jvmargs = params.split(",");
-            for (int ii = 0; ii < jvmargs.length; ii++) {
-                jvmargs[ii] = "-D" + jvmargs[ii];
+            try {
+                // Check our permissions, download getdown.txt, etc.
+                _config.init();
+            } catch (Exception e) {
+                _errmsg = e.getMessage();
             }
-        }
 
-        try {
             // XXX getSigners() returns all certificates used to sign this applet which may allow
             // a third party to insert a trusted certificate. This should be replaced with
             // statically included trusted keys.
-            _getdown = new Getdown(appdir, null, GetdownApplet.class.getSigners(), jvmargs) {
+            _getdown = new Getdown(_config.appdir, null, GetdownApplet.class.getSigners(),
+                _config.jvmargs) {
                 protected Container createContainer () {
                     getContentPane().removeAll();
                     return getContentPane();
                 }
                 protected RotatingBackgrounds getBackground () {
-                    return bgimages;
+                    return _config.getBackgroundImages(GetdownApplet.this);
                 }
                 protected void showContainer () {
                     ((JPanel)getContentPane()).revalidate();
@@ -132,55 +75,32 @@ public class GetdownApplet extends JApplet
                     // nothing to do as we're in an applet
                 }
                 protected boolean invokeDirect () {
-                    return "true".equalsIgnoreCase(getParameter("direct"));
+                    return _config.invokeDirect;
                 }
                 protected JApplet getApplet () {
                     return GetdownApplet.this;
                 }
                 protected void exit (int exitCode) {
                     _app.releaseLock();
-                    // Redirect to the URL in 'redirect_on_finish' if we completed successfully.
-                    // This allows us to use some javascript on that page to close Getdown's
-                    // browser window.  I'd prefer to use the javascript bridge from the applet
-                    // rather than redirecting, but calling JSObject.getWindow(this).call("close")
-                    // doesn't seem to do anything.
-                    if (getParameter("redirect_on_finish") != null && exitCode == 0) {
-                        URL dest;
-                        try {
-                            dest = new URL(getParameter("redirect_on_finish"));
-                        } catch (MalformedURLException e) {
-                            log.warning("URL in redirect_on_finish param is malformed: " + e);
-                            return;
-                        }
-                        String target = getParameter("redirect_on_finish_target");
-                        if (target == null) {
-                            getAppletContext().showDocument(dest);
-                        } else {
-                            getAppletContext().showDocument(dest, target);
-                        }
-                    }
+                    _config.redirect();
                 }
             };
 
-            // configure the status/progress text in case something goes horribly wrong before we
-            // get a chance to read getdown.txt (like when the user rejects write permissions)
-            Rectangle statusBounds = Application.parseRect(getParameter("ui.status"));
-            if (statusBounds != null) {
-                _getdown._ifc.status = statusBounds;
-            }
-            Color statusColor = Application.parseColor(getParameter("ui.status_text"));
-            if (statusColor != null) {
-                _getdown._ifc.statusText = statusColor;
-            }
-
-            // set up our user interface immediately
+            // set up our user interface
+            _config.config(_getdown);
             _getdown.preInit();
 
         } catch (Exception e) {
+            // assume that if we already encountered an error, that is the root cause that we want
+            // to report back to the user
+            if (_errmsg == null) {
+                _errmsg = e.getMessage();
+            }
             log.warning("init() failed.", e);
         }
     }
 
+    // implemented from ImageLoader
     public Image loadImage (String path)
     {
         try {
@@ -216,107 +136,6 @@ public class GetdownApplet extends JApplet
     }
 
     /**
-     * Does all the fiddly initialization of Getdown and throws an exception if something goes
-     * horribly wrong. If an exception is thrown we will abort the whole process and display an
-     * error message to the user.
-     */
-    protected File initGetdown (String appbase, String appname, String imgpath)
-        throws Exception
-    {
-        // getdown requires full read/write permissions to the system; if we don't have this, then
-        // we need to not do anything unsafe, and display a message to the user telling them they
-        // need to (groan) close out of the web browser entirely and re-launch the browser, go to
-        // our site, and accept the certificate
-        SecurityManager sm = System.getSecurityManager();
-        if (sm != null) {
-            try {
-                sm.checkWrite("getdown");
-                sm.checkPropertiesAccess();
-            } catch (SecurityException se) {
-                log.warning("Signed applet rejected by user", "se", se);
-                throw new Exception("m.insufficient_permissions_error");
-            }
-        }
-
-        // pass through properties parameters
-        String properties = getParameter("properties");
-        if (properties != null) {
-            String[] proparray = properties.split(" ");
-            for (String property : proparray) {
-                String key = property.substring(property.indexOf("-D") + 2, property.indexOf("="));
-                String value = property.substring(property.indexOf("=") + 1);
-                System.setProperty(key, value);
-            }
-        }
-
-        // when run from an applet, we install to the user's home directory
-        String root;
-        if (RunAnywhere.isWindows()) {
-            root = "Application Data";
-            String verStr = System.getProperty("os.version");
-            try {
-                if (Float.parseFloat(verStr) >= 6.0f) {
-                    // Vista makes us write it here....  Yay.
-                    root = "AppData" + File.separator + "LocalLow";
-                }
-            } catch (Exception e) {
-                log.warning("Couldn't parse OS version", "vers", verStr, "error", e);
-            }
-        } else if (RunAnywhere.isMacOS()) {
-            root = "Library" + File.separator + "Application Support";
-        } else /* isLinux() or something wacky */ {
-            root = ".getdown";
-        }
-        File appdir = new File(System.getProperty("user.home") + File.separator + root +
-                               File.separator + appname);
-
-        // if our application directory does not exist, auto-create it
-        if (!appdir.exists() || !appdir.isDirectory()) {
-            if (!appdir.mkdirs()) {
-                throw new Exception("m.create_appdir_failed");
-            }
-        }
-
-        // if an installer.txt file is desired, create that
-        String inststr = getParameter("installer");
-        if (!StringUtil.isBlank(inststr)) {
-            File infile = new File(appdir, "installer.txt");
-            if (!infile.exists()) {
-                writeToFile(infile, inststr);
-            }
-        }
-
-        // if our getdown.txt file does not exist, or it is corrupt, auto-/recreate it
-        File gdfile = new File(appdir, "getdown.txt");
-        boolean createGetdown = !gdfile.exists();
-        if (!createGetdown) {
-            try {
-                Map<String,Object> cdata = ConfigUtil.parseConfig(gdfile, false);
-                String oappbase = StringUtil.trim((String)cdata.get("appbase"));
-                createGetdown = (appbase != null && !appbase.trim().equals(oappbase));
-                if (createGetdown) {
-                    log.warning("Recreating getdown.txt due to appbase mismatch",
-                                "nappbase", appbase, "oappbase", oappbase);
-                }
-            } catch (Exception e) {
-                log.warning("Failure checking validity of getdown.txt, forcing recreate.",
-                            "error", e);
-                createGetdown = true;
-            }
-        }
-        if (createGetdown) {
-            if (StringUtil.isBlank(appbase)) {
-                throw new Exception("m.missing_appbase");
-            }
-            if (!writeToFile(gdfile, "appbase = " + appbase)) {
-                throw new Exception("m.create_getdown_failed");
-            }
-        }
-
-        return appdir;
-    }
-
-    /**
      * Creates the specified file and writes the supplied contents to it.
      */
     protected boolean writeToFile (File tofile, String contents)
@@ -331,6 +150,9 @@ public class GetdownApplet extends JApplet
             return false;
         }
     }
+
+    /** The Getdown configuration as pulled from the applet params */
+    protected GetdownAppletConfig _config;
 
     /** Handles all the actual getting down. */
     protected Getdown _getdown;
