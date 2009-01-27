@@ -24,12 +24,8 @@
     *;
 }
 
--keep public class com.threerings.getdown.data.Application {
-    *;
-}
-
 -keep public class com.threerings.getdown.launcher.Getdown {
-    *;
+    public static void main (java.lang.String[]);
 }
 
 -keep public class com.threerings.getdown.launcher.GetdownApp {
