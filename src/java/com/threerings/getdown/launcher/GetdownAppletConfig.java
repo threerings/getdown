@@ -257,7 +257,9 @@ public class GetdownAppletConfig
     }
 
     /**
-     *
+     * Gets the rotation background images and error image.The given image loader will be used if
+     * the images have not been loaded yet. The locations of the images are pulled from the Applet
+     * parameters.
      */
     public RotatingBackgrounds getBackgroundImages (ImageLoader loader)
     {
@@ -268,6 +270,10 @@ public class GetdownAppletConfig
         return bgimages;
     }
 
+    /**
+     * Gets the rotation background images and error image.The given image loader will be used if
+     * the images have not been loaded yet.
+     */
     public static RotatingBackgrounds getBackgroundImages (String imageParam,
         String errorImagePath, ImageLoader loader)
     {
