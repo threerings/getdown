@@ -123,7 +123,9 @@ public class StatusPanel extends JComponent
         _displayError = displayError;
         status = xlate(status);
         _newlab = new Label(status, _ifc.statusText, _font);
-        _newlab.setTargetWidth(Math.min(_ifc.status.width, getWidth() - _ifc.status.x*2));
+        int width = getWidth() - _ifc.status.x*2;
+        width = width > 0 ? Math.min(_ifc.status.width, width) : _ifc.status.width;
+        _newlab.setTargetWidth(width);
         if (_ifc.textShadow != null) {
             _newlab.setAlternateColor(_ifc.textShadow);
             _newlab.setStyle(Label.SHADOW);
