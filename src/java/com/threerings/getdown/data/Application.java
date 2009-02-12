@@ -542,8 +542,8 @@ public class Application
         // transfer our JVM arguments
         String[] jvmargs = ConfigUtil.getMultiValue(cdata, "jvmarg");
         if (jvmargs != null) {
-            for (int ii = 0; ii < jvmargs.length; ii++) {
-                _jvmargs.add(jvmargs[ii]);
+            for (String jvmarg : jvmargs) {
+                _jvmargs.add(jvmarg);
             }
         }
 
@@ -555,24 +555,13 @@ public class Application
         // transfer our application arguments
         String[] appargs = ConfigUtil.getMultiValue(cdata, prefix + "apparg");
         if (appargs != null) {
-            for (int ii = 0; ii < appargs.length; ii++) {
-                _appargs.add(appargs[ii]);
+            for (String apparg : appargs) {
+                _appargs.add(apparg);
             }
         }
 
         // look for custom arguments
-        File file = getLocalPath("extra.txt");
-        if (file.exists()) {
-            try {
-                List<String[]> args = ConfigUtil.parsePairs(file, false);
-                for (Iterator<String[]> iter = args.iterator(); iter.hasNext();) {
-                    String[] pair = iter.next();
-                    _jvmargs.add(pair[0] + "=" + pair[1]);
-                }
-            } catch (Throwable t) {
-                log.warning("Failed to parse '" + file + "': " + t);
-            }
-        }
+        fillAssignmentListFromPairs("extra.txt", _jvmargs);
 
         // determine whether or not we should be using bit torrent
         _useTorrent = (cdata.get("torrent") != null) || (System.getProperty("torrent") != null);
@@ -611,6 +600,24 @@ public class Application
         }
 
         return ui;
+    }
+
+    /**
+     * Adds strings of the form pair0=pair1 to collector for each pair parsed out of pairLocation.
+     */
+    protected void fillAssignmentListFromPairs (String pairLocation, List<String> collector)
+    {
+        File pairFile = getLocalPath(pairLocation);
+        if (pairFile.exists()) {
+            try {
+                List<String[]> args = ConfigUtil.parsePairs(pairFile, false);
+                for (String[] pair : args) {
+                    collector.add(pair[0] + "=" + pair[1]);
+                }
+            } catch (Throwable t) {
+                log.warning("Failed to parse '" + pairFile + "': " + t);
+            }
+        }
     }
 
     /**
@@ -709,11 +716,10 @@ public class Application
     {
         // create our classpath
         StringBuilder cpbuf = new StringBuilder();
-        for (Iterator<Resource> iter = _codes.iterator(); iter.hasNext(); ) {
+        for (Resource rsrc : _codes) {
             if (cpbuf.length() > 0) {
                 cpbuf.append(File.pathSeparator);
             }
-            Resource rsrc = iter.next();
             cpbuf.append(rsrc.getLocal().getAbsolutePath());
         }
 
@@ -749,23 +755,37 @@ public class Application
         }
 
         // add the JVM arguments
-        for (Iterator<String> iter = _jvmargs.iterator(); iter.hasNext(); ) {
-            args.add(processArg(iter.next()));
+        for (String string : _jvmargs) {
+            args.add(processArg(string));
         }
 
         // add the application class name
         args.add(_class);
 
         // finally add the application arguments
-        for (Iterator<String> iter = _appargs.iterator(); iter.hasNext(); ) {
-            args.add(processArg(iter.next()));
+        for (String string : _appargs) {
+            args.add(processArg(string));
         }
 
         String[] sargs = new String[args.size()];
         args.toArray(sargs);
 
+
+        // Look for environmental variables. Pass through envp as null if no environmental
+        // variables were specified so we keep the current environment
+        String[] envp = null;
+        List<String> envvar = new ArrayList<String>();
+        fillAssignmentListFromPairs("environment.txt", envvar);
+        if (envvar.size() > 0) {
+            envp = new String[envvar.size()];
+            for (int ii = 0; ii < envp.length; ii++) {
+                envp[ii] = processArg(envvar.get(ii));
+            }
+            log.info("Environment " + StringUtil.join(envp, "\n "));
+        }
+
         log.info("Running " + StringUtil.join(sargs, "\n  "));
-        return Runtime.getRuntime().exec(sargs, null);
+        return Runtime.getRuntime().exec(sargs, envp);
     }
 
     /**
