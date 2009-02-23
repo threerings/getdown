@@ -23,6 +23,8 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.threerings.getdown.data;
 
+import static com.threerings.getdown.Log.log;
+
 import java.awt.Color;
 import java.awt.Rectangle;
 import java.io.BufferedReader;
@@ -54,6 +56,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -74,8 +77,6 @@ import com.threerings.getdown.util.FileUtil;
 import com.threerings.getdown.util.LaunchUtil;
 import com.threerings.getdown.util.MetaProgressObserver;
 import com.threerings.getdown.util.ProgressObserver;
-
-import static com.threerings.getdown.Log.log;
 
 /**
  * Parses and provide access to the information contained in the <code>getdown.txt</code>
@@ -767,25 +768,50 @@ public class Application
             args.add(processArg(string));
         }
 
+
+        String[] envp = createEnvironment ();
         String[] sargs = new String[args.size()];
         args.toArray(sargs);
+        log.info("Running " + StringUtil.join(sargs, "\n  "));
 
+        return Runtime.getRuntime().exec(sargs, envp);
+    }
 
-        // Look for environmental variables. Pass through envp as null if no environmental
-        // variables were specified so we keep the current environment
-        String[] envp = null;
+    /**
+     * If the application provided environment variables, combine those with the current
+     * environment and return that in a style usable for {@link Runtime#exec(String, String[])}.
+     * If the application didn't provide any environment variables, null is returned to just use
+     * the existing environment. If the application provided environment variables and this is
+     * running on Java 1.4 which can't find the existing environment, null is returned so the
+     * existing environment is used and things have a chance of running.
+     */
+    protected String[] createEnvironment ()
+    {
         List<String> envvar = new ArrayList<String>();
         fillAssignmentListFromPairs("environment.txt", envvar);
-        if (envvar.size() > 0) {
-            envp = new String[envvar.size()];
-            for (int ii = 0; ii < envp.length; ii++) {
-                envp[ii] = processArg(envvar.get(ii));
-            }
-            log.info("Environment " + StringUtil.join(envp, "\n "));
+        if (envvar.isEmpty()) {
+            log.info("Didn't find any custom environment variables, not setting any.");
+            return null;
         }
-
-        log.info("Running " + StringUtil.join(sargs, "\n  "));
-        return Runtime.getRuntime().exec(sargs, envp);
+        Map<String, String> existing;
+        try {
+            existing = System.getenv();
+        } catch (NoSuchMethodError nsme) {
+            log.warning("Unable to access the existing environment, most likely due to being on "
+                + "Java 1.4.  Not setting application specific environment.", "applicationEnv",
+                envvar, nsme);
+            return null;
+        }
+        List<String> envAssignments = new ArrayList<String>();
+        for (String assignment : envvar) {
+            envAssignments.add(processArg(assignment));
+        }
+        for (Entry<String, String> environmentEntry : existing.entrySet()) {
+            envAssignments.add(environmentEntry.getKey() + "=" + environmentEntry.getValue());
+        }
+        String[] envp = envAssignments.toArray(new String[envAssignments.size()]);
+        log.info("Environment " + StringUtil.join(envp, "\n "));
+        return envp;
     }
 
     /**
