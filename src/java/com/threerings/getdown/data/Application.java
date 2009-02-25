@@ -769,7 +769,7 @@ public class Application
         }
 
 
-        String[] envp = createEnvironment ();
+        String[] envp = createEnvironment();
         String[] sargs = new String[args.size()];
         args.toArray(sargs);
         log.info("Running " + StringUtil.join(sargs, "\n  "));
@@ -788,7 +788,7 @@ public class Application
     protected String[] createEnvironment ()
     {
         List<String> envvar = new ArrayList<String>();
-        fillAssignmentListFromPairs("environment.txt", envvar);
+        fillAssignmentListFromPairs("env.txt", envvar);
         if (envvar.isEmpty()) {
             log.info("Didn't find any custom environment variables, not setting any.");
             return null;
