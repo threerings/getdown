@@ -164,7 +164,7 @@ public class GetdownAppletConfig
         }
 
         String direct = getParameter(DIRECT, "false");
-        invokeDirect = Boolean.parseBoolean(direct);
+        invokeDirect = Boolean.valueOf(direct);
 
         String redirectURL = getParameter(REDIRECT_ON_FINISH);
         if (redirectURL != null) {
