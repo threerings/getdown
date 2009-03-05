@@ -101,8 +101,8 @@ public class AbortPanel extends JFrame
     {
         // if this string is tainted, we don't translate it, instead we
         // simply remove the taint character and return it to the caller
-        if (key.startsWith(MessageUtil.TAINT_CHAR)) {
-            return key.substring(1);
+        if (MessageUtil.isTainted(key)) {
+            return MessageUtil.untaint(key);
         }
         try {
             return _msgs.getString(key);

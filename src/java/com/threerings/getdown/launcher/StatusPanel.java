@@ -226,8 +226,8 @@ public class StatusPanel extends JComponent
             for (int i = 0; i < args.length; i++) {
                 // if the argument is tainted, do no further translation
                 // (it might contain |s or other fun stuff)
-                if (args[i].startsWith(MessageUtil.TAINT_CHAR)) {
-                    args[i] = MessageUtil.unescape(args[i].substring(1));
+                if (MessageUtil.isTainted(args[i])) {
+                    args[i] = MessageUtil.unescape(MessageUtil.untaint(args[i]));
                 } else {
                     args[i] = xlate(MessageUtil.unescape(args[i]));
                 }
@@ -258,8 +258,8 @@ public class StatusPanel extends JComponent
 
         // if this string is tainted, we don't translate it, instead we
         // simply remove the taint character and return it to the caller
-        if (key.startsWith(MessageUtil.TAINT_CHAR)) {
-            return key.substring(1);
+        if (MessageUtil.isTainted(key)) {
+            return MessageUtil.untaint(key);
         }
         try {
             return _msgs.getString(key);
