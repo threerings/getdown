@@ -30,8 +30,6 @@ import java.io.IOException;
 
 import com.samskivert.io.StreamUtil;
 
-import org.apache.commons.io.IOUtils;
-
 import static com.threerings.getdown.Log.log;
 
 /**
@@ -78,7 +76,7 @@ public class FileUtil
         try {
             fin = new FileInputStream(source);
             fout = new FileOutputStream(dest);
-            IOUtils.copy(fin, fout);
+            StreamUtil.copy(fin, fout);
             if (!source.delete()) {
                 log.warning("Failed to delete " + source +
                             " after brute force copy to " + dest + ".");

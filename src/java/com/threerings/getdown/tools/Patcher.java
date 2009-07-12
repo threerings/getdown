@@ -33,7 +33,6 @@ import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
 import com.samskivert.io.StreamUtil;
-import org.apache.commons.io.IOUtils;
 
 import com.threerings.getdown.util.FileUtil;
 import com.threerings.getdown.util.ProgressObserver;
@@ -166,7 +165,7 @@ public class Patcher
         InputStream in = null;
         FileOutputStream fout = null;
         try {
-            IOUtils.copy(in = file.getInputStream(entry), fout = new FileOutputStream(patch));
+            StreamUtil.copy(in = file.getInputStream(entry), fout = new FileOutputStream(patch));
             StreamUtil.close(fout);
             fout = null;
 

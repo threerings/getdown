@@ -30,8 +30,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.logging.Level;
 
-import org.apache.commons.io.IOUtils;
-
+import com.samskivert.io.StreamUtil;
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
 
@@ -176,7 +175,7 @@ public class LaunchUtil
                 try {
                     // copy the moved file back to getdown-dop-new.jar so that we don't end up
                     // downloading another copy next time
-                    IOUtils.copy(new FileInputStream(curgd), new FileOutputStream(newgd));
+                    StreamUtil.copy(new FileInputStream(curgd), new FileOutputStream(newgd));
                 } catch (IOException e) {
                     log.warning("Error copying updated Getdown back: " + e);
                 }
@@ -193,7 +192,7 @@ public class LaunchUtil
         // that didn't work, let's try copying it
         log.info("Attempting to upgrade by copying over " + curgd + "...");
         try {
-            IOUtils.copy(new FileInputStream(newgd), new FileOutputStream(curgd));
+            StreamUtil.copy(new FileInputStream(newgd), new FileOutputStream(curgd));
         } catch (IOException ioe) {
             log.warning("Mayday! Brute force copy method also failed.", ioe);
         }

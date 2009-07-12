@@ -11,7 +11,6 @@
 -injars dist/lib/samskivert.jar(
   com/samskivert/Log.class,**/io/**,**/swing/**,**/net/**,**/text/**,**/util/**)
 -injars dist/lib/commons-codec.jar(!META-INF/*)
--injars dist/lib/commons-io.jar(!META-INF/*)
 -injars dist/lib/snark.jar(!META-INF/*)
 
 -dontskipnonpubliclibraryclasses

@@ -23,6 +23,10 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.threerings.getdown.data;
 
+import java.io.FileInputStream;
+
+import com.samskivert.io.StreamUtil;
+
 import static com.threerings.getdown.Log.log;
 
 import java.awt.Color;
@@ -63,7 +67,6 @@ import java.util.regex.Pattern;
 import javax.swing.JApplet;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.IOUtils;
 
 import com.samskivert.io.StreamUtil;
 import com.samskivert.text.MessageUtil;
@@ -1182,7 +1185,7 @@ public class Application
                 FileReader reader = null;
                 try {
                     reader = new FileReader(signatureFile);
-                    signature = IOUtils.toByteArray(reader, "utf8");
+                    signature = StreamUtil.toByteArray(new FileInputStream(signatureFile));
                 } finally {
                     StreamUtil.close(reader);
                     signatureFile.delete(); // delete the file regardless
@@ -1267,7 +1270,7 @@ public class Application
         try {
             fin = targetURL.openStream();
             fout = new FileOutputStream(target);
-            IOUtils.copy(fin, fout);
+            StreamUtil.copy(fin, fout);
         } finally {
             StreamUtil.close(fin);
             StreamUtil.close(fout);

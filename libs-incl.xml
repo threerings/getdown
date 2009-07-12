@@ -4,7 +4,6 @@
   <fileset dir="${libs.dir}" id="getdown.libs">
     <include name="ant.jar"/>
     <include name="commons-codec.jar"/>
-    <include name="commons-io.jar"/>
     <include name="proguard.jar"/>
     <include name="retroweaver-all-1.2.2.jar"/>
     <include name="retroweaver-rt-1.2.2.jar"/>

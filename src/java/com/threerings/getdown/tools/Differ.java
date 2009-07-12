@@ -40,7 +40,6 @@ import java.util.zip.ZipEntry;
 import java.security.MessageDigest;
 
 import com.sun.javaws.jardiff.JarDiff;
-import org.apache.commons.io.IOUtils;
 
 import com.samskivert.io.StreamUtil;
 
@@ -243,7 +242,7 @@ public class Differ
     {
         FileInputStream fin = null;
         try {
-            IOUtils.copy(fin = new FileInputStream(file), jout);
+            StreamUtil.copy(fin = new FileInputStream(file), jout);
         } finally {
             StreamUtil.close(fin);
         }
