@@ -58,6 +58,7 @@ public class TorrentDownloader extends Downloader
     }
 
     // documentation inherited
+    @Override
     protected long checkSize(Resource rsrc)
         throws IOException
     {
@@ -89,6 +90,7 @@ public class TorrentDownloader extends Downloader
     }
 
     // documentation inherited
+    @Override
     protected void doDownload(Resource rsrc)
         throws IOException
     {

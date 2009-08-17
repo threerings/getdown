@@ -6,13 +6,13 @@
 //
 // Redistribution and use in source and binary forms, with or without modification, are permitted
 // provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list of
 //    conditions and the following disclaimer in the documentation and/or other materials provided
 //    with the distribution.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
 // INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
 // PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
@@ -33,7 +33,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 
 import com.samskivert.text.MessageUtil;
@@ -63,9 +62,7 @@ public class Digest
         // parse and validate our digest file contents
         StringBuilder data = new StringBuilder();
         File dfile = new File(appdir, DIGEST_FILE);
-        List pairs = ConfigUtil.parsePairs(dfile, false);
-        for (Iterator iter = pairs.iterator(); iter.hasNext(); ) {
-            String[] pair = (String[])iter.next();
+        for (String[] pair : ConfigUtil.parsePairs(dfile, false)) {
             if (pair[0].equals(DIGEST_FILE)) {
                 _metaDigest = pair[1];
                 break;
@@ -132,8 +129,7 @@ public class Digest
             new OutputStreamWriter(new FileOutputStream(output), "UTF-8"));
 
         // compute and append the MD5 digest of each resource in the list
-        for (Iterator<Resource> iter = resources.iterator(); iter.hasNext();) {
-            Resource rsrc = iter.next();
+        for (Resource rsrc : resources) {
             String path = rsrc.getPath();
             try {
                 String digest = rsrc.computeDigest(md, null);

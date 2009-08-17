@@ -27,6 +27,7 @@ import java.awt.Container;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowAdapter;
 import javax.swing.JFrame;
+import javax.swing.WindowConstants;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -99,6 +100,7 @@ public class GetdownApp
 
         try {
             Getdown app = new Getdown(appDir, appId) {
+                @Override
                 protected Container createContainer () {
                     // create our user interface, and display it
                     String title =
@@ -106,6 +108,7 @@ public class GetdownApp
                     if (_frame == null) {
                         _frame = new JFrame(title);
                         _frame.addWindowListener(new WindowAdapter() {
+                            @Override
                             public void windowClosing (WindowEvent evt) {
                                 handleWindowClose();
                             }
@@ -115,9 +118,10 @@ public class GetdownApp
                         _frame.setTitle(title);
                         _frame.getContentPane().removeAll();
                     }
-                    _frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+                    _frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
                     return _frame.getContentPane();
                 }
+                @Override
                 protected void showContainer () {
                     if (_frame != null) {
                         _frame.pack();
@@ -125,12 +129,14 @@ public class GetdownApp
                         _frame.setVisible(true);
                     }
                 }
+                @Override
                 protected void disposeContainer () {
                     if (_frame != null) {
                         _frame.dispose();
                         _frame = null;
                     }
                 }
+                @Override
                 protected void exit (int exitCode) {
                     System.exit(exitCode);
                 }

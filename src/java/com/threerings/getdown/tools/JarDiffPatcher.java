@@ -6,13 +6,13 @@
 //
 // Redistribution and use in source and binary forms, with or without modification, are permitted
 // provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list of
 //    conditions and the following disclaimer in the documentation and/or other materials provided
 //    with the distribution.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
 // INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
 // PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
@@ -88,7 +88,7 @@ public class JarDiffPatcher
         determineNameMapping(jarDiff, ignoreSet, renameMap);
 
         // get all keys in renameMap
-        Object[] keys = renameMap.keySet().toArray();
+        String[] keys = renameMap.keySet().toArray(new String[renameMap.size()]);
 
         // Files to implicit move
         Set<String> oldjarNames  = new HashSet<String>();
@@ -139,9 +139,8 @@ public class JarDiffPatcher
         }
 
         // go through the renameMap and apply move for each entry
-        for (int j = 0; j < keys.length; j++) {
+        for (String newName : keys) {
             // Apply move <oldName> <newName> command
-            String newName = (String)keys[j];
             String oldName = renameMap.get(newName);
 
             // Get source JarEntry
@@ -177,10 +176,10 @@ public class JarDiffPatcher
         }
 
         // implicit move
-        Iterator iEntries = oldjarNames.iterator();
+        Iterator<String> iEntries = oldjarNames.iterator();
         if (iEntries != null) {
             while (iEntries.hasNext()) {
-                String name = (String)iEntries.next();
+                String name = iEntries.next();
                 JarEntry entry = oldJar.getJarEntry(name);
                 updateObserver(observer, currentEntry, size);
                 currentEntry++;

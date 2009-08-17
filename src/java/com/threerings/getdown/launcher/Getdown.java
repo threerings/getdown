@@ -139,6 +139,7 @@ public abstract class Getdown extends Thread
         }
     }
 
+    @Override
     public void run ()
     {
         // if we have no messages, just bail because we're hosed; the error message will be
@@ -245,7 +246,7 @@ public abstract class Getdown extends Thread
                 boolean enabled = false;
                 RegistryKey.initialize();
                 RegistryKey r = new RegistryKey(RootKey.HKEY_CURRENT_USER, PROXY_REGISTRY);
-                for (Iterator iter = r.values(); iter.hasNext(); ) {
+                for (Iterator<?> iter = r.values(); iter.hasNext(); ) {
                     RegistryValue value = (RegistryValue)iter.next();
                     if (value.getName().equals("ProxyEnable")) {
                         enabled = value.getStringValue().equals("1");
@@ -277,7 +278,7 @@ public abstract class Getdown extends Thread
         File pfile = _app.getLocalPath("proxy.txt");
         if (pfile.exists()) {
             try {
-                HashMap pconf = ConfigUtil.parseConfig(pfile, false);
+                HashMap<String, Object> pconf = ConfigUtil.parseConfig(pfile, false);
                 setProxyProperties((String)pconf.get("host"), (String)pconf.get("port"));
                 return true;
             } catch (IOException ioe) {
@@ -744,7 +745,7 @@ public abstract class Getdown extends Thread
                     // spawn a daemon thread that will catch the early bits of stderr in case the
                     // launch fails
                     Thread t = new Thread() {
-                        public void run () {
+                        @Override public void run () {
                             copyStream(stderr, System.err);
                         }
                     };
@@ -971,6 +972,7 @@ public abstract class Getdown extends Thread
             _url = url;
         }
 
+        @Override
         public void run () {
             try {
                 HttpURLConnection ucon = (HttpURLConnection)_url.openConnection();

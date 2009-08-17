@@ -61,25 +61,32 @@ public class GetdownApplet extends JApplet
             // statically included trusted keys.
             _getdown = new Getdown(_config.appdir, null, GetdownApplet.class.getSigners(),
                 _config.jvmargs) {
+                @Override
                 protected Container createContainer () {
                     getContentPane().removeAll();
                     return getContentPane();
                 }
+                @Override
                 protected RotatingBackgrounds getBackground () {
                     return _config.getBackgroundImages(GetdownApplet.this);
                 }
+                @Override
                 protected void showContainer () {
                     ((JPanel)getContentPane()).revalidate();
                 }
+                @Override
                 protected void disposeContainer () {
                     // nothing to do as we're in an applet
                 }
+                @Override
                 protected boolean invokeDirect () {
                     return _config.invokeDirect;
                 }
+                @Override
                 protected JApplet getApplet () {
                     return GetdownApplet.this;
                 }
+                @Override
                 protected void exit (int exitCode) {
                     _app.releaseLock();
                     _config.redirect();

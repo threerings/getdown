@@ -83,6 +83,7 @@ public class DigesterTask extends Task
     /**
      * Performs the actual work of the task.
      */
+    @Override
     public void execute () throws BuildException
     {
         // make sure appdir is set

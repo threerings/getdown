@@ -6,13 +6,13 @@
 //
 // Redistribution and use in source and binary forms, with or without modification, are permitted
 // provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list of
 //    conditions and the following disclaimer in the documentation and/or other materials provided
 //    with the distribution.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
 // INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
 // PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
@@ -31,7 +31,6 @@ import java.io.InputStreamReader;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 
 import com.samskivert.io.StreamUtil;
@@ -136,14 +135,12 @@ public class ConfigUtil
     public static HashMap<String, Object> parseConfig (File config, boolean checkPlatform)
         throws IOException
     {
-        List<String[]> pairs = parsePairs(config, checkPlatform);
         HashMap<String, Object> data = new HashMap<String, Object>();
 
         // I thought that we could use HashMap<String, String[]> and put new String[] {pair[1]} for
         // the null case, but it mysteriously dies on launch, so leaving it as HashMap<String,
         // Object> for now
-        for (Iterator iter = pairs.iterator(); iter.hasNext(); ) {
-            String[] pair = (String[])iter.next();
+        for (String[] pair : parsePairs(config, checkPlatform)) {
             Object value = data.get(pair[0]);
             if (value == null) {
                 data.put(pair[0], pair[1]);
@@ -165,7 +162,7 @@ public class ConfigUtil
      * Massages a single string into an array and leaves existing array values as is. Simplifies
      * access to parameters that are expected to be arrays.
      */
-    public static String[] getMultiValue (HashMap data, String name)
+    public static String[] getMultiValue (HashMap<String, Object> data, String name)
     {
         Object value = data.get(name);
         if (value instanceof String) {

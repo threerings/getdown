@@ -96,6 +96,7 @@ public class ProxyPanel extends JPanel
     }
 
     // documentation inherited
+    @Override
     public void addNotify  ()
     {
         super.addNotify();
@@ -103,6 +104,7 @@ public class ProxyPanel extends JPanel
     }
 
     // documentation inherited
+    @Override
     public Dimension getPreferredSize ()
     {
         // this is annoyingly hardcoded, but we can't just force the width
@@ -144,6 +146,7 @@ public class ProxyPanel extends JPanel
 
     protected static class SaneTextField extends JTextField
     {
+        @Override
         public Dimension getPreferredSize () {
             Dimension d = super.getPreferredSize();
             d.width = Math.max(d.width, 150);

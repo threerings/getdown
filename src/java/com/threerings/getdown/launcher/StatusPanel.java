@@ -36,6 +36,7 @@ import java.util.ResourceBundle;
 import javax.swing.JComponent;
 
 import com.samskivert.swing.Label;
+import com.samskivert.swing.LabelStyleConstants;
 import com.samskivert.swing.util.SwingUtil;
 import com.samskivert.text.MessageUtil;
 import com.samskivert.util.StringUtil;
@@ -110,7 +111,7 @@ public class StatusPanel extends JComponent
         _newplab = new Label(label, _ifc.progressText, _font);
         if (_ifc.textShadow != null) {
             _newplab.setAlternateColor(_ifc.textShadow);
-            _newplab.setStyle(Label.SHADOW);
+            _newplab.setStyle(LabelStyleConstants.SHADOW);
         }
         repaint();
     }
@@ -128,12 +129,13 @@ public class StatusPanel extends JComponent
         _newlab.setTargetWidth(width);
         if (_ifc.textShadow != null) {
             _newlab.setAlternateColor(_ifc.textShadow);
-            _newlab.setStyle(Label.SHADOW);
+            _newlab.setStyle(LabelStyleConstants.SHADOW);
         }
         repaint();
     }
 
     // documentation inherited
+    @Override
     public void paintComponent (Graphics g)
     {
         super.paintComponent(g);
@@ -204,6 +206,7 @@ public class StatusPanel extends JComponent
     }
 
     // documentation inherited
+    @Override
     public Dimension getPreferredSize ()
     {
         return _psize;

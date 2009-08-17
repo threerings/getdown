@@ -76,6 +76,7 @@ public class AbortPanel extends JFrame
     }
 
     // documentation inherited
+    @Override
     public Dimension getPreferredSize ()
     {
         // this is annoyingly hardcoded, but we can't just force the width

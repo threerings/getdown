@@ -6,13 +6,13 @@
 //
 // Redistribution and use in source and binary forms, with or without modification, are permitted
 // provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list of
 //    conditions and the following disclaimer in the documentation and/or other materials provided
 //    with the distribution.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
 // INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
 // PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
@@ -32,7 +32,6 @@ import java.net.URL;
 import java.security.MessageDigest;
 
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -180,6 +179,7 @@ public class Resource
     /**
      * If our path is equal, we are equal.
      */
+    @Override
     public boolean equals (Object other)
     {
         if (other instanceof Resource) {
@@ -192,6 +192,7 @@ public class Resource
     /**
      * We hash on our path.
      */
+    @Override
     public int hashCode ()
     {
         return _path.hashCode();
@@ -200,6 +201,7 @@ public class Resource
     /**
      * Returns a string representation of this instance.
      */
+    @Override
     public String toString ()
     {
         return _path;
@@ -228,9 +230,7 @@ public class Resource
                 entries.sort(ENTRY_COMP);
 
                 int eidx = 0;
-                for (Iterator iter = entries.iterator(); iter.hasNext(); ) {
-                    JarEntry entry = (JarEntry)iter.next();
-
+                for (JarEntry entry : entries) {
                     // skip metadata; we just want the goods
                     if (entry.getName().startsWith("META-INF")) {
                         updateProgress(obs, eidx, entries.size());

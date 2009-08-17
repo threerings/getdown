@@ -60,6 +60,7 @@ public class HTTPDownloader extends Downloader
      * Issues a HEAD request for the specified resource and notes the
      * amount of data we will be downloading to account for it.
      */
+    @Override
     protected long checkSize (Resource rsrc)
         throws IOException
     {
@@ -80,6 +81,7 @@ public class HTTPDownloader extends Downloader
     }
 
     // documentation inherited
+    @Override
     protected void doDownload (Resource rsrc)
         throws IOException
     {

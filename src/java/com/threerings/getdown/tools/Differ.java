@@ -6,13 +6,13 @@
 //
 // Redistribution and use in source and binary forms, with or without modification, are permitted
 // provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list of
 //    conditions and the following disclaimer in the documentation and/or other materials provided
 //    with the distribution.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
 // INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
 // PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
@@ -131,7 +131,7 @@ public class Differ
                         // by leaving it out, it will be left as is during the
                         // patching process
                         continue;
-                    } 
+                    }
 
                     // otherwise potentially create a jar diff
                     if (rsrc.getPath().endsWith(".jar")) {
@@ -192,8 +192,8 @@ public class Differ
         JarOutputStream jout = new JarOutputStream(
             new BufferedOutputStream(new FileOutputStream(temp)));
         byte[] buffer = new byte[4096];
-        for (Enumeration iter = jar.entries(); iter.hasMoreElements(); ) {
-            JarEntry entry = (JarEntry)iter.nextElement();
+        for (Enumeration<JarEntry> iter = jar.entries(); iter.hasMoreElements(); ) {
+            JarEntry entry = iter.nextElement();
             entry.setCompressedSize(-1);
             jout.putNextEntry(entry);
             InputStream in = jar.getInputStream(entry);

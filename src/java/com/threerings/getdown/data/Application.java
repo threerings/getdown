@@ -23,12 +23,6 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.threerings.getdown.data;
 
-import java.io.FileInputStream;
-
-import com.samskivert.io.StreamUtil;
-
-import static com.threerings.getdown.Log.log;
-
 import java.awt.Color;
 import java.awt.Rectangle;
 import java.io.BufferedReader;
@@ -80,6 +74,8 @@ import com.threerings.getdown.util.FileUtil;
 import com.threerings.getdown.util.LaunchUtil;
 import com.threerings.getdown.util.MetaProgressObserver;
 import com.threerings.getdown.util.ProgressObserver;
+
+import static com.threerings.getdown.Log.log;
 
 /**
  * Parses and provide access to the information contained in the <code>getdown.txt</code>
@@ -140,6 +136,7 @@ public class Application
         public String installError;
 
         /** Generates a string representation of this instance. */
+        @Override
         public String toString ()
         {
             return "[name=" + name + ", bg=" + backgroundImage + ", pi=" + progressImage +
@@ -750,7 +747,7 @@ public class Application
         }
 
         // pass along any pass-through arguments
-        for (Map.Entry entry : System.getProperties().entrySet()) {
+        for (Map.Entry<Object, Object> entry : System.getProperties().entrySet()) {
             String key = (String)entry.getKey();
             if (key.startsWith(PROP_PASSTHROUGH_PREFIX)) {
                 key = key.substring(PROP_PASSTHROUGH_PREFIX.length());
@@ -834,7 +831,7 @@ public class Application
         URLClassLoader loader = new URLClassLoader(
             jars.toArray(new URL[jars.size()]),
             ClassLoader.getSystemClassLoader()) {
-            protected PermissionCollection getPermissions (CodeSource code) {
+            @Override protected PermissionCollection getPermissions (CodeSource code) {
                 Permissions perms = new Permissions();
                 perms.add(new AllPermission());
                 return perms;
@@ -856,7 +853,7 @@ public class Application
 
         // pass along any pass-through arguments
         Map<String, String> passProps = new HashMap<String, String>();
-        for (Map.Entry entry : System.getProperties().entrySet()) {
+        for (Map.Entry<Object, Object> entry : System.getProperties().entrySet()) {
             String key = (String)entry.getKey();
             if (key.startsWith(PROP_PASSTHROUGH_PREFIX)) {
                 key = key.substring(PROP_PASSTHROUGH_PREFIX.length());
