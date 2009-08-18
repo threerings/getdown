@@ -567,6 +567,9 @@ public class Application
         // determine whether or not we should be using bit torrent
         _useTorrent = (cdata.get("torrent") != null) || (System.getProperty("torrent") != null);
 
+        // determine whether we want to allow offline operation (defaults to false)
+        _allowOffline = Boolean.parseBoolean((String)cdata.get("allow_offline"));
+
         // look for a debug.txt file which causes us to run in java.exe on Windows so that we can
         // obtain a thread dump of the running JVM
         _windebug = getLocalPath("debug.txt").exists();
@@ -702,11 +705,28 @@ public class Application
             throw (IOException) new IOException(err).initCause(mue);
         }
 
-        // now re-download our control files; we download the digest first so that if it fails, our
-        // config file will still reference the old version and re-running the updater will start
-        // the whole process over again
-        downloadDigestFile();
-        downloadConfigFile();
+        try {
+            // now re-download our control files; we download the digest first so that if it fails,
+            // our config file will still reference the old version and re-running the updater will
+            // start the whole process over again
+            downloadDigestFile();
+            downloadConfigFile();
+
+        } catch (IOException ex) {
+            // if we are allowing offline execution, we want to allow the application to run in its
+            // current form rather than aborting the entire process; to do this, we delete the
+            // version.txt file and "trick" Getdown into thinking that it just needs to validate
+            // the application as is; next time the app runs when connected to the internet, it
+            // will have to rediscover that it needs updating and reattempt to update itself
+            if (_allowOffline) {
+                log.warning("Failed to update digest files.  Attempting offline operaton.", ex);
+                if (!getLocalPath(VERSION_FILE).delete()) {
+                    log.warning("Deleting version.txt failed.  This probably isn't going to work.");
+                }
+            } else {
+                throw ex;
+            }
+        }
     }
 
     /**
@@ -1377,7 +1397,8 @@ public class Application
     protected String _name;
     protected String _dockIconPath;
     protected boolean _windebug;
-    protected boolean _useTorrent = false;
+    protected boolean _useTorrent;
+    protected boolean _allowOffline;
 
     protected String _trackingURL;
     protected ArrayIntSet _trackingPcts;
