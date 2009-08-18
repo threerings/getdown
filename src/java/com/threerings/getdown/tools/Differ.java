@@ -220,7 +220,7 @@ public class Differ
         if (args.length < 2) {
             System.err.println(
                 "Usage: Differ [-verbose] new_vers_dir old_vers_dir");
-            System.exit(-1);
+            System.exit(255);
         }
         Differ differ = new Differ();
         boolean verbose = false;
@@ -234,6 +234,7 @@ public class Differ
                               new File(args[aidx++]), verbose);
         } catch (IOException ioe) {
             System.err.println("Error: " + ioe.getMessage());
+            System.exit(255);
         }
     }
 
