@@ -582,7 +582,7 @@ public class Application
         ui.progressBar = parseColor(cdata, "ui.progress_bar", ui.progressBar);
         ui.status = parseRect(cdata, "ui.status", ui.status);
         ui.statusText = parseColor(cdata, "ui.status_text", ui.statusText);
-        ui.textShadow = parseColor(cdata, "ui.text_shadow", ui.textShadow);
+        ui.textShadow = parseColor(cdata, "ui.text_shadow", ui.textShadow, false);
         ui.backgroundImage = (String)cdata.get("ui.background_image");
         if (ui.backgroundImage == null) { // support legacy format
             ui.backgroundImage = (String)cdata.get("ui.background");
@@ -1351,9 +1351,16 @@ public class Application
     /** Used to parse color specifications from the config file. */
     protected Color parseColor (HashMap<String,Object> cdata, String name, Color def)
     {
+        return parseColor(cdata, name, def, true);
+    }
+
+    /** Used to parse color specifications from the config file. */
+    protected Color parseColor (HashMap<String, Object> cdata, String name, Color def,
+        boolean required)
+    {
         String value = (String)cdata.get(name);
         Color color = parseColor(value);
-        if (color == null) {
+        if (color == null && required) {
             log.warning("Ignoring invalid '" + name + "' config '" + value + "'.");
         } else {
             return color;
