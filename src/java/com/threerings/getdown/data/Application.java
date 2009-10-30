@@ -65,6 +65,7 @@ import org.apache.commons.codec.binary.Base64;
 import com.samskivert.io.StreamUtil;
 import com.samskivert.text.MessageUtil;
 import com.samskivert.util.ArrayIntSet;
+import com.samskivert.util.RandomUtil;
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
 
@@ -368,7 +369,9 @@ public class Application
     {
         try {
             String suffix = _trackingURLSuffix == null ? "" : _trackingURLSuffix;
-            return _trackingURL == null ? null : new URL(_trackingURL + event + suffix);
+            String random = _trackingURLRandomPrefix == null ?
+                "" : _trackingURLRandomPrefix + RandomUtil.getInt(_trackingRandomRange);
+            return _trackingURL == null ? null : new URL(_trackingURL + event + suffix + random);
         } catch (MalformedURLException mue) {
             log.warning("Invalid tracking URL [path=" + _trackingURL + ", event=" + event +
                         ", error=" + mue + "].");
@@ -512,6 +515,18 @@ public class Application
 
         // Some app may need an extra suffix added to the tracking URL
         _trackingURLSuffix = (String)cdata.get("tracking_url_suffix");
+
+        // Some app may need a random value in the tracking URL
+        _trackingURLRandomPrefix = (String)cdata.get("tracking_url_random_prefix");
+        vstr = (String)cdata.get("tracking_random_range");
+        if (vstr != null) {
+            try {
+                _trackingRandomRange = Integer.parseInt(vstr);
+            } catch (Exception e) {
+                String err = MessageUtil.tcompose("m.invalid_random_range", vstr);
+                throw (IOException) new IOException(err).initCause(e);
+            }
+        }
 
         // clear our arrays as we may be reinitializing
         _codes.clear();
@@ -1412,6 +1427,8 @@ public class Application
     protected String _trackingCookieName;
     protected String _trackingCookieProperty;
     protected String _trackingURLSuffix;
+    protected String _trackingURLRandomPrefix;
+    protected int _trackingRandomRange;
 
     protected int _javaVersion;
     protected String _javaLocation;
