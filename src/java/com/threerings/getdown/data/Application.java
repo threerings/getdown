@@ -369,9 +369,12 @@ public class Application
     {
         try {
             String suffix = _trackingURLSuffix == null ? "" : _trackingURLSuffix;
-            String random = _trackingURLRandomPrefix == null ?
-                "" : _trackingURLRandomPrefix + RandomUtil.getInt(_trackingRandomRange);
-            return _trackingURL == null ? null : new URL(_trackingURL + event + suffix + random);
+            String ga = getGATrackingCode();
+            if (_trackingURL != null) {
+                log.info("Tracking", "url", _trackingURL + event + suffix + ga);
+            }
+            return _trackingURL == null ?
+                null : new URL(_trackingURL + event + suffix + ga);
         } catch (MalformedURLException mue) {
             log.warning("Invalid tracking URL [path=" + _trackingURL + ", event=" + event +
                         ", error=" + mue + "].");
@@ -516,17 +519,8 @@ public class Application
         // Some app may need an extra suffix added to the tracking URL
         _trackingURLSuffix = (String)cdata.get("tracking_url_suffix");
 
-        // Some app may need a random value in the tracking URL
-        _trackingURLRandomPrefix = (String)cdata.get("tracking_url_random_prefix");
-        vstr = (String)cdata.get("tracking_random_range");
-        if (vstr != null) {
-            try {
-                _trackingRandomRange = Integer.parseInt(vstr);
-            } catch (Exception e) {
-                String err = MessageUtil.tcompose("m.invalid_random_range", vstr);
-                throw (IOException) new IOException(err).initCause(e);
-            }
-        }
+        // Some app may need to generate google analytics code
+        _trackingGAHash = (String)cdata.get("tracking_ga_hash");
 
         // clear our arrays as we may be reinitializing
         _codes.clear();
@@ -1406,6 +1400,29 @@ public class Application
         return (value == null) ? new String[0] : StringUtil.parseStringArray(value);
     }
 
+    /** Possibly generates and returns a google analytics tracking cookie. */
+    protected String getGATrackingCode ()
+    {
+        if (_trackingGAHash == null) {
+            return "";
+        }
+        long time = System.currentTimeMillis() / 1000;
+        if (_trackingStart == 0) {
+            _trackingStart = time;
+        }
+        if (_trackingId == 0) {
+            _trackingId = RandomUtil.getInt(2000000000, 1000000000);
+        }
+        StringBuilder cookie = new StringBuilder("&utmcc=__utma%3D").append(_trackingGAHash);
+        cookie.append(".").append(_trackingId);
+        cookie.append(".").append(_trackingStart).append(".").append(_trackingStart);
+        cookie.append(".").append(time).append(".1%3B%2B");
+        cookie.append("__utmz%3D").append(_trackingGAHash).append(_trackingStart).append("1.1.");
+        cookie.append("utmcsr%3D(direct)%7Cutmccn%3D(direct)%7Cutmcmd%3D(none)%3B");
+        cookie.append("&utmn=").append(RandomUtil.getInt(1000000000, 100000000));
+        return cookie.toString();
+    }
+
     protected File _appdir;
     protected String _appid;
     protected File _config;
@@ -1427,8 +1444,9 @@ public class Application
     protected String _trackingCookieName;
     protected String _trackingCookieProperty;
     protected String _trackingURLSuffix;
-    protected String _trackingURLRandomPrefix;
-    protected int _trackingRandomRange;
+    protected String _trackingGAHash;
+    protected long _trackingStart;
+    protected int _trackingId;
 
     protected int _javaVersion;
     protected String _javaLocation;
