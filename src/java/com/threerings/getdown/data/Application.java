@@ -370,9 +370,6 @@ public class Application
         try {
             String suffix = _trackingURLSuffix == null ? "" : _trackingURLSuffix;
             String ga = getGATrackingCode();
-            if (_trackingURL != null) {
-                log.info("Tracking", "url", _trackingURL + event + suffix + ga);
-            }
             return _trackingURL == null ?
                 null : new URL(_trackingURL + event + suffix + ga);
         } catch (MalformedURLException mue) {
