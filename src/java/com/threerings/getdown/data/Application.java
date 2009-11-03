@@ -1408,15 +1408,16 @@ public class Application
             _trackingStart = time;
         }
         if (_trackingId == 0) {
-            _trackingId = RandomUtil.getInt(2000000000, 1000000000);
+            _trackingId = RandomUtil.getInt(1000000000, 100000000);
         }
         StringBuilder cookie = new StringBuilder("&utmcc=__utma%3D").append(_trackingGAHash);
         cookie.append(".").append(_trackingId);
         cookie.append(".").append(_trackingStart).append(".").append(_trackingStart);
         cookie.append(".").append(time).append(".1%3B%2B");
-        cookie.append("__utmz%3D").append(_trackingGAHash).append(_trackingStart).append("1.1.");
+        cookie.append("__utmz%3D").append(_trackingGAHash).append(".");
+        cookie.append(_trackingStart).append(".1.1.");
         cookie.append("utmcsr%3D(direct)%7Cutmccn%3D(direct)%7Cutmcmd%3D(none)%3B");
-        cookie.append("&utmn=").append(RandomUtil.getInt(1000000000, 100000000));
+        cookie.append("&utmn=").append(RandomUtil.getInt(2000000000, 1000000000));
         return cookie.toString();
     }
 
