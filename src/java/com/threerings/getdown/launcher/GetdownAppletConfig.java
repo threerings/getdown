@@ -2,7 +2,7 @@
 // $Id$
 //
 // Getdown - application installer, patcher and launcher
-// Copyright (C) 2004-2009 Three Rings Design, Inc.
+// Copyright (C) 2004-2010 Three Rings Design, Inc.
 //
 // Redistribution and use in source and binary forms, with or without modification, are permitted
 // provided that the following conditions are met:
