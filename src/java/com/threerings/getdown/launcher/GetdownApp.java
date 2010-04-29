@@ -6,13 +6,13 @@
 //
 // Redistribution and use in source and binary forms, with or without modification, are permitted
 // provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list of
 //    conditions and the following disclaimer in the documentation and/or other materials provided
 //    with the distribution.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
 // INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
 // PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
@@ -36,6 +36,7 @@ import java.io.BufferedOutputStream;
 import java.io.PrintStream;
 
 import com.samskivert.swing.util.SwingUtil;
+import com.samskivert.util.ArrayUtil;
 import com.samskivert.util.StringUtil;
 
 import static com.threerings.getdown.Log.log;
@@ -54,7 +55,7 @@ public class GetdownApp
         if (StringUtil.isBlank(adarg)) {
             if (args.length < 1) {
                 System.err.println(
-                    "Usage: java -jar getdown.jar app_dir [app_id]");
+                    "Usage: java -jar getdown.jar app_dir [app_id] [jvm args]");
                 System.exit(-1);
             }
             adarg = args[aidx++];
@@ -64,6 +65,12 @@ public class GetdownApp
         String appId = null;
         if (args.length > aidx) {
             appId = args[aidx++];
+        }
+
+        // pass along anything after that as jvm args
+        String[] jvmargs = null;
+        if (args.length > aidx) {
+            jvmargs = ArrayUtil.splice(args, 0, aidx);
         }
 
         // ensure a valid directory was supplied
@@ -99,7 +106,7 @@ public class GetdownApp
         log.info("---------------------------------------------");
 
         try {
-            Getdown app = new Getdown(appDir, appId) {
+            Getdown app = new Getdown(appDir, appId, null, jvmargs) {
                 @Override
                 protected Container createContainer () {
                     // create our user interface, and display it
