@@ -55,7 +55,7 @@ public class GetdownApp
         if (StringUtil.isBlank(adarg)) {
             if (args.length < 1) {
                 System.err.println(
-                    "Usage: java -jar getdown.jar app_dir [app_id] [jvm args]");
+                    "Usage: java -jar getdown.jar app_dir [app_id] [app args]");
                 System.exit(-1);
             }
             adarg = args[aidx++];
@@ -68,9 +68,9 @@ public class GetdownApp
         }
 
         // pass along anything after that as jvm args
-        String[] jvmargs = null;
+        String[] appargs = null;
         if (args.length > aidx) {
-            jvmargs = ArrayUtil.splice(args, 0, aidx);
+            appargs = ArrayUtil.splice(args, 0, aidx);
         }
 
         // ensure a valid directory was supplied
@@ -106,7 +106,7 @@ public class GetdownApp
         log.info("---------------------------------------------");
 
         try {
-            Getdown app = new Getdown(appDir, appId, null, jvmargs) {
+            Getdown app = new Getdown(appDir, appId, null, null, appargs) {
                 @Override
                 protected Container createContainer () {
                     // create our user interface, and display it

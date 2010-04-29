@@ -164,7 +164,7 @@ public class Application
      */
     public Application (File appdir, String appid)
     {
-        this(appdir, appid, null, null);
+        this(appdir, appid, null, null, null);
     }
 
     /**
@@ -177,8 +177,10 @@ public class Application
      * the primary application.
      * @param signers an array of possible signers of this application. Used to verify the digest.
      * @param jvmargs arguments to pass on to launched jvms
+     * @param appargs arguments to pass on to launched application
      */
-    public Application (File appdir, String appid, Object[] signers, String[] jvmargs)
+    public Application (
+        File appdir, String appid, Object[] signers, String[] jvmargs, String[] appargs)
     {
         _appdir = appdir;
         _appid = appid;
@@ -186,6 +188,9 @@ public class Application
         _config = getLocalPath(CONFIG_FILE);
         if (jvmargs != null) {
             _baseJvmArgs = jvmargs;
+        }
+        if (appargs != null) {
+            _baseAppArgs = appargs;
         }
     }
 
@@ -565,6 +570,11 @@ public class Application
             for (String apparg : appargs) {
                 _appargs.add(apparg);
             }
+        }
+
+        // add the launch specific application arguments
+        for (String arg : _baseAppArgs) {
+            _appargs.add(arg);
         }
 
         // look for custom arguments
@@ -1461,6 +1471,7 @@ public class Application
     protected ArrayList<String> _appargs = new ArrayList<String>();
 
     protected String[] _baseJvmArgs = new String[0];
+    protected String[] _baseAppArgs = new String[0];
 
     protected Object[] _signers;
 
