@@ -782,6 +782,9 @@ public class Application
             args.add("-Dhttp.proxyPort=" + System.getProperty("http.proxyPort"));
         }
 
+        // add the marker indicating the app is running in getdown
+        args.add("-D" + Properties.GETDOWN + "=true");
+
         // pass along any pass-through arguments
         for (Map.Entry<Object, Object> entry : System.getProperties().entrySet()) {
             String key = (String)entry.getKey();
@@ -806,8 +809,7 @@ public class Application
 
 
         String[] envp = createEnvironment();
-        String[] sargs = new String[args.size()];
-        args.toArray(sargs);
+        String[] sargs = args.toArray(new String[args.size()]);
         log.info("Running " + StringUtil.join(sargs, "\n  "));
 
         return Runtime.getRuntime().exec(sargs, envp);
