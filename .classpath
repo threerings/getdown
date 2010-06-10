@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src/java"/>
+	<classpathentry kind="lib" path="dist/lib/javaws.jar"/>
+	<classpathentry kind="lib" path="lib/ant-contrib.jar"/>
+	<classpathentry kind="lib" path="lib/ant.jar"/>
+	<classpathentry kind="lib" path="lib/commons-codec.jar"/>
+	<classpathentry kind="lib" path="lib/commons-io.jar"/>
+	<classpathentry kind="lib" path="lib/javaws.jar"/>
+	<classpathentry kind="lib" path="lib/jRegistryKey.jar"/>
+	<classpathentry kind="lib" path="lib/proguard.jar"/>
+	<classpathentry kind="lib" path="lib/retroweaver-all-1.2.2.jar"/>
+	<classpathentry kind="lib" path="lib/retroweaver-rt-1.2.2.jar"/>
+	<classpathentry kind="lib" path="lib/samskivert.jar"/>
+	<classpathentry kind="lib" path="lib/snark.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="output" path="dist/classes"/>
+</classpath>
