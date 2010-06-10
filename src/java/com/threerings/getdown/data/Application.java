@@ -160,7 +160,7 @@ public class Application
     /**
      * Creates an application instance with no signers.
      *
-     * @see #Application(File, String, Object[])
+     * @see #Application(File, String, Object[], String[], String[])
      */
     public Application (File appdir, String appid)
     {
