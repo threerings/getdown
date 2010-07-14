@@ -506,7 +506,7 @@ public abstract class Getdown extends Thread
         try {
             // First try for a localized image.
             String localeStr = Locale.getDefault().getLanguage();
-            imgpath = _app.getLocalPath(StringUtil.replace(path, ".", "_" + localeStr + "."));
+            imgpath = _app.getLocalPath(path.replace(".", "_" + localeStr + "."));
             return ImageIO.read(imgpath);
         } catch (IOException ioe) {
             // No biggie, we'll try the generic one.

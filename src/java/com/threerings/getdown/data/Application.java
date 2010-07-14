@@ -926,8 +926,8 @@ public class Application
     /** Replaces the application directory and version in any argument. */
     protected String processArg (String arg)
     {
-        arg = StringUtil.replace(arg, "%APPDIR%", _appdir.getAbsolutePath());
-        arg = StringUtil.replace(arg, "%VERSION%", String.valueOf(_version));
+        arg = arg.replace("%APPDIR%", _appdir.getAbsolutePath());
+        arg = arg.replace("%VERSION%", String.valueOf(_version));
         return arg;
     }
 
@@ -1111,7 +1111,7 @@ public class Application
     protected URL createVAppBase (long version)
         throws MalformedURLException
     {
-        return new URL(StringUtil.replace(_appbase, "%VERSION%", "" + version));
+        return new URL(_appbase.replace("%VERSION%", "" + version));
     }
 
     /**
