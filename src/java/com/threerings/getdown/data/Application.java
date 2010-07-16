@@ -51,10 +51,12 @@ import java.security.Signature;
 import java.security.cert.Certificate;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -64,7 +66,6 @@ import org.apache.commons.codec.binary.Base64;
 
 import com.samskivert.io.StreamUtil;
 import com.samskivert.text.MessageUtil;
-import com.samskivert.util.ArrayIntSet;
 import com.samskivert.util.RandomUtil;
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
@@ -509,9 +510,13 @@ public class Application
         // check for tracking progress percent configuration
         String trackPcts = (String)cdata.get("tracking_percents");
         if (!StringUtil.isBlank(trackPcts)) {
-            _trackingPcts = new ArrayIntSet(StringUtil.parseIntArray(trackPcts));
+            _trackingPcts = new HashSet<Integer>();
+            for (int pct : StringUtil.parseIntArray(trackPcts)) {
+                _trackingPcts.add(pct);
+            }
         } else if (!StringUtil.isBlank(_trackingURL)) {
-            _trackingPcts = new ArrayIntSet(new int[] { 50 });
+            _trackingPcts = new HashSet<Integer>();
+            _trackingPcts.add(50);
         }
 
         // Check for tracking cookie configuration
@@ -1450,7 +1455,7 @@ public class Application
     protected boolean _allowOffline;
 
     protected String _trackingURL;
-    protected ArrayIntSet _trackingPcts;
+    protected Set<Integer> _trackingPcts;
     protected String _trackingCookieName;
     protected String _trackingCookieProperty;
     protected String _trackingURLSuffix;

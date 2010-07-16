@@ -32,13 +32,13 @@ import java.net.URL;
 import java.security.MessageDigest;
 
 import java.util.Comparator;
+import java.util.Collections;
+import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 import com.samskivert.io.StreamUtil;
-import com.samskivert.util.CollectionUtil;
 import com.samskivert.util.FileUtil;
-import com.samskivert.util.SortableArrayList;
 import com.samskivert.util.StringUtil;
 
 import com.threerings.getdown.util.ProgressObserver;
@@ -224,10 +224,8 @@ public class Resource
         if (target.getPath().endsWith(".jar")) {
             JarFile jar = new JarFile(target);
             try {
-                SortableArrayList<JarEntry> entries =
-                    new SortableArrayList<JarEntry>();
-                CollectionUtil.addAll(entries, jar.entries());
-                entries.sort(ENTRY_COMP);
+                List<JarEntry> entries = Collections.list(jar.entries());
+                Collections.sort(entries, ENTRY_COMP);
 
                 int eidx = 0;
                 for (JarEntry entry : entries) {

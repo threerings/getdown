@@ -35,8 +35,10 @@ import java.io.IOException;
 import java.io.BufferedOutputStream;
 import java.io.PrintStream;
 
+import java.util.Arrays;
+import java.util.List;
+
 import com.samskivert.swing.util.SwingUtil;
-import com.samskivert.util.ArrayUtil;
 import com.samskivert.util.StringUtil;
 
 import static com.threerings.getdown.Log.log;
@@ -46,32 +48,28 @@ import static com.threerings.getdown.Log.log;
  */
 public class GetdownApp
 {
-    public static void main (String[] args)
+    public static void main (String[] argArray)
     {
         // maybe they specified the appdir in a system property
         int aidx = 0;
+        List<String> args = Arrays.asList(argArray);
         String adarg = System.getProperty("appdir");
         // if not, check for a command line argument
         if (StringUtil.isBlank(adarg)) {
-            if (args.length < 1) {
+            if (args.isEmpty()) {
                 System.err.println(
                     "Usage: java -jar getdown.jar app_dir [app_id] [app args]");
                 System.exit(-1);
             }
-            adarg = args[aidx++];
+            adarg = args.get(aidx++);
         }
 
         // look for a specific app identifier
-        String appId = null;
-        if (args.length > aidx) {
-            appId = args[aidx++];
-        }
+        String appId = (aidx < args.size()) ? args.get(aidx++) : null;
 
         // pass along anything after that as jvm args
-        String[] appargs = null;
-        if (args.length > aidx) {
-            appargs = ArrayUtil.splice(args, 0, aidx);
-        }
+        String[] appargs = (aidx < args.size())
+            ? args.subList(aidx, args.size()).toArray(new String[0]) : null;
 
         // ensure a valid directory was supplied
         File appDir = new File(adarg);
