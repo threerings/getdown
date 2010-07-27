@@ -69,6 +69,7 @@ public class StatusPanel extends JComponent
             _psize = new Dimension(img.getWidth(null), img.getHeight(null));
         }
         _barimg = barimg;
+        invalidate();
     }
 
     /**
