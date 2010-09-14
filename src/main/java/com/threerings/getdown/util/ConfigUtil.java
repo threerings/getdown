@@ -190,7 +190,7 @@ public class ConfigUtil
         if (quals.startsWith("!")) {
             if (quals.indexOf(",") != -1) { // sanity check
                 log.warning("Multiple qualifiers cannot be used when one of the qualifiers " +
-                            "is negative", "qual", quals);
+                            "is negative", "quals", quals);
                 return false;
             }
             return !checkQualifier(quals.substring(1), osname, osarch);
