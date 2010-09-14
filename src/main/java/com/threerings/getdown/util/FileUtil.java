@@ -23,10 +23,15 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.threerings.getdown.util;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.Reader;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import com.samskivert.io.StreamUtil;
 
@@ -91,5 +96,22 @@ public class FileUtil
             StreamUtil.close(fin);
             StreamUtil.close(fout);
         }
+    }
+
+    /**
+     * Reads the contents of the supplied input stream into a list of lines. Closes the reader on
+     * successful or failed completion.
+     */
+    public static List<String> readLines (Reader in)
+        throws IOException
+    {
+        List<String> lines = new ArrayList<String>();
+        try {
+            BufferedReader bin = new BufferedReader(in);
+            for (String line = null; (line = bin.readLine()) != null; lines.add(line)) {}
+        } finally {
+            StreamUtil.close(in);
+        }
+        return lines;
     }
 }

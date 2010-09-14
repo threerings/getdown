@@ -23,17 +23,16 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.threerings.getdown.util;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Reader;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import com.samskivert.io.StreamUtil;
 import com.samskivert.util.StringUtil;
 
 import static com.threerings.getdown.Log.log;
@@ -48,81 +47,30 @@ public class ConfigUtil
      * Parses a configuration file containing key/value pairs. The file must be in the UTF-8
      * encoding.
      *
+     * @param checkPlatform if true, platform qualifiers will be used to filter out pairs that do
+     * not match the current platform; if false, all pairs will be returned.
+     *
      * @return a list of <code>String[]</code> instances containing the key/value pairs in the
      * order they were parsed from the file.
      */
     public static List<String[]> parsePairs (File config, boolean checkPlatform)
         throws IOException
     {
-        ArrayList<String[]> pairs = new ArrayList<String[]>();
-        String osname = System.getProperty("os.name");
-        osname = (osname == null) ? "" : osname.toLowerCase();
+        // annoyingly FileReader does not allow encoding to be specified (uses platform default)
+        return parsePairs(
+            new InputStreamReader(new FileInputStream(config), "UTF-8"), checkPlatform);
+    }
 
-        // parse our configuration file
-        FileInputStream fin = null;
-        try {
-            fin = new FileInputStream(config);
-            BufferedReader bin = new BufferedReader(new InputStreamReader(fin, "UTF-8"));
-            String line = null;
-            while ((line = bin.readLine()) != null) {
-                // nix comments
-                int cidx = line.indexOf("#");
-                if (cidx != -1) {
-                    line = line.substring(0, cidx);
-                }
-
-                // trim whitespace and skip blank lines
-                line = line.trim();
-                if (StringUtil.isBlank(line)) {
-                    continue;
-                }
-
-                // parse our key/value pair
-                String[] pair = new String[2];
-                int eidx = line.indexOf("=");
-                if (eidx != -1) {
-                    pair[0] = line.substring(0, eidx).trim();
-                    pair[1] = line.substring(eidx+1).trim();
-                } else {
-                    pair[0] = line;
-                    pair[1] = "";
-                }
-
-                // allow a value to have a [Linux]
-                if (pair[1].startsWith("[")) {
-                    cidx = pair[1].indexOf("]");
-                    if (cidx == -1) {
-                        log.warning("Bogus platform specifier [key=" + pair[0] +
-                                    ", value=" + pair[1] + "].");
-                    } else {
-                        String platform = pair[1].substring(1, cidx);
-                        platform = platform.trim().toLowerCase();
-                        pair[1] = pair[1].substring(cidx+1).trim();
-                        if (checkPlatform) {
-                            if (platform.startsWith("!")) {
-                                platform = platform.substring(1);
-                                if (osname.indexOf(platform) != -1) {
-                                    log.info("Skipping [platform=!" + platform +
-                                             ", key=" + pair[0] + ", value=" + pair[1] + "].");
-                                    continue;
-                                }
-                            } else if (osname.indexOf(platform) == -1) {
-                                log.info("Skipping [platform=" + platform +
-                                         ", key=" + pair[0] + ", value=" + pair[1] + "].");
-                                continue;
-                            }
-                        }
-                    }
-                }
-
-                pairs.add(pair);
-            }
-
-        } finally {
-            StreamUtil.close(fin);
-        }
-
-        return pairs;
+    /**
+     * See {@link #parsePairs(File,boolean}.
+     */
+    public static List<String[]> parsePairs (Reader config, boolean checkPlatform)
+        throws IOException
+    {
+        return parsePairs(
+            config,
+            checkPlatform ? StringUtil.deNull(System.getProperty("os.name")).toLowerCase() : null,
+            checkPlatform ? StringUtil.deNull(System.getProperty("os.arch")).toLowerCase() : null);
     }
 
     /**
@@ -170,5 +118,91 @@ public class ConfigUtil
         } else {
             return (String[])value;
         }
+    }
+
+    /**
+     * A helper function for {@link #parsePairs(Reader,boolean}.
+     */
+    protected static List<String[]> parsePairs (Reader config, String osname, String osarch)
+        throws IOException
+    {
+        List<String[]> pairs = new ArrayList<String[]>();
+        for (String line : FileUtil.readLines(config)) {
+            // nix comments
+            int cidx = line.indexOf("#");
+            if (cidx != -1) {
+                line = line.substring(0, cidx);
+            }
+
+            // trim whitespace and skip blank lines
+            line = line.trim();
+            if (StringUtil.isBlank(line)) {
+                continue;
+            }
+
+            // parse our key/value pair
+            String[] pair = new String[2];
+            int eidx = line.indexOf("=");
+            if (eidx != -1) {
+                pair[0] = line.substring(0, eidx).trim();
+                pair[1] = line.substring(eidx+1).trim();
+            } else {
+                pair[0] = line;
+                pair[1] = "";
+            }
+
+            // if the pair has an os qualifier, we need to process it
+            if (pair[1].startsWith("[")) {
+                int qidx = pair[1].indexOf("]");
+                if (qidx == -1) {
+                    log.warning("Bogus platform specifier", "key", pair[0], "value", pair[1]);
+                    continue; // omit the pair entirely
+                }
+                // if we're checking qualifiers and the os doesn't match this qualifier, skip it
+                String quals = pair[1].substring(1, qidx);
+                if (osname != null && !checkQualifiers(quals, osname, osarch)) {
+                    log.info("Skipping", "quals", quals, "osname", osname, "osarch", osarch,
+                             "key", pair[0], "value", pair[1]);
+                    continue;
+                }
+                // otherwise filter out the qualifier text
+                pair[1] = pair[1].substring(qidx+1).trim();
+            }
+
+            pairs.add(pair);
+        }
+
+        return pairs;
+    }
+
+    /**
+     * A helper function for {@link #parsePairs(Reader,String,String)}. Qualifiers have the
+     * following form:
+     * <pre>
+     * id = os[-arch]
+     * ids = id | id,ids
+     * quals = !id | ids
+     * </pre>
+     * Examples: [linux-amd64,linux-x86_64], [windows], [mac os x], [!windows].
+     */
+    protected static boolean checkQualifiers (String quals, String osname, String osarch)
+    {
+        for (String qual : quals.split(",")) {
+            String[] bits = qual.trim().toLowerCase().split("-");
+            String os = bits[0], arch = (bits.length > 1) ? bits[1] : "";
+            if (os.startsWith("!")) {
+                // if we have a negative match, we can immediately return false
+                if (osname.indexOf(os.substring(1)) != -1 && osarch.indexOf(arch) != -1) {
+                    return false;
+                }
+            } else {
+                // if we have a positive match, we can immediately return true
+                if (osname.indexOf(os) != -1 && osarch.indexOf(arch) != -1) {
+                    return true;
+                }
+            }
+        }
+        // we had no positive matches, so return false
+        return false;
     }
 }
