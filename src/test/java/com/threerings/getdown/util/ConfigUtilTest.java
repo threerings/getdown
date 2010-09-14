@@ -74,7 +74,8 @@ public class ConfigUtilTest
         Pair linux64s = new Pair("nine", "[linux-x86_64, linux-amd64] ten");
         Pair mac64 = new Pair("eleven", "[mac os x-x86_64] twelve");
         Pair win64 = new Pair("thirteen", "[windows-x86_64] fourteen");
-        Pair[] pairs = { linux, mac, linuxAndMac, linux64, linux64s, mac64, win64 };
+        Pair notWin = new Pair("fifteen", "[!windows] sixteen");
+        Pair[] pairs = { linux, mac, linuxAndMac, linux64, linux64s, mac64, win64, notWin };
 
         List<String[]> parsed = ConfigUtil.parsePairs(toReader(pairs), "linux", "i386");
         assertTrue(exists(parsed, linux.key));
@@ -84,6 +85,7 @@ public class ConfigUtilTest
         assertTrue(!exists(parsed, linux64s.key));
         assertTrue(!exists(parsed, mac64.key));
         assertTrue(!exists(parsed, win64.key));
+        assertTrue(exists(parsed, notWin.key));
 
         parsed = ConfigUtil.parsePairs(toReader(pairs), "linux", "x86_64");
         assertTrue(exists(parsed, linux.key));
@@ -93,6 +95,7 @@ public class ConfigUtilTest
         assertTrue(exists(parsed, linux64s.key));
         assertTrue(!exists(parsed, mac64.key));
         assertTrue(!exists(parsed, win64.key));
+        assertTrue(exists(parsed, notWin.key));
 
         parsed = ConfigUtil.parsePairs(toReader(pairs), "linux", "amd64");
         assertTrue(exists(parsed, linux.key));
@@ -102,6 +105,7 @@ public class ConfigUtilTest
         assertTrue(exists(parsed, linux64s.key));
         assertTrue(!exists(parsed, mac64.key));
         assertTrue(!exists(parsed, win64.key));
+        assertTrue(exists(parsed, notWin.key));
 
         parsed = ConfigUtil.parsePairs(toReader(pairs), "mac os x", "x86_64");
         assertTrue(!exists(parsed, linux.key));
@@ -111,6 +115,7 @@ public class ConfigUtilTest
         assertTrue(!exists(parsed, linux64s.key));
         assertTrue(exists(parsed, mac64.key));
         assertTrue(!exists(parsed, win64.key));
+        assertTrue(exists(parsed, notWin.key));
 
         parsed = ConfigUtil.parsePairs(toReader(pairs), "windows", "i386");
         assertTrue(!exists(parsed, linux.key));
@@ -120,6 +125,7 @@ public class ConfigUtilTest
         assertTrue(!exists(parsed, linux64s.key));
         assertTrue(!exists(parsed, mac64.key));
         assertTrue(!exists(parsed, win64.key));
+        assertTrue(!exists(parsed, notWin.key));
 
         parsed = ConfigUtil.parsePairs(toReader(pairs), "windows", "x86_64");
         assertTrue(!exists(parsed, linux.key));
@@ -129,6 +135,7 @@ public class ConfigUtilTest
         assertTrue(!exists(parsed, linux64s.key));
         assertTrue(!exists(parsed, mac64.key));
         assertTrue(exists(parsed, win64.key));
+        assertTrue(!exists(parsed, notWin.key));
 
         parsed = ConfigUtil.parsePairs(toReader(pairs), "windows", "amd64");
         assertTrue(!exists(parsed, linux.key));
@@ -138,6 +145,7 @@ public class ConfigUtilTest
         assertTrue(!exists(parsed, linux64s.key));
         assertTrue(!exists(parsed, mac64.key));
         assertTrue(!exists(parsed, win64.key));
+        assertTrue(!exists(parsed, notWin.key));
     }
 
     protected static boolean exists (List<String[]> pairs, String key)

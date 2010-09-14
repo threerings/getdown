@@ -21,6 +21,7 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
 // LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 package com.threerings.getdown.util;
 
 import java.io.File;
@@ -120,9 +121,7 @@ public class ConfigUtil
         }
     }
 
-    /**
-     * A helper function for {@link #parsePairs(Reader,boolean}.
-     */
+    /** A helper function for {@link #parsePairs(Reader,boolean}. */
     protected static List<String[]> parsePairs (Reader config, String osname, String osarch)
         throws IOException
     {
@@ -183,26 +182,33 @@ public class ConfigUtil
      * ids = id | id,ids
      * quals = !id | ids
      * </pre>
-     * Examples: [linux-amd64,linux-x86_64], [windows], [mac os x], [!windows].
+     * Examples: [linux-amd64,linux-x86_64], [windows], [mac os x], [!windows]. Negative qualifiers
+     * must only be used alone as they trigger match or non-match immediately, irrespective of the
+     * value of other qualifiers.
      */
     protected static boolean checkQualifiers (String quals, String osname, String osarch)
     {
+        if (quals.startsWith("!")) {
+            if (quals.indexOf(",") != -1) { // sanity check
+                log.warning("Multiple qualifiers cannot be used when one of the qualifiers " +
+                            "is negative", "qual", quals);
+                return false;
+            }
+            return !checkQualifier(quals.substring(1), osname, osarch);
+        }
         for (String qual : quals.split(",")) {
-            String[] bits = qual.trim().toLowerCase().split("-");
-            String os = bits[0], arch = (bits.length > 1) ? bits[1] : "";
-            if (os.startsWith("!")) {
-                // if we have a negative match, we can immediately return false
-                if (osname.indexOf(os.substring(1)) != -1 && osarch.indexOf(arch) != -1) {
-                    return false;
-                }
-            } else {
-                // if we have a positive match, we can immediately return true
-                if (osname.indexOf(os) != -1 && osarch.indexOf(arch) != -1) {
-                    return true;
-                }
+            if (checkQualifier(qual, osname, osarch)) {
+                return true; // if we have a positive match, we can immediately return true
             }
         }
-        // we had no positive matches, so return false
-        return false;
+        return false; // we had no positive matches, so return false
+    }
+
+    /** A helper function for {@link #checkQualifiers}. */
+    protected static boolean checkQualifier (String qual, String osname, String osarch)
+    {
+        String[] bits = qual.trim().toLowerCase().split("-");
+        String os = bits[0], arch = (bits.length > 1) ? bits[1] : "";
+        return (osname.indexOf(os) != -1) && (osarch.indexOf(arch) != -1);
     }
 }
