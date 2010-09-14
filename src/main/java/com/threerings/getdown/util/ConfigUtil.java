@@ -183,8 +183,7 @@ public class ConfigUtil
      * quals = !id | ids
      * </pre>
      * Examples: [linux-amd64,linux-x86_64], [windows], [mac os x], [!windows]. Negative qualifiers
-     * must only be used alone as they trigger match or non-match immediately, irrespective of the
-     * value of other qualifiers.
+     * must appear alone, they cannot be used with other qualifiers (positive or negative).
      */
     protected static boolean checkQualifiers (String quals, String osname, String osarch)
     {
