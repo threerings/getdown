@@ -3,7 +3,8 @@
 
   <!-- various basic settings -->
   <property name="app.name" value="getdown"/>
-  <property name="src.dir" value="src/java"/>
+  <property name="src.dir" value="src/main/java"/>
+  <property name="test.dir" value="src/test/java"/>
   <property name="deploy.dir" value="dist"/>
   <property name="libs.dir" value="lib"/>
   <import file="libs-incl.xml"/>
@@ -46,6 +47,7 @@
   <target name="prepare">
     <mkdir dir="${deploy.dir}/lib"/>
     <mkdir dir="${deploy.dir}/classes"/>
+    <mkdir dir="${deploy.dir}/test-classes"/>
     <mkdir dir="${javadoc.dir}"/>
     <!-- copy media and properties into the target directory -->
     <copy todir="${deploy.dir}/classes">
@@ -67,6 +69,7 @@
   <!-- cleans out the intermediate build files -->
   <target name="clean">
     <delete dir="${deploy.dir}/classes"/>
+    <delete dir="${deploy.dir}/test-classes"/>
     <delete dir="${deploy.dir}/docs"/>
   </target>
 
@@ -75,15 +78,26 @@
     <delete dir="${deploy.dir}"/>
   </target>
 
-  <!-- build the java class files -->
-  <target name="compile" depends="check-available">
+  <target name="compile" depends="check-available" description="Compiles main classes.">
     <javac srcdir="${src.dir}" destdir="${deploy.dir}/classes"
-           debug="on" optimize="off" deprecation="on"
            classpathref="clazzpath" includeAntRuntime="no"
-           source="1.5" target="1.5">
+           debug="on" deprecation="on" source="1.5" target="1.5">
       <exclude name="**/TorrentDownloader*" unless="build.torrent"/>
       <exclude name="**/tools/Differ*" unless="build.differ"/>
-      <compilerarg value="-Xlint:unchecked"/>
+      <compilerarg value="-Xlint"/>
+      <compilerarg value="-Xlint:-serial"/>
+    </javac>
+  </target>
+
+  <target name="test-compile" depends="compile" description="Compiles test classes.">
+    <javac srcdir="${test.dir}" destdir="${deploy.dir}/test-classes" includeAntRuntime="false"
+           debug="on" deprecation="on" source="1.5" target="1.5" encoding="utf-8">
+      <classpath>
+        <path refid="clazzpath"/>
+        <pathelement location="${deploy.dir}/classes"/>
+      </classpath>
+      <compilerarg value="-Xlint"/>
+      <compilerarg value="-Xlint:-serial"/>
     </javac>
   </target>
 
@@ -109,6 +123,24 @@
   <target name="dist" depends="check-available,compile">
     <jar destfile="${deploy.dir}/${app.name}.jar" manifest="lib/manifest.mf"
          basedir="${deploy.dir}/classes" excludes="**/netscape/**"/>
+  </target>
+
+  <property name="test" value=""/>
+  <target name="tests" depends="test-compile"
+          description="Runs unit tests. Use -Dtest=Foo to run only FooTest.">
+    <taskdef name="unit" classpathref="clazzpath"
+      classname="org.apache.tools.ant.taskdefs.optional.junit.JUnitTask"/>
+    <unit printsummary="off" haltonfailure="yes">
+      <classpath>
+        <pathelement location="${deploy.dir}/classes"/>
+        <pathelement location="${deploy.dir}/test-classes"/>
+        <fileset dir="${deploy.dir}/lib" includes="*.jar"/>
+      </classpath>
+      <formatter type="brief" usefile="false"/>
+      <batchtest>
+        <fileset dir="${test.dir}" includes="**/*${test}*Test.java"/>
+      </batchtest>
+    </unit>
   </target>
 
   <!-- optimizes, combines and removes dead code -->
@@ -151,31 +183,5 @@
     <signjar jar="${deploy.dir}/${app.name}-retro-pro.jar" lazy="true"
       keystore="${sign.keystore}" storepass="${sign.storepass}"
       alias="${sign.alias}" keypass="${sign.keypass}"/>
-  </target>
-
-  <!-- creates a zipfile with our source distribution -->
-  <target name="snapshot" depends="proguard">
-     <echo message="You may want to stop and run 'ant savedoc' first."/>
-     <delete file="${deploy.dir}/${app.name}-snapshot.zip"/>
-     <mkdir dir="${deploy.dir}/snapshot/${app.name}"/>
-     <copy todir="${deploy.dir}/snapshot/${app.name}">
-       <fileset dir=".">
-         <include name="**"/>
-         <exclude name="${deploy.dir}/**"/>
-         <exclude name="tests/dist/**"/>
-         <exclude name="${app.name}-*.zip"/>
-       </fileset>
-     </copy>
-     <copy todir="${deploy.dir}/snapshot/${app.name}" file="${deploy.dir}/${app.name}-pro.jar"/>
-     <copy todir="${deploy.dir}/snapshot/${app.name}"
-           file="${deploy.dir}/${app.name}-retro-pro.jar"/>
-     <copy todir="${deploy.dir}/snapshot/${app.name}/lib">
-       <fileset dir="${deploy.dir}/lib" includes="*.jar"/>
-     </copy>
-     <copy todir="${deploy.dir}/snapshot/${app.name}/docs/api">
-       <fileset dir="${deploy.dir}/docs" includes="**"/>
-     </copy>
-     <zip destfile="${deploy.dir}/${app.name}-snapshot.zip" basedir="${deploy.dir}/snapshot"/>
-     <delete dir="${deploy.dir}/snapshot"/>
   </target>
 </project>

@@ -9,5 +9,6 @@
     <include name="retroweaver-rt-1.2.2.jar"/>
     <include name="samskivert.jar"/>
     <include name="snark.jar"/>
+    <include name="junit4.jar"/>
   </fileset>
 </project>
