@@ -7,7 +7,7 @@
   <property name="test.dir" value="src/test/java"/>
   <property name="deploy.dir" value="dist"/>
   <property name="libs.dir" value="lib"/>
-  <import file="libs-incl.xml"/>
+  <import file="etc/libs-incl.xml"/>
 
   <!-- these are only used if we're going to sign things -->
   <property file="build.properties"/>
