@@ -196,15 +196,6 @@ public class Application
     }
 
     /**
-     * Indicates whether or not we support downloading of our resources using the Bittorrent
-     * protocol.
-     */
-    public boolean getUseTorrent ()
-    {
-        return _useTorrent;
-    }
-
-    /**
      * Returns a resource that refers to the application configuration file itself.
      */
     public Resource getConfigResource ()
@@ -584,9 +575,6 @@ public class Application
 
         // look for custom arguments
         fillAssignmentListFromPairs("extra.txt", _jvmargs);
-
-        // determine whether or not we should be using bit torrent
-        _useTorrent = (cdata.get("torrent") != null) || (System.getProperty("torrent") != null);
 
         // determine whether we want to allow offline operation (defaults to false)
         _allowOffline = Boolean.parseBoolean((String)cdata.get("allow_offline"));
@@ -1451,7 +1439,6 @@ public class Application
     protected String _name;
     protected String _dockIconPath;
     protected boolean _windebug;
-    protected boolean _useTorrent;
     protected boolean _allowOffline;
 
     protected String _trackingURL;

@@ -66,7 +66,6 @@ import com.threerings.getdown.data.Application;
 import com.threerings.getdown.data.Resource;
 import com.threerings.getdown.net.Downloader;
 import com.threerings.getdown.net.HTTPDownloader;
-import com.threerings.getdown.net.TorrentDownloader;
 import com.threerings.getdown.tools.Patcher;
 import com.threerings.getdown.util.ConfigUtil;
 import com.threerings.getdown.util.LaunchUtil;
@@ -683,27 +682,8 @@ public abstract class Getdown extends Thread
             protected int _lastCheck = -1;
         };
 
-        // assume we're going to use an HTTP downloader
-        Downloader dl = new HTTPDownloader(resources, obs);
-
-        // if torrent downloading is enabled and we are downloading the right set of resources (a
-        // single patch file or the entire app from scratch), then use a torrent downloader
-        // instead.  Because many of our installers also bundle background.png, and might bundle
-        // more required files, we need to allow a 'fudge factor' threshhold for determining at
-        // which point it is faster to torrent, and at which point we should use HTTP.
-        if (_app.getUseTorrent()) {
-            int verifiedResources = _app.getAllResources().size() - resources.size();
-            if (verifiedResources <= MAX_TORRENT_VERIFIED_RESOURCES) {
-                ArrayList<Resource> full = new ArrayList<Resource>();
-                full.add(_app.getFullResource());
-                full.addAll(resources);
-                dl = new TorrentDownloader(full, obs);
-            } else if (resources.size() == 1 && resources.get(0).getPath().startsWith("patch")) {
-                dl = new TorrentDownloader(resources, obs);
-            }
-        }
-
         // start the download and wait for it to complete
+        Downloader dl = new HTTPDownloader(resources, obs);
         if (!dl.download()) {
             if (Thread.interrupted()) {
                 throw new InterruptedException("m.applet_stopped");
@@ -1033,9 +1013,6 @@ public abstract class Getdown extends Thread
 
     /** Number of minutes to wait after startup before beginning any real heavy lifting. */
     protected int _delay;
-
-    /** The maximum number of resources that can be already present for bittorrent to be used. */
-    protected static final int MAX_TORRENT_VERIFIED_RESOURCES = 1;
 
     protected static final int MAX_LOOPS = 5;
     protected static final long MIN_EXIST_TIME = 5000L;
