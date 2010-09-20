@@ -49,12 +49,8 @@ import java.util.zip.*;
  *
  * @version 1.13, 06/26/03
  */
-public class JarDiff {
-    public static final String VERSION_HEADER = "version 1.0";
-    public static final String INDEX_NAME = "META-INF/INDEX.JD";
-    public static final String REMOVE_COMMAND = "remove";
-    public static final String MOVE_COMMAND = "move";
-
+public class JarDiff implements JarDiffCodes
+{
     private static final int DEFAULT_READ_SIZE = 2048;
     private static byte[] newBytes = new byte[DEFAULT_READ_SIZE];
     private static byte[] oldBytes = new byte[DEFAULT_READ_SIZE];

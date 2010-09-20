@@ -49,20 +49,8 @@ import com.threerings.getdown.util.ProgressObserver;
 /**
  * Applies a jardiff patch to a jar file.
  */
-public class JarDiffPatcher
+public class JarDiffPatcher implements JarDiffCodes
 {
-    /** The name of the jardiff control file. */
-    public static final String INDEX_NAME = "META-INF/INDEX.JD";
-
-    /** The version header used in the control file. */
-    public static final String VERSION_HEADER = "version 1.0";
-
-    /** A jardiff command to remove an entry. */
-    public static final String REMOVE_COMMAND = "remove";
-
-    /** A jardiff command to move an entry. */
-    public static final String MOVE_COMMAND = "move";
-
     /**
      * Patches the specified jar file using the supplied patch file and writing
      * the new jar file to the supplied target.
