@@ -27,22 +27,6 @@
     <fileset dir="${deploy.dir}/lib" includes="*.jar"/>
   </path>
 
-  <!-- checks the availability of certain libraries -->
-  <target name="check-available" depends="prepare">
-    <available property="snark.present"
-     classname="org.klomp.snark.Snark" classpathref="clazzpath"/>
-    <echo message="Have Snark: ${snark.present}"/>
-    <condition property="build.torrent">
-      <isset property="snark.present"/>
-    </condition>
-    <available property="javaws.present"
-     classname="com.sun.javaws.jardiff.JarDiff" classpathref="clazzpath"/>
-    <echo message="Have Java Web Start: ${javaws.present}"/>
-    <condition property="build.differ">
-      <isset property="javaws.present"/>
-    </condition>
-  </target>
-
   <!-- prepares the application directories -->
   <target name="prepare">
     <mkdir dir="${deploy.dir}/lib"/>
@@ -61,9 +45,6 @@
     <copy todir="${deploy.dir}/lib" flatten="true">
       <fileset refid="${app.name}.libs"/>
     </copy>
-    <!-- first look in libs.dir for javaws.jar then try java.home -->
-    <copy todir="${deploy.dir}/lib" file="${libs.dir}/javaws.jar" failonerror="false"/>
-    <copy todir="${deploy.dir}/lib" file="${java.home}/lib/javaws.jar" failonerror="false"/>
   </target>
 
   <!-- cleans out the intermediate build files -->
@@ -78,12 +59,9 @@
     <delete dir="${deploy.dir}"/>
   </target>
 
-  <target name="compile" depends="check-available" description="Compiles main classes.">
-    <javac srcdir="${src.dir}" destdir="${deploy.dir}/classes"
-           classpathref="clazzpath" includeAntRuntime="no"
-           debug="on" deprecation="on" source="1.5" target="1.5">
-      <exclude name="**/TorrentDownloader*" unless="build.torrent"/>
-      <exclude name="**/tools/Differ*" unless="build.differ"/>
+  <target name="compile" depends="prepare" description="Compiles main classes.">
+    <javac srcdir="${src.dir}" destdir="${deploy.dir}/classes" includeAntRuntime="no"
+           classpathref="clazzpath" debug="on" deprecation="on" source="1.5" target="1.5">
       <compilerarg value="-Xlint"/>
       <compilerarg value="-Xlint:-serial"/>
     </javac>
@@ -117,10 +95,10 @@
   </target>
 
   <!-- a target for rebuilding everything -->
-  <target name="all" depends="clean,check-available,compile,javadoc,dist"/>
+  <target name="all" depends="clean,compile,javadoc,dist"/>
 
   <!-- builds our distribution files -->
-  <target name="dist" depends="check-available,compile">
+  <target name="dist" depends="compile">
     <jar destfile="${deploy.dir}/${app.name}.jar" manifest="lib/manifest.mf"
          basedir="${deploy.dir}/classes" excludes="**/netscape/**"/>
   </target>

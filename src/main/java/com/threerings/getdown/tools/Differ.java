@@ -40,8 +40,6 @@ import java.util.zip.ZipEntry;
 
 import java.security.MessageDigest;
 
-import com.sun.javaws.jardiff.JarDiff;
-
 import com.samskivert.io.StreamUtil;
 
 import com.threerings.getdown.data.Application;
