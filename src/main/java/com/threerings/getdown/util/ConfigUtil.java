@@ -63,7 +63,7 @@ public class ConfigUtil
     }
 
     /**
-     * See {@link #parsePairs(File,boolean}.
+     * See {@link #parsePairs(File,boolean)}.
      */
     public static List<String[]> parsePairs (Reader config, boolean checkPlatform)
         throws IOException
