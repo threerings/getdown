@@ -132,7 +132,7 @@
             <configuration>
               <target>
                 <property name="maven.version" value="${project.version}" />
-                <ant antfile="${basedir}/build-ivy.xml">
+                <ant antfile="${basedir}/build-proguard.xml">
                   <target name="proguard" />
                 </ant>
               </target>
