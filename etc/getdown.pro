@@ -5,8 +5,7 @@
 
 -basedirectory ../
 
--injars dist/getdown.jar(!**/tools/**)
--injars dist/getdown.jar(**/tools/*Patcher*,**/tools/Differ*)
+-injars dist/getdown.jar(!**/tools/DigesterTask*)
 -injars dist/lib/jRegistryKey.jar(!META-INF/*)
 -injars dist/lib/samskivert.jar(
   com/samskivert/Log.class,**/io/**,**/swing/**,**/net/**,**/text/**,**/util/**)
