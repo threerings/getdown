@@ -51,12 +51,6 @@
       <keep name="com.threerings.getdown.launcher.GetdownApplet">
         <constructor/><method name="*"/><field access="public" name="*"/>
       </keep>
-      <keep name="*" extends="javax.swing.JApplet">
-        <constructor/><method name="*"/><field access="public" name="*"/>
-      </keep>
-      <keep name="com.threerings.getdown.launcher.GetdownAppletConfig">
-        <constructor/><method name="*"/><field access="public" name="*"/>
-      </keep>
       <keep name="com.threerings.getdown.tools.DigesterTask">
         <constructor/><method name="*"/><field access="public" name="*"/>
       </keep>

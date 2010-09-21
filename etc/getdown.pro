@@ -33,11 +33,3 @@
 -keep public class com.threerings.getdown.launcher.GetdownApplet {
     *;
 }
-
--keep class * extends javax.swing.JApplet {
-    <methods>;
-}
-
--keep public class com.threerings.getdown.launcher.GetdownAppletConfig {
-    *;
-}
