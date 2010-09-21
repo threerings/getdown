@@ -45,7 +45,7 @@ import com.samskivert.util.StringUtil;
 import static com.threerings.getdown.Log.log;
 
 /**
- * Does something extraordinary.
+ * The main application entry point for Getdown.
  */
 public class GetdownApp
 {
