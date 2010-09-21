@@ -4,7 +4,7 @@
   <groupId>com.threerings</groupId>
   <artifactId>getdown</artifactId>
   <packaging>jar</packaging>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0</version>
   <name>getdown</name>
   <description>An application installer and updater.</description>
   <url>http://code.google.com/p/getdown/</url>
@@ -35,9 +35,9 @@
   </developers>
 
   <scm>
-    <connection>scm:svn:http://getdown.googlecode.com/svn/trunk/</connection>
-    <developerConnection>scm:svn:https://getdown.googlecode.com/svn/trunk/</developerConnection>
-    <url>http://getdown.googlecode.com/svn/trunk/</url>
+    <connection>scm:svn:http://getdown.googlecode.com/svn/tags/getdown-1.0</connection>
+    <developerConnection>scm:svn:https://getdown.googlecode.com/svn/tags/getdown-1.0</developerConnection>
+    <url>http://getdown.googlecode.com/svn/tags/getdown-1.0</url>
   </scm>
 
   <dependencies>
@@ -135,9 +135,9 @@
             <phase>package</phase>
             <configuration>
               <target>
-                <property name="maven.version" value="${project.version}"/>
+                <property name="maven.version" value="${project.version}" />
                 <ant antfile="${basedir}/build-ivy.xml">
-                  <target name="proguard"/>
+                  <target name="proguard" />
                 </ant>
               </target>
             </configuration>
