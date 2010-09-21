@@ -154,7 +154,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>com.threerings.getdown.launcher.Getdown</mainClass>
+              <mainClass>com.threerings.getdown.launcher.GetdownApp</mainClass>
             </manifest>
           </archive>
         </configuration>
