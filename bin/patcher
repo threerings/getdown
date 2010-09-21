@@ -1,4 +1,4 @@
 #!/bin/sh
 
 # we'll magically try to match dist/getdown.jar or target/getdown-1.x-SNAPSHOT.jar
-java -classpath */getdown*.jar com.threerings.getdown.tools.Differ "$@"
+java -classpath */getdown*.jar com.threerings.getdown.tools.Patcher "$@"
