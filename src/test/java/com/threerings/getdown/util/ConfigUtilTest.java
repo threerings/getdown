@@ -29,7 +29,6 @@ import java.io.StringReader;
 import java.util.List;
 
 import com.samskivert.util.RandomUtil;
-import com.samskivert.util.StringUtil;
 
 import org.junit.*;
 import static org.junit.Assert.*;

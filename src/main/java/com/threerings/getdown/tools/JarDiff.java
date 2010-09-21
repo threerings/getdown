@@ -142,8 +142,6 @@ public class JarDiff implements JarDiffCodes
                             moved.put(oldname, oldname);
                             moveSrc.add(oldname);
                         }
-
-
                     }
                 }
             }

@@ -801,7 +801,6 @@ public class Application
             args.add(processArg(string));
         }
 
-
         String[] envp = createEnvironment();
         String[] sargs = args.toArray(new String[args.size()]);
         log.info("Running " + StringUtil.join(sargs, "\n  "));
