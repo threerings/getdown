@@ -33,7 +33,7 @@
 
     <taskdef resource="proguard/ant/task.properties" classpath="${proguard}"/>
     <proguard>
-      <injar path="target/getdown-${maven.version}.jar" filter="!**/tools/DigesterTask*"/>
+      <injar path="target/getdown-${maven.version}.jar"/>
       <injar path="lib/jRegistryKey.jar" filter="!META-INF/**"/>
       <injar path="${samskivert}" filter="!META-INF/**,!**/Log4JLogger*,
         !**/*.java,com/samskivert/Log.class,**/samskivert/io/**,**/samskivert/swing/**,
@@ -41,18 +41,28 @@
       <injar path="${commons-codec}" filter="!META-INF/**"/>
       <outjar path="target/getdown-pro-${maven.version}.jar"/>
       <libraryjar name="target/runtime.jar"/>
-      <keep name="ca.beq.util.win32.registry.**"/>
+      <libraryjar name="${ant}"/>
       <keep name="com.threerings.getdown.launcher.Getdown">
         <method access="static" name="main"/>
       </keep>
       <keep name="com.threerings.getdown.launcher.GetdownApp">
         <method access="static" name="main"/>
       </keep>
-      <keep name="com.threerings.getdown.launcher.GetdownApplet"/>
-      <keep name="*" extends="javax.swing.JApplet">
-        <method name="*"/>
+      <keep name="com.threerings.getdown.launcher.GetdownApplet">
+        <constructor/><method name="*"/><field access="public" name="*"/>
       </keep>
-      <keep name="com.threerings.getdown.launcher.GetdownAppletConfig"/>
+      <keep name="*" extends="javax.swing.JApplet">
+        <constructor/><method name="*"/><field access="public" name="*"/>
+      </keep>
+      <keep name="com.threerings.getdown.launcher.GetdownAppletConfig">
+        <constructor/><method name="*"/><field access="public" name="*"/>
+      </keep>
+      <keep name="com.threerings.getdown.tools.DigesterTask">
+        <constructor/><method name="*"/><field access="public" name="*"/>
+      </keep>
+      <keep name="ca.beq.util.win32.registry.**">
+        <constructor/><method name="*"/><field access="public" name="*"/>
+      </keep>
     </proguard>
 
     <delete file="target/runtime.jar"/>
