@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ivy-module version="2.0" xmlns:mvn="http://ant.apache.org/ivy/maven">
-  <info organisation="com.threerings" module="getdown" revision="${revision}">
+  <info organisation="com.threerings" module="getdown" revision="1.0">
     <description homepage="http://code.google.com/p/getdown"/>
   </info>
   <configurations>
@@ -14,17 +14,10 @@
     <conf name="compile" visibility="private" extends="runtime,provided,optional"/>
     <conf name="test" visibility="private" extends="compile"/>
   </configurations>
-  <publications>
-    <artifact type="jar"/>
-    <artifact type="source" ext="jar" mvn:classifier="sources"/>
-    <artifact type="javadoc" ext="jar" mvn:classifier="javadoc"/>
-  </publications>
   <dependencies>
     <dependency org="net.sf.proguard" name="proguard" rev="4.4" conf="compile->master(*)"/>
     <dependency org="com.samskivert" name="samskivert" rev="1.0" conf="compile->master(*)"/>
     <dependency org="commons-codec" name="commons-codec" rev="1.4" conf="compile->master(*)"/>
-    <dependency org="log4j" name="log4j" rev="1.2.15" conf="compile->master(*)"/>
-    <dependency org="net.sourceforge.retroweaver" name="retroweaver" rev="2.0.7" conf="compile->master(*)"/>
     <dependency org="org.apache.ant" name="ant" rev="1.7.1" conf="compile->master(*)"/>
   </dependencies>
 </ivy-module>

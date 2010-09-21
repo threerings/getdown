@@ -42,21 +42,6 @@
 
   <dependencies>
     <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <version>1.2.15</version>
-      <scope>compile</scope>
-      <optional>true</optional>
-      <exclusions>
-        <exclusion><groupId>javax.mail</groupId><artifactId>mail</artifactId></exclusion>
-        <exclusion><groupId>javax.jms</groupId><artifactId>jms</artifactId></exclusion>
-        <exclusion><groupId>com.sun.jdmk</groupId><artifactId>jmxtools</artifactId></exclusion>
-        <exclusion><groupId>com.sun.jmx</groupId><artifactId>jmxri</artifactId></exclusion>
-        <exclusion><groupId>oro</groupId><artifactId>oro</artifactId></exclusion>
-        <exclusion><groupId>junit</groupId><artifactId>junit</artifactId></exclusion>
-      </exclusions> 
-    </dependency>
-    <dependency>
       <groupId>net.sf.proguard</groupId>
       <artifactId>proguard</artifactId>
       <version>4.4</version>
@@ -74,13 +59,6 @@
       <groupId>commons-codec</groupId>
       <artifactId>commons-codec</artifactId>
       <version>1.4</version>
-      <scope>compile</scope>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>net.sourceforge.retroweaver</groupId>
-      <artifactId>retroweaver</artifactId>
-      <version>2.0.7</version>
       <scope>compile</scope>
       <optional>true</optional>
     </dependency>
@@ -144,6 +122,40 @@
             <link>http://java.sun.com/products/javamail/javadocs/</link>
             <link>http://download.oracle.com/javaee/1.2.1/api/</link>
           </links>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>RELEASE</version>
+        <executions>
+          <execution>
+            <id>package</id>
+            <phase>package</phase>
+            <configuration>
+              <target>
+                <property name="maven.version" value="${project.version}"/>
+                <ant antfile="${basedir}/build-ivy.xml">
+                  <target name="proguard"/>
+                </ant>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>RELEASE</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>com.threerings.getdown.launcher.Getdown</mainClass>
+            </manifest>
+          </archive>
         </configuration>
       </plugin>
       <plugin>

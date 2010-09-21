@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
-<project xmlns:ivy="antlib:org.apache.ivy.ant" name="getdown" default="compile" basedir=".">
+<project xmlns:ivy="antlib:org.apache.ivy.ant" name="getdown" basedir=".">
   <property name="app.name" value="getdown"/>
-  <property name="revision" value="1.0"/>
 
   <!-- downloads ivy if necessary and sets everything up -->
   <property name="ivy.vers" value="2.1.0-rc2" />
@@ -19,84 +18,43 @@
     <ivy:cachepath pathid="compile.classpath" conf="compile" log="download-only"/>
   </target>
 
-  <target name="check-ivy" depends="-init-ivy" description="Computes and prints Ivy classpath.">
-    <pathconvert pathsep="${line.separator}  " property="compile.str" refid="compile.classpath"/>
-    <echo>Compile classpath:</echo>
-    <echo>  ${compile.str}</echo>
-  </target>
-
   <target name="proguard" depends="-init-ivy">
-    <!-- we need ant-contrib for if -->
-<!--
-    <taskdef resource="net/sf/antcontrib/antlib.xml">
-      <classpath>
-        <pathelement location="${deploy.dir}/lib/ant-contrib.jar"/>
-      </classpath>
-    </taskdef>
--->
+    <!-- Ivy is awesome and will fill the location of all of our dependencies into properties -->
+    <property name="cache.dir" value="${user.home}/.ivy2/cache"/>
+    <ivy:artifactproperty 
+       name="[artifact]" 
+       value="${cache.dir}/[organization]/[module]/[type]s/[artifact]-[revision].[ext]"/>
 
-    <!-- figure out where the Java rt.jar file lives -->
-<!--
-    <if><and><os family="mac"/><os family="unix"/></and><then>
-      <property name="rtClasses" value="${java.home}/../Classes/classes.jar"/>
-    </then><else>
-      <property name="rtClasses" value="${java.home}/lib/rt.jar"/>
-    </else></if>
--->
-
+    <!-- fucking Proguard, fucking Mac OS X -->
     <mkdir dir="target"/>
+    <copy file="${java.home}/../Classes/classes.jar" tofile="target/runtime.jar"
+          failonerror="false"/>
+    <copy file="${java.home}/lib/rt.jar" tofile="target/runtime.jar" failonerror="false"/>
 
-    <taskdef resource="proguard/ant/task.properties" classpathref="compile.classpath"/>
+    <taskdef resource="proguard/ant/task.properties" classpath="${proguard}"/>
     <proguard>
--injars dist/getdown.jar(!**/tools/**)
--injars dist/getdown.jar(**/tools/*Patcher*,**/tools/Differ*)
--injars dist/lib/jRegistryKey.jar(!META-INF/*)
--injars dist/lib/samskivert.jar(
-  com/samskivert/Log.class,**/io/**,**/swing/**,**/net/**,**/text/**,**/util/**)
--injars dist/lib/commons-codec.jar(!META-INF/*)
-
--dontskipnonpubliclibraryclasses
-
--outjars target/getdown-pro.jar
-
--keep public class ca.beq.util.win32.registry.** {
-    *;
-}
-
--keep public class com.threerings.getdown.launcher.Getdown {
-    public static void main (java.lang.String[]);
-}
-
--keep public class com.threerings.getdown.launcher.GetdownApp {
-    public static void main (java.lang.String[]);
-}
-
--keep public class com.threerings.getdown.launcher.GetdownApplet {
-    *;
-}
-
--keep class * extends javax.swing.JApplet {
-    &lt;methods&gt;;
-}
-
--keep public class com.threerings.getdown.launcher.GetdownAppletConfig {
-    *;
-}
+      <injar path="target/getdown-${maven.version}.jar" filter="!**/tools/DigesterTask*"/>
+      <injar path="lib/jRegistryKey.jar" filter="!META-INF/**"/>
+      <injar path="${samskivert}" filter="!META-INF/**,!**/Log4JLogger*,
+        !**/*.java,com/samskivert/Log.class,**/samskivert/io/**,**/samskivert/swing/**,
+        **/samskivert/text/**,**/samskivert/util/**"/>
+      <injar path="${commons-codec}" filter="!META-INF/**"/>
+      <outjar path="target/getdown-pro-${maven.version}.jar"/>
+      <libraryjar name="target/runtime.jar"/>
+      <keep name="ca.beq.util.win32.registry.**"/>
+      <keep name="com.threerings.getdown.launcher.Getdown">
+        <method access="static" name="main"/>
+      </keep>
+      <keep name="com.threerings.getdown.launcher.GetdownApp">
+        <method access="static" name="main"/>
+      </keep>
+      <keep name="com.threerings.getdown.launcher.GetdownApplet"/>
+      <keep name="*" extends="javax.swing.JApplet">
+        <method name="*"/>
+      </keep>
+      <keep name="com.threerings.getdown.launcher.GetdownAppletConfig"/>
     </proguard>
 
-<!--
-    <taskdef name="weave" classname="com.rc.retroweaver.ant.RetroWeaverTask"
-             classpath="${deploy.dir}/lib/retroweaver-all-1.2.2.jar"/>
-    <weave inputjar="${basedir}/${deploy.dir}/${app.name}-pro.jar"
-           outputjar="${basedir}/${deploy.dir}/${app.name}-retro-pro.jar"/>
--->
-    <!-- now combine the retroweaved jar file with the retroweaver runtime -->
-<!--
-    <unjar src="${deploy.dir}/lib/retroweaver-rt-1.2.2.jar"
-           dest="${deploy.dir}/rptmp"/>
-    <jar destfile="${deploy.dir}/${app.name}-retro-pro.jar"
-         manifest="lib/manifest.mf" basedir="${deploy.dir}/rptmp" update="true"/>
-    <delete dir="${deploy.dir}/rptmp"/>
--->
+    <delete file="target/runtime.jar"/>
   </target>
 </project>
