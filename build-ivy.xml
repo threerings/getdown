@@ -66,5 +66,7 @@
     </proguard>
 
     <delete file="target/runtime.jar"/>
+    <rename src="target/getdown-pro-${maven.version}.jar"
+            dest="target/getdown-${maven.version}.jar" replace="true"/>
   </target>
 </project>
