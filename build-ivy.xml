@@ -60,6 +60,9 @@
       <keep name="com.threerings.getdown.tools.DigesterTask">
         <constructor/><method name="*"/><field access="public" name="*"/>
       </keep>
+      <keep name="com.threerings.getdown.util.LaunchUtil">
+        <constructor/><method name="*"/><field access="public" name="*"/>
+      </keep>
       <keep name="ca.beq.util.win32.registry.**">
         <constructor/><method name="*"/><field access="public" name="*"/>
       </keep>
