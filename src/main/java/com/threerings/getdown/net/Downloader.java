@@ -27,7 +27,9 @@ package com.threerings.getdown.net;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.threerings.getdown.data.Resource;
 
@@ -117,7 +119,8 @@ public abstract class Downloader extends Thread
                 discoverSize(resource);
             }
 
-            log.info("Downloading " + _totalSize + " bytes...");
+            long totalSize = sum(_sizes.values());
+            log.info("Downloading " + totalSize + " bytes...");
 
             // make a note of the time at which we started the download
             _start = System.currentTimeMillis();
@@ -154,8 +157,7 @@ public abstract class Downloader extends Thread
     protected void discoverSize (Resource rsrc)
         throws IOException
     {
-        // add this resource's size to our total download size
-        _totalSize += checkSize(rsrc);
+        _sizes.put(rsrc, Math.max(checkSize(rsrc), 0L));
     }
 
     /**
@@ -181,25 +183,40 @@ public abstract class Downloader extends Thread
     }
 
     /**
-     * Periodically called by the protocol-specific downloaders to update their progress.
+     * Periodically called by the protocol-specific downloaders to update their progress. This
+     * should be called at least once for each resource to be downloaded, with the total downloaded
+     * size for that resource. It can also be called periodically along the way for each resource
+     * to communicate incremental progress.
+     *
+     * @param rsrc the resource currently being downloaded.
+     * @param currentSize the number of bytes currently downloaded for said resource.
      */
-    protected void updateObserver ()
+    protected void updateObserver (Resource rsrc, long currentSize)
         throws IOException
     {
+        // update the current downloaded size for said resource; don't allow the downloaded bytes
+        // to exceed the original claimed size of the resource, otherwise our progress will get
+        // booched and we'll end up back on the Daily WTF: http://tinyurl.com/29wt4oq
+        _downloaded.put(rsrc, Math.min(_sizes.get(rsrc), currentSize));
+
         // notify the observer if it's been sufficiently long since our last notification
         long now = System.currentTimeMillis();
         if ((now - _lastUpdate) >= UPDATE_DELAY) {
             _lastUpdate = now;
 
+            // total up our current and total bytes
+            long downloaded = sum(_downloaded.values());
+            long totalSize = sum(_sizes.values());
+
             // compute our bytes per second
             long secs = (now - _start) / 1000L;
-            long bps = (secs == 0) ? 0 : (_currentSize / secs);
+            long bps = (secs == 0) ? 0 : (downloaded / secs);
 
             // compute our percentage completion
-            int pctdone = (_totalSize == 0) ? 0 : (int)((_currentSize * 100f) / _totalSize);
+            int pctdone = (totalSize == 0) ? 0 : (int)((downloaded * 100f) / totalSize);
 
             // estimate our time remaining
-            long remaining = (bps <= 0 || _totalSize == 0) ? -1 : (_totalSize - _currentSize) / bps;
+            long remaining = (bps <= 0 || totalSize == 0) ? -1 : (totalSize - downloaded) / bps;
 
             // make sure we only report 100% exactly once
             if (pctdone < 100 || !_complete) {
@@ -212,6 +229,18 @@ public abstract class Downloader extends Thread
     }
 
     /**
+     * Sums the supplied values.
+     */
+    protected static long sum (Iterable<Long> values)
+    {
+        long acc = 0L;
+        for (Long value : values) {
+            acc += value;
+        }
+        return acc;
+    }
+
+    /**
      * Accomplishes the copying of the resource from remote location to local location using
      * protocol-specific code
      */
@@ -220,17 +249,17 @@ public abstract class Downloader extends Thread
     /** The list of resources to be downloaded. */
     protected List<Resource> _resources;
 
+    /** The reported sizes of our resources. */
+    protected Map<Resource, Long> _sizes = new HashMap<Resource, Long>();
+
+    /** The bytes downloaded for each resource. */
+    protected Map<Resource, Long> _downloaded = new HashMap<Resource, Long>();
+
     /** The observer with whom we are communicating. */
     protected Observer _obs;
 
     /** Used while downloading. */
     protected byte[] _buffer = new byte[4096];
-
-    /** The total file size in bytes to be transferred. */
-    protected long _totalSize;
-
-    /** The file size in bytes transferred thus far. */
-    protected long _currentSize;
 
     /** The time at which the file transfer began. */
     protected long _start;

@@ -47,6 +47,7 @@ import java.io.PrintStream;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -300,14 +301,20 @@ public abstract class Getdown extends Thread
         URL rurl = _app.getConfigResource().getRemote();
         try {
             // try to make a HEAD request for this URL
-            HttpURLConnection ucon = (HttpURLConnection)rurl.openConnection();
-            ucon.setRequestMethod("HEAD");
-            ucon.connect();
-
-            // make sure we got a satisfactory response code
-            if (ucon.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                log.warning("Got a non-200 response but assuming we're OK because we got " +
-                            "something... [url=" + rurl + ", rsp=" + ucon.getResponseCode() + "].");
+            URLConnection conn = rurl.openConnection();
+            if (conn instanceof HttpURLConnection) {
+                HttpURLConnection hcon = (HttpURLConnection)conn;
+                try {
+                    hcon.setRequestMethod("HEAD");
+                    hcon.connect();
+                    // make sure we got a satisfactory response code
+                    if (hcon.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                        log.warning("Got a non-200 response but assuming we're OK because we got " +
+                                    "something...", "url", rurl, "rsp", hcon.getResponseCode());
+                    }
+                } finally {
+                    hcon.disconnect();
+                }
             }
 
             // we got through, so we appear not to require a proxy; make a blank proxy config and
