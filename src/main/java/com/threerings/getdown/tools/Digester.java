@@ -54,7 +54,7 @@ public class Digester
     public static void main (String[] args)
         throws IOException, GeneralSecurityException
     {
-        if (args.length != 1 || args.length != 4) {
+        if (args.length != 1 && args.length != 4) {
             System.err.println("Usage: Digester app_dir [keystore_path password alias]");
             System.exit(255);
         }
