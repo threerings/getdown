@@ -4,6 +4,7 @@
   <!-- various basic settings -->
   <property name="app.name" value="getdown"/>
   <property name="src.dir" value="src/main/java"/>
+  <property name="rsrc.dir" value="src/main/resources"/>
   <property name="test.dir" value="src/test/java"/>
   <property name="deploy.dir" value="dist"/>
   <property name="libs.dir" value="lib"/>
@@ -35,9 +36,7 @@
     <mkdir dir="${javadoc.dir}"/>
     <!-- copy media and properties into the target directory -->
     <copy todir="${deploy.dir}/classes">
-      <fileset dir="${src.dir}" includes="**/*.jpg"/>
-      <fileset dir="${src.dir}" includes="**/*.png"/>
-      <fileset dir="${src.dir}" includes="**/*.properties"/>
+      <fileset dir="${rsrc.dir}" includes="**"/>
     </copy>
     <copy todir="${deploy.dir}/lib">
       <fileset dir="lib" includes="**/*.jar"/>
