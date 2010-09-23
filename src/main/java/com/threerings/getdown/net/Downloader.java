@@ -190,14 +190,21 @@ public abstract class Downloader extends Thread
      *
      * @param rsrc the resource currently being downloaded.
      * @param currentSize the number of bytes currently downloaded for said resource.
+     * @param actualSize the size reported for this resource now that we're actually downloading
+     * it. Some web servers lie about Content-length when doing a HEAD request, so by reporting
+     * updated sizes here we can recover from receiving bogus information in the earlier {@link
+     * #checkSize} phase.
      */
-    protected void updateObserver (Resource rsrc, long currentSize)
+    protected void updateObserver (Resource rsrc, long currentSize, long actualSize)
         throws IOException
     {
+        // update the actual size for this resource (but don't let it shrink)
+        _sizes.put(rsrc, actualSize = Math.max(actualSize, _sizes.get(rsrc)));
+
         // update the current downloaded size for said resource; don't allow the downloaded bytes
         // to exceed the original claimed size of the resource, otherwise our progress will get
         // booched and we'll end up back on the Daily WTF: http://tinyurl.com/29wt4oq
-        _downloaded.put(rsrc, Math.min(_sizes.get(rsrc), currentSize));
+        _downloaded.put(rsrc, Math.min(actualSize, currentSize));
 
         // notify the observer if it's been sufficiently long since our last notification
         long now = System.currentTimeMillis();

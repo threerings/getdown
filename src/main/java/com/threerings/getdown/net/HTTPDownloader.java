@@ -89,7 +89,8 @@ public class HTTPDownloader extends Downloader
             }
         }
 
-        log.info("Downloading resource [url=" + rsrc.getRemote() + "].");
+        long actualSize = conn.getContentLength();
+        log.info("Downloading resource", "url", rsrc.getRemote(), "size", actualSize);
         InputStream in = null;
         FileOutputStream out = null;
         long currentSize = 0L;
@@ -114,7 +115,7 @@ public class HTTPDownloader extends Downloader
 
                 // note that we've downloaded some data
                 currentSize += read;
-                updateObserver(rsrc, currentSize);
+                updateObserver(rsrc, currentSize, actualSize);
             }
         } finally {
             StreamUtil.close(in);
