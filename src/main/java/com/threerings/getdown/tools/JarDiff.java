@@ -190,7 +190,7 @@ public class JarDiff implements JarDiffCodes
             }
 
             jos.finish();
-            jos.close();
+//            jos.close();
 
         } catch (IOException ioE){
             throw ioE;
