@@ -39,7 +39,6 @@ package com.threerings.getdown.tools;
 import java.io.*;
 import java.util.*;
 import java.util.jar.*;
-import java.util.zip.*;
 
 /**
  * JarDiff is able to create a jar file containing the delta between two jar files (old and new).

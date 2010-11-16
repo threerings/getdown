@@ -1,18 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="src/java"/>
-	<classpathentry kind="lib" path="dist/lib/javaws.jar"/>
-	<classpathentry kind="lib" path="lib/ant-contrib.jar"/>
-	<classpathentry kind="lib" path="lib/ant.jar"/>
-	<classpathentry kind="lib" path="lib/commons-codec.jar"/>
-	<classpathentry kind="lib" path="lib/commons-io.jar"/>
-	<classpathentry kind="lib" path="lib/javaws.jar"/>
+	<classpathentry including="**/*.java" kind="src" output="dist/test-classes" path="src/test/java"/>
+	<classpathentry including="**/*.java" kind="src" path="src/main/java"/>
+	<classpathentry excluding="**/*.java" kind="src" path="src/main/resources"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/ant/ant/1.7.1/ant-1.7.1.jar"/>
+	<classpathentry kind="var" path="M2_REPO/commons-codec/commons-codec/1.4/commons-codec-1.4.jar"/>
 	<classpathentry kind="lib" path="lib/jRegistryKey.jar"/>
-	<classpathentry kind="lib" path="lib/proguard.jar"/>
-	<classpathentry kind="lib" path="lib/retroweaver-all-1.2.2.jar"/>
-	<classpathentry kind="lib" path="lib/retroweaver-rt-1.2.2.jar"/>
-	<classpathentry kind="lib" path="lib/samskivert.jar"/>
-	<classpathentry kind="lib" path="lib/snark.jar"/>
+	<classpathentry kind="var" path="M2_REPO/junit/junit/4.8.1/junit-4.8.1.jar"/>
+	<classpathentry kind="var" path="M2_REPO/net/sf/proguard/proguard/4.4/proguard-4.4.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/samskivert/samskivert/1.0/samskivert-1.0.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="dist/classes"/>
 </classpath>
