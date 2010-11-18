@@ -6,7 +6,7 @@
 -basedirectory ../
 
 -injars dist/getdown.jar(!**/tools/DigesterTask*)
--injars dist/lib/jRegistryKey.jar(!META-INF/*)
+-injars dist/lib/jregistrykey/jregistrykey/1.0/jregistrykey-1.0.jar(!META-INF/*)
 -injars dist/lib/samskivert.jar(
   com/samskivert/Log.class,**/io/**,**/swing/**,**/net/**,**/text/**,**/util/**)
 -injars dist/lib/commons-codec.jar(!META-INF/*)

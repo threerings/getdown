@@ -40,6 +40,13 @@
     <url>http://getdown.googlecode.com/svn/trunk/</url>
   </scm>
 
+  <repositories>
+    <repository>
+      <id>lib-repo</id>
+      <url>file://${basedir}/lib</url>
+    </repository>
+  </repositories>
+
   <dependencies>
     <dependency>
       <groupId>net.sf.proguard</groupId>
@@ -63,17 +70,17 @@
       <optional>true</optional>
     </dependency>
     <dependency>
+      <groupId>jregistrykey</groupId>
+      <artifactId>jregistrykey</artifactId>
+      <version>1.0</version>
+      <scope>compile</scope>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
       <groupId>org.apache.ant</groupId>
       <artifactId>ant</artifactId>
       <version>1.7.1</version>
       <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>jregistrykey</groupId>
-      <artifactId>jregistrykey</artifactId>
-      <version>1.0</version>
-      <scope>system</scope>
-      <systemPath>${project.basedir}/lib/jRegistryKey.jar</systemPath>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -88,7 +95,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>RELEASE</version>
+        <version>2.3.2</version>
         <configuration>
           <source>1.5</source>
           <target>1.5</target>
@@ -102,7 +109,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
-        <version>RELEASE</version>
+        <version>2.4.3</version>
         <configuration>
           <encoding>UTF-8</encoding>
         </configuration>
@@ -110,12 +117,12 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>RELEASE</version>
+        <version>2.6</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>RELEASE</version>
+        <version>2.7</version>
         <configuration>
           <quiet>true</quiet>
           <show>public</show>
@@ -124,7 +131,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>
-        <version>RELEASE</version>
+        <version>1.6</version>
         <executions>
           <execution>
             <id>package</id>
@@ -146,7 +153,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>RELEASE</version>
+        <version>2.3.1</version>
         <configuration>
           <archive>
             <manifest>
@@ -157,18 +164,13 @@
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>RELEASE</version>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-install-plugin</artifactId>
-        <version>RELEASE</version>
+        <version>2.3.1</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-deploy-plugin</artifactId>
-        <version>RELEASE</version>
+        <version>2.5</version>
       </plugin>
     </plugins>
   </build>
@@ -184,7 +186,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
-            <version>RELEASE</version>
+            <version>1.1</version>
             <executions>
               <execution>
                 <id>sign-artifacts</id>
