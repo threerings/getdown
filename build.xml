@@ -107,10 +107,10 @@
 
   <target name="-proguard" depends="-prepare">
     <!-- locate the platform classes -->
-    <condition property="tools.jar" value="${java.home}/../Classes/classes.jar">
+    <condition property="rt.jar" value="${java.home}/../Classes/classes.jar">
       <available file="${java.home}/../Classes/classes.jar"/>
     </condition>
-    <condition property="tools.jar" value="${java.home}/lib/rt.jar">
+    <condition property="rt.jar" value="${java.home}/lib/rt.jar">
       <available file="${java.home}/lib/rt.jar"/>
     </condition>
 
@@ -138,7 +138,7 @@
         **/samskivert/swing/**,**/samskivert/text/**,**/samskivert/util/**"/>
       <injar path="${deploy.dir}/proguard/commons-codec-1.4.jar" filter="!META-INF/**"/>
       <outjar path="${deploy.dir}/getdown-pro${version.suff}.jar"/>
-      <libraryjar name="${tools.jar}"/>
+      <libraryjar name="${rt.jar}"/>
       <libraryjar name="${deploy.dir}/proguard/ant-1.7.1.jar"/>
 
       <keep name="com.threerings.getdown.launcher.Getdown">
