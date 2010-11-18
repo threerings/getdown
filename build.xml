@@ -147,28 +147,7 @@
       <keep name="com.threerings.getdown.launcher.GetdownApp">
         <method access="static" name="main"/>
       </keep>
-      <keep name="com.threerings.getdown.data.Resource">
-        <constructor/><method name="*"/><field access="public" name="*"/>
-      </keep>
-      <keep name="com.threerings.getdown.tools.Differ">
-        <method access="static" name="main"/>
-      </keep>
-      <keep name="com.threerings.getdown.tools.Patcher">
-        <method access="static" name="main"/>
-      </keep>
-      <keep name="com.threerings.getdown.tools.Digester">
-        <method access="static" name="main"/>
-      </keep>
-      <keep name="com.threerings.getdown.tools.AppletParamSigner">
-        <method access="static" name="main"/>
-      </keep>
       <keep name="com.threerings.getdown.launcher.GetdownApplet">
-        <constructor/><method name="*"/><field access="public" name="*"/>
-      </keep>
-      <keep name="com.threerings.getdown.tools.DigesterTask">
-        <constructor/><method name="*"/><field access="public" name="*"/>
-      </keep>
-      <keep name="com.threerings.getdown.util.LaunchUtil">
         <constructor/><method name="*"/><field access="public" name="*"/>
       </keep>
       <keep name="ca.beq.util.win32.registry.**">
