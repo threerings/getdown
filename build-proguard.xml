@@ -32,9 +32,9 @@
     <copy file="${java.home}/lib/rt.jar" tofile="target/runtime.jar" failonerror="false"/>
 
     <taskdef resource="proguard/ant/task.properties" classpath="${proguard}"/>
-    <proguard>
+    <proguard obfuscate="false">
       <injar path="target/getdown-${maven.version}.jar"/>
-      <injar path="lib/jregistrykey/jregistrykey/1.0/jregistrykey-1.0..jar" filter="!META-INF/**"/>
+      <injar path="lib/jregistrykey/jregistrykey/1.0/jregistrykey-1.0.jar" filter="!META-INF/**"/>
       <injar path="${samskivert}" filter="!META-INF/**,!**/Log4JLogger*,
         !**/*.java,com/samskivert/Log.class,**/samskivert/io/**,**/samskivert/swing/**,
         **/samskivert/text/**,**/samskivert/util/**"/>
@@ -49,15 +49,6 @@
         <method access="static" name="main"/>
       </keep>
       <keep name="com.threerings.getdown.data.Resource">
-        <constructor/><method name="*"/><field access="public" name="*"/>
-      </keep>
-      <keep name="com.threerings.getdown.net.Downloader">
-        <constructor/><method name="*"/><field access="public" name="*"/>
-      </keep>
-      <keep name="com.threerings.getdown.net.Downloader$Observer">
-        <constructor/><method name="*"/><field access="public" name="*"/>
-      </keep>
-      <keep name="com.threerings.getdown.net.HTTPDownloader">
         <constructor/><method name="*"/><field access="public" name="*"/>
       </keep>
       <keep name="com.threerings.getdown.tools.Differ">
