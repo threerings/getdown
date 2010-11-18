@@ -52,6 +52,7 @@
 
   <target name="compile" depends="-prepare" description="Compiles main and test classes.">
     <mkdir dir="${deploy.dir}/classes"/>
+    <copy todir="${deploy.dir}/classes"><fileset dir="src/main/resources" includes="**"/></copy>
     <javac srcdir="${src.dir}" destdir="${deploy.dir}/classes" includeAntRuntime="no"
            classpathref="compile.classpath" debug="on" deprecation="on" source="1.5" target="1.5"
            encoding="utf-8">
