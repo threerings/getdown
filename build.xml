@@ -182,4 +182,20 @@
              keystore="${sign.keystore}" storepass="${sign.storepass}"
              alias="${sign.alias}" keypass="${sign.keypass}"/>
   </target>
+
+  <target name="maven-deploy" depends="dist" 
+          description="Deploys our build artifacts to a Maven repository.">
+    <fail unless="maven.deploy.repo">
+      Must specify Maven repository with -Dmaven.deploy.repo=file://somepath
+    </fail>
+    <artifact:deploy file="${deploy.dir}/${lib.name}.jar" uniqueVersion="false">
+      <remoteRepository url="${maven.deploy.repo}"/>
+      <pom refid="pom"/>
+    </artifact:deploy>
+    <artifact:pom id="proguard-pom" file="proguard-pom.xml"/>
+    <artifact:deploy file="${deploy.dir}/${ant.project.name}-pro.jar" uniqueVersion="false">
+      <remoteRepository url="${maven.deploy.repo}"/>
+      <pom refid="proguard-pom"/>
+    </artifact:deploy>
+  </target>
 </project>
