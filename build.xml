@@ -167,7 +167,7 @@
     <fail unless="maven.deploy.repo">
       Must specify Maven repository with -Dmaven.deploy.repo=file://somepath
     </fail>
-    <artifact:deploy file="${deploy.dir}/${lib.name}.jar" uniqueVersion="false">
+    <artifact:deploy file="${deploy.dir}/${ant.project.name}.jar" uniqueVersion="false">
       <remoteRepository url="${maven.deploy.repo}"/>
       <pom refid="pom"/>
     </artifact:deploy>
