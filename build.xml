@@ -1,164 +1,185 @@
-<!-- build configuration -->
-<project name="getdown" default="compile" basedir=".">
-
-  <!-- various basic settings -->
-  <property name="app.name" value="getdown"/>
+<?xml version="1.0"?>
+<project name="getdown" default="compile" basedir="." xmlns:artifact="urn:maven-artifact-ant">
   <property name="src.dir" value="src/main/java"/>
   <property name="rsrc.dir" value="src/main/resources"/>
-  <property name="test.dir" value="src/test/java"/>
+  <property name="tsrc.dir" value="src/test/java"/>
   <property name="deploy.dir" value="dist"/>
-  <property name="libs.dir" value="lib"/>
-  <import file="etc/libs-incl.xml"/>
 
-  <!-- these are only used if we're going to sign things -->
-  <property file="build.properties"/>
   <property file="${cert_dir}/certificate.properties"/>
 
-  <!-- used when generating javadocs -->
-  <property name="javadoc.dir"  value="${deploy.dir}/docs"/>
-  <property name="doc.packages" value="com.threerings.getdown.*"/>
-  <property name="doc.overview" value="com/threerings/getdown/overview.html"/>
-  <property name="copy.pre"     value="Copyright &#169; 2010"/>
-  <property name="copyright.holder" value="Three Rings Design, Inc."/>
-  <property name="copy.post"    value="All Rights Reserved."/>
-
-  <!-- declare our classpath -->
-  <path id="clazzpath">
-    <pathelement location="${deploy.dir}/classes"/>
-    <fileset dir="${deploy.dir}/lib" includes="*.jar"/>
-  </path>
-
-  <!-- prepares the application directories -->
-  <target name="prepare">
-    <mkdir dir="${deploy.dir}/lib"/>
-    <mkdir dir="${deploy.dir}/classes"/>
-    <mkdir dir="${deploy.dir}/test-classes"/>
-    <mkdir dir="${javadoc.dir}"/>
-    <!-- copy media and properties into the target directory -->
-    <copy todir="${deploy.dir}/classes">
-      <fileset dir="${rsrc.dir}" includes="**"/>
-    </copy>
-    <copy todir="${deploy.dir}/lib">
-      <fileset dir="lib" includes="**/*.jar"/>
-    </copy>
-    <copy todir="${deploy.dir}/lib" flatten="true">
-      <fileset refid="${app.name}.libs"/>
-    </copy>
+  <property name="maven-ant.vers" value="2.1.1"/>
+  <property name="maven-ant.dir" value="${user.home}/.m2/ant-support"/>
+  <property name="maven-ant.jar" value="${maven-ant.dir}/maven-ant-tasks-${maven-ant.vers}.jar"/>
+  <property name="maven-ant.url"
+            value="http://mirrors.ibiblio.org/pub/mirrors/apache/maven/binaries"/>
+  <condition property="maven-ant.exists"><available file="${maven-ant.jar}"/></condition>
+  <target name="-download-maven-ant" unless="maven-ant.exists">
+    <mkdir dir="${maven-ant.dir}"/>
+    <get src="${maven-ant.url}/maven-ant-tasks-${maven-ant.vers}.jar" 
+         dest="${maven-ant.jar}" usetimestamp="true"/>
   </target>
 
-  <!-- cleans out the intermediate build files -->
-  <target name="clean">
+  <target name="-init-maven-ant" depends="-download-maven-ant">
+    <taskdef resource="org/apache/maven/artifact/ant/antlib.xml"
+             uri="urn:maven-artifact-ant" classpath="${maven-ant.jar}"/>
+    <artifact:pom id="pom" file="pom.xml"/>
+    <artifact:dependencies pathId="compile.classpath" pomRefId="pom" useScope="compile"/>
+    <artifact:dependencies pathId="testlibs.classpath" pomRefId="pom" useScope="test"/>
+  </target>
+
+  <target name="-prepare" depends="-init-maven-ant">
+    <mkdir dir="${deploy.dir}"/>
+    <path id="built.classpath">
+      <path refid="compile.classpath"/>
+      <pathelement location="${deploy.dir}/classes"/>
+    </path>
+    <path id="test.classpath">
+      <path refid="testlibs.classpath"/>
+      <path refid="built.classpath"/>
+      <pathelement location="${deploy.dir}/test-classes"/>
+    </path>
+  </target>
+
+  <target name="clean" description="Cleans out build results.">
     <delete dir="${deploy.dir}/classes"/>
     <delete dir="${deploy.dir}/test-classes"/>
     <delete dir="${deploy.dir}/docs"/>
   </target>
 
-  <!-- wipes the entire build directory clean -->
-  <target name="distclean" depends="clean">
+  <target name="distclean" description="Scorched earth clean.">
     <delete dir="${deploy.dir}"/>
   </target>
 
-  <target name="compile" depends="prepare" description="Compiles main classes.">
+  <target name="compile" depends="-prepare" description="Compiles main and test classes.">
+    <mkdir dir="${deploy.dir}/classes"/>
     <javac srcdir="${src.dir}" destdir="${deploy.dir}/classes" includeAntRuntime="no"
-           classpathref="clazzpath" debug="on" deprecation="on" source="1.5" target="1.5">
+           classpathref="compile.classpath" debug="on" deprecation="on" source="1.5" target="1.5"
+           encoding="utf-8">
       <compilerarg value="-Xlint"/>
       <compilerarg value="-Xlint:-serial"/>
     </javac>
-  </target>
 
-  <target name="test-compile" depends="compile" description="Compiles test classes.">
-    <javac srcdir="${test.dir}" destdir="${deploy.dir}/test-classes" includeAntRuntime="false"
-           debug="on" deprecation="on" source="1.5" target="1.5" encoding="utf-8">
-      <classpath>
-        <path refid="clazzpath"/>
-        <pathelement location="${deploy.dir}/classes"/>
-      </classpath>
+    <mkdir dir="${deploy.dir}/test-classes"/>
+    <javac srcdir="${tsrc.dir}" destdir="${deploy.dir}/test-classes" includeAntRuntime="false"
+           classpathref="test.classpath" debug="on" deprecation="on" source="1.5" target="1.5"
+           encoding="utf-8">
       <compilerarg value="-Xlint"/>
       <compilerarg value="-Xlint:-serial"/>
     </javac>
-  </target>
-
-  <!-- build the javadoc documentation -->
-  <target name="javadoc" depends="prepare">
-    <javadoc sourcepath="${src.dir}"
-             packagenames="${doc.packages}"
-             windowtitle="${app.name} API"
-             doctitle="${app.name} API"
-             overview="${src.dir}/${doc.overview}"
-             bottom="${copy.pre} ${copyright.holder} ${copy.post}"
-             destdir="${javadoc.dir}">
-      <classpath refid="clazzpath"/>
-      <link href="http://samskivert.com/code/samskivert/samskivert/docs/api"/>
-      <link href="http://java.sun.com/j2se/1.5/docs/api/"/>
-    </javadoc>
-  </target>
-
-  <!-- a target for rebuilding everything -->
-  <target name="all" depends="clean,compile,javadoc,dist"/>
-
-  <!-- builds our distribution files -->
-  <target name="dist" depends="compile">
-    <jar destfile="${deploy.dir}/${app.name}.jar" manifest="lib/manifest.mf"
-         basedir="${deploy.dir}/classes" excludes="**/netscape/**"/>
   </target>
 
   <property name="test" value=""/>
-  <target name="tests" depends="test-compile"
+  <target name="tests" depends="compile"
           description="Runs unit tests. Use -Dtest=Foo to run only FooTest.">
-    <taskdef name="unit" classpathref="clazzpath"
+    <taskdef name="unit" classpathref="test.classpath"
       classname="org.apache.tools.ant.taskdefs.optional.junit.JUnitTask"/>
     <unit printsummary="off" haltonfailure="yes">
       <classpath>
-        <pathelement location="${deploy.dir}/classes"/>
-        <pathelement location="${deploy.dir}/test-classes"/>
-        <fileset dir="${deploy.dir}/lib" includes="*.jar"/>
+        <path refid="test.classpath"/>
       </classpath>
       <formatter type="brief" usefile="false"/>
       <batchtest>
-        <fileset dir="${test.dir}" includes="**/*${test}*Test.java"/>
+        <fileset dir="${tsrc.dir}" includes="**/*${test}*Test.java"/>
       </batchtest>
     </unit>
   </target>
 
-  <!-- optimizes, combines and removes dead code -->
-  <target name="proguard" depends="dist">
-    <!-- we need ant-contrib for if -->
-    <taskdef resource="net/sf/antcontrib/antlib.xml">
-      <classpath>
-        <pathelement location="${deploy.dir}/lib/ant-contrib.jar"/>
-      </classpath>
-    </taskdef>
-
-    <!-- figure out where the Java rt.jar file lives -->
-    <if><and><os family="mac"/><os family="unix"/></and><then>
-      <property name="rtClasses" value="${java.home}/../Classes/classes.jar"/>
-    </then><else>
-      <property name="rtClasses" value="${java.home}/lib/rt.jar"/>
-    </else></if>
-
-    <mkdir dir="${deploy.dir}"/>
-
-    <taskdef resource="proguard/ant/task.properties"
-             classpath="${deploy.dir}/lib/proguard.jar"/>
-    <proguard configuration="etc/getdown.pro">
-      <libraryjar name="${rtClasses}"/>
-    </proguard>
-
-    <taskdef name="weave" classname="com.rc.retroweaver.ant.RetroWeaverTask"
-             classpath="${deploy.dir}/lib/retroweaver-all-1.2.2.jar"/>
-    <weave inputjar="${basedir}/${deploy.dir}/${app.name}-pro.jar"
-           outputjar="${basedir}/${deploy.dir}/${app.name}-retro-pro.jar"/>
-    <!-- now combine the retroweaved jar file with the retroweaver runtime -->
-    <unjar src="${deploy.dir}/lib/retroweaver-rt-1.2.2.jar"
-           dest="${deploy.dir}/rptmp"/>
-    <jar destfile="${deploy.dir}/${app.name}-retro-pro.jar"
-         manifest="lib/manifest.mf" basedir="${deploy.dir}/rptmp" update="true"/>
-    <delete dir="${deploy.dir}/rptmp"/>
+  <target name="javadoc" depends="-prepare">
+    <javadoc sourcepath="${src.dir}" packagenames="com.threerings.getdown.*"
+             windowtitle="${ant.project.name} API" doctitle="${ant.project.name} API"
+             overview="${src.dir}/com/threerings/getdown/overview.html"
+             bottom="Copyright &#169; 2010 Three Rings Design, Inc. All Rights Reserved."
+             destdir="${deploy.dir}/docs">
+      <classpath refid="compile.classpath"/>
+      <link href="http://java.sun.com/j2se/1.5/docs/api/"/>
+    </javadoc>
   </target>
 
-  <target name="sign" depends="proguard">
-    <signjar jar="${deploy.dir}/${app.name}-retro-pro.jar" lazy="true"
-      keystore="${sign.keystore}" storepass="${sign.storepass}"
-      alias="${sign.alias}" keypass="${sign.keypass}"/>
+  <target name="dist" depends="compile" description="Builds jar files.">
+    <jar destfile="${deploy.dir}/${ant.project.name}.jar" manifest="lib/manifest.mf"
+         basedir="${deploy.dir}/classes"/>
+    <!-- generate our proguard jar file -->
+    <antcall target="-proguard">
+      <param name="getdown.jar" value="${deploy.dir}/${ant.project.name}.jar"/>
+      <param name="version.suff" value=""/>
+    </antcall>
+  </target>
+
+  <target name="-proguard" depends="-prepare">
+    <!-- locate the platform classes -->
+    <condition property="tools.jar" value="${java.home}/../Classes/classes.jar">
+      <available file="${java.home}/../Classes/classes.jar"/>
+    </condition>
+    <condition property="tools.jar" value="${java.home}/lib/rt.jar">
+      <available file="${java.home}/lib/rt.jar"/>
+    </condition>
+
+    <!-- we have to do some jockeying to get our Maven dependencies somewhere
+         that Proguard can process them; unfortunately the Maven ant task
+         doesn't provide a property for each dependency like Ivy does -->
+    <artifact:dependencies filesetId="compile.fileset" pomRefId="pom" useScope="compile"/>
+    <mkdir dir="${deploy.dir}/proguard"/>
+    <copy todir="${deploy.dir}/proguard">
+      <fileset refid="compile.fileset"/>
+      <mapper type="flatten"/>
+    </copy>
+
+    <!-- we put these guys in the test classpath though really we just want a
+         tools classpath -->
+    <artifact:dependencies pathId="proguard.classpath">
+      <dependency groupId="net.sf.proguard" artifactId="proguard" version="4.4"/>
+    </artifact:dependencies>
+    <taskdef resource="proguard/ant/task.properties" classpathref="proguard.classpath"/>
+    <proguard>
+      <injar path="${getdown.jar}"/>
+      <injar path="${deploy.dir}/proguard/jregistrykey-1.0.jar" filter="!META-INF/**"/>
+      <injar path="${deploy.dir}/proguard/samskivert-1.0.jar" filter="!META-INF/**, 
+        !**/Log4JLogger*,!**/*.java,com/samskivert/Log.class,**/samskivert/io/**,
+        **/samskivert/swing/**,**/samskivert/text/**,**/samskivert/util/**"/>
+      <injar path="${deploy.dir}/proguard/commons-codec-1.4.jar" filter="!META-INF/**"/>
+      <outjar path="${deploy.dir}/getdown-pro${version.suff}.jar"/>
+      <libraryjar name="${tools.jar}"/>
+      <libraryjar name="${deploy.dir}/proguard/ant-1.7.1.jar"/>
+
+      <keep name="com.threerings.getdown.launcher.Getdown">
+        <method access="static" name="main"/>
+      </keep>
+      <keep name="com.threerings.getdown.launcher.GetdownApp">
+        <method access="static" name="main"/>
+      </keep>
+      <keep name="com.threerings.getdown.data.Resource">
+        <constructor/><method name="*"/><field access="public" name="*"/>
+      </keep>
+      <keep name="com.threerings.getdown.tools.Differ">
+        <method access="static" name="main"/>
+      </keep>
+      <keep name="com.threerings.getdown.tools.Patcher">
+        <method access="static" name="main"/>
+      </keep>
+      <keep name="com.threerings.getdown.tools.Digester">
+        <method access="static" name="main"/>
+      </keep>
+      <keep name="com.threerings.getdown.tools.AppletParamSigner">
+        <method access="static" name="main"/>
+      </keep>
+      <keep name="com.threerings.getdown.launcher.GetdownApplet">
+        <constructor/><method name="*"/><field access="public" name="*"/>
+      </keep>
+      <keep name="com.threerings.getdown.tools.DigesterTask">
+        <constructor/><method name="*"/><field access="public" name="*"/>
+      </keep>
+      <keep name="com.threerings.getdown.util.LaunchUtil">
+        <constructor/><method name="*"/><field access="public" name="*"/>
+      </keep>
+      <keep name="ca.beq.util.win32.registry.**">
+        <constructor/><method name="*"/><field access="public" name="*"/>
+      </keep>
+    </proguard>
+  </target>
+
+  <target name="sign" depends="compile">
+    <signjar jar="${deploy.dir}/${ant.project.name}-retro-pro.jar" lazy="true"
+             keystore="${sign.keystore}" storepass="${sign.storepass}"
+             alias="${sign.alias}" keypass="${sign.keypass}"/>
   </target>
 </project>

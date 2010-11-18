@@ -49,25 +49,16 @@
 
   <dependencies>
     <dependency>
-      <groupId>net.sf.proguard</groupId>
-      <artifactId>proguard</artifactId>
-      <version>4.4</version>
-      <scope>compile</scope>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
       <groupId>com.samskivert</groupId>
       <artifactId>samskivert</artifactId>
       <version>1.0</version>
       <scope>compile</scope>
-      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>commons-codec</groupId>
       <artifactId>commons-codec</artifactId>
       <version>1.4</version>
       <scope>compile</scope>
-      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>jregistrykey</groupId>
@@ -138,9 +129,11 @@
             <phase>package</phase>
             <configuration>
               <target>
-                <property name="maven.version" value="${project.version}" />
-                <ant antfile="${basedir}/build-proguard.xml">
-                  <target name="proguard" />
+                <property name="deploy.dir" value="target"/>
+                <property name="getdown.jar" value="target/getdown-${project.version}.jar"/>
+                <property name="version.suff" value="-${project.version}.jar"/>
+                <ant antfile="${basedir}/build.xml">
+                  <target name="-proguard"/>
                 </ant>
               </target>
             </configuration>
