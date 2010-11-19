@@ -4,7 +4,7 @@
   <groupId>com.threerings</groupId>
   <artifactId>getdown</artifactId>
   <packaging>jar</packaging>
-  <version>1.1</version>
+  <version>1.2-SNAPSHOT</version>
   <name>getdown</name>
   <description>An application installer and updater.</description>
   <url>http://code.google.com/p/getdown/</url>
