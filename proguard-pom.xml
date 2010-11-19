@@ -4,7 +4,7 @@
   <groupId>com.threerings</groupId>
   <artifactId>getdown-pro</artifactId>
   <packaging>jar</packaging>
-  <version>1.1-SNAPSHOT</version>
+  <version>1.1</version>
   <name>getdown-pro</name>
   <description>A dependencies-included version of getdown.jar.</description>
 
