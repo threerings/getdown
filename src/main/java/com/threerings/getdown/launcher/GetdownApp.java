@@ -59,8 +59,7 @@ public class GetdownApp
         // if not, check for a command line argument
         if (StringUtil.isBlank(adarg)) {
             if (args.isEmpty()) {
-                System.err.println(
-                    "Usage: java -jar getdown.jar app_dir [app_id] [app args]");
+                System.err.println("Usage: java -jar getdown.jar app_dir [app_id] [app args]");
                 System.exit(-1);
             }
             adarg = args.get(aidx++);
@@ -110,8 +109,7 @@ public class GetdownApp
                 @Override
                 protected Container createContainer () {
                     // create our user interface, and display it
-                    String title =
-                        StringUtil.isBlank(_ifc.name) ? "" : _ifc.name;
+                    String title = StringUtil.isBlank(_ifc.name) ? "" : _ifc.name;
                     if (_frame == null) {
                         _frame = new JFrame(title);
                         _frame.addWindowListener(new WindowAdapter() {
