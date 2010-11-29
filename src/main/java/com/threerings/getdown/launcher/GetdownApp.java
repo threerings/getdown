@@ -26,6 +26,7 @@
 package com.threerings.getdown.launcher;
 
 import java.awt.Container;
+import java.awt.Image;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowAdapter;
 import javax.swing.JFrame;
@@ -37,6 +38,7 @@ import java.io.IOException;
 import java.io.BufferedOutputStream;
 import java.io.PrintStream;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -122,6 +124,23 @@ public class GetdownApp
                     } else {
                         _frame.setTitle(title);
                         _frame.getContentPane().removeAll();
+                    }
+                    if (_ifc.iconImages != null) {
+                        ArrayList<Image> icons = new ArrayList<Image>();
+                        for (String path : _ifc.iconImages) {
+                            Image img = loadImage(path);
+                            if (img == null) {
+                                log.warning("Error loading icon image", "path", path);
+                            } else {
+                                icons.add(img);
+                            }
+                        }
+                        if (icons.isEmpty()) {
+                            log.warning("Failed to load any icons", "iconImages", _ifc.iconImages);
+
+                        } else {
+                            _frame.setIconImages(icons);
+                        }
                     }
                     _frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
                     return _frame.getContentPane();

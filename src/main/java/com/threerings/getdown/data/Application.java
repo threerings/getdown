@@ -112,6 +112,9 @@ public class Application
         /** The error background image for {@link RotatingBackgrounds}. */
         public String errorBackground;
 
+        /** The paths (relative to the appdir) of file names for icon images. */
+        public String[] iconImages;
+
         /** The path (relative to the appdir) to a single background image. */
         public String backgroundImage;
 
@@ -600,6 +603,7 @@ public class Application
         }
         ui.progressImage = (String)cdata.get("ui.progress_image");
         ui.rotatingBackgrounds = ConfigUtil.getMultiValue(cdata, "ui.rotating_background");
+        ui.iconImages = ConfigUtil.getMultiValue(cdata, "ui.icon");
         ui.errorBackground = (String)cdata.get("ui.error_background");
         _dockIconPath = (String)cdata.get("ui.mac_dock_icon");
         if (_dockIconPath == null) {
