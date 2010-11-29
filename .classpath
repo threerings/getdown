@@ -5,8 +5,8 @@
 	<classpathentry excluding="**/*.java" kind="src" path="src/main/resources"/>
 	<classpathentry kind="var" path="M2_REPO/org/apache/ant/ant/1.7.1/ant-1.7.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-codec/commons-codec/1.4/commons-codec-1.4.jar"/>
-	<classpathentry kind="lib" path="lib/jRegistryKey.jar"/>
 	<classpathentry kind="var" path="M2_REPO/junit/junit/4.8.1/junit-4.8.1.jar"/>
+	<classpathentry kind="var" path="M2_REPO/jregistrykey/jregistrykey/1.0/jregistrykey-1.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/net/sf/proguard/proguard/4.4/proguard-4.4.jar"/>
 	<classpathentry kind="var" path="M2_REPO/com/samskivert/samskivert/1.0/samskivert-1.0.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
