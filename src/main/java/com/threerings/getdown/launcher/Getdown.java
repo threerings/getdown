@@ -201,7 +201,7 @@ public abstract class Getdown extends Thread
      */
     public void configureProxy (String host, String port)
     {
-        log.info("User configured proxy [host=" + host + ", port=" + port + "].");
+        log.info("User configured proxy", "host", host, "port", port);
 
         // if we're provided with valid values, create a proxy.txt file
         if (!StringUtil.isBlank(host)) {
@@ -273,7 +273,7 @@ public abstract class Getdown extends Thread
                 }
 
             } catch (Throwable t) {
-                log.info("Failed to find proxy settings in Windows registry [error=" + t + "].");
+                log.info("Failed to find proxy settings in Windows registry", "error", t);
             }
         }
 
@@ -347,7 +347,7 @@ public abstract class Getdown extends Thread
             if (!StringUtil.isBlank(port)) {
                 System.setProperty("http.proxyPort", port);
             }
-            log.info("Using proxy [host=" + host + ", port=" + port + "].");
+            log.info("Using proxy", "host", host, "port", port);
         }
     }
 
@@ -525,7 +525,7 @@ public abstract class Getdown extends Thread
             imgpath = _app.getLocalPath(path);
             return ImageIO.read(imgpath);
         } catch (IOException ioe2) {
-            log.warning("Failed to load image [path=" + imgpath + ", error=" + ioe2 + "].");
+            log.warning("Failed to load image", "path", imgpath, "error", ioe2);
             return null;
         }
     }
@@ -568,8 +568,7 @@ public abstract class Getdown extends Thread
                 log.info("Please smack a Java engineer. Running: " + cmd);
                 Runtime.getRuntime().exec(cmd);
             } catch (Exception e) {
-                log.warning("Failed to mark VM binary as executable [cmd=" + cmd +
-                            ", error=" + e + "].");
+                log.warning("Failed to mark VM binary as executable", "cmd", cmd, "error", e);
                 // we should do something like tell the user or something but fucking fuck
             }
         }
@@ -580,7 +579,7 @@ public abstract class Getdown extends Thread
             log.info("Regenerating classes.jsa for " + vmpath + "...");
             Runtime.getRuntime().exec(vmpath + " -Xshare:dump");
         } catch (Exception e) {
-            log.warning("Failed to regenerate .jsa dum file [error=" + e + "].");
+            log.warning("Failed to regenerate .jsa dum file", "error", e);
         }
 
         reportTrackingEvent("jvm_complete", -1);
@@ -621,7 +620,7 @@ public abstract class Getdown extends Thread
                     Patcher patcher = new Patcher();
                     patcher.patch(prsrc.getLocal().getParentFile(), prsrc.getLocal(), _progobs);
                 } catch (Exception e) {
-                    log.warning("Failed to apply patch [prsrc=" + prsrc + "].", e);
+                    log.warning("Failed to apply patch", "prsrc", prsrc, e);
                 }
 
                 // clean up the patch file
@@ -683,7 +682,7 @@ public abstract class Getdown extends Thread
 
             public void downloadFailed (Resource rsrc, Exception e) {
                 updateStatus(MessageUtil.tcompose("m.failure", e.getMessage()));
-                log.warning("Download failed [rsrc=" + rsrc + "].", e);
+                log.warning("Download failed", "rsrc", rsrc, e);
             }
 
             /** The last percentage at which we checked for another getdown running, or -1 for not
@@ -950,7 +949,7 @@ public abstract class Getdown extends Thread
                 out.flush();
             }
         } catch (IOException ioe) {
-            log.warning("Failure copying [in=" + in + ", out=" + out + ", error=" + ioe + "].");
+            log.warning("Failure copying", "in", in, "out", out, "error", ioe);
         }
     }
 
@@ -980,16 +979,15 @@ public abstract class Getdown extends Thread
                 ucon.connect();
                 try {
                     if (ucon.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                        log.warning("Failed to report tracking event [url=" + _url +
-                                    ", rcode=" + ucon.getResponseCode() + "].");
+                        log.warning("Failed to report tracking event",
+                            "url", _url, "rcode", ucon.getResponseCode());
                     }
                 } finally {
                     ucon.disconnect();
                 }
 
             } catch (IOException ioe) {
-                log.warning("Failed to report tracking event [url=" + _url +
-                            ", error=" + ioe + "].");
+                log.warning("Failed to report tracking event", "url", _url, "error", ioe);
             }
         }
 

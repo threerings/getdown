@@ -302,8 +302,8 @@ public class Application
     public Resource getPatchResource (String auxgroup)
     {
         if (_targetVersion <= _version) {
-            log.warning("Requested patch resource for up-to-date or non-versioned application " +
-                        "[cvers=" + _version + ", tvers=" + _targetVersion + "].");
+            log.warning("Requested patch resource for up-to-date or non-versioned application",
+                "cvers", _version, "tvers", _targetVersion);
             return null;
         }
 
@@ -313,9 +313,8 @@ public class Application
             URL remote = new URL(createVAppBase(_targetVersion), pfile);
             return new Resource(pfile, remote, getLocalPath(pfile), false);
         } catch (Exception e) {
-            log.warning("Failed to create patch resource path [pfile=" + pfile +
-                        ", appbase=" + _appbase + ", tvers=" + _targetVersion +
-                        ", error=" + e + "].");
+            log.warning("Failed to create patch resource path",
+                "pfile", pfile, "appbase", _appbase, "tvers", _targetVersion, "error", e);
             return null;
         }
     }
@@ -336,9 +335,8 @@ public class Application
             URL remote = new URL(createVAppBase(_targetVersion), _javaLocation);
             return new Resource(vmfile, remote, getLocalPath(vmfile), true);
         } catch (Exception e) {
-            log.warning("Failed to create VM resource [vmfile=" + vmfile + ", appbase=" + _appbase +
-                        ", tvers=" + _targetVersion + ", javaloc=" + _javaLocation +
-                        ", error=" + e + "].");
+            log.warning("Failed to create VM resource", "vmfile", vmfile, "appbase", _appbase,
+                "tvers", _targetVersion, "javaloc", _javaLocation, "error", e);
             return null;
         }
     }
@@ -354,9 +352,8 @@ public class Application
             URL remote = new URL(createVAppBase(_targetVersion), file);
             return new Resource(file, remote, getLocalPath(file), false);
         } catch (Exception e) {
-            log.warning("Failed to create full resource path [file=" + file +
-                        ", appbase=" + _appbase + ", tvers=" + _targetVersion +
-                        ", error=" + e + "].");
+            log.warning("Failed to create full resource path",
+                "file", file, "appbase", _appbase, "tvers", _targetVersion, "error", e);
             return null;
         }
     }
@@ -372,11 +369,9 @@ public class Application
         try {
             String suffix = _trackingURLSuffix == null ? "" : _trackingURLSuffix;
             String ga = getGATrackingCode();
-            return _trackingURL == null ?
-                null : new URL(_trackingURL + event + suffix + ga);
+            return _trackingURL == null ? null : new URL(_trackingURL + event + suffix + ga);
         } catch (MalformedURLException mue) {
-            log.warning("Invalid tracking URL [path=" + _trackingURL + ", event=" + event +
-                        ", error=" + mue + "].");
+            log.warning("Invalid tracking URL", "path", _trackingURL, "event", event, "error", mue);
             return null;
         }
     }
@@ -681,8 +676,8 @@ public class Application
         if (!m.matches()) {
             // if we can't parse the java version we're in weird land and should probably just try
             // our luck with what we've got rather than try to download a new jvm
-            log.warning("Unable to parse VM version, hoping for the best [version=" + verstr +
-                        ", needed=" + _javaVersion + "].");
+            log.warning("Unable to parse VM version, hoping for the best",
+                "version", verstr, "needed", _javaVersion);
             return true;
         }
 
@@ -1069,12 +1064,12 @@ public class Application
                         rsrc.markAsValid();
                         continue;
                     }
-                    log.info("Failure unpacking resource [rsrc=" + rsrc + "].");
+                    log.info("Failure unpacking resource", "rsrc", rsrc);
                 }
 
             } catch (Exception e) {
-                log.info("Failure validating resource [rsrc=" + rsrc + ", error=" + e + "]. " +
-                         "Requesting redownload...");
+                log.info("Failure validating resource. Requesting redownload...",
+                    "rsrc", rsrc, "error", e);
 
             } finally {
                 mpobs.progress(100);
@@ -1133,13 +1128,13 @@ public class Application
         try {
             _lockChannel = new RandomAccessFile(getLocalPath("gettingdown.lock"), "rw").getChannel();
         } catch (FileNotFoundException e) {
-            log.warning("Unable to create lock file [message=" + e.getMessage() + "]", e);
+            log.warning("Unable to create lock file", "message", e.getMessage(), e);
             return false;
         }
         try {
             _lock = _lockChannel.tryLock();
         } catch (IOException e) {
-            log.warning("Unable to create lock [message=" + e.getMessage() + "]", e);
+            log.warning("Unable to create lock", "message", e.getMessage(), e);
             return false;
         } catch (OverlappingFileLockException e) {
             log.warning("The lock is held elsewhere in this JVM", e);
@@ -1159,12 +1154,12 @@ public class Application
             try {
                 _lock.release();
             } catch (IOException e) {
-                log.warning("Unable to release lock [message=" + e.getMessage() + "]", e);
+                log.warning("Unable to release lock", "message", e.getMessage(), e);
             }
             try {
                 _lockChannel.close();
             } catch (IOException e) {
-                log.warning("Unable to close lock channel [message=" + e.getMessage() + "]", e);
+                log.warning("Unable to close lock channel", "message", e.getMessage(), e);
             }
             _lockChannel = null;
             _lock = null;
@@ -1200,7 +1195,7 @@ public class Application
 
         if (validateSignature) {
             if (_signers == null) {
-                log.info("No signers, not verifying file [path=" + path + "].");
+                log.info("No signers, not verifying file", "path", path);
 
             } else {
                 File signatureFile = downloadFile(path + SIGNATURE_SUFFIX);
@@ -1232,10 +1227,10 @@ public class Application
                         }
 
                         if (!sig.verify(Base64.decodeBase64(signature))) {
-                            log.info("Signature does not match [cert=" + cert.getPublicKey() + "]");
+                            log.info("Signature does not match", "cert", cert.getPublicKey());
                             continue;
                         } else {
-                            log.info("Signature matches [cert=" + cert.getPublicKey() + "]");
+                            log.info("Signature matches", "cert", cert.getPublicKey());
                             validated++;
                         }
 
@@ -1280,8 +1275,8 @@ public class Application
         try {
             targetURL = getRemoteURL(path);
         } catch (Exception e) {
-            log.warning("Requested to download invalid control file [appbase=" + _vappbase +
-                        ", path=" + path + ", error=" + e + "].");
+            log.warning("Requested to download invalid control file",
+                "appbase", _vappbase, "path", path, "error", e);
             throw (IOException) new IOException("Invalid path '" + path + "'.").initCause(e);
         }
 
@@ -1355,7 +1350,7 @@ public class Application
     }
 
     /** Used to parse color specifications from the config file. */
-    protected Color parseColor (HashMap<String,Object> cdata, String name, Color def)
+    protected Color parseColor (HashMap<String, Object> cdata, String name, Color def)
     {
         return parseColor(cdata, name, def, true);
     }
@@ -1391,7 +1386,7 @@ public class Application
     }
 
     /** Parses a list of strings from the config file. */
-    protected String[] parseList (HashMap<String,Object> cdata, String name)
+    protected String[] parseList (HashMap<String, Object> cdata, String name)
     {
         String value = (String)cdata.get(name);
         return (value == null) ? new String[0] : StringUtil.parseStringArray(value);

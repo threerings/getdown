@@ -46,8 +46,8 @@ import com.threerings.getdown.util.ProgressObserver;
 import static com.threerings.getdown.Log.log;
 
 /**
- * Manages the <code>digest.txt</code> file and the computing and
- * processing of MD5 digests for an application.
+ * Manages the <code>digest.txt</code> file and the computing and processing of MD5 digests for an
+ * application.
  */
 public class Digest
 {
@@ -55,8 +55,8 @@ public class Digest
     public static final String DIGEST_FILE = "digest.txt";
 
     /**
-     * Creates a digest instance which will parse and validate the
-     * <code>digest.txt</code> in the supplied application directory.
+     * Creates a digest instance which will parse and validate the <code>digest.txt</code> in the
+     * supplied application directory.
      */
     public Digest (File appdir)
         throws IOException
@@ -78,8 +78,7 @@ public class Digest
         byte[] contents = data.toString().getBytes("UTF-8");
         String md5 = StringUtil.hexlate(md.digest(contents));
         if (!md5.equals(_metaDigest)) {
-            String err = MessageUtil.tcompose(
-                "m.invalid_digest_file", _metaDigest, md5);
+            String err = MessageUtil.tcompose("m.invalid_digest_file", _metaDigest, md5);
             throw new IOException(err);
         }
     }
@@ -93,13 +92,11 @@ public class Digest
     }
 
     /**
-     * Computes the MD5 hash of the specified resource and compares it
-     * with the value parsed from the digest file. Logs a message if the
-     * resource fails validation.
+     * Computes the MD5 hash of the specified resource and compares it with the value parsed from
+     * the digest file. Logs a message if the resource fails validation.
      *
-     * @return true if the resource is valid, false if it failed the
-     * digest check or if an I/O error was encountered during the
-     * validation process.
+     * @return true if the resource is valid, false if it failed the digest check or if an I/O
+     * error was encountered during the validation process.
      */
     public boolean validateResource (Resource resource, ProgressObserver obs)
     {
@@ -109,18 +106,16 @@ public class Digest
             if (cmd5.equals(emd5)) {
                 return true;
             }
-            log.info("Resource failed digest check [rsrc=" + resource +
-                     ", computed=" + cmd5 + ", expected=" + emd5 + "].");
+            log.info("Resource failed digest check",
+                "rsrc", resource, "computed", cmd5, "expected", emd5);
         } catch (Throwable t) {
-            log.info("Resource failed digest check [rsrc=" + resource +
-                     ", error=" + t + "].");
+            log.info("Resource failed digest check", "rsrc", resource, "error", t);
         }
         return false;
     }
 
     /**
-     * Creates a digest file at the specified location using the supplied
-     * list of resources.
+     * Creates a digest file at the specified location using the supplied list of resources.
      */
     public static void createDigest (List<Resource> resources, File output)
         throws IOException
@@ -146,15 +141,13 @@ public class Digest
         // finally compute and append the digest for the file contents
         md.reset();
         byte[] contents = data.toString().getBytes("UTF-8");
-        pout.println(DIGEST_FILE + " = " +
-                     StringUtil.hexlate(md.digest(contents)));
+        pout.println(DIGEST_FILE + " = " + StringUtil.hexlate(md.digest(contents)));
 
         pout.close();
     }
 
     /**
-     * Obtains an appropriate message digest instance for use by the
-     * Getdown system.
+     * Obtains an appropriate message digest instance for use by the Getdown system.
      */
     public static MessageDigest getMessageDigest ()
     {
