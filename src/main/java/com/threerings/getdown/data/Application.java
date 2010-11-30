@@ -1304,7 +1304,7 @@ public class Application
         return new Resource(path, getRemoteURL(path), getLocalPath(path), unpack);
     }
 
-    /** Used to parse resources with the specfied name. */
+    /** Used to parse resources with the specified name. */
     protected void parseResources (HashMap<String,Object> cdata, String name, boolean unpack,
                                    ArrayList<Resource> list)
     {
@@ -1467,6 +1467,6 @@ public class Application
     /** Locks gettingdown.lock in the app dir. Held the entire time updating is going on.*/
     protected FileLock _lock;
 
-    /** Channel to the file underying _lock.  Kept around solely so the lock doesn't close. */
+    /** Channel to the file underlying _lock.  Kept around solely so the lock doesn't close. */
     protected FileChannel _lockChannel;
 }
