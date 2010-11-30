@@ -38,7 +38,6 @@ import java.io.IOException;
 import java.io.BufferedOutputStream;
 import java.io.PrintStream;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -125,21 +124,12 @@ public class GetdownApp
                         _frame.setTitle(title);
                         _frame.getContentPane().removeAll();
                     }
-                    if (_ifc.iconImages != null) {
-                        ArrayList<Image> icons = new ArrayList<Image>();
-                        for (String path : _ifc.iconImages) {
-                            Image img = loadImage(path);
-                            if (img == null) {
-                                log.warning("Error loading icon image", "path", path);
-                            } else {
-                                icons.add(img);
-                            }
-                        }
-                        if (icons.isEmpty()) {
-                            log.warning("Failed to load any icons", "iconImages", _ifc.iconImages);
-
+                    if (_ifc.iconImage != null) {
+                        Image img = loadImage(_ifc.iconImage);
+                        if (img == null) {
+                            log.warning("Failed to load icon", "iconImage", _ifc.iconImage);
                         } else {
-                            _frame.setIconImages(icons);
+                            _frame.setIconImage(img);
                         }
                     }
                     _frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
