@@ -817,9 +817,7 @@ public class Application
      * If the application provided environment variables, combine those with the current
      * environment and return that in a style usable for {@link Runtime#exec(String, String[])}.
      * If the application didn't provide any environment variables, null is returned to just use
-     * the existing environment. If the application provided environment variables and this is
-     * running on Java 1.4 which can't find the existing environment, null is returned so the
-     * existing environment is used and things have a chance of running.
+     * the existing environment.
      */
     protected String[] createEnvironment ()
     {
@@ -829,20 +827,12 @@ public class Application
             log.info("Didn't find any custom environment variables, not setting any.");
             return null;
         }
-        Map<String, String> existing;
-        try {
-            existing = System.getenv();
-        } catch (NoSuchMethodError nsme) {
-            log.warning("Unable to access the existing environment, most likely due to being on "
-                + "Java 1.4.  Not setting application specific environment.", "applicationEnv",
-                envvar, nsme);
-            return null;
-        }
+
         List<String> envAssignments = new ArrayList<String>();
         for (String assignment : envvar) {
             envAssignments.add(processArg(assignment));
         }
-        for (Entry<String, String> environmentEntry : existing.entrySet()) {
+        for (Entry<String, String> environmentEntry : System.getenv().entrySet()) {
             envAssignments.add(environmentEntry.getKey() + "=" + environmentEntry.getValue());
         }
         String[] envp = envAssignments.toArray(new String[envAssignments.size()]);
