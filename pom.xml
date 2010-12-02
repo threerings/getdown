@@ -51,7 +51,7 @@
     <dependency>
       <groupId>com.samskivert</groupId>
       <artifactId>samskivert</artifactId>
-      <version>1.0</version>
+      <version>1.2-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
