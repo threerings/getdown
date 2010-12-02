@@ -27,22 +27,23 @@ package com.threerings.getdown.launcher;
 
 import java.awt.Container;
 import java.awt.Image;
-import java.awt.event.WindowEvent;
 import java.awt.event.WindowAdapter;
-import javax.swing.JFrame;
-import javax.swing.WindowConstants;
-
+import java.awt.event.WindowEvent;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.BufferedOutputStream;
 import java.io.PrintStream;
-
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.samskivert.swing.util.SwingUtil;
+import javax.swing.JFrame;
+import javax.swing.WindowConstants;
+
 import com.samskivert.util.StringUtil;
+
+import com.samskivert.swing.util.SwingUtil;
 
 import static com.threerings.getdown.Log.log;
 
@@ -124,14 +125,24 @@ public class GetdownApp
                         _frame.setTitle(title);
                         _frame.getContentPane().removeAll();
                     }
-                    if (_ifc.iconImage != null) {
-                        Image img = loadImage(_ifc.iconImage);
-                        if (img == null) {
-                            log.warning("Failed to load icon", "iconImage", _ifc.iconImage);
+
+                    if (_ifc.iconImages != null) {
+                        ArrayList<Image> icons = new ArrayList<Image>();
+                        for (String path : _ifc.iconImages) {
+                            Image img = loadImage(path);
+                            if (img == null) {
+                                log.warning("Error loading icon image", "path", path);
+                            } else {
+                                icons.add(img);
+                            }
+                        }
+                        if (icons.isEmpty()) {
+                            log.warning("Failed to load any icons", "iconImages", _ifc.iconImages);
                         } else {
-                            _frame.setIconImage(img);
+                            SwingUtil.setWindowIcons(_frame, icons);
                         }
                     }
+
                     _frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
                     return _frame.getContentPane();
                 }
