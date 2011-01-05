@@ -1034,7 +1034,7 @@ public class Application
                     BufferedReader bin = new BufferedReader(new InputStreamReader(in));
                     for (String[] pair : ConfigUtil.parsePairs(bin, false)) {
                         if (pair[0].equals("version")) {
-                            _targetVersion = Long.parseLong(pair[1]);
+                            _targetVersion = Math.max(Long.parseLong(pair[1]), _targetVersion);
                             break;
                         }
                     }
