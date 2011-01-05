@@ -468,6 +468,16 @@ public class Application
             throw (IOException) new IOException(err).initCause(mue);
         }
 
+        // check for a latest config URL
+        String latest = (String)cdata.get("latest");
+        if (latest != null) {
+            try {
+                _latest = new URL(latest);
+            } catch (MalformedURLException mue) {
+                log.warning("Invalid URL for latest attribute.", mue);
+            }
+        }
+
         String prefix = (_appid == null) ? "" : (_appid + ".");
 
         // determine our application class name
@@ -1000,6 +1010,7 @@ public class Application
         _targetVersion = _version;
 
         // if we are a versioned application, read in the contents of the version.txt file
+        // and/or check the latest config URL for a newer version
         if (_version != -1) {
             File vfile = getLocalPath(VERSION_FILE);
             FileInputStream fin = null;
@@ -1014,6 +1025,24 @@ public class Application
                 log.info("Unable to read version file: " + e.getMessage());
             } finally {
                 StreamUtil.close(fin);
+            }
+
+            if (_latest != null) {
+                InputStream in = null;
+                try {
+                    in = _latest.openStream();
+                    BufferedReader bin = new BufferedReader(new InputStreamReader(in));
+                    for (String[] pair : ConfigUtil.parsePairs(bin, false)) {
+                        if (pair[0].equals("version")) {
+                            _targetVersion = Long.parseLong(pair[1]);
+                            break;
+                        }
+                    }
+                } catch (Exception e) {
+                    log.warning("Unable to retrieve version from latest config file.", e);
+                } finally {
+                    StreamUtil.close(in);
+                }
             }
         }
 
@@ -1425,6 +1454,7 @@ public class Application
     protected long _targetVersion = -1;
     protected String _appbase;
     protected URL _vappbase;
+    protected URL _latest;
     protected String _class;
     protected String _name;
     protected String _dockIconPath;
