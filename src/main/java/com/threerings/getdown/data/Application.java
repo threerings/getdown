@@ -36,6 +36,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.io.RandomAccessFile;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -1014,12 +1015,13 @@ public class Application
         if (_version != -1) {
             File vfile = getLocalPath(VERSION_FILE);
             FileInputStream fin = null;
+            long fileVersion = -1;
             try {
                 fin = new FileInputStream(vfile);
                 BufferedReader bin = new BufferedReader(new InputStreamReader(fin));
                 String vstr = bin.readLine();
                 if (!StringUtil.isBlank(vstr)) {
-                    _targetVersion = Long.parseLong(vstr);
+                    _targetVersion = fileVersion = Long.parseLong(vstr);
                 }
             } catch (Exception e) {
                 log.info("Unable to read version file: " + e.getMessage());
@@ -1029,12 +1031,18 @@ public class Application
 
             if (_latest != null) {
                 InputStream in = null;
+                PrintStream out = null;
                 try {
                     in = _latest.openStream();
                     BufferedReader bin = new BufferedReader(new InputStreamReader(in));
                     for (String[] pair : ConfigUtil.parsePairs(bin, false)) {
                         if (pair[0].equals("version")) {
                             _targetVersion = Math.max(Long.parseLong(pair[1]), _targetVersion);
+                            if (fileVersion != -1 && _targetVersion > fileVersion) {
+                                // replace the file with the newest version
+                                out = new PrintStream(new FileOutputStream(vfile));
+                                out.println(_targetVersion);
+                            }
                             break;
                         }
                     }
@@ -1042,6 +1050,7 @@ public class Application
                     log.warning("Unable to retrieve version from latest config file.", e);
                 } finally {
                     StreamUtil.close(in);
+                    StreamUtil.close(out);
                 }
             }
         }
