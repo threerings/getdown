@@ -120,7 +120,8 @@ public abstract class Getdown extends Thread
                 dir = System.getProperty("user.dir");
             }
             String errmsg = "The directory in which this application is installed:\n" + dir +
-                "\nis invalid. The directory must not contain the '!' character. Please reinstall.";
+                "\nis invalid (" + e.getMessage() + "). If the full path to the app directory " +
+                "contains the '!' character, this will trigger this error.";
             fail(errmsg);
         }
         _app = new Application(appDir, appId, signers, jvmargs, appargs);
