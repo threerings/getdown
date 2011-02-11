@@ -99,7 +99,7 @@
   <target name="dist" depends="compile" description="Builds jar files.">
     <jar destfile="${deploy.dir}/${ant.project.name}.jar" manifest="lib/manifest.mf"
          basedir="${deploy.dir}/classes"/>
-    <!-- generate our proguard jar file -->
+    <!-- generate our proguard client and tool jar files -->
     <antcall target="-proguard">
       <param name="getdown.jar" value="${deploy.dir}/${ant.project.name}.jar"/>
       <param name="version.suff" value=""/>
@@ -114,13 +114,13 @@
     <condition property="rt.jar" value="${java.home}/lib/rt.jar">
       <available file="${java.home}/lib/rt.jar"/>
     </condition>
-
-    <!-- we put these guys in the test classpath though really we just want a
-         tools classpath -->
+    <!-- set up the proguard task -->
     <artifact:dependencies pathId="proguard.classpath">
       <dependency groupId="net.sf.proguard" artifactId="proguard" version="4.4"/>
     </artifact:dependencies>
     <taskdef resource="proguard/ant/task.properties" classpathref="proguard.classpath"/>
+
+    <!-- build the client jar file -->
     <proguard>
       <injar path="${getdown.jar}"/>
       <injar path="${jregistrykey:jregistrykey:jar}" filter="!META-INF/**"/>
@@ -143,6 +143,23 @@
       </keep>
       <keep name="ca.beq.util.win32.registry.**">
         <constructor/><method name="*"/><field access="public" name="*"/>
+      </keep>
+    </proguard>
+
+    <!-- build the tools jar file -->
+    <proguard>
+      <injar path="${getdown.jar}"/>
+      <injar path="${com.samskivert:samskivert:jar}" filter="!META-INF/**, 
+        !**/Log4JLogger*,!**/*.java,com/samskivert/Log.class,**/samskivert/io/**,
+        **/samskivert/swing/**,**/samskivert/text/**,**/samskivert/util/**"/>
+      <injar path="${commons-codec:commons-codec:jar}" filter="!META-INF/**"/>
+      <outjar path="${deploy.dir}/getdown-tools${version.suff}.jar"/>
+      <libraryjar name="${rt.jar}"/>
+      <libraryjar name="${jregistrykey:jregistrykey:jar}"/>
+      <libraryjar name="${org.apache.ant:ant:jar}"/>
+
+      <keep name="com.threerings.getdown.tools.*">
+        <method name="*"/>
       </keep>
     </proguard>
   </target>
