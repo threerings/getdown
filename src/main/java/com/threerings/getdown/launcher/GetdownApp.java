@@ -70,8 +70,8 @@ public class GetdownApp
         // look for a specific app identifier
         String appId = (aidx < args.size()) ? args.get(aidx++) : null;
 
-        // pass along anything after that as jvm args
-        String[] appargs = (aidx < args.size())
+        // pass along anything after that as app args
+        String[] appArgs = (aidx < args.size())
             ? args.subList(aidx, args.size()).toArray(new String[0]) : null;
 
         // ensure a valid directory was supplied
@@ -107,7 +107,7 @@ public class GetdownApp
         log.info("---------------------------------------------");
 
         try {
-            Getdown app = new Getdown(appDir, appId, null, null, appargs) {
+            Getdown app = new Getdown(appDir, appId, null, null, appArgs) {
                 @Override
                 protected Container createContainer () {
                     // create our user interface, and display it
