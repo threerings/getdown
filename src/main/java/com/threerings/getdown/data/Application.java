@@ -479,7 +479,7 @@ public class Application
             }
         }
 
-        String prefix = (_appid == null) ? "" : (_appid + ".");
+        String prefix = StringUtil.isBlank(_appid) ? "" : (_appid + ".");
 
         // determine our application class name
         _class = (String)cdata.get(prefix + "class");
