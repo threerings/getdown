@@ -51,7 +51,7 @@
     <dependency>
       <groupId>com.samskivert</groupId>
       <artifactId>samskivert</artifactId>
-      <version>1.2-SNAPSHOT</version>
+      <version>1.2</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -131,7 +131,7 @@
               <target>
                 <property name="deploy.dir" value="target" />
                 <property name="getdown.jar" value="target/getdown-${project.version}.jar" />
-                <property name="version.suff" value="-${project.version}.jar" />
+                <property name="version.suff" value="-${project.version}" />
                 <ant antfile="${basedir}/build.xml">
                   <target name="-proguard" />
                 </ant>
