@@ -51,7 +51,7 @@ import java.net.URL;
 import java.net.URLConnection;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Map;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -282,7 +282,7 @@ public abstract class Getdown extends Thread
         File pfile = _app.getLocalPath("proxy.txt");
         if (pfile.exists()) {
             try {
-                HashMap<String, Object> pconf = ConfigUtil.parseConfig(pfile, false);
+                Map<String, Object> pconf = ConfigUtil.parseConfig(pfile, false);
                 setProxyProperties((String)pconf.get("host"), (String)pconf.get("port"));
                 return true;
             } catch (IOException ioe) {
@@ -546,7 +546,7 @@ public abstract class Getdown extends Thread
         reportTrackingEvent("jvm_start", -1);
 
         updateStatus("m.downloading_java");
-        ArrayList<Resource> list = new ArrayList<Resource>();
+        List<Resource> list = new ArrayList<Resource>();
         list.add(vmjar);
         download(list);
 
@@ -598,7 +598,7 @@ public abstract class Getdown extends Thread
         // attempt to download the patch files
         Resource patch = _app.getPatchResource(null);
         if (patch != null) {
-            ArrayList<Resource> list = new ArrayList<Resource>();
+            List<Resource> list = new ArrayList<Resource>();
             list.add(patch);
 
             // add the auxiliary group patch files for activated groups

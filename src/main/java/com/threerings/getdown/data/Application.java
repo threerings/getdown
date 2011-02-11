@@ -57,8 +57,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -421,7 +421,7 @@ public class Application
         throws IOException
     {
         // parse our configuration file
-        HashMap<String,Object> cdata = null;
+        Map<String,Object> cdata = null;
         try {
             cdata = ConfigUtil.parseConfig(_config, checkPlatform);
         } catch (FileNotFoundException fnfe) {
@@ -602,7 +602,7 @@ public class Application
         ui.progressBar = parseColor(cdata, "ui.progress_bar", ui.progressBar);
         ui.status = parseRect(cdata, "ui.status", ui.status);
         ui.statusText = parseColor(cdata, "ui.status_text", ui.statusText);
-        ui.textShadow = parseColor(cdata, "ui.text_shadow", ui.textShadow, false);
+        ui.textShadow = parseColor(cdata, "ui.text_shadow", ui.textShadow);
         ui.backgroundImage = (String)cdata.get("ui.background_image");
         if (ui.backgroundImage == null) { // support legacy format
             ui.backgroundImage = (String)cdata.get("ui.background");
@@ -1343,8 +1343,8 @@ public class Application
     }
 
     /** Used to parse resources with the specified name. */
-    protected void parseResources (HashMap<String,Object> cdata, String name, boolean unpack,
-                                   ArrayList<Resource> list)
+    protected void parseResources (Map<String,Object> cdata, String name, boolean unpack,
+                                   List<Resource> list)
     {
         String[] rsrcs = ConfigUtil.getMultiValue(cdata, name);
         if (rsrcs == null) {
@@ -1360,51 +1360,35 @@ public class Application
     }
 
     /** Used to parse rectangle specifications from the config file. */
-    protected Rectangle parseRect (HashMap<String,Object> cdata, String name, Rectangle def)
+    protected Rectangle parseRect (Map<String,Object> cdata, String name, Rectangle def)
     {
         String value = (String)cdata.get(name);
-        Rectangle rect = parseRect(value);
-        if (rect == null) {
-            log.warning("Ignoring invalid '" + name + "' config '" + value + "'.");
-        } else {
-            return rect;
-        }
-        return def;
+        Rectangle rect = parseRect(name, value);
+        return (rect == null) ? def : rect;
     }
 
     /**
      * Takes a comma-separated String of four integers and returns a rectangle using those ints as
      * the its x, y, width, and height.
      */
-    public static Rectangle parseRect (String value)
+    public static Rectangle parseRect (String name, String value)
     {
         if (!StringUtil.isBlank(value)) {
             int[] v = StringUtil.parseIntArray(value);
             if (v != null && v.length == 4) {
                 return new Rectangle(v[0], v[1], v[2], v[3]);
             }
+            log.warning("Ignoring invalid '" + name + "' config '" + value + "'.");
         }
         return null;
     }
 
     /** Used to parse color specifications from the config file. */
-    protected Color parseColor (HashMap<String, Object> cdata, String name, Color def)
-    {
-        return parseColor(cdata, name, def, true);
-    }
-
-    /** Used to parse color specifications from the config file. */
-    protected Color parseColor (HashMap<String, Object> cdata, String name, Color def,
-        boolean required)
+    protected Color parseColor (Map<String, Object> cdata, String name, Color def)
     {
         String value = (String)cdata.get(name);
         Color color = parseColor(value);
-        if (color == null && required) {
-            log.warning("Ignoring invalid '" + name + "' config '" + value + "'.");
-        } else {
-            return color;
-        }
-        return def;
+        return (color == null) ? def : color;
     }
 
     /**
@@ -1424,7 +1408,7 @@ public class Application
     }
 
     /** Parses a list of strings from the config file. */
-    protected String[] parseList (HashMap<String, Object> cdata, String name)
+    protected String[] parseList (Map<String, Object> cdata, String name)
     {
         String value = (String)cdata.get(name);
         return (value == null) ? new String[0] : StringUtil.parseStringArray(value);
@@ -1482,16 +1466,15 @@ public class Application
     protected int _javaVersion;
     protected String _javaLocation;
 
-    protected ArrayList<Resource> _codes = new ArrayList<Resource>();
-    protected ArrayList<Resource> _resources = new ArrayList<Resource>();
+    protected List<Resource> _codes = new ArrayList<Resource>();
+    protected List<Resource> _resources = new ArrayList<Resource>();
 
-    protected ArrayList<String> _auxgroups = new ArrayList<String>();
-    protected HashMap<String,ArrayList<Resource>> _auxrsrcs =
-        new HashMap<String,ArrayList<Resource>>();
-    protected HashMap<String,Boolean> _auxactive = new HashMap<String,Boolean>();
+    protected List<String> _auxgroups = new ArrayList<String>();
+    protected Map<String,ArrayList<Resource>> _auxrsrcs = new HashMap<String,ArrayList<Resource>>();
+    protected Map<String,Boolean> _auxactive = new HashMap<String,Boolean>();
 
-    protected ArrayList<String> _jvmargs = new ArrayList<String>();
-    protected ArrayList<String> _appargs = new ArrayList<String>();
+    protected List<String> _jvmargs = new ArrayList<String>();
+    protected List<String> _appargs = new ArrayList<String>();
 
     protected String[] _baseJvmArgs = new String[0];
     protected String[] _baseAppArgs = new String[0];

@@ -180,7 +180,7 @@ public class GetdownAppletConfig
         // This allows us to configure the status panel from applet parameters in case something
         // goes horribly wrong before we get a chance to read getdown.txt (like when the user
         // rejects write permission for the applet)
-        statusBounds = Application.parseRect(getParameter("ui.status"));
+        statusBounds = Application.parseRect("ui.status", getParameter("ui.status"));
         statusColor = Application.parseColor(getParameter("ui.status_text"));
     }
 

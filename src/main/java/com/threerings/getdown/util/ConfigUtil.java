@@ -34,6 +34,7 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.samskivert.util.StringUtil;
 
@@ -82,10 +83,10 @@ public class ConfigUtil
      * @return a map from keys to values, where a value will be an array of strings if more than
      * one key/value pair in the config file was associated with the same key.
      */
-    public static HashMap<String, Object> parseConfig (File config, boolean checkPlatform)
+    public static Map<String, Object> parseConfig (File config, boolean checkPlatform)
         throws IOException
     {
-        HashMap<String, Object> data = new HashMap<String, Object>();
+        Map<String, Object> data = new HashMap<String, Object>();
 
         // I thought that we could use HashMap<String, String[]> and put new String[] {pair[1]} for
         // the null case, but it mysteriously dies on launch, so leaving it as HashMap<String,
@@ -112,7 +113,7 @@ public class ConfigUtil
      * Massages a single string into an array and leaves existing array values as is. Simplifies
      * access to parameters that are expected to be arrays.
      */
-    public static String[] getMultiValue (HashMap<String, Object> data, String name)
+    public static String[] getMultiValue (Map<String, Object> data, String name)
     {
         Object value = data.get(name);
         if (value instanceof String) {
