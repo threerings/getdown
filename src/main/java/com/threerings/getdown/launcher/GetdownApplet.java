@@ -62,7 +62,7 @@ public class GetdownApplet extends JApplet
             // a third party to insert a trusted certificate. This should be replaced with
             // statically included trusted keys.
             _getdown = new Getdown(_config.appdir, null, GetdownApplet.class.getSigners(),
-                _config.jvmargs, null) {
+                                   _config.jvmargs, _config.appargs) {
                 @Override
                 protected Container createContainer () {
                     getContentPane().removeAll();

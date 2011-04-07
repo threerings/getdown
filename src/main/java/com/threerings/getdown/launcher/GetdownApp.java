@@ -41,9 +41,9 @@ import java.util.List;
 import javax.swing.JFrame;
 import javax.swing.WindowConstants;
 
-import com.samskivert.util.StringUtil;
-
 import com.samskivert.swing.util.SwingUtil;
+import com.samskivert.util.ArrayUtil;
+import com.samskivert.util.StringUtil;
 
 import static com.threerings.getdown.Log.log;
 
@@ -71,8 +71,8 @@ public class GetdownApp
         String appId = (aidx < args.size()) ? args.get(aidx++) : null;
 
         // pass along anything after that as app args
-        String[] appArgs = (aidx < args.size())
-            ? args.subList(aidx, args.size()).toArray(new String[0]) : null;
+        String[] appArgs = (aidx < args.size()) ?
+            args.subList(aidx, args.size()).toArray(ArrayUtil.EMPTY_STRING) : null;
 
         // ensure a valid directory was supplied
         File appDir = new File(adarg);

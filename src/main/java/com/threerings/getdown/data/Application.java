@@ -69,6 +69,7 @@ import org.apache.commons.codec.binary.Base64;
 
 import com.samskivert.io.StreamUtil;
 import com.samskivert.text.MessageUtil;
+import com.samskivert.util.ArrayUtil;
 import com.samskivert.util.RandomUtil;
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
@@ -179,26 +180,22 @@ public class Application
      * configuration file from the supplied application directory.
      *
      * @param appid usually null but a string identifier if a secondary application is desired to
-     * be launched. That application will use <code>appid.class</code> and
-     * <code>appid.apparg</code> to configure itself but all other parameters will be the same as
-     * the primary application.
+     * be launched. That application will use {@code appid.class} and {@code appid.apparg} to
+     * configure itself but all other parameters will be the same as the primary application.
      * @param signers an array of possible signers of this application. Used to verify the digest.
-     * @param jvmargs arguments to pass on to launched jvms
-     * @param appargs arguments to pass on to launched application
+     * @param jvmargs additional arguments to pass on to launched jvms.
+     * @param appargs additional arguments to pass on to launched application; these will be added
+     * after the args in the getdown.txt file.
      */
-    public Application (
-        File appdir, String appid, Object[] signers, String[] jvmargs, String[] appargs)
+    public Application (File appdir, String appid, Object[] signers,
+                        String[] jvmargs, String[] appargs)
     {
         _appdir = appdir;
         _appid = appid;
         _signers = signers;
         _config = getLocalPath(CONFIG_FILE);
-        if (jvmargs != null) {
-            _baseJvmArgs = jvmargs;
-        }
-        if (appargs != null) {
-            _baseAppArgs = appargs;
-        }
+        _extraJvmArgs = (jvmargs == null) ? ArrayUtil.EMPTY_STRING : jvmargs;
+        _extraAppArgs = (appargs == null) ? ArrayUtil.EMPTY_STRING : appargs;
     }
 
     /**
@@ -567,7 +564,7 @@ public class Application
         }
 
         // Add the launch specific JVM arguments
-        for (String arg : _baseJvmArgs) {
+        for (String arg : _extraJvmArgs) {
             _jvmargs.add(arg);
         }
 
@@ -580,7 +577,7 @@ public class Application
         }
 
         // add the launch specific application arguments
-        for (String arg : _baseAppArgs) {
+        for (String arg : _extraAppArgs) {
             _appargs.add(arg);
         }
 
@@ -1411,7 +1408,7 @@ public class Application
     protected String[] parseList (Map<String, Object> cdata, String name)
     {
         String value = (String)cdata.get(name);
-        return (value == null) ? new String[0] : StringUtil.parseStringArray(value);
+        return (value == null) ? ArrayUtil.EMPTY_STRING : StringUtil.parseStringArray(value);
     }
 
     /** Possibly generates and returns a google analytics tracking cookie. */
@@ -1476,15 +1473,15 @@ public class Application
     protected List<String> _jvmargs = new ArrayList<String>();
     protected List<String> _appargs = new ArrayList<String>();
 
-    protected String[] _baseJvmArgs = new String[0];
-    protected String[] _baseAppArgs = new String[0];
+    protected String[] _extraJvmArgs;
+    protected String[] _extraAppArgs;
 
     protected Object[] _signers;
 
     /** If a warning has been issued about not being able to set modtimes. */
     protected boolean _warnedAboutSetLastModified;
 
-    protected static final String[] SA_PROTO = new String[0];
+    protected static final String[] SA_PROTO = ArrayUtil.EMPTY_STRING;
 
     /** Locks gettingdown.lock in the app dir. Held the entire time updating is going on.*/
     protected FileLock _lock;

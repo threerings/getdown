@@ -93,8 +93,7 @@ public abstract class Getdown extends Thread
         this(appDir, appId, null, null, null);
     }
 
-    public Getdown (
-        File appDir, String appId, Object[] signers, String[] jvmargs, String[] appargs)
+    public Getdown (File appDir, String appId, Object[] signers, String[] jvmargs, String[] appargs)
     {
         super("Getdown");
         try {
