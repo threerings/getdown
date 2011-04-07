@@ -72,7 +72,7 @@ public class GetdownAppletConfig
     /** A property specifying the names of additional appargs properties. Each apparg property will
      * be suffixed by a monotonically increasing integer starting at zero, e.g.
      * <pre>{@code
-     * <param name="apparg0" value="&quot;my awesome value&quot;"/>
+     * <param name="apparg0" value="my awesome value"/>
      * <param name="apparg1" value="monkeys"/>
      * }</pre>
      * When a number is reached for which no value exists, we stop looking. */
