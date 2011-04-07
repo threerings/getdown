@@ -33,6 +33,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -50,25 +52,32 @@ import static com.threerings.getdown.Log.log;
 public class GetdownAppletConfig
 {
     public static final String APPBASE = "appbase";
-
     public static final String APPNAME = "appname";
-
     public static final String BGIMAGE = "bgimage";
-
     public static final String ERRORBGIMAGE = "errorbgimage";
-
-    public static final String PROPERTIES = "properties";
-
     public static final String PARAM_DELIMITER = ".";
-
-    public static final String APP_PROPERTIES = "app_properties";
-
     public static final String DIRECT = "direct";
-
     public static final String REDIRECT_ON_FINISH = "redirect_on_finish";
-
     public static final String REDIRECT_ON_FINISH_TARGET = "redirect_on_finish_target";
 
+    /** Used to specify the names of additional jvmargs properties. Each jvmarg property will
+     * be suffixed by a monotonically increasing integer starting at zero, e.g.
+     * <pre>{@code
+     * <param name="jvmarg0" value="-Xmx256M"/>
+     * <param name="jvmarg1" value="-Dfoo=bar"/>
+     * }</pre>
+     * When a number is reached for which no value exists, we stop looking. */
+    public static final String JVMARG_PREFIX = "jvmargs";
+
+    /** A property specifying the names of additional appargs properties. Each apparg property will
+     * be suffixed by a monotonically increasing integer starting at zero, e.g.
+     * <pre>{@code
+     * <param name="apparg0" value="&quot;my awesome value&quot;"/>
+     * <param name="apparg1" value="monkeys"/>
+     * }</pre>
+     * When a number is reached for which no value exists, we stop looking. */
+    public static final String APPARG_PREFIX = "appargs";
+ 
     public String appbase;
 
     public String appname;
@@ -79,11 +88,13 @@ public class GetdownAppletConfig
     /** The error background image */
     public String errorimgpath;
 
-    public Properties properties = new Properties();
-
     public File appdir;
 
+    /** Additional jvmargs to supply to the launching app. */
     public String[] jvmargs;
+
+    /** Additional appargs to supply to the launching app. */
+    public String[] appargs;
 
     /** An optional URL to which the applet should redirect when done. */
     public URL redirectUrl;
@@ -92,10 +103,8 @@ public class GetdownAppletConfig
 
     public String installerFileContents;
 
-    /**
-     * Indicates whether the downloaded app should be launched in the parent applet (true) or as a
-     * separate java process (false).
-     */
+    /** Indicates whether the downloaded app should be launched in the parent applet (true) or as a
+     * separate java process (false). */
     public boolean invokeDirect;
 
     /** Optional default bounds for the status panel. */
@@ -121,15 +130,17 @@ public class GetdownAppletConfig
         imgpath = getParameter(BGIMAGE);
         errorimgpath = getParameter(ERRORBGIMAGE);
 
-        String props = getParameter(PROPERTIES);
+        // DEPRECATED LEGACY CRAP: extract system properties to set in applet JVM (not app JVM)
+        String props = getParameter("properties");
         if (props != null) {
             String[] proparray = props.split(" ");
             for (String property : proparray) {
                 String key = property.substring(property.indexOf("-D") + 2, property.indexOf("="));
                 String value = property.substring(property.indexOf("=") + 1);
-                properties.setProperty(key, value);
+                _properties.setProperty(key, value);
             }
         }
+        // END DLC
 
         String root;
         if (RunAnywhere.isWindows()) {
@@ -153,16 +164,21 @@ public class GetdownAppletConfig
 
         installerFileContents = getParameter("installer");
 
-        // Pull out -D properties to pass through to the launched vm if they exist
-        String params = getParameter(APP_PROPERTIES);
-        if (params == null) {
-            jvmargs = new String[0];
-        } else {
-            jvmargs = params.split(",");
-            for (int ii = 0; ii < jvmargs.length; ii++) {
-                jvmargs[ii] = "-D" + jvmargs[ii];
+        // extract arguments to be added to getdown.txt's jvmargs
+        List<String> jvmalist = parseArgList(JVMARG_PREFIX);
+        // DEPRECATED LEGACY CRAP: extract system properties to set in app JVM
+        String appprops = getParameter("app_properties");
+        if (appprops != null) {
+            for (String jvmarg : appprops.split(",")) {
+                jvmalist.add("-D" + jvmarg);
             }
         }
+        // END DLC
+        jvmargs = jvmalist.toArray(new String[jvmalist.size()]);
+
+        // extract arguments to be added to getdown.txt's appargs
+        List<String> appalist = parseArgList(APPARG_PREFIX);
+        appargs = appalist.toArray(new String[appalist.size()]);
 
         String direct = getParameter(DIRECT, "false");
         invokeDirect = Boolean.valueOf(direct);
@@ -226,10 +242,9 @@ public class GetdownAppletConfig
      */
     public String getParameter (String param)
     {
-        if (_prefix != null) {
-            return _applet.getParameter(_prefix + PARAM_DELIMITER + param);
-        }
-        return _applet.getParameter(param);
+        return (_prefix == null) ?
+            _applet.getParameter(param) :
+            _applet.getParameter(_prefix + PARAM_DELIMITER + param);
     }
 
     /**
@@ -239,7 +254,7 @@ public class GetdownAppletConfig
     public String getParameter (String param, String defaultValue)
     {
         String value = getParameter(param);
-        return value == null ? defaultValue : value;
+        return (value == null) ? defaultValue : value;
     }
 
     /**
@@ -291,6 +306,19 @@ public class GetdownAppletConfig
     }
 
     /**
+     * Parses parameters named {@code prefix0}, {@code prefix1}, ... into a list.
+     */
+    protected List<String> parseArgList (String prefix)
+    {
+        List<String> arglist = new ArrayList<String>();
+        String value;
+        for (int ii = 0; (value = getParameter(prefix + ii)) != null; ii++) {
+            arglist.add(value);
+        }
+        return arglist;
+    }
+
+    /**
      * This checks whether the user has accepted our signed
      */
     protected void securityCheck () throws Exception
@@ -316,7 +344,7 @@ public class GetdownAppletConfig
      */
     protected void setSystemProperties ()
     {
-        System.getProperties().putAll(properties);
+        System.getProperties().putAll(_properties);
     }
 
     /**
@@ -398,4 +426,7 @@ public class GetdownAppletConfig
 
     /** The background images displayed on the status panel as Getdown is getting down. */
     protected RotatingBackgrounds bgimages;
+
+    /** System properties to set in the applet JVM. */
+    protected Properties _properties = new Properties();
 }
