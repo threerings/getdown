@@ -83,7 +83,7 @@ public class HTTPDownloader extends Downloader
 
         // make sure we got a satisfactory response code
         if (conn instanceof HttpURLConnection) {
-            HttpURLConnection hcon = (HttpURLConnection)rsrc.getRemote().openConnection();
+            HttpURLConnection hcon = (HttpURLConnection)conn;
             if (hcon.getResponseCode() != HttpURLConnection.HTTP_OK) {
                 throw new IOException("Unable to download resource " + rsrc.getRemote() + ": " +
                                       hcon.getResponseCode());
