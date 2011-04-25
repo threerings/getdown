@@ -68,7 +68,7 @@ public class GetdownApp
         }
 
         // look for a specific app identifier
-        String appId = (aidx < args.size()) ? args.get(aidx++) : null;
+        String appId = (aidx < args.size()) ? args.get(aidx++) : System.getProperty("appid");
 
         // pass along anything after that as app args
         String[] appArgs = (aidx < args.size()) ?
