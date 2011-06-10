@@ -1077,6 +1077,7 @@ public class Application
         }
 
         MetaProgressObserver mpobs = new MetaProgressObserver(obs, totalSize);
+        boolean noUnpack = Boolean.getBoolean("no_unpack");
         for (Resource rsrc : rsrcs) {
             if (Thread.interrupted()) {
                 throw new InterruptedException("m.applet_stopped");
@@ -1094,7 +1095,7 @@ public class Application
             try {
                 if (_digest.validateResource(rsrc, mpobs)) {
                     // unpack this resource if appropriate
-                    if (!rsrc.shouldUnpack() || rsrc.unpack()) {
+                    if (noUnpack || !rsrc.shouldUnpack() || rsrc.unpack()) {
                         // finally note that this resource is kosher
                         rsrc.markAsValid();
                         continue;
