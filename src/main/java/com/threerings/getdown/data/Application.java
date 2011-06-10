@@ -1063,9 +1063,11 @@ public class Application
      *
      * @param alreadyValid if non-null a 1 element array that will have the number of "already
      * validated" resources filled in.
+     * @param unpacked a set to populate with unpacked resources.
      */
-    public List<Resource> verifyResources (ProgressObserver obs, int[] alreadyValid)
-        throws InterruptedException
+    public List<Resource> verifyResources (
+        ProgressObserver obs, int[] alreadyValid, Set<Resource> unpacked)
+            throws InterruptedException
     {
         List<Resource> rsrcs = getAllResources();
         List<Resource> failures = new ArrayList<Resource>();
@@ -1095,8 +1097,13 @@ public class Application
             try {
                 if (_digest.validateResource(rsrc, mpobs)) {
                     // unpack this resource if appropriate
-                    if (noUnpack || !rsrc.shouldUnpack() || rsrc.unpack()) {
+                    if (noUnpack || !rsrc.shouldUnpack()) {
                         // finally note that this resource is kosher
+                        rsrc.markAsValid();
+                        continue;
+                    }
+                    if (rsrc.unpack()) {
+                        unpacked.add(rsrc);
                         rsrc.markAsValid();
                         continue;
                     }
@@ -1114,6 +1121,40 @@ public class Application
         }
 
         return (failures.size() == 0) ? null : failures;
+    }
+
+    /**
+     * Unpacks the resources that require it (we know that they're valid).
+     *
+     * @param unpacked a set of resources to skip because they're already unpacked.
+     */
+    public void unpackResources (ProgressObserver obs, Set<Resource> unpacked)
+        throws InterruptedException
+    {
+        List<Resource> rsrcs = getActiveResources();
+
+        // total up the file size of the resources to unpack
+        long totalSize = 0L;
+        for (Iterator<Resource> it = rsrcs.iterator(); it.hasNext(); ) {
+            Resource rsrc = it.next();
+            if (rsrc.shouldUnpack() && !unpacked.contains(rsrc)) {
+                totalSize += rsrc.getLocal().length();
+            } else {
+                it.remove();
+            }
+        }
+
+        MetaProgressObserver mpobs = new MetaProgressObserver(obs, totalSize);
+        for (Resource rsrc : rsrcs) {
+            if (Thread.interrupted()) {
+                throw new InterruptedException("m.applet_stopped");
+            }
+            mpobs.startElement(rsrc.getLocal().length());
+            if (!rsrc.unpack()) {
+                log.info("Failure unpacking resource", "rsrc", rsrc);
+            }
+            mpobs.progress(100);
+        }
     }
 
     /**

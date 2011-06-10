@@ -51,10 +51,12 @@ import java.net.URL;
 import java.net.URLConnection;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.Set;
 
 import ca.beq.util.win32.registry.RegistryKey;
 import ca.beq.util.win32.registry.RegistryValue;
@@ -404,6 +406,9 @@ public abstract class Getdown extends Thread
             // time through
             int[] alreadyValid = new int[1];
 
+            // we'll keep track of all the resources we unpack
+            Set<Resource> unpacked = new HashSet<Resource>();
+
             for (int ii = 0; ii < MAX_LOOPS; ii++) {
                 // if we aren't running in a JVM that meets our version requirements, either
                 // complain or attempt to download and install the appropriate version
@@ -431,9 +436,22 @@ public abstract class Getdown extends Thread
 
                 // now verify our resources...
                 setStatus("m.validating", -1, -1L, false);
-                List<Resource> failures = _app.verifyResources(_progobs, alreadyValid);
+                List<Resource> failures = _app.verifyResources(_progobs, alreadyValid, unpacked);
                 if (failures == null) {
                     log.info("Resources verified.");
+
+                    // if we were downloaded in full from another service (say, Steam), we may
+                    // not have unpacked all of our resources yet
+                    if (Boolean.getBoolean("check_unpacked")) {
+                        File ufile = _app.getLocalPath("unpacked.dat");
+                        if (!ufile.exists()) {
+                            log.info("Performing initial unpack.");
+                            setStatus("m.validating", -1, -1L, true);
+                            _app.unpackResources(_progobs, unpacked);
+                            ufile.createNewFile();
+                        }
+                    }
+
                     // Only launch if we aren't in silent mode. Some mystery program starting out
                     // of the blue would be disconcerting.
                     if (!_silent || _launchInSilent) {
