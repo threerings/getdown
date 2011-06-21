@@ -42,6 +42,7 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.net.URLConnection;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
@@ -1363,7 +1364,14 @@ public class Application
         InputStream fin = null;
         FileOutputStream fout = null;
         try {
-            fin = targetURL.openStream();
+            URLConnection uconn = targetURL.openConnection();
+            // we have to tell Java not to use caches here, otherwise it will cache any request for
+            // same URL for the lifetime of this JVM (based on the URL string, not the URL object);
+            // if the getdown.txt file, for example, changes in the meanwhile, we would never hear
+            // about it; turning off caches is not a performance concern, because when Getdown asks
+            // to download a file, it expects it to come over the wire, not from a cache
+            uconn.setUseCaches(false);
+            fin = uconn.getInputStream();
             fout = new FileOutputStream(target);
             StreamUtil.copy(fin, fout);
         } finally {
