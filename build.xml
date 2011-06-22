@@ -120,7 +120,7 @@
     </artifact:dependencies>
     <taskdef resource="proguard/ant/task.properties" classpathref="proguard.classpath"/>
 
-    <!-- build the client jar file -->
+    <!-- build the dependencies included jar file -->
     <proguard>
       <injar path="${getdown.jar}"/>
       <injar path="${jregistrykey:jregistrykey:jar}" filter="!META-INF/**"/>
@@ -132,34 +132,12 @@
       <libraryjar name="${rt.jar}"/>
       <libraryjar name="${org.apache.ant:ant:jar}"/>
 
-      <keep name="com.threerings.getdown.launcher.Getdown">
-        <method access="static" name="main"/>
-      </keep>
-      <keep name="com.threerings.getdown.launcher.GetdownApp">
-        <method access="static" name="main"/>
-      </keep>
-      <keep name="com.threerings.getdown.launcher.GetdownApplet">
-        <constructor/><method name="*"/><field access="public" name="*"/>
+      <!-- keep the whole nine yards, just trim/obfuscate our depends -->
+      <keep name="com.threerings.getdown.**">
+        <method name="*"/>
       </keep>
       <keep name="ca.beq.util.win32.registry.**">
         <constructor/><method name="*"/><field access="public" name="*"/>
-      </keep>
-    </proguard>
-
-    <!-- build the tools jar file -->
-    <proguard>
-      <injar path="${getdown.jar}"/>
-      <injar path="${com.samskivert:samskivert:jar}" filter="!META-INF/**, 
-        !**/Log4JLogger*,!**/*.java,com/samskivert/Log.class,**/samskivert/io/**,
-        **/samskivert/swing/**,**/samskivert/text/**,**/samskivert/util/**"/>
-      <injar path="${commons-codec:commons-codec:jar}" filter="!META-INF/**"/>
-      <outjar path="${deploy.dir}/getdown-tools${version.suff}.jar"/>
-      <libraryjar name="${rt.jar}"/>
-      <libraryjar name="${jregistrykey:jregistrykey:jar}"/>
-      <libraryjar name="${org.apache.ant:ant:jar}"/>
-
-      <keep name="com.threerings.getdown.tools.*">
-        <method name="*"/>
       </keep>
     </proguard>
   </target>
