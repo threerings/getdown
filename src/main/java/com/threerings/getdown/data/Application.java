@@ -54,6 +54,7 @@ import java.security.Permissions;
 import java.security.Signature;
 import java.security.cert.Certificate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -183,7 +184,7 @@ public class Application
      * @param appid usually null but a string identifier if a secondary application is desired to
      * be launched. That application will use {@code appid.class} and {@code appid.apparg} to
      * configure itself but all other parameters will be the same as the primary application.
-     * @param signers an array of possible signers of this application. Used to verify the digest.
+     * @param signers a list of possible signers of this application. Used to verify the digest.
      * @param jvmargs additional arguments to pass on to launched jvms.
      * @param appargs additional arguments to pass on to launched application; these will be added
      * after the args in the getdown.txt file.
@@ -193,7 +194,7 @@ public class Application
     {
         _appdir = appdir;
         _appid = appid;
-        _signers = signers;
+        _signers = (signers == null) ? Collections.<Certificate>emptyList() : signers;
         _config = getLocalPath(CONFIG_FILE);
         _extraJvmArgs = (jvmargs == null) ? ArrayUtil.EMPTY_STRING : jvmargs;
         _extraAppArgs = (appargs == null) ? ArrayUtil.EMPTY_STRING : appargs;
