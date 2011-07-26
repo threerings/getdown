@@ -690,11 +690,11 @@ public class Application
             return true;
         }
 
-        int one = Integer.parseInt(m.group(1)); // will there ever be a two?
-        int major = Integer.parseInt(m.group(2));
-        int minor = Integer.parseInt(m.group(3));
+        int major = Integer.parseInt(m.group(1));
+        int minor = Integer.parseInt(m.group(2));
+        int revis = Integer.parseInt(m.group(3));
         int patch = m.group(4) == null ? 0 : Integer.parseInt(m.group(4).substring(1));
-        int version = patch + 100 * (minor + 100 * (major + 100 * one));
+        int version = patch + 100 * (revis + 100 * (minor + 100 * major));
         return version >= _javaVersion;
     }
 
@@ -814,7 +814,7 @@ public class Application
         String[] sargs = args.toArray(new String[args.size()]);
         log.info("Running " + StringUtil.join(sargs, "\n  "));
 
-        return Runtime.getRuntime().exec(sargs, envp);
+        return Runtime.getRuntime().exec(sargs, envp, _appdir);
     }
 
     /**
