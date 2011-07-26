@@ -25,8 +25,6 @@
 
 package com.threerings.getdown.launcher;
 
-import java.util.Locale;
-
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.EventQueue;
@@ -50,11 +48,14 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 
+import java.security.cert.Certificate;
+
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
 
@@ -95,7 +96,8 @@ public abstract class Getdown extends Thread
         this(appDir, appId, null, null, null);
     }
 
-    public Getdown (File appDir, String appId, Object[] signers, String[] jvmargs, String[] appargs)
+    public Getdown (File appDir, String appId, List<Certificate> signers,
+                    String[] jvmargs, String[] appargs)
     {
         super("Getdown");
         try {

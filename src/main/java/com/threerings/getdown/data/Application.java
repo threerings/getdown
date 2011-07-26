@@ -188,7 +188,7 @@ public class Application
      * @param appargs additional arguments to pass on to launched application; these will be added
      * after the args in the getdown.txt file.
      */
-    public Application (File appdir, String appid, Object[] signers,
+    public Application (File appdir, String appid, List<Certificate> signers,
                         String[] jvmargs, String[] appargs)
     {
         _appdir = appdir;
@@ -1272,7 +1272,7 @@ public class Application
         File target = downloadFile(path);
 
         if (validateSignature) {
-            if (_signers == null) {
+            if (_signers.isEmpty()) {
                 log.info("No signers, not verifying file", "path", path);
 
             } else {
@@ -1289,12 +1289,7 @@ public class Application
 
                 byte[] buffer = new byte[8192];
                 int length, validated = 0;
-                for (Object signer : _signers) {
-                    if (!(signer instanceof Certificate)) {
-                        continue;
-                    }
-
-                    Certificate cert = (Certificate)signer;
+                for (Certificate cert : _signers) {
                     FileInputStream dataInput = null;
                     try {
                         dataInput = new FileInputStream(target);
@@ -1526,7 +1521,7 @@ public class Application
     protected String[] _extraJvmArgs;
     protected String[] _extraAppArgs;
 
-    protected Object[] _signers;
+    protected List<Certificate> _signers;
 
     /** If a warning has been issued about not being able to set modtimes. */
     protected boolean _warnedAboutSetLastModified;

@@ -30,9 +30,17 @@ import java.awt.Image;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+
 import javax.swing.JApplet;
 import javax.swing.JPanel;
 
@@ -58,10 +66,21 @@ public class GetdownApplet extends JApplet
                 _errmsg = e.getMessage();
             }
 
-            // XXX getSigners() returns all certificates used to sign this applet which may allow
-            // a third party to insert a trusted certificate. This should be replaced with
-            // statically included trusted keys.
-            _getdown = new Getdown(_config.appdir, null, GetdownApplet.class.getSigners(),
+            List<Certificate> signers = new ArrayList<Certificate>();
+            Certificate cert = loadCertificate("resource.crt");
+            if (cert != null) {
+                signers.add(cert);
+            } else {
+                // getSigners() returns all certificates used to sign this applet which may allow a
+                // third party to insert a trusted certificate. This should be avoided.
+                log.warning("No resource certificate found, falling back to class signers");
+                for (Object signer : GetdownApplet.class.getSigners()) {
+                    if (signer instanceof Certificate) {
+                        signers.add((Certificate)signer);
+                    }
+                }
+            }
+            _getdown = new Getdown(_config.appdir, null, signers,
                                    _config.jvmargs, _config.appargs) {
                 @Override
                 protected Container createContainer () {
@@ -157,6 +176,26 @@ public class GetdownApplet extends JApplet
         } catch (IOException ioe) {
             log.warning("Failed to create '" + tofile + "'.", ioe);
             return false;
+        }
+    }
+
+    protected static Certificate loadCertificate (String path)
+    {
+        try {
+            URL keyUrl = GetdownApplet.class.getClassLoader().getResource(path);
+            if (keyUrl == null) {
+                return null;
+            }
+            InputStream is = keyUrl.openStream();
+            try {
+                return CertificateFactory.getInstance("X.509").generateCertificate(is);
+            } finally {
+                is.close();
+            }
+        } catch (CertificateException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
