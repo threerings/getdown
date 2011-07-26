@@ -7,7 +7,7 @@
 
   <property file="${cert_dir}/certificate.properties"/>
 
-  <property name="maven-ant.vers" value="2.1.1"/>
+  <property name="maven-ant.vers" value="2.1.3"/>
   <property name="maven-ant.dir" value="${user.home}/.m2/ant-support"/>
   <property name="maven-ant.jar" value="${maven-ant.dir}/maven-ant-tasks-${maven-ant.vers}.jar"/>
   <property name="maven-ant.url"
