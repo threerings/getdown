@@ -189,8 +189,9 @@ public class GetdownApplet extends JApplet
     {
         // bind and set a property with the local port that will be passed through to the app
         _serverSocket = new ServerSocket(0, 0, InetAddress.getByName(null));
-        System.setProperty(Application.PROP_PASSTHROUGH_PREFIX + Properties.CONNECT_PORT,
-            String.valueOf(_serverSocket.getLocalPort()));
+        String port = String.valueOf(_serverSocket.getLocalPort());
+        log.info("Listening for connections from launched app.", "port", port);
+        System.setProperty(Application.PROP_PASSTHROUGH_PREFIX + Properties.CONNECT_PORT, port);
         Thread thread = new Thread("ConnectServer") {
             @Override
             public void run () {
@@ -207,6 +208,7 @@ public class GetdownApplet extends JApplet
             }
             protected void acceptConnection () throws IOException {
                 Socket socket = _serverSocket.accept();
+                log.info("App connected.", "port", socket.getPort());
                 DataInputStream connectIn = new DataInputStream(socket.getInputStream());
                 synchronized (GetdownApplet.this) {
                     _connectOut = new DataOutputStream(socket.getOutputStream());
