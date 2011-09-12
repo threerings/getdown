@@ -57,6 +57,7 @@ public class GetdownAppletConfig
     public static final String ERRORBGIMAGE = "errorbgimage";
     public static final String PARAM_DELIMITER = ".";
     public static final String DIRECT = "direct";
+    public static final String CONNECT = "connect";
     public static final String REDIRECT_ON_FINISH = "redirect_on_finish";
     public static final String REDIRECT_ON_FINISH_TARGET = "redirect_on_finish_target";
 
@@ -77,7 +78,7 @@ public class GetdownAppletConfig
      * }</pre>
      * When a number is reached for which no value exists, we stop looking. */
     public static final String APPARG_PREFIX = "appargs";
- 
+
     public String appbase;
 
     public String appname;
@@ -106,6 +107,11 @@ public class GetdownAppletConfig
     /** Indicates whether the downloaded app should be launched in the parent applet (true) or as a
      * separate java process (false). */
     public boolean invokeDirect;
+
+    /** Indicates whether Getdown should allow the launched app to connect to it through a server
+     * socket bound to localhost on any available port in order to allow interaction with
+     * JavaScript code on the page containing the applet. */
+    public boolean allowConnect;
 
     /** Optional default bounds for the status panel. */
     public Rectangle statusBounds;
@@ -182,6 +188,9 @@ public class GetdownAppletConfig
 
         String direct = getParameter(DIRECT, "false");
         invokeDirect = Boolean.valueOf(direct);
+
+        String connect = getParameter(CONNECT, "false");
+        allowConnect = Boolean.valueOf(connect);
 
         String redirectURL = getParameter(REDIRECT_ON_FINISH);
         if (redirectURL != null) {

@@ -27,12 +27,17 @@ package com.threerings.getdown.launcher;
 
 import java.awt.Container;
 import java.awt.Image;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +49,11 @@ import java.security.cert.CertificateFactory;
 import javax.swing.JApplet;
 import javax.swing.JPanel;
 
+import netscape.javascript.JSObject;
+
+import com.threerings.getdown.data.Application;
+import com.threerings.getdown.data.Properties;
+
 import static com.threerings.getdown.Log.log;
 
 /**
@@ -52,6 +62,35 @@ import static com.threerings.getdown.Log.log;
 public class GetdownApplet extends JApplet
     implements ImageLoader
 {
+    /**
+     * Sets the JavaScript callback to invoke when a message is received from the launched app.
+     * The callback should be a function that accepts a single string parameter (the received
+     * message).
+     */
+    public synchronized void setMessageCallback (JSObject callback)
+    {
+        _messageCallback = callback;
+    }
+
+    /**
+     * Attempts to send a message to the launched app.
+     *
+     * @return true if we succeeded in sending the message, false if the launched app has not (yet)
+     * established a connection to Getdown, or the send failed.
+     */
+    public synchronized boolean sendMessage (String message)
+    {
+        if (_connectOut != null) {
+            try {
+                _connectOut.writeUTF(message);
+                return true;
+            } catch (IOException e) {
+                log.warning("Error sending message to app.", "message", message, e);
+            }
+        }
+        return false;
+    }
+
     @Override // documentation inherited
     public void init ()
     {
@@ -108,6 +147,19 @@ public class GetdownApplet extends JApplet
                     return GetdownApplet.this;
                 }
                 @Override
+                protected void launch () {
+                    // if so configured, create a server socket to listen
+                    // for a connection from the app
+                    if (_config.allowConnect) {
+                        try {
+                            startConnectServer();
+                        } catch (IOException e) {
+                            log.warning("Failed to start connect server.", e);
+                        }
+                    }
+                    super.launch();
+                }
+                @Override
                 protected void exit (int exitCode) {
                     _app.releaseLock();
                     _config.redirect();
@@ -126,6 +178,62 @@ public class GetdownApplet extends JApplet
             }
             log.warning("init() failed.", e);
         }
+    }
+
+    /**
+     * Attempts to start the server that will accept a connection from the launched app, allowing
+     * it to exchange messages with the JavaScript context.
+     */
+    protected void startConnectServer ()
+        throws IOException
+    {
+        // bind and set a property with the local port that will be passed through to the app
+        _serverSocket = new ServerSocket(0, 0, InetAddress.getByName(null));
+        System.setProperty(Application.PROP_PASSTHROUGH_PREFIX + Properties.CONNECT_PORT,
+            String.valueOf(_serverSocket.getLocalPort()));
+        Thread thread = new Thread("ConnectServer") {
+            @Override
+            public void run () {
+                while (true) {
+                    try {
+                        acceptConnection();
+                    } catch (IOException e) {
+                        if (!_serverSocket.isClosed()) {
+                            log.warning("Error accepting connection.", e);
+                        }
+                        break;
+                    }
+                }
+            }
+            protected void acceptConnection () throws IOException {
+                Socket socket = _serverSocket.accept();
+                DataInputStream connectIn = new DataInputStream(socket.getInputStream());
+                synchronized (GetdownApplet.this) {
+                    _connectOut = new DataOutputStream(socket.getOutputStream());
+                }
+                while (true) {
+                    try {
+                        String message = connectIn.readUTF();
+                        synchronized (GetdownApplet.this) {
+                            if (_messageCallback != null) {
+                                _messageCallback.call("call",
+                                    new Object[] { _messageCallback, message });
+                            }
+                        }
+                    } catch (IOException e) {
+                        if (!socket.isClosed()) {
+                            log.warning("Error reading message.", e);
+                        }
+                        break;
+                    }
+                }
+                synchronized (GetdownApplet.this) {
+                    _connectOut = null;
+                }
+            }
+        };
+        thread.setDaemon(true);
+        thread.start();
     }
 
     // implemented from ImageLoader
@@ -161,6 +269,25 @@ public class GetdownApplet extends JApplet
         _getdown.interrupt();
         // release the lock if the applet window is closed or replaced
         _getdown._app.releaseLock();
+    }
+
+    @Override // documentation inherited
+    public synchronized void destroy ()
+    {
+        if (_serverSocket != null) {
+            try {
+                _serverSocket.close();
+            } catch (IOException e) {
+                log.warning("Error closing server socket.", e);
+            }
+        }
+        if (_connectOut != null) {
+            try {
+                _connectOut.close();
+            } catch (IOException e) {
+                log.warning("Error closing connect socket/output stream.", e);
+            }
+        }
     }
 
     /**
@@ -207,4 +334,13 @@ public class GetdownApplet extends JApplet
 
     /** An error encountered during initialization. */
     protected String _errmsg;
+
+    /** The message callback registered by JavaScript on the containing page, if any. */
+    protected JSObject _messageCallback;
+
+    /** The server socket on which we listen for connections, if any. */
+    protected ServerSocket _serverSocket;
+
+    /** The output stream to the launched app, if a connection has been established. */
+    protected DataOutputStream _connectOut;
 }

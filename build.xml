@@ -15,7 +15,7 @@
   <condition property="maven-ant.exists"><available file="${maven-ant.jar}"/></condition>
   <target name="-download-maven-ant" unless="maven-ant.exists">
     <mkdir dir="${maven-ant.dir}"/>
-    <get src="${maven-ant.url}/maven-ant-tasks-${maven-ant.vers}.jar" 
+    <get src="${maven-ant.url}/maven-ant-tasks-${maven-ant.vers}.jar"
          dest="${maven-ant.jar}" usetimestamp="true"/>
   </target>
 
@@ -23,12 +23,16 @@
     <taskdef resource="org/apache/maven/artifact/ant/antlib.xml"
              uri="urn:maven-artifact-ant" classpath="${maven-ant.jar}"/>
     <artifact:pom id="pom" file="pom.xml"/>
-    <artifact:dependencies pathId="compile.classpath" pomRefId="pom" useScope="compile"/>
+    <artifact:dependencies pathId="pom-compile.classpath" pomRefId="pom" useScope="compile"/>
     <artifact:dependencies pathId="testlibs.classpath" pomRefId="pom" useScope="test"/>
   </target>
 
   <target name="-prepare" depends="-init-maven-ant">
     <mkdir dir="${deploy.dir}"/>
+    <path id="compile.classpath">
+      <path refid="pom-compile.classpath"/>
+      <pathelement location="${java.home}/lib/plugin.jar"/>
+    </path>
     <path id="built.classpath">
       <path refid="compile.classpath"/>
       <pathelement location="${deploy.dir}/classes"/>
@@ -124,13 +128,14 @@
     <proguard>
       <injar path="${getdown.jar}"/>
       <injar path="${jregistrykey:jregistrykey:jar}" filter="!META-INF/**"/>
-      <injar path="${com.samskivert:samskivert:jar}" filter="!META-INF/**, 
+      <injar path="${com.samskivert:samskivert:jar}" filter="!META-INF/**,
         !**/Log4JLogger*,!**/*.java,com/samskivert/Log.class,**/samskivert/io/**,
         **/samskivert/swing/**,**/samskivert/text/**,**/samskivert/util/**"/>
       <injar path="${commons-codec:commons-codec:jar}" filter="!META-INF/**"/>
       <outjar path="${deploy.dir}/getdown-pro${version.suff}.jar"/>
       <libraryjar name="${rt.jar}"/>
       <libraryjar name="${org.apache.ant:ant:jar}"/>
+      <libraryjar name="${java.home}/lib/plugin.jar"/>
 
       <!-- keep the whole nine yards, just trim/obfuscate our depends -->
       <keep name="com.threerings.getdown.**">
@@ -149,7 +154,7 @@
   </target>
 
   <property name="maven.deploy.repo" value="file://${user.home}/.m2/repository"/>
-  <target name="maven-deploy" depends="dist" 
+  <target name="maven-deploy" depends="dist"
           description="Deploys our build artifacts to a Maven repository.">
     <jar basedir="${src.dir}" destfile="${deploy.dir}/${ant.project.name}-sources.jar"/>
     <artifact:deploy file="${deploy.dir}/${ant.project.name}.jar" uniqueVersion="false">
