@@ -217,7 +217,11 @@ public class GetdownApplet extends JApplet
                     try {
                         String message = connectIn.readUTF();
                         synchronized (GetdownApplet.this) {
-                            if (_messageCallback != null) {
+                            if (message.equals("CLOSE")) {
+                                socket.close();
+                                log.info("App closed connection.");
+                                break;
+                            } else if (_messageCallback != null) {
                                 _messageCallback.call("call",
                                     new Object[] { _messageCallback, message });
                             }
@@ -285,7 +289,9 @@ public class GetdownApplet extends JApplet
         }
         if (_connectOut != null) {
             try {
+                _connectOut.writeUTF("CLOSE");
                 _connectOut.close();
+                log.info("Disconnected from app.");
             } catch (IOException e) {
                 log.warning("Error closing connect socket/output stream.", e);
             }
