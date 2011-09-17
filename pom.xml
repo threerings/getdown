@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.threerings</groupId>
   <artifactId>getdown</artifactId>
@@ -52,19 +54,18 @@
       <groupId>com.samskivert</groupId>
       <artifactId>samskivert</artifactId>
       <version>1.2</version>
-      <scope>compile</scope>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>commons-codec</groupId>
       <artifactId>commons-codec</artifactId>
       <version>1.4</version>
-      <scope>compile</scope>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>jregistrykey</groupId>
       <artifactId>jregistrykey</artifactId>
       <version>1.0</version>
-      <scope>compile</scope>
       <optional>true</optional>
     </dependency>
     <dependency>
@@ -72,6 +73,13 @@
       <artifactId>ant</artifactId>
       <version>1.7.1</version>
       <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>java</groupId>
+      <artifactId>plugin</artifactId>
+      <version>1.5</version>
+      <scope>system</scope>
+      <systemPath>${java.home}/lib/plugin.jar</systemPath>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -107,11 +115,6 @@
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.6</version>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>2.7</version>
         <configuration>
@@ -120,28 +123,56 @@
         </configuration>
       </plugin>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <version>1.6</version>
+        <groupId>com.pyx4me</groupId>
+        <artifactId>proguard-maven-plugin</artifactId>
+        <version>2.0.4</version>
         <executions>
-          <execution>
-            <id>package</id>
-            <phase>package</phase>
-            <configuration>
-              <target>
-                <property name="deploy.dir" value="target" />
-                <property name="getdown.jar" value="target/getdown-${project.version}.jar" />
-                <property name="version.suff" value="-${project.version}" />
-                <ant antfile="${basedir}/build.xml">
-                  <target name="-proguard" />
-                </ant>
-              </target>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
+         <execution>
+           <phase>package</phase>
+           <goals><goal>proguard</goal></goals>
+         </execution>
         </executions>
+        <dependencies>
+          <dependency>
+            <groupId>net.sf.proguard</groupId>
+            <artifactId>proguard</artifactId>
+            <version>4.4</version>
+            <scope>runtime</scope>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <proguardVersion>4.4</proguardVersion>
+          <outputDirectory>${project.build.directory}</outputDirectory>
+          <outjar>${project.build.finalName}.jar</outjar>
+          <injar>${project.build.finalName}.jar</injar>
+          <assembly>
+            <inclusions>
+              <inclusion>
+                <groupId>com.samskivert</groupId>
+                <artifactId>samskivert</artifactId>
+                <filter>!**/Log4JLogger*,!**/*.java,com/samskivert/Log.class,**/samskivert/io/**,
+                        **/samskivert/swing/**,**/samskivert/text/**,**/samskivert/util/**</filter>
+              </inclusion>
+              <inclusion>
+                <groupId>jregistrykey</groupId>
+                <artifactId>jregistrykey</artifactId>
+              </inclusion>
+              <inclusion>
+                <groupId>commons-codec</groupId>
+                <artifactId>commons-codec</artifactId>
+              </inclusion>
+            </inclusions>
+          </assembly>
+          <obfuscate>true</obfuscate>
+          <options>
+            <option>-keep public class com.threerings.getdown.** { *; }</option>
+            <option>-keep public class ca.beq.util.win32.registry.** { *; }</option>
+          </options>
+          <libs>
+            <lib>${rt.jar.path}</lib>
+          </libs>
+          <addMavenDescriptor>false</addMavenDescriptor>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -155,17 +186,8 @@
           </archive>
         </configuration>
       </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-install-plugin</artifactId>
-        <version>2.3.1</version>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-deploy-plugin</artifactId>
-        <version>2.5</version>
-      </plugin>
     </plugins>
+
     <pluginManagement>
       <plugins>
         <plugin>
@@ -225,6 +247,25 @@
           </plugin>
         </plugins>
       </build>
+    </profile>
+    <!-- finagling to deal with rt.jar not existing on Macs, thanks Apple! -->
+    <profile>
+      <id>mac</id>
+      <activation>
+        <file><exists>${java.home}/../Classes/classes.jar</exists></file>
+      </activation>
+      <properties>
+        <rt.jar.path>${java.home}/../Classes/classes.jar</rt.jar.path>
+      </properties>
+    </profile>
+    <profile>
+      <id>non-mac</id>
+      <activation>
+        <file><exists>${java.home}/../lib/rt.jar</exists></file>
+      </activation>
+      <properties>
+        <rt.jar.path>${java.home}/../lib/rt.jar</rt.jar.path>
+      </properties>
     </profile>
   </profiles>
 </project>

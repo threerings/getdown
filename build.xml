@@ -100,17 +100,12 @@
     </javadoc>
   </target>
 
-  <target name="dist" depends="compile" description="Builds jar files.">
-    <jar destfile="${deploy.dir}/${ant.project.name}.jar" manifest="lib/manifest.mf"
+  <target name="dist" depends="compile" description="Builds jar file.">
+    <jar destfile="${deploy.dir}/${ant.project.name}-bare.jar" manifest="lib/manifest.mf"
          basedir="${deploy.dir}/classes"/>
-    <!-- generate our proguard client and tool jar files -->
-    <antcall target="-proguard">
-      <param name="getdown.jar" value="${deploy.dir}/${ant.project.name}.jar"/>
-      <param name="version.suff" value=""/>
-    </antcall>
   </target>
 
-  <target name="-proguard" depends="-prepare">
+  <target name="proguard" depends="dist" description="Builds dependencies included jar file.">
     <!-- locate the platform classes -->
     <condition property="rt.jar" value="${java.home}/../Classes/classes.jar">
       <available file="${java.home}/../Classes/classes.jar"/>
@@ -126,13 +121,13 @@
 
     <!-- build the dependencies included jar file -->
     <proguard>
-      <injar path="${getdown.jar}"/>
+      <injar path="${deploy.dir}/${ant.project.name}-bare.jar"/>
       <injar path="${jregistrykey:jregistrykey:jar}" filter="!META-INF/**"/>
       <injar path="${com.samskivert:samskivert:jar}" filter="!META-INF/**,
         !**/Log4JLogger*,!**/*.java,com/samskivert/Log.class,**/samskivert/io/**,
         **/samskivert/swing/**,**/samskivert/text/**,**/samskivert/util/**"/>
       <injar path="${commons-codec:commons-codec:jar}" filter="!META-INF/**"/>
-      <outjar path="${deploy.dir}/getdown-pro${version.suff}.jar"/>
+      <outjar path="${deploy.dir}/${ant.project.name}.jar"/>
       <libraryjar name="${rt.jar}"/>
       <libraryjar name="${org.apache.ant:ant:jar}"/>
       <libraryjar name="${java.home}/lib/plugin.jar"/>
@@ -154,18 +149,13 @@
   </target>
 
   <property name="maven.deploy.repo" value="file://${user.home}/.m2/repository"/>
-  <target name="maven-deploy" depends="dist"
+  <target name="maven-deploy" depends="proguard"
           description="Deploys our build artifacts to a Maven repository.">
     <jar basedir="${src.dir}" destfile="${deploy.dir}/${ant.project.name}-sources.jar"/>
     <artifact:deploy file="${deploy.dir}/${ant.project.name}.jar" uniqueVersion="false">
       <remoteRepository url="${maven.deploy.repo}"/>
       <pom refid="pom"/>
       <attach file="${deploy.dir}/${ant.project.name}-sources.jar" classifier="sources"/>
-    </artifact:deploy>
-    <artifact:pom id="proguard-pom" file="proguard-pom.xml"/>
-    <artifact:deploy file="${deploy.dir}/${ant.project.name}-pro.jar" uniqueVersion="false">
-      <remoteRepository url="${maven.deploy.repo}"/>
-      <pom refid="proguard-pom"/>
     </artifact:deploy>
   </target>
 </project>
