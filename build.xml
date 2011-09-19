@@ -134,7 +134,7 @@
 
       <!-- keep the whole nine yards, just trim/obfuscate our depends -->
       <keep name="com.threerings.getdown.**">
-        <method name="*"/>
+        <constructor/><method name="*"/><field name="*"/>
       </keep>
       <keep name="ca.beq.util.win32.registry.**">
         <constructor/><method name="*"/><field access="public" name="*"/>
