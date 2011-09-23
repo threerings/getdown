@@ -43,6 +43,7 @@ import javax.swing.WindowConstants;
 
 import com.samskivert.swing.util.SwingUtil;
 import com.samskivert.util.ArrayUtil;
+import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
 
 import static com.threerings.getdown.Log.log;
@@ -159,6 +160,29 @@ public class GetdownApp
                     if (_frame != null) {
                         _frame.dispose();
                         _frame = null;
+                    }
+                }
+                @Override
+                protected void showDocument (String url) {
+                    String[] cmdarray;
+                    if (RunAnywhere.isWindows()) {
+                        String osName = System.getProperty("os.name");
+                        if (osName.indexOf("9") != -1 || osName.indexOf("Me") != -1) {
+                            cmdarray = new String[] {
+                                "command.com", "/c", "start", "\"" + url + "\"" };
+                        } else {
+                            cmdarray = new String[] {
+                                "cmd.exe", "/c", "start", "\"\"", "\"" + url + "\"" };
+                        }
+                    } else if (RunAnywhere.isMacOS()) {
+                        cmdarray = new String[] { "open", url };
+                    } else { // Linux, Solaris, etc.
+                        cmdarray = new String[] { "firefox", url };
+                    }
+                    try {
+                        Runtime.getRuntime().exec(cmdarray);
+                    } catch (Exception e) {
+                        log.warning("Failed to open browser.", "cmdarray", cmdarray, e);
                     }
                 }
                 @Override

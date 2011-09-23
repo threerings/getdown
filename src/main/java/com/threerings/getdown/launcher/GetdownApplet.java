@@ -147,6 +147,14 @@ public class GetdownApplet extends JApplet
                     return GetdownApplet.this;
                 }
                 @Override
+                protected void showDocument (String url) {
+                    try {
+                        getAppletContext().showDocument(new URL(url), "_blank");
+                    } catch (MalformedURLException e) {
+                        log.warning("Invalid document url.", "url", url, e);
+                    }
+                }
+                @Override
                 protected void launch () {
                     // if so configured, create a server socket to listen
                     // for a connection from the app

@@ -146,6 +146,12 @@ public class Application
         /** Where to point the user for help with install errors. */
         public String installError;
 
+        /** The dimensions of the patch notes button. */
+        public Rectangle patchNotes = new Rectangle(5, 50, 112, 26);
+
+        /** The patch notes URL. */
+        public String patchNotesUrl;
+
         /** Generates a string representation of this instance. */
         @Override
         public String toString ()
@@ -153,7 +159,8 @@ public class Application
             return "[name=" + name + ", bg=" + backgroundImage + ", pi=" + progressImage +
                 ", prect=" + progress + ", pt=" + progressText + ", pb=" + progressBar +
                 ", srect=" + status + ", st=" + statusText + ", shadow=" + textShadow +
-                ", err=" + installError + "]";
+                ", err=" + installError + ", nrect=" + patchNotes +
+                ", notes=" + patchNotesUrl + "]";
         }
     }
 
@@ -622,6 +629,10 @@ public class Application
         } else {
             ui.installError = MessageUtil.taint(ui.installError);
         }
+
+        // the patch notes bits
+        ui.patchNotes = parseRect(cdata, "ui.patch_notes", ui.patchNotes);
+        ui.patchNotesUrl = (String)cdata.get("ui.patch_notes_url");
 
         return ui;
     }

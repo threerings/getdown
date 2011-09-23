@@ -27,13 +27,18 @@ package com.threerings.getdown.launcher;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Image;
+import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 
 import javax.imageio.ImageIO;
+import javax.swing.AbstractAction;
 import javax.swing.JApplet;
+import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLayeredPane;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -630,6 +635,16 @@ public abstract class Getdown extends Thread
                 }
             }
 
+            // show the patch notes button, if applicable
+            if (!StringUtil.isBlank(_ifc.patchNotesUrl)) {
+                createInterface(false);
+                EventQueue.invokeLater(new Runnable() {
+                    public void run () {
+                        _patchNotes.setVisible(true);
+                    }
+                });
+            }
+
             // download the patch files...
             download(list);
 
@@ -796,8 +811,17 @@ public abstract class Getdown extends Thread
             public void run () {
                 if (_status == null) {
                     _container = createContainer();
+                    _layers = new JLayeredPane();
+                    _container.add(_layers, BorderLayout.CENTER);
+                    _patchNotes = new JButton(new AbstractAction(
+                            _msgs.getString("m.patch_notes")) {
+                        @Override public void actionPerformed (ActionEvent event) {
+                            showDocument(_ifc.patchNotesUrl);
+                        }
+                    });
+                    _layers.add(_patchNotes);
                     _status = new StatusPanel(_msgs);
-                    _container.add(_status, BorderLayout.CENTER);
+                    _layers.add(_status);
                     initInterface();
                 } else if (reinit) {
                     initInterface();
@@ -819,6 +843,12 @@ public abstract class Getdown extends Thread
             _background = newBackgrounds;
         }
         _status.init(_ifc, _background, getProgressImage());
+        Dimension size = _status.getPreferredSize();
+        _status.setSize(size);
+        _layers.setPreferredSize(size);
+
+        _patchNotes.setBounds(_ifc.patchNotes);
+        _patchNotes.setVisible(false);
     }
 
     protected RotatingBackgrounds getBackground ()
@@ -951,6 +981,11 @@ public abstract class Getdown extends Thread
     }
 
     /**
+     * Requests to show the document at the specified URL in a new window.
+     */
+    protected abstract void showDocument (String url);
+
+    /**
      * Requests that Getdown exit. In applet mode this does nothing.
      */
     protected abstract void exit (int exitCode);
@@ -1026,7 +1061,9 @@ public abstract class Getdown extends Thread
 
     protected ResourceBundle _msgs;
     protected Container _container;
+    protected JLayeredPane _layers;
     protected StatusPanel _status;
+    protected JButton _patchNotes;
     protected AbortPanel _abort;
     protected RotatingBackgrounds _background;
 
