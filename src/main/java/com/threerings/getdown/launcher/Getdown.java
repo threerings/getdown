@@ -819,6 +819,7 @@ public abstract class Getdown extends Thread
                             showDocument(_ifc.patchNotesUrl);
                         }
                     });
+                    _patchNotes.setFont(StatusPanel.FONT);
                     _layers.add(_patchNotes);
                     _status = new StatusPanel(_msgs);
                     _layers.add(_status);

@@ -111,7 +111,7 @@ public class StatusPanel extends JComponent
         msg = get(msg);
         String label = MessageFormat.format(msg, new Object[] {
             new Integer(percent), remstr });
-        _newplab = new Label(label, _ifc.progressText, _font);
+        _newplab = new Label(label, _ifc.progressText, FONT);
         if (_ifc.textShadow != null) {
             _newplab.setAlternateColor(_ifc.textShadow);
             _newplab.setStyle(LabelStyleConstants.SHADOW);
@@ -126,7 +126,7 @@ public class StatusPanel extends JComponent
     {
         _displayError = displayError;
         status = xlate(status);
-        _newlab = new Label(status, _ifc.statusText, _font);
+        _newlab = new Label(status, _ifc.statusText, FONT);
         int width = getWidth() - _ifc.status.x*2;
         width = width > 0 ? Math.min(_ifc.status.width, width) : _ifc.status.width;
         _newlab.setTargetWidth(width);
@@ -292,5 +292,5 @@ public class StatusPanel extends JComponent
     protected int _ridx;
     protected Throttle _rthrottle = new Throttle(1, 1000L);
 
-    protected static final Font _font = new Font("SansSerif", Font.BOLD, 12);
+    protected static final Font FONT = new Font("SansSerif", Font.BOLD, 12);
 }
