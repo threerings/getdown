@@ -59,6 +59,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map.Entry;
 import java.util.Map;
 import java.util.Set;
@@ -623,16 +624,13 @@ public class Application
         }
 
         // On an installation error, where do we point the user.
-        ui.installError = (String)cdata.get("ui.install_error");
-        if (StringUtil.isBlank(ui.installError)) {
-            ui.installError = "m.default_install_error";
-        } else {
-            ui.installError = MessageUtil.taint(ui.installError);
-        }
+        String installError = parseUrl(cdata, "ui.install_error", null);
+        ui.installError = (installError == null) ?
+            "m.default_install_error" : MessageUtil.taint(installError);
 
         // the patch notes bits
         ui.patchNotes = parseRect(cdata, "ui.patch_notes", ui.patchNotes);
-        ui.patchNotesUrl = (String)cdata.get("ui.patch_notes_url");
+        ui.patchNotesUrl = parseUrl(cdata, "ui.patch_notes_url", null);
 
         return ui;
     }
@@ -1466,6 +1464,19 @@ public class Application
     {
         String value = (String)cdata.get(name);
         return (value == null) ? ArrayUtil.EMPTY_STRING : StringUtil.parseStringArray(value);
+    }
+
+    /**
+     * Parses a URL from the config file, checking first for a localized version.
+     */
+    protected String parseUrl (Map<String, Object> cdata, String name, String def)
+    {
+        String value = (String)cdata.get(name + "." + Locale.getDefault().getLanguage());
+        if (!StringUtil.isBlank(value)) {
+            return value;
+        }
+        value = (String)cdata.get(name);
+        return StringUtil.isBlank(value) ? def : value;
     }
 
     /** Possibly generates and returns a google analytics tracking cookie. */
