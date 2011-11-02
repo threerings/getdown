@@ -645,7 +645,11 @@ public class Application
             try {
                 List<String[]> args = ConfigUtil.parsePairs(pairFile, false);
                 for (String[] pair : args) {
-                    collector.add(pair[0] + "=" + pair[1]);
+                    if (pair[1].length() == 0) {
+                        collector.add(pair[0]);
+                    } else {
+                        collector.add(pair[0] + "=" + pair[1]);
+                    }
                 }
             } catch (Throwable t) {
                 log.warning("Failed to parse '" + pairFile + "': " + t);
