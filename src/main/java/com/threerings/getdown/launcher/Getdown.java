@@ -63,6 +63,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import ca.beq.util.win32.registry.RegistryKey;
 import ca.beq.util.win32.registry.RegistryValue;
@@ -748,7 +750,33 @@ public abstract class Getdown extends Thread
                 _app.invokeDirect(getApplet());
 
             } else {
-                Process proc = _app.createProcess();
+                Process proc;
+                if (_app.hasOptimumJvmArgs()) {
+                    // if we have "optimum" arguments, we want to try launching with them first
+                    proc = _app.createProcess(true);
+
+                    // wait a short amount of time for the process to exit; if it doesn't (or it
+                    // exits with a success code), assume everything's good
+                    Timer timer = new Timer("fallbackCheck", true);
+                    timer.schedule(new TimerTask() {
+                        @Override public void run () {
+                            Getdown.this.interrupt();
+                        }
+                    }, FALLBACK_CHECK_TIME);
+                    boolean error;
+                    try {
+                        error = (proc.waitFor() != 0);
+                    } catch (InterruptedException e) {
+                        error = false;
+                    }
+                    timer.cancel();
+                    if (error) {
+                        log.info("Failed to launch with optimum arguments; falling back.");
+                        proc = _app.createProcess(false);
+                    }
+                } else {
+                    proc = _app.createProcess(false);
+                }
 
                 // close standard in to avoid choking standard out of the launched process
                 proc.getInputStream().close();
@@ -1081,6 +1109,7 @@ public abstract class Getdown extends Thread
 
     protected static final int MAX_LOOPS = 5;
     protected static final long MIN_EXIST_TIME = 5000L;
+    protected static final long FALLBACK_CHECK_TIME = 1000L;
     protected static final String PROXY_REGISTRY =
         "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings";
 }

@@ -545,6 +545,7 @@ public class Application
         _auxrsrcs.clear();
         _jvmargs.clear();
         _appargs.clear();
+        _txtJvmArgs.clear();
 
         // parse our code resources
         if (ConfigUtil.getMultiValue(cdata, "code") == null) {
@@ -578,6 +579,9 @@ public class Application
             _jvmargs.add(arg);
         }
 
+        // get the set of optimum JVM arguments
+        _optimumJvmArgs = ConfigUtil.getMultiValue(cdata, "optimum_jvmarg");
+
         // transfer our application arguments
         String[] appargs = ConfigUtil.getMultiValue(cdata, prefix + "apparg");
         if (appargs != null) {
@@ -592,7 +596,7 @@ public class Application
         }
 
         // look for custom arguments
-        fillAssignmentListFromPairs("extra.txt", _jvmargs);
+        fillAssignmentListFromPairs("extra.txt", _txtJvmArgs);
 
         // determine whether we want to allow offline operation (defaults to false)
         _allowOffline = Boolean.parseBoolean((String)cdata.get("allow_offline"));
@@ -713,6 +717,16 @@ public class Application
     }
 
     /**
+     * Checks whether the app has a set of "optimum" JVM args that we wish to try first, detecting
+     * whether the launch is successful and, if necessary, trying again without the optimum
+     * arguments.
+     */
+    public boolean hasOptimumJvmArgs ()
+    {
+        return _optimumJvmArgs != null;
+    }
+
+    /**
      * Attempts to redownload the <code>getdown.txt</code> file based on information parsed from a
      * previous call to {@link #init}.
      */
@@ -764,8 +778,11 @@ public class Application
 
     /**
      * Invokes the process associated with this application definition.
+     *
+     * @param optimum whether or not to include the set of optimum arguments (as opposed to falling
+     * back).
      */
-    public Process createProcess ()
+    public Process createProcess (boolean optimum)
         throws IOException
     {
         // create our classpath
@@ -813,6 +830,18 @@ public class Application
 
         // add the JVM arguments
         for (String string : _jvmargs) {
+            args.add(processArg(string));
+        }
+
+        // add the optimum arguments if requested and available
+        if (optimum && _optimumJvmArgs != null) {
+            for (String string : _optimumJvmArgs) {
+                args.add(processArg(string));
+            }
+        }
+
+        // add the arguments from extra.txt (after the optimum ones, in case they override them)
+        for (String string : _txtJvmArgs) {
             args.add(processArg(string));
         }
 
@@ -1547,6 +1576,10 @@ public class Application
 
     protected String[] _extraJvmArgs;
     protected String[] _extraAppArgs;
+
+    protected String[] _optimumJvmArgs;
+
+    protected List<String> _txtJvmArgs = new ArrayList<String>();
 
     protected List<Certificate> _signers;
 
