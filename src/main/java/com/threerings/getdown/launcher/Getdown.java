@@ -760,7 +760,7 @@ public abstract class Getdown extends Thread
                     Timer timer = new Timer("fallbackCheck", true);
                     timer.schedule(new TimerTask() {
                         @Override public void run () {
-                            Getdown.this.interrupt();
+                            interrupt();
                         }
                     }, FALLBACK_CHECK_TIME);
                     boolean error;
