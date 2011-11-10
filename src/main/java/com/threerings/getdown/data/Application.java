@@ -797,7 +797,7 @@ public class Application
         ArrayList<String> args = new ArrayList<String>();
 
         // reconstruct the path to the JVM
-        args.add(LaunchUtil.getJVMPath(_appdir, _windebug));
+        args.add(LaunchUtil.getJVMPath(_appdir, _windebug || optimum));
 
         // add the classpath arguments
         args.add("-classpath");
