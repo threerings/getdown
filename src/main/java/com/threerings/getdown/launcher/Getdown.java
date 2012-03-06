@@ -746,6 +746,9 @@ public abstract class Getdown extends Thread
 
         try {
             if (invokeDirect()) {
+                // if we're in applet mode, this will NOOP; if we're in app mode and are invoking
+                // direct, we want to close the Getdown window, as the app is launching
+                disposeContainer();
                 _app.releaseLock();
                 _app.invokeDirect(getApplet());
 
