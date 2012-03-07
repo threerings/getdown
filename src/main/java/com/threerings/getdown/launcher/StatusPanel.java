@@ -109,8 +109,7 @@ public class StatusPanel extends JComponent
             remstr += seconds;
         }
         msg = get(msg);
-        String label = MessageFormat.format(msg, new Object[] {
-            new Integer(percent), remstr });
+        String label = MessageFormat.format(msg, percent, remstr);
         _newplab = new Label(label, _ifc.progressText, FONT);
         if (_ifc.textShadow != null) {
             _newplab.setAlternateColor(_ifc.textShadow);
