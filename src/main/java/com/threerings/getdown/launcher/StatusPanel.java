@@ -25,17 +25,21 @@
 
 package com.threerings.getdown.launcher;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.text.MessageFormat;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 import javax.swing.JComponent;
+import javax.swing.Timer;
 
 import com.samskivert.swing.Label;
 import com.samskivert.swing.LabelStyleConstants;
@@ -56,6 +60,18 @@ public class StatusPanel extends JComponent
     public StatusPanel (ResourceBundle msgs)
     {
         _msgs = msgs;
+
+        // Add a bit of "throbbing" to the display by updating the number of dots displayed after
+        // our status. This lets users know things are still working.
+        new Timer(1000,
+            new ActionListener() {
+                public void actionPerformed (ActionEvent event) {
+                    if (_status != null && !_displayError) {
+                        _statusDots = (_statusDots % 3) + 1; // 1, 2, 3, 1, 2, 3, etc.
+                        updateStatusLabel();
+                    }
+                }
+            }).start();
     }
 
     public void init (UpdateInterface ifc, RotatingBackgrounds bg, Image barimg)
@@ -85,11 +101,7 @@ public class StatusPanel extends JComponent
         if (_progress != percent) {
             _progress = percent;
             String msg = MessageFormat.format(get("m.complete"), percent);
-            _newplab = new Label(msg, _ifc.progressText, FONT);
-            if (_ifc.textShadow != null) {
-                _newplab.setAlternateColor(_ifc.textShadow);
-                _newplab.setStyle(LabelStyleConstants.SHADOW);
-            }
+            _newplab = createLabel(msg, _ifc.progressText);
             needsRepaint = true;
         }
 
@@ -116,11 +128,7 @@ public class StatusPanel extends JComponent
 
             String remstr = minutes + ":" + ((seconds < 10) ? "0" : "") + seconds;
             String msg = MessageFormat.format(get("m.remain"), remstr);
-            _newrlab = new Label(msg, _ifc.statusText, FONT);
-            if (_ifc.textShadow != null) {
-                _newrlab.setAlternateColor(_ifc.textShadow);
-                _newrlab.setStyle(LabelStyleConstants.SHADOW);
-            }
+            _newrlab = createLabel(msg, _ifc.statusText);
             needsRepaint = true;
 
         } else if (_rlabel != null || _newrlab != null) {
@@ -140,17 +148,9 @@ public class StatusPanel extends JComponent
      */
     public void setStatus (String status, boolean displayError)
     {
+        _status = xlate(status);
         _displayError = displayError;
-        status = xlate(status);
-        _newlab = new Label(status, _ifc.statusText, FONT);
-        int width = getWidth() - _ifc.status.x*2;
-        width = width > 0 ? Math.min(_ifc.status.width, width) : _ifc.status.width;
-        _newlab.setTargetWidth(width);
-        if (_ifc.textShadow != null) {
-            _newlab.setAlternateColor(_ifc.textShadow);
-            _newlab.setStyle(LabelStyleConstants.SHADOW);
-        }
-        repaint();
+        updateStatusLabel();
     }
 
     // documentation inherited
@@ -233,6 +233,27 @@ public class StatusPanel extends JComponent
         return _psize;
     }
 
+    /**
+     * Update the status label.
+     */
+    protected void updateStatusLabel ()
+    {
+        String status = _status;
+        if (!_displayError) {
+            for (int ii = 0; ii < _statusDots; ii++) {
+                status += " .";
+            }
+        }
+        _newlab = createLabel(status, _ifc.statusText);
+        int width = getWidth() - _ifc.status.x*2;
+        width = width > 0 ? Math.min(_ifc.status.width, width) : _ifc.status.width;
+        _newlab.setTargetWidth(width);
+        repaint();
+    }
+
+    /**
+     * Get the y coordinate of a label in the status area.
+     */
     protected int getStatusY (Label label)
     {
         // if the status region is higher than the progress region, we
@@ -242,6 +263,19 @@ public class StatusPanel extends JComponent
             return _ifc.status.y;
         }
         return _ifc.status.y + (_ifc.status.height - label.getSize().height);
+    }
+
+    /**
+     * Create a label, taking care of adding the shadow if needed.
+     */
+    protected Label createLabel (String text, Color color)
+    {
+        Label label = new Label(text, color, FONT);
+        if (_ifc.textShadow != null) {
+            label.setAlternateColor(_ifc.textShadow);
+            label.setStyle(LabelStyleConstants.SHADOW);
+        }
+        return label;
     }
 
     /** Used by {@link #setStatus}. */
@@ -311,6 +345,8 @@ public class StatusPanel extends JComponent
     protected ResourceBundle _msgs;
 
     protected int _progress = 0;
+    protected String _status;
+    protected int _statusDots = 1;
     protected boolean _displayError;
     protected Label _label, _newlab;
     protected Label _plabel, _newplab;
