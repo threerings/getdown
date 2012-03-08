@@ -63,7 +63,7 @@ public class StatusPanel extends JComponent
 
         // Add a bit of "throbbing" to the display by updating the number of dots displayed after
         // our status. This lets users know things are still working.
-        new Timer(1000,
+        _timer = new Timer(1000,
             new ActionListener() {
                 public void actionPerformed (ActionEvent event) {
                     if (_status != null && !_displayError) {
@@ -71,7 +71,7 @@ public class StatusPanel extends JComponent
                         updateStatusLabel();
                     }
                 }
-            }).start();
+            });
     }
 
     public void init (UpdateInterface ifc, RotatingBackgrounds bg, Image barimg)
@@ -151,6 +151,20 @@ public class StatusPanel extends JComponent
         _status = xlate(status);
         _displayError = displayError;
         updateStatusLabel();
+    }
+
+    @Override
+    public void addNotify ()
+    {
+        super.addNotify();
+        _timer.start();
+    }
+
+    @Override
+    public void removeNotify ()
+    {
+        _timer.stop();
+        super.removeNotify();
     }
 
     // documentation inherited
@@ -353,6 +367,7 @@ public class StatusPanel extends JComponent
     protected Label _rlabel, _newrlab;
 
     protected UpdateInterface _ifc;
+    protected Timer _timer;
 
     protected long[] _remain = new long[4];
     protected int _ridx;
