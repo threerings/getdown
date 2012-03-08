@@ -92,6 +92,31 @@ import static com.threerings.getdown.Log.log;
 public abstract class Getdown extends Thread
     implements Application.StatusDisplay, ImageLoader
 {
+    /**
+     * The major steps.
+     */
+    public enum Step
+    {
+        START(1),
+        UPDATE_JAVA(10),
+        VERIFY_METADATA(15),
+        DOWNLOAD(50),
+        PATCH(70),
+        VERIFY_RESOURCES(80),
+        REDOWNLOAD_RESOURCES(85),
+        UNPACK(90),
+        LAUNCH(99);
+
+        /** What is the final percent value for this step? */
+        public final int finalPercent;
+
+        /** Enum constructor. */
+        Step (int finalPercent)
+        {
+            this.finalPercent = finalPercent;
+        }
+    }
+
     public static void main (String[] args)
     {
         // legacy support
@@ -418,6 +443,7 @@ public abstract class Getdown extends Thread
             // we'll keep track of all the resources we unpack
             Set<Resource> unpacked = new HashSet<Resource>();
 
+            setStep(Step.START);
             for (int ii = 0; ii < MAX_LOOPS; ii++) {
                 // if we aren't running in a JVM that meets our version requirements, either
                 // complain or attempt to download and install the appropriate version
@@ -425,6 +451,7 @@ public abstract class Getdown extends Thread
                     // download and install the necessary version of java, then loop back again and
                     // reverify everything; if we can't download java; we'll throw an exception
                     log.info("Attempting to update Java VM...");
+                    setStep(Step.UPDATE_JAVA);
                     _enableTracking = true; // always track JVM downloads
                     try {
                         updateJava();
@@ -435,6 +462,7 @@ public abstract class Getdown extends Thread
                 }
 
                 // make sure we have the desired version and that the metadata files are valid...
+                setStep(Step.VERIFY_METADATA);
                 setStatus("m.validating", -1, -1L, false);
                 if (_app.verifyMetadata(this)) {
                     log.info("Application requires update.");
@@ -444,6 +472,7 @@ public abstract class Getdown extends Thread
                 }
 
                 // now verify our resources...
+                setStep(Step.VERIFY_RESOURCES);
                 setStatus("m.validating", -1, -1L, false);
                 List<Resource> failures = _app.verifyResources(_progobs, alreadyValid, unpacked);
                 if (failures == null) {
@@ -455,7 +484,8 @@ public abstract class Getdown extends Thread
                         File ufile = _app.getLocalPath("unpacked.dat");
                         if (!ufile.exists()) {
                             log.info("Performing initial unpack.");
-                            setStatus("m.validating", -1, -1L, true);
+                            setStep(Step.UNPACK);
+                            updateStatus("m.validating");
                             _app.unpackResources(_progobs, unpacked);
                             ufile.createNewFile();
                         }
@@ -485,6 +515,7 @@ public abstract class Getdown extends Thread
                     // redownload any that are corrupt or invalid...
                     log.info(failures.size() + " of " + _app.getAllResources().size() +
                              " rsrcs require update (" + alreadyValid[0] + " assumed valid).");
+                    setStep(Step.REDOWNLOAD_RESOURCES);
                     download(failures);
 
                     reportTrackingEvent("app_complete", -1);
@@ -648,14 +679,19 @@ public abstract class Getdown extends Thread
             }
 
             // download the patch files...
+            setStep(Step.DOWNLOAD);
             download(list);
 
             // and apply them...
+            setStep(Step.PATCH);
             updateStatus("m.patching");
+
+            // create a new ProgressObserver that divides the different patching phases
+            UnifiedProgressObserver uProgObs = new UnifiedProgressObserver(list.size(), _progobs);
             for (Resource prsrc : list) {
                 try {
                     Patcher patcher = new Patcher();
-                    patcher.patch(prsrc.getLocal().getParentFile(), prsrc.getLocal(), _progobs);
+                    patcher.patch(prsrc.getLocal().getParentFile(), prsrc.getLocal(), uProgObs);
                 } catch (Exception e) {
                     log.warning("Failed to apply patch", "prsrc", prsrc, e);
                 }
@@ -665,6 +701,7 @@ public abstract class Getdown extends Thread
                     log.warning("Failed to delete '" + prsrc + "'.");
                     prsrc.getLocal().deleteOnExit();
                 }
+                uProgObs.stepComplete();
             }
         }
 
@@ -742,6 +779,7 @@ public abstract class Getdown extends Thread
      */
     protected void launch ()
     {
+        setStep(Step.LAUNCH);
         setStatus("m.launching", 100, -1L, false);
 
         try {
@@ -929,11 +967,36 @@ public abstract class Getdown extends Thread
         setStatus(message, 0, -1L, true);
     }
 
+    /**
+     * Set the current step, which will be used to globalize per-step percentages.
+     */
+    protected void setStep (Step step)
+    {
+        if (step.finalPercent < _stepMaxPercent) {
+            // we've gone backwards. Ignore it.
+            return;
+        }
+        _stepMaxPercent = step.finalPercent;
+        _stepMinPercent = _lastGlobalPercent;
+    }
+
+    /**
+     * Update the status <em>of the current step</em>.
+     *
+     * Any percent specified will be "globalized" so that the user sees one unified, always
+     * increasing, progress bar.
+     */
     protected void setStatus (
         final String message, final int percent, final long remaining, boolean createUI)
     {
         if (_status == null && createUI) {
             createInterface(false);
+        }
+
+        // maybe update the global percent, never letting it go backwards
+        if (percent >= 0) {
+            _lastGlobalPercent = Math.max(_lastGlobalPercent,
+                _stepMinPercent + (percent * (_stepMaxPercent - _stepMinPercent)) / 100);
         }
 
         EventQueue.invokeLater(new Runnable() {
@@ -950,7 +1013,7 @@ public abstract class Getdown extends Thread
                 if (_dead) {
                     _status.setProgress(0, -1L);
                 } else if (percent >= 0) {
-                    _status.setProgress(percent, remaining);
+                    _status.setProgress(_lastGlobalPercent, remaining);
                 }
             }
         });
@@ -1083,10 +1146,47 @@ public abstract class Getdown extends Thread
 
     /** Used to pass progress on to our user interface. */
     protected ProgressObserver _progobs = new ProgressObserver() {
-        public void progress (final int percent) {
+        public void progress (int percent) {
             setStatus(null, percent, -1L, false);
         }
     };
+
+    /** A simple combiner of multiple 0->100 progresses into one. */
+    protected static class UnifiedProgressObserver 
+        implements ProgressObserver
+    {
+        /**
+         * Constructor.
+         */
+        public UnifiedProgressObserver (int steps, ProgressObserver delegate)
+        {
+            _steps = steps;
+            _delegate = delegate;
+        }
+
+        /**
+         * Call prior to moving on to a next step.
+         */
+        public void stepComplete ()
+        {
+            _step++;
+        }
+
+        // from ProgressObserver
+        public void progress (int percent)
+        {
+            _delegate.progress(((_step * 100) + percent) / _steps);
+        }
+
+        /** The total number of steps. */
+        protected final int _steps;
+
+        /** Our delegate observer. */
+        protected final ProgressObserver _delegate;
+
+        /** The current step. */
+        protected int _step;
+    }
 
     protected Application _app;
     protected Application.UpdateInterface _ifc = new Application.UpdateInterface();
@@ -1109,6 +1209,10 @@ public abstract class Getdown extends Thread
 
     /** Number of minutes to wait after startup before beginning any real heavy lifting. */
     protected int _delay;
+
+    protected int _stepMaxPercent;
+    protected int _stepMinPercent;
+    protected int _lastGlobalPercent;
 
     protected static final int MAX_LOOPS = 5;
     protected static final long MIN_EXIST_TIME = 5000L;
