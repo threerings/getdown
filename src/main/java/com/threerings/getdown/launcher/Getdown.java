@@ -100,12 +100,12 @@ public abstract class Getdown extends Thread
     {
         START(1),
         UPDATE_JAVA(10),
-        VERIFY_METADATA(15),
-        DOWNLOAD(50),
-        PATCH(70),
-        VERIFY_RESOURCES(80),
-        REDOWNLOAD_RESOURCES(85),
-        UNPACK(90),
+        VERIFY_METADATA(12),
+        DOWNLOAD(40),
+        PATCH(60),
+        VERIFY_RESOURCES(70),
+        REDOWNLOAD_RESOURCES(90),
+        UNPACK(98),
         LAUNCH(99);
 
         /** What is the final percent value for this step? */
