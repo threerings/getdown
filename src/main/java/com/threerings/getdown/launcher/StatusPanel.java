@@ -79,9 +79,21 @@ public class StatusPanel extends JComponent
      */
     public void setProgress (int percent, long remaining)
     {
-        _progress = percent;
-        String msg = "m.complete";
-        String remstr = "";
+        boolean needsRepaint = false;
+
+        // maybe update the progress label
+        if (_progress != percent) {
+            _progress = percent;
+            String msg = MessageFormat.format(get("m.complete"), percent);
+            _newplab = new Label(msg, _ifc.progressText, FONT);
+            if (_ifc.textShadow != null) {
+                _newplab.setAlternateColor(_ifc.textShadow);
+                _newplab.setStyle(LabelStyleConstants.SHADOW);
+            }
+            needsRepaint = true;
+        }
+
+        // maybe update the remaining label
         if (remaining > 1) {
             // skip this estimate if it's been less than a second since
             // our last one came in
@@ -99,23 +111,26 @@ public class StatusPanel extends JComponent
             remaining /= values;
 
             // now compute our display value
-            msg = "m.complete_remain";
             int minutes = (int)(remaining / 60);
             int seconds = (int)(remaining % 60);
-            remstr = minutes + ":";
-            if (seconds < 10) {
-                remstr += "0";
+
+            String remstr = minutes + ":" + ((seconds < 10) ? "0" : "") + seconds;
+            String msg = MessageFormat.format(get("m.remain"), remstr);
+            _newrlab = new Label(msg, _ifc.statusText, FONT);
+            if (_ifc.textShadow != null) {
+                _newrlab.setAlternateColor(_ifc.textShadow);
+                _newrlab.setStyle(LabelStyleConstants.SHADOW);
             }
-            remstr += seconds;
+            needsRepaint = true;
+
+        } else {
+            needsRepaint = needsRepaint || (_rlabel != null);
+            _newrlab = _rlabel = null;
         }
-        msg = get(msg);
-        String label = MessageFormat.format(msg, percent, remstr);
-        _newplab = new Label(label, _ifc.progressText, FONT);
-        if (_ifc.textShadow != null) {
-            _newplab.setAlternateColor(_ifc.textShadow);
-            _newplab.setStyle(LabelStyleConstants.SHADOW);
+
+        if (needsRepaint) {
+            repaint();
         }
-        repaint();
     }
 
     /**
@@ -169,6 +184,11 @@ public class StatusPanel extends JComponent
             _plabel = _newplab;
             _newplab = null;
         }
+        if (_newrlab != null) {
+            _newrlab.layout(gfx);
+            _rlabel = _newrlab;
+            _newrlab = null;
+        }
 
         if (_barimg != null) {
             gfx.setClip(_ifc.progress.x, _ifc.progress.y,
@@ -191,17 +211,14 @@ public class StatusPanel extends JComponent
         }
 
         if (_label != null) {
-            // if the status region is higher than the progress region, we
-            // want to align the label with the bottom of its region
-            // rather than the top
-            int ly;
-            if (_ifc.status.y > _ifc.progress.y) {
-                ly = _ifc.status.y;
-            } else {
-                ly = _ifc.status.y + (_ifc.status.height -
-                                      _label.getSize().height);
-            }
-            _label.render(gfx, _ifc.status.x, ly);
+            _label.render(gfx, _ifc.status.x, getStatusY(_label));
+        }
+
+        if (_rlabel != null) {
+            // put the remaining label at the end of the status area. This could be dangerous
+            // but I think the only time we would display it is with small statuses.
+            int x = _ifc.status.x + _ifc.status.width - _rlabel.getSize().width;
+            _rlabel.render(gfx, x, getStatusY(_rlabel));
         }
 
         SwingUtil.restoreAntiAliasing(gfx, oalias);
@@ -212,6 +229,17 @@ public class StatusPanel extends JComponent
     public Dimension getPreferredSize ()
     {
         return _psize;
+    }
+
+    protected int getStatusY (Label label)
+    {
+        // if the status region is higher than the progress region, we
+        // want to align the label with the bottom of its region
+        // rather than the top
+        if (_ifc.status.y > _ifc.progress.y) {
+            return _ifc.status.y;
+        }
+        return _ifc.status.y + (_ifc.status.height - label.getSize().height);
     }
 
     /** Used by {@link #setStatus}. */
@@ -284,6 +312,7 @@ public class StatusPanel extends JComponent
     protected boolean _displayError;
     protected Label _label, _newlab;
     protected Label _plabel, _newplab;
+    protected Label _rlabel, _newrlab;
 
     protected UpdateInterface _ifc;
 
