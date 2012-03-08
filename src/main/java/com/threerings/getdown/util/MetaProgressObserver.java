@@ -39,19 +39,18 @@ public class MetaProgressObserver implements ProgressObserver
 
     public void startElement (long elementSize)
     {
-        _currentSize += elementSize;
+        // add the previous size
+        _accum += (_elementSize * 100);
+        // then set the new one
         _elementSize = elementSize;
     }
 
     // documentation inherited from interface
     public void progress (int percent)
     {
-        if (_target != null  && _elementSize > 0) {
-            long position = _currentSize + (100 * percent / _elementSize);
-            _target.progress((int)(100 * position / _totalSize));
-        }
+        _target.progress((int)((_accum + (percent * _elementSize)) / _totalSize));
     }
 
     protected ProgressObserver _target;
-    protected long _totalSize, _currentSize, _elementSize;
+    protected long _totalSize, _accum, _elementSize;
 }

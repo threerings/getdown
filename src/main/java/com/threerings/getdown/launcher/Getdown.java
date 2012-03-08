@@ -82,6 +82,7 @@ import com.threerings.getdown.net.HTTPDownloader;
 import com.threerings.getdown.tools.Patcher;
 import com.threerings.getdown.util.ConfigUtil;
 import com.threerings.getdown.util.LaunchUtil;
+import com.threerings.getdown.util.MetaProgressObserver;
 import com.threerings.getdown.util.ProgressObserver;
 
 import static com.threerings.getdown.Log.log;
@@ -687,11 +688,12 @@ public abstract class Getdown extends Thread
             updateStatus("m.patching");
 
             // create a new ProgressObserver that divides the different patching phases
-            UnifiedProgressObserver uProgObs = new UnifiedProgressObserver(list.size(), _progobs);
+            MetaProgressObserver mprog = new MetaProgressObserver(_progobs, list.size());
             for (Resource prsrc : list) {
+                mprog.startElement(1);
                 try {
                     Patcher patcher = new Patcher();
-                    patcher.patch(prsrc.getLocal().getParentFile(), prsrc.getLocal(), uProgObs);
+                    patcher.patch(prsrc.getLocal().getParentFile(), prsrc.getLocal(), mprog);
                 } catch (Exception e) {
                     log.warning("Failed to apply patch", "prsrc", prsrc, e);
                 }
@@ -701,7 +703,6 @@ public abstract class Getdown extends Thread
                     log.warning("Failed to delete '" + prsrc + "'.");
                     prsrc.getLocal().deleteOnExit();
                 }
-                uProgObs.stepComplete();
             }
         }
 
@@ -1151,43 +1152,6 @@ public abstract class Getdown extends Thread
             setStatus(null, percent, -1L, false);
         }
     };
-
-    /** A simple combiner of multiple 0->100 progresses into one. */
-    protected static class UnifiedProgressObserver 
-        implements ProgressObserver
-    {
-        /**
-         * Constructor.
-         */
-        public UnifiedProgressObserver (int steps, ProgressObserver delegate)
-        {
-            _steps = steps;
-            _delegate = delegate;
-        }
-
-        /**
-         * Call prior to moving on to a next step.
-         */
-        public void stepComplete ()
-        {
-            _step++;
-        }
-
-        // from ProgressObserver
-        public void progress (int percent)
-        {
-            _delegate.progress(((_step * 100) + percent) / _steps);
-        }
-
-        /** The total number of steps. */
-        protected final int _steps;
-
-        /** Our delegate observer. */
-        protected final ProgressObserver _delegate;
-
-        /** The current step. */
-        protected int _step;
-    }
 
     protected Application _app;
     protected Application.UpdateInterface _ifc = new Application.UpdateInterface();
