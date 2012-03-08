@@ -987,7 +987,7 @@ public abstract class Getdown extends Thread
      * increasing, progress bar.
      */
     protected void setStatus (
-        final String message, final int percent, final long remaining, boolean createUI)
+        final String message, int percent, final long remaining, boolean createUI)
     {
         if (_status == null && createUI) {
             createInterface(false);
@@ -999,6 +999,7 @@ public abstract class Getdown extends Thread
                 _stepMinPercent + (percent * (_stepMaxPercent - _stepMinPercent)) / 100);
         }
 
+        final int reportedPercent = (percent >= 0) ? _lastGlobalPercent : -1;
         EventQueue.invokeLater(new Runnable() {
             public void run () {
                 if (_status == null) {
@@ -1012,8 +1013,8 @@ public abstract class Getdown extends Thread
                 }
                 if (_dead) {
                     _status.setProgress(0, -1L);
-                } else if (percent >= 0) {
-                    _status.setProgress(_lastGlobalPercent, remaining);
+                } else if (reportedPercent >= 0) {
+                    _status.setProgress(reportedPercent, remaining);
                 }
             }
         });
