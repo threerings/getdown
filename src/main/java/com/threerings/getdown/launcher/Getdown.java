@@ -1006,7 +1006,7 @@ public abstract class Getdown extends Thread
     }
 
     /**
-     * Update the status <em>of the current step</em>.
+     * Update the status.
      */
     protected void setStatus (
         final String message, final int percent, final long remaining, boolean createUI)
