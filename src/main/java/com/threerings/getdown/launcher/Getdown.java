@@ -76,6 +76,7 @@ import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
 
 import com.threerings.getdown.data.Application;
+import com.threerings.getdown.data.Application.UpdateInterface.Step;
 import com.threerings.getdown.data.Resource;
 import com.threerings.getdown.net.Downloader;
 import com.threerings.getdown.net.HTTPDownloader;
@@ -93,30 +94,6 @@ import static com.threerings.getdown.Log.log;
 public abstract class Getdown extends Thread
     implements Application.StatusDisplay, ImageLoader
 {
-    /**
-     * The major steps.
-     */
-    public enum Step
-    {
-        UPDATE_JAVA(10),
-        VERIFY_METADATA(15, 65, 95),
-        DOWNLOAD(40),
-        PATCH(60),
-        VERIFY_RESOURCES(70, 97),
-        REDOWNLOAD_RESOURCES(90),
-        UNPACK(98),
-        LAUNCH(99);
-
-        /** What is the final percent value for this step? */
-        public int[] finalPercents;
-
-        /** Enum constructor. */
-        Step (int... finalPercents)
-        {
-            this.finalPercents = finalPercents;
-        }
-    }
-
     public static void main (String[] args)
     {
         // legacy support
@@ -978,7 +955,7 @@ public abstract class Getdown extends Thread
     protected void setStep (Step step)
     {
         int finalPercent = -1;
-        for (int perc : step.finalPercents) {
+        for (Integer perc : _ifc.stepPercentages.get(step)) {
             if (perc > _stepMaxPercent) {
                 finalPercent = perc;
                 break;

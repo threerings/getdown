@@ -55,6 +55,7 @@ import java.security.Signature;
 import java.security.cert.Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -108,6 +109,31 @@ public class Application
     /** Used to communicate information about the UI displayed when updating the application. */
     public static class UpdateInterface
     {
+        /**
+         * The major steps involved in updating, along with some arbitrary percentages
+         * assigned to them, to mark global progress.
+         */
+        public enum Step
+        {
+            UPDATE_JAVA(10),
+            VERIFY_METADATA(15, 65, 95),
+            DOWNLOAD(40),
+            PATCH(60),
+            VERIFY_RESOURCES(70, 97),
+            REDOWNLOAD_RESOURCES(90),
+            UNPACK(98),
+            LAUNCH(99);
+
+            /** What is the final percent value for this step? */
+            public final List<Integer> defaultPercents;
+
+            /** Enum constructor. */
+            Step (int... percents)
+            {
+                this.defaultPercents = intsToList(percents);
+            }
+        }
+
         /** The human readable name of this application. */
         public String name;
 
@@ -153,6 +179,11 @@ public class Application
         /** The patch notes URL. */
         public String patchNotesUrl;
 
+        /** The global percentages for each step. A step may have more than one, and
+         * the lowest reasonable one is used if a step is revisited. */
+        public Map<Step, List<Integer>> stepPercentages =
+            new EnumMap<Step, List<Integer>>(Step.class);
+
         /** Generates a string representation of this instance. */
         @Override
         public String toString ()
@@ -161,7 +192,14 @@ public class Application
                 ", prect=" + progress + ", pt=" + progressText + ", pb=" + progressBar +
                 ", srect=" + status + ", st=" + statusText + ", shadow=" + textShadow +
                 ", err=" + installError + ", nrect=" + patchNotes +
-                ", notes=" + patchNotesUrl + "]";
+                ", notes=" + patchNotesUrl + ", stepPercentages=" + stepPercentages + "]";
+        }
+
+        /** Initializer */
+        {
+            for (Step step : Step.values()) {
+                stepPercentages.put(step, step.defaultPercents);
+            }
         }
     }
 
@@ -635,6 +673,18 @@ public class Application
         // the patch notes bits
         ui.patchNotes = parseRect(cdata, "ui.patch_notes", ui.patchNotes);
         ui.patchNotesUrl = parseUrl(cdata, "ui.patch_notes_url", null);
+
+        // step progress percentages
+        for (UpdateInterface.Step step : UpdateInterface.Step.values()) {
+            String spec = (String)cdata.get("ui.percents." + step.name());
+            if (spec != null) {
+                try {
+                    ui.stepPercentages.put(step, intsToList(StringUtil.parseIntArray(spec)));
+                } catch (Exception e) {
+                    log.warning("Failed to parse percentages for " + step + ": " + spec);
+                }
+            }
+        }
 
         return ui;
     }
@@ -1450,6 +1500,18 @@ public class Application
         String value = (String)cdata.get(name);
         Rectangle rect = parseRect(name, value);
         return (rect == null) ? def : rect;
+    }
+
+    /**
+     * Make an immutable List from the specified int array.
+     */
+    public static List<Integer> intsToList (int[] values)
+    {
+        List<Integer> list = new ArrayList<Integer>(values.length);
+        for (int val : values) {
+            list.add(val);
+        }
+        return Collections.unmodifiableList(list);
     }
 
     /**
