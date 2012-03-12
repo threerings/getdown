@@ -747,7 +747,7 @@ public abstract class Getdown extends Thread
                     // to check if this was the reason for aborting.
                     return false;
                 }
-                setStatus("m.downloading", percent, remaining, true);
+                setStatus("m.downloading", stepToGlobalPercent(percent), remaining, true);
                 if (percent > 0) {
                     reportTrackingEvent("progress", percent);
                 }
@@ -780,7 +780,7 @@ public abstract class Getdown extends Thread
     protected void launch ()
     {
         setStep(Step.LAUNCH);
-        setStatus("m.launching", 100, -1L, false);
+        setStatus("m.launching", stepToGlobalPercent(100), -1L, false);
 
         try {
             if (invokeDirect()) {
@@ -969,7 +969,7 @@ public abstract class Getdown extends Thread
     protected void fail (String message)
     {
         _dead = true;
-        setStatus(message, 0, -1L, true);
+        setStatus(message, stepToGlobalPercent(0), -1L, true);
     }
 
     /**
@@ -994,27 +994,27 @@ public abstract class Getdown extends Thread
     }
 
     /**
+     * Convert a step percentage to the global percentage.
+     */
+    protected int stepToGlobalPercent (int percent)
+    {
+        int adjustedMaxPercent = 
+            ((_stepMaxPercent - _uiDisplayPercent) * 100) / (100 - _uiDisplayPercent);
+        _lastGlobalPercent = Math.max(_lastGlobalPercent,
+            _stepMinPercent + (percent * (adjustedMaxPercent - _stepMinPercent)) / 100);
+        return _lastGlobalPercent;
+    }
+
+    /**
      * Update the status <em>of the current step</em>.
-     *
-     * Any percent specified will be "globalized" so that the user sees one unified, always
-     * increasing, progress bar.
      */
     protected void setStatus (
-        final String message, int percent, final long remaining, boolean createUI)
+        final String message, final int percent, final long remaining, boolean createUI)
     {
         if (_status == null && createUI) {
             createInterface(false);
         }
 
-        // maybe update the global percent, never letting it go backwards
-        if (percent >= 0) {
-            int adjustedMaxPercent = 
-                ((_stepMaxPercent - _uiDisplayPercent) * 100) / (100 - _uiDisplayPercent);
-            _lastGlobalPercent = Math.max(_lastGlobalPercent,
-                _stepMinPercent + (percent * (adjustedMaxPercent - _stepMinPercent)) / 100);
-        }
-
-        final int reportedPercent = (percent >= 0) ? _lastGlobalPercent : -1;
         EventQueue.invokeLater(new Runnable() {
             public void run () {
                 if (_status == null) {
@@ -1028,8 +1028,8 @@ public abstract class Getdown extends Thread
                 }
                 if (_dead) {
                     _status.setProgress(0, -1L);
-                } else if (reportedPercent >= 0) {
-                    _status.setProgress(reportedPercent, remaining);
+                } else if (percent >= 0) {
+                    _status.setProgress(percent, remaining);
                 }
             }
         });
@@ -1163,7 +1163,7 @@ public abstract class Getdown extends Thread
     /** Used to pass progress on to our user interface. */
     protected ProgressObserver _progobs = new ProgressObserver() {
         public void progress (int percent) {
-            setStatus(null, percent, -1L, false);
+            setStatus(null, stepToGlobalPercent(percent), -1L, false);
         }
     };
 
