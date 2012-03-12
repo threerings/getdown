@@ -365,7 +365,7 @@ public class StatusPanel extends JComponent
 
     protected ResourceBundle _msgs;
 
-    protected int _progress = 0;
+    protected int _progress = -1;
     protected String _status;
     protected int _statusDots = 1;
     protected boolean _displayError;
