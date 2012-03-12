@@ -98,23 +98,22 @@ public abstract class Getdown extends Thread
      */
     public enum Step
     {
-        START(1),
         UPDATE_JAVA(10),
-        VERIFY_METADATA(12),
+        VERIFY_METADATA(15, 65, 95),
         DOWNLOAD(40),
         PATCH(60),
-        VERIFY_RESOURCES(70),
+        VERIFY_RESOURCES(70, 97),
         REDOWNLOAD_RESOURCES(90),
         UNPACK(98),
         LAUNCH(99);
 
         /** What is the final percent value for this step? */
-        public final int finalPercent;
+        public int[] finalPercents;
 
         /** Enum constructor. */
-        Step (int finalPercent)
+        Step (int... finalPercents)
         {
-            this.finalPercent = finalPercent;
+            this.finalPercents = finalPercents;
         }
     }
 
@@ -444,7 +443,7 @@ public abstract class Getdown extends Thread
             // we'll keep track of all the resources we unpack
             Set<Resource> unpacked = new HashSet<Resource>();
 
-            setStep(Step.START);
+            //setStep(Step.START);
             for (int ii = 0; ii < MAX_LOOPS; ii++) {
                 // if we aren't running in a JVM that meets our version requirements, either
                 // complain or attempt to download and install the appropriate version
@@ -920,6 +919,11 @@ public abstract class Getdown extends Thread
 
         _patchNotes.setBounds(_ifc.patchNotes);
         _patchNotes.setVisible(false);
+
+        // we were displaying progress while the UI wasn't up. Now that it is, whatever progress
+        // is left is scaled into a 0-100 DISPLAYED progress.
+        _uiDisplayPercent = _lastGlobalPercent;
+        _stepMinPercent = _lastGlobalPercent = 0;
     }
 
     protected RotatingBackgrounds getBackground ()
@@ -973,11 +977,19 @@ public abstract class Getdown extends Thread
      */
     protected void setStep (Step step)
     {
-        if (step.finalPercent < _stepMaxPercent) {
-            // we've gone backwards. Ignore it.
+        int finalPercent = -1;
+        for (int perc : step.finalPercents) {
+            if (perc > _stepMaxPercent) {
+                finalPercent = perc;
+                break;
+            }
+        }
+        if (finalPercent == -1) {
+            // we've gone backwards and this step will be ignored
             return;
         }
-        _stepMaxPercent = step.finalPercent;
+
+        _stepMaxPercent = finalPercent;
         _stepMinPercent = _lastGlobalPercent;
     }
 
@@ -996,8 +1008,10 @@ public abstract class Getdown extends Thread
 
         // maybe update the global percent, never letting it go backwards
         if (percent >= 0) {
+            int adjustedMaxPercent = 
+                ((_stepMaxPercent - _uiDisplayPercent) * 100) / (100 - _uiDisplayPercent);
             _lastGlobalPercent = Math.max(_lastGlobalPercent,
-                _stepMinPercent + (percent * (_stepMaxPercent - _stepMinPercent)) / 100);
+                _stepMinPercent + (percent * (adjustedMaxPercent - _stepMinPercent)) / 100);
         }
 
         final int reportedPercent = (percent >= 0) ? _lastGlobalPercent : -1;
@@ -1178,6 +1192,7 @@ public abstract class Getdown extends Thread
     protected int _stepMaxPercent;
     protected int _stepMinPercent;
     protected int _lastGlobalPercent;
+    protected int _uiDisplayPercent;
 
     protected static final int MAX_LOOPS = 5;
     protected static final long MIN_EXIST_TIME = 5000L;
