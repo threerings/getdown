@@ -259,9 +259,16 @@ public class StatusPanel extends JComponent
             }
         }
         _newlab = createLabel(status, _ifc.statusText);
-        int width = getWidth() - _ifc.status.x*2;
-        width = width > 0 ? Math.min(_ifc.status.width, width) : _ifc.status.width;
-        _newlab.setTargetWidth(width);
+        // set the width of the label to the width specified
+        int width = _ifc.status.width;
+        if (width == 0) {
+            // unless we had trouble reading that width, in which case use the entire window
+            width = getWidth();
+        }
+        // but the window itself might not be initialized and have a width of 0
+        if (width > 0) {
+            _newlab.setTargetWidth(width);
+        }
         repaint();
     }
 
