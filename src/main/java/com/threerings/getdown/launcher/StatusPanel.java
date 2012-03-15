@@ -153,6 +153,16 @@ public class StatusPanel extends JComponent
         updateStatusLabel();
     }
 
+    /**
+     * Stop the throbbing.
+     */
+    public void stopThrob ()
+    {
+        _timer.stop();
+        _statusDots = 3;
+        updateStatusLabel();
+    }
+
     @Override
     public void addNotify ()
     {

@@ -834,6 +834,9 @@ public abstract class Getdown extends Thread
                 } catch (Exception e) {
                 }
             }
+
+            // pump the percent up to 100%
+            setStatus(null, 100, -1L, false);
             exit(0);
 
         } catch (Exception e) {

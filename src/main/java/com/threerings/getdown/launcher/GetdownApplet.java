@@ -169,6 +169,7 @@ public class GetdownApplet extends JApplet
                 }
                 @Override
                 protected void exit (int exitCode) {
+                    _status.stopThrob();
                     _app.releaseLock();
                     _config.redirect();
                 }
