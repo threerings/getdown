@@ -137,6 +137,9 @@ public class Application
         /** The human readable name of this application. */
         public String name;
 
+        /** A background color, just in case. */
+        public Color background;
+
         /** Background image specifiers for {@link RotatingBackgrounds}. */
         public String[] rotatingBackgrounds;
 
@@ -188,10 +191,10 @@ public class Application
         @Override
         public String toString ()
         {
-            return "[name=" + name + ", bg=" + backgroundImage + ", pi=" + progressImage +
-                ", prect=" + progress + ", pt=" + progressText + ", pb=" + progressBar +
-                ", srect=" + status + ", st=" + statusText + ", shadow=" + textShadow +
-                ", err=" + installError + ", nrect=" + patchNotes +
+            return "[name=" + name + ", bg=" + background + ", bg=" + backgroundImage +
+                ", pi=" + progressImage + ", prect=" + progress + ", pt=" + progressText +
+                ", pb=" + progressBar + ", srect=" + status + ", st=" + statusText +
+                ", shadow=" + textShadow + ", err=" + installError + ", nrect=" + patchNotes +
                 ", notes=" + patchNotesUrl + ", stepPercentages=" + stepPercentages + "]";
         }
 
@@ -656,6 +659,14 @@ public class Application
         if (ui.backgroundImage == null) { // support legacy format
             ui.backgroundImage = (String)cdata.get("ui.background");
         }
+        // and now ui.background can refer to the background color, but fall back to black
+        // or white, depending on the brightness of the progressText
+        Color defaultBackground = (.5f < Color.RGBtoHSB(
+                ui.progressText.getRed(), ui.progressText.getGreen(), ui.progressText.getBlue(),
+                null)[2])
+            ? Color.BLACK
+            : Color.WHITE;
+        ui.background = parseColor(cdata, "ui.background", defaultBackground);
         ui.progressImage = (String)cdata.get("ui.progress_image");
         ui.rotatingBackgrounds = ConfigUtil.getMultiValue(cdata, "ui.rotating_background");
         ui.iconImages = ConfigUtil.getMultiValue(cdata, "ui.icon");

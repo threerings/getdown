@@ -184,6 +184,10 @@ public class StatusPanel extends JComponent
         super.paintComponent(g);
         Graphics2D gfx = (Graphics2D)g;
 
+        // always draw a background in case our image isn't ready yet
+        gfx.setColor(_ifc.background);
+        gfx.fillRect(0, 0, getWidth(), getHeight());
+        // then attempt to draw a background image...
         Image img;
         if (_displayError) {
             img = _bg.getErrorImage();
@@ -192,9 +196,6 @@ public class StatusPanel extends JComponent
         }
         if (img != null) {
             gfx.drawImage(img, 0, 0, this);
-        } else {
-            gfx.setColor(getBackground());
-            gfx.fillRect(0, 0, getWidth(), getHeight());
         }
 
         Object oalias = SwingUtil.activateAntiAliasing(gfx);
