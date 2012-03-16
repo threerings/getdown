@@ -48,7 +48,7 @@ public class MetaProgressObserver implements ProgressObserver
     // documentation inherited from interface
     public void progress (int percent)
     {
-        if (_elementSize > 0) {
+        if (_totalSize > 0) {
             _target.progress((int)((_accum + (percent * _elementSize)) / _totalSize));
         }
     }
