@@ -132,7 +132,7 @@ public class StatusPanel extends JComponent
             needsRepaint = true;
 
         } else if (_rlabel != null || _newrlab != null) {
-            _rthrottle.reinit(1, 1000);
+            _rthrottle = new Throttle(1, 1000);
             _ridx = 0;
             _newrlab = _rlabel = null;
             needsRepaint = true;
