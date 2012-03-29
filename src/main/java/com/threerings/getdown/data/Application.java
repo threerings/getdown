@@ -182,6 +182,12 @@ public class Application
         /** The patch notes URL. */
         public String patchNotesUrl;
 
+        /** The dimensions of the play again button. */
+        public Rectangle playAgain;
+
+        /** The path (relative to the appdir) to a single play again image. */
+        public String playAgainImage;
+
         /** The global percentages for each step. A step may have more than one, and
          * the lowest reasonable one is used if a step is revisited. */
         public Map<Step, List<Integer>> stepPercentages =
@@ -195,7 +201,8 @@ public class Application
                 ", pi=" + progressImage + ", prect=" + progress + ", pt=" + progressText +
                 ", pb=" + progressBar + ", srect=" + status + ", st=" + statusText +
                 ", shadow=" + textShadow + ", err=" + installError + ", nrect=" + patchNotes +
-                ", notes=" + patchNotesUrl + ", stepPercentages=" + stepPercentages + "]";
+                ", notes=" + patchNotesUrl + ", stepPercentages=" + stepPercentages +
+                ", parect=" + playAgain + ", paimage=" + playAgainImage + "]";
         }
 
         /** Initializer */
@@ -684,6 +691,10 @@ public class Application
         // the patch notes bits
         ui.patchNotes = parseRect(cdata, "ui.patch_notes", ui.patchNotes);
         ui.patchNotesUrl = parseUrl(cdata, "ui.patch_notes_url", null);
+
+        // the play again bits
+        ui.playAgain = parseRect(cdata, "ui.play_again", ui.playAgain);
+        ui.playAgainImage = (String)cdata.get("ui.play_again_image");
 
         // step progress percentages
         for (UpdateInterface.Step step : UpdateInterface.Step.values()) {

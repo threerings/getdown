@@ -31,10 +31,12 @@ import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
+import javax.swing.ImageIcon;
 import javax.swing.JApplet;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -838,6 +840,9 @@ public abstract class Getdown extends Thread
             // pump the percent up to 100%
             setStatus(null, 100, -1L, false);
             exit(0);
+            if (_playAgain != null) {
+                _playAgain.setVisible(true);
+            }
 
         } catch (Exception e) {
             log.warning("launch() failed.", e);
@@ -870,6 +875,24 @@ public abstract class Getdown extends Thread
                     });
                     _patchNotes.setFont(StatusPanel.FONT);
                     _layers.add(_patchNotes);
+
+                    if (getApplet() != null && _ifc.playAgain != null) {
+                        Image image = loadImage(_ifc.playAgainImage);
+                        if (image != null) {
+                            _playAgain = new JButton(new ImageIcon(image));
+                            _playAgain.setBorderPainted(false);
+                        } else {
+                            _playAgain = new JButton(_msgs.getString("m.play_again"));
+                        }
+                        _playAgain.addActionListener(new ActionListener() {
+                            @Override public void actionPerformed (ActionEvent event) {
+                                getdown();
+                                _playAgain.setVisible(false);
+                            }
+                        });
+                        _layers.add(_playAgain);
+                    }
+
                     _status = new StatusPanel(_msgs);
                     _layers.add(_status);
                     initInterface();
@@ -899,6 +922,11 @@ public abstract class Getdown extends Thread
 
         _patchNotes.setBounds(_ifc.patchNotes);
         _patchNotes.setVisible(false);
+
+        if (_playAgain != null) {
+            _playAgain.setBounds(_ifc.playAgain);
+            _playAgain.setVisible(false);
+        }
 
         // we were displaying progress while the UI wasn't up. Now that it is, whatever progress
         // is left is scaled into a 0-100 DISPLAYED progress.
@@ -978,7 +1006,7 @@ public abstract class Getdown extends Thread
      */
     protected int stepToGlobalPercent (int percent)
     {
-        int adjustedMaxPercent = 
+        int adjustedMaxPercent =
             ((_stepMaxPercent - _uiDisplayPercent) * 100) / (100 - _uiDisplayPercent);
         _lastGlobalPercent = Math.max(_lastGlobalPercent,
             _stepMinPercent + (percent * (adjustedMaxPercent - _stepMinPercent)) / 100);
@@ -1155,6 +1183,7 @@ public abstract class Getdown extends Thread
     protected JLayeredPane _layers;
     protected StatusPanel _status;
     protected JButton _patchNotes;
+    protected JButton _playAgain;
     protected AbortPanel _abort;
     protected RotatingBackgrounds _background;
 
