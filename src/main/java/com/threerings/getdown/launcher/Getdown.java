@@ -27,6 +27,7 @@ package com.threerings.getdown.launcher;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Image;
@@ -775,21 +776,17 @@ public abstract class Getdown extends Thread
                     // if we have "optimum" arguments, we want to try launching with them first
                     proc = _app.createProcess(true);
 
-                    // wait a short amount of time for the process to exit; if it doesn't (or it
-                    // exits with a success code), assume everything's good
-                    Timer timer = new Timer("fallbackCheck", true);
-                    timer.schedule(new TimerTask() {
-                        @Override public void run () {
-                            interrupt();
+                    long fallback = System.currentTimeMillis() + FALLBACK_CHECK_TIME;
+                    boolean error = false;
+                    while (fallback > System.currentTimeMillis()) {
+                        try {
+                            error = proc.exitValue() != 0;
+                            break;
+                        } catch (IllegalThreadStateException e) {
+                            Thread.yield();
                         }
-                    }, FALLBACK_CHECK_TIME);
-                    boolean error;
-                    try {
-                        error = (proc.waitFor() != 0);
-                    } catch (InterruptedException e) {
-                        error = false;
                     }
-                    timer.cancel();
+
                     if (error) {
                         log.info("Failed to launch with optimum arguments; falling back.");
                         proc = _app.createProcess(false);
@@ -840,8 +837,14 @@ public abstract class Getdown extends Thread
             // pump the percent up to 100%
             setStatus(null, 100, -1L, false);
             exit(0);
-            if (_playAgain != null) {
-                _playAgain.setVisible(true);
+            if (_playAgain != null && _playAgain.isEnabled()) {
+                // wait a little time before showing the button
+                Timer timer = new Timer("playAgain", true);
+                timer.schedule(new TimerTask() {
+                    @Override public void run () {
+                        _playAgain.setVisible(true);
+                    }
+                }, PLAY_AGAIN_TIME);
             }
 
         } catch (Exception e) {
@@ -876,18 +879,20 @@ public abstract class Getdown extends Thread
                     _patchNotes.setFont(StatusPanel.FONT);
                     _layers.add(_patchNotes);
 
-                    if (getApplet() != null && _ifc.playAgain != null) {
-                        Image image = loadImage(_ifc.playAgainImage);
-                        if (image != null) {
-                            _playAgain = new JButton(new ImageIcon(image));
-                            _playAgain.setBorderPainted(false);
-                        } else {
-                            _playAgain = new JButton(_msgs.getString("m.play_again"));
-                        }
+                    if (getApplet() != null) {
+                        _playAgain = new JButton();
+                        _playAgain.setEnabled(false);
+                        _playAgain.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                        _playAgain.setFont(StatusPanel.FONT);
                         _playAgain.addActionListener(new ActionListener() {
                             @Override public void actionPerformed (ActionEvent event) {
-                                getdown();
                                 _playAgain.setVisible(false);
+                                _stepMinPercent = _lastGlobalPercent = 0;
+                                EventQueue.invokeLater(new Runnable() {
+                                    public void run () {
+                                        getdown();
+                                    }
+                                });
                             }
                         });
                         _layers.add(_playAgain);
@@ -924,7 +929,22 @@ public abstract class Getdown extends Thread
         _patchNotes.setVisible(false);
 
         if (_playAgain != null) {
-            _playAgain.setBounds(_ifc.playAgain);
+            Image image = loadImage(_ifc.playAgainImage);
+            boolean hasImage = image != null;
+            if (hasImage) {
+                _playAgain.setIcon(new ImageIcon(image));
+                _playAgain.setText("");
+            } else {
+                _playAgain.setText(_msgs.getString("m.play_again"));
+                _playAgain.setIcon(null);
+            }
+            _playAgain.setBorderPainted(!hasImage);
+            _playAgain.setOpaque(!hasImage);
+            _playAgain.setContentAreaFilled(!hasImage);
+            if (_ifc.playAgain != null) {
+                _playAgain.setBounds(_ifc.playAgain);
+                _playAgain.setEnabled(true);
+            }
             _playAgain.setVisible(false);
         }
 
@@ -1206,6 +1226,7 @@ public abstract class Getdown extends Thread
     protected static final int MAX_LOOPS = 5;
     protected static final long MIN_EXIST_TIME = 5000L;
     protected static final long FALLBACK_CHECK_TIME = 1000L;
+    protected static final long PLAY_AGAIN_TIME = 3000L;
     protected static final String PROXY_REGISTRY =
         "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings";
 }
