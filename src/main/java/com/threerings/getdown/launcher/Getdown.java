@@ -842,6 +842,7 @@ public abstract class Getdown extends Thread
                 Timer timer = new Timer("playAgain", true);
                 timer.schedule(new TimerTask() {
                     @Override public void run () {
+                        initPlayAgain();
                         _playAgain.setVisible(true);
                     }
                 }, PLAY_AGAIN_TIME);
@@ -928,6 +929,16 @@ public abstract class Getdown extends Thread
         _patchNotes.setBounds(_ifc.patchNotes);
         _patchNotes.setVisible(false);
 
+        initPlayAgain();
+
+        // we were displaying progress while the UI wasn't up. Now that it is, whatever progress
+        // is left is scaled into a 0-100 DISPLAYED progress.
+        _uiDisplayPercent = _lastGlobalPercent;
+        _stepMinPercent = _lastGlobalPercent = 0;
+    }
+
+    protected void initPlayAgain ()
+    {
         if (_playAgain != null) {
             Image image = loadImage(_ifc.playAgainImage);
             boolean hasImage = image != null;
@@ -947,11 +958,6 @@ public abstract class Getdown extends Thread
             }
             _playAgain.setVisible(false);
         }
-
-        // we were displaying progress while the UI wasn't up. Now that it is, whatever progress
-        // is left is scaled into a 0-100 DISPLAYED progress.
-        _uiDisplayPercent = _lastGlobalPercent;
-        _stepMinPercent = _lastGlobalPercent = 0;
     }
 
     protected RotatingBackgrounds getBackground ()
