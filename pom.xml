@@ -257,12 +257,21 @@
       </properties>
     </profile>
     <profile>
-      <id>non-mac</id>
+      <id>non-mac-jre</id>
       <activation>
         <file><exists>${java.home}/../lib/rt.jar</exists></file>
       </activation>
       <properties>
         <rt.jar.path>${java.home}/../lib/rt.jar</rt.jar.path>
+      </properties>
+    </profile>
+    <profile>
+      <id>non-mac-jdk</id>
+      <activation>
+        <file><exists>${java.home}/lib/rt.jar</exists></file>
+      </activation>
+      <properties>
+        <rt.jar.path>${java.home}/lib/rt.jar</rt.jar.path>
       </properties>
     </profile>
   </profiles>
