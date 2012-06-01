@@ -34,6 +34,7 @@ import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.ImageObserver;
 import java.text.MessageFormat;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
@@ -56,6 +57,7 @@ import static com.threerings.getdown.Log.log;
  * Displays download and patching status.
  */
 public class StatusPanel extends JComponent
+    implements ImageObserver
 {
     public StatusPanel (ResourceBundle msgs)
     {
@@ -79,15 +81,37 @@ public class StatusPanel extends JComponent
         _ifc = ifc;
         _bg = bg;
         Image img = _bg.getImage(_progress);
-        if (img == null) {
+        int width = img == null ? -1 : img.getWidth(this);
+        int height = img == null ? -1 : img.getHeight(this);
+        if (width == -1 || height == -1) {
             Rectangle bounds = ifc.progress.union(ifc.status);
             bounds.grow(5, 5);
             _psize = bounds.getSize();
         } else {
-            _psize = new Dimension(img.getWidth(null), img.getHeight(null));
+            _psize = new Dimension(width, height);
         }
         _barimg = barimg;
         invalidate();
+    }
+
+    @Override
+    public boolean imageUpdate (Image img, int infoflags, int x, int y, int width, int height)
+    {
+        boolean updated = false;
+        if ((infoflags | WIDTH) != 0) {
+            _psize.width = width;
+            updated = true;
+        }
+        if ((infoflags | HEIGHT) != 0) {
+            _psize.height = height;
+            updated = true;
+        }
+        if (updated) {
+            invalidate();
+            setSize(_psize);
+            getParent().setSize(_psize);
+        }
+        return (infoflags | ALLBITS) != 0;
     }
 
     /**
