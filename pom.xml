@@ -77,7 +77,7 @@
       <artifactId>plugin</artifactId>
       <version>1.5</version>
       <scope>system</scope>
-      <systemPath>${java.home}/lib/plugin.jar</systemPath>
+      <systemPath>${plugin.jar.path}</systemPath>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -246,6 +246,7 @@
         </plugins>
       </build>
     </profile>
+
     <!-- finagling to deal with rt.jar not existing on Macs, thanks Apple! -->
     <profile>
       <id>mac</id>
@@ -272,6 +273,26 @@
       </activation>
       <properties>
         <rt.jar.path>${java.home}/lib/rt.jar</rt.jar.path>
+      </properties>
+    </profile>
+
+    <!-- finagling to deal with plugin.jar not being bundled with OpenJDK -->
+    <profile>
+      <id>standard-jdk</id>
+      <activation>
+        <file><exists>${java.home}/lib/plugin.jar</exists></file>
+      </activation>
+      <properties>
+        <plugin.jar.path>${java.home}/lib/plugin.jar</plugin.jar.path>
+      </properties>
+    </profile>
+    <profile>
+      <id>icedtea-web</id>
+      <activation>
+        <file><exists>/usr/share/icedtea-web/plugin.jar</exists></file>
+      </activation>
+      <properties>
+        <plugin.jar.path>/usr/share/icedtea-web/plugin.jar</plugin.jar.path>
       </properties>
     </profile>
   </profiles>
