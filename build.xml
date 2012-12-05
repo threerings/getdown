@@ -111,7 +111,7 @@
     </condition>
     <!-- set up the proguard task -->
     <artifact:dependencies pathId="proguard.classpath">
-      <dependency groupId="net.sf.proguard" artifactId="proguard" version="4.4"/>
+      <dependency groupId="net.sf.proguard" artifactId="proguard-anttask" version="4.8"/>
     </artifact:dependencies>
     <taskdef resource="proguard/ant/task.properties" classpathref="proguard.classpath"/>
 
