@@ -501,6 +501,9 @@ public class Application
             _appbase = _appbase + "/";
         }
 
+        // check if we're overriding the domain in the appbase
+        _appbase = replaceDomain(_appbase);
+
         // extract our version information
         String vstr = (String)cdata.get("version");
         if (vstr != null) {
@@ -527,6 +530,7 @@ public class Application
         // check for a latest config URL
         String latest = (String)cdata.get("latest");
         if (latest != null) {
+            latest = replaceDomain(latest);
             try {
                 _latest = new URL(latest);
             } catch (MalformedURLException mue) {
@@ -1618,6 +1622,19 @@ public class Application
         cookie.append("utmcsr%3D(direct)%7Cutmccn%3D(direct)%7Cutmcmd%3D(none)%3B");
         cookie.append("&utmn=").append(RandomUtil.getInRange(1000000000, 2000000000));
         return cookie.toString();
+    }
+
+    /**
+     * If appbase_domain property is set, replace the domain on the provided string.
+     */
+    protected String replaceDomain (String appbase)
+    {
+        String appbaseDomain = System.getProperty("appbase_domain");
+        if (appbaseDomain != null) {
+            Matcher m = Pattern.compile("(http://[^/]+)(.*)").matcher(appbase);
+            appbase = m.replaceAll(appbaseDomain + "$2");
+        }
+        return appbase;
     }
 
     protected File _appdir;
