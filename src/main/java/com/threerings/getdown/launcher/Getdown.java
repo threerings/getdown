@@ -88,6 +88,7 @@ import com.threerings.getdown.util.ConfigUtil;
 import com.threerings.getdown.util.LaunchUtil;
 import com.threerings.getdown.util.MetaProgressObserver;
 import com.threerings.getdown.util.ProgressObserver;
+import com.threerings.getdown.util.VersionUtil;
 
 import static com.threerings.getdown.Log.log;
 
@@ -462,12 +463,25 @@ public abstract class Getdown extends Thread
                     // not have unpacked all of our resources yet
                     if (Boolean.getBoolean("check_unpacked")) {
                         File ufile = _app.getLocalPath("unpacked.dat");
+                        long version = -1;
+                        long aversion = _app.getVersion();
                         if (!ufile.exists()) {
-                            log.info("Performing initial unpack.");
+                            ufile.createNewFile();
+                        } else {
+                            version = VersionUtil.readVersion(ufile);
+                        }
+
+                        if (version < aversion) {
+                            log.info("Performing unpack.",
+                                    "version", version, "aversion", aversion);
                             setStep(Step.UNPACK);
                             updateStatus("m.validating");
                             _app.unpackResources(_progobs, unpacked);
-                            ufile.createNewFile();
+                            try {
+                                VersionUtil.writeVersion(ufile, aversion);
+                            } catch (IOException ioe) {
+                                log.warning("Failed to update unpacked version", ioe);
+                            }
                         }
                     }
 

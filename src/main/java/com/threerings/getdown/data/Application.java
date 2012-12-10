@@ -84,6 +84,7 @@ import com.threerings.getdown.util.FileUtil;
 import com.threerings.getdown.util.LaunchUtil;
 import com.threerings.getdown.util.MetaProgressObserver;
 import com.threerings.getdown.util.ProgressObserver;
+import com.threerings.getdown.util.VersionUtil;
 
 import static com.threerings.getdown.Log.log;
 
@@ -1131,19 +1132,9 @@ public class Application
         // and/or check the latest config URL for a newer version
         if (_version != -1) {
             File vfile = getLocalPath(VERSION_FILE);
-            FileInputStream fin = null;
-            long fileVersion = -1;
-            try {
-                fin = new FileInputStream(vfile);
-                BufferedReader bin = new BufferedReader(new InputStreamReader(fin));
-                String vstr = bin.readLine();
-                if (!StringUtil.isBlank(vstr)) {
-                    _targetVersion = fileVersion = Long.parseLong(vstr);
-                }
-            } catch (Exception e) {
-                log.info("Unable to read version file: " + e.getMessage());
-            } finally {
-                StreamUtil.close(fin);
+            long fileVersion = VersionUtil.readVersion(vfile);
+            if (fileVersion != -1) {
+                _targetVersion = fileVersion;
             }
 
             if (_latest != null) {
@@ -1283,6 +1274,15 @@ public class Application
     public void clearValidationMarkers ()
     {
         clearValidationMarkers(getAllResources().iterator());
+    }
+
+    /**
+     * Returns the version number for the application.  Should only be called after successful
+     * return of verifyMetadata.
+     */
+    public long getVersion ()
+    {
+        return _version;
     }
 
     /**
