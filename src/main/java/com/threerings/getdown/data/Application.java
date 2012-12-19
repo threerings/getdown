@@ -80,6 +80,7 @@ import com.samskivert.util.StringUtil;
 
 import com.threerings.getdown.launcher.RotatingBackgrounds;
 import com.threerings.getdown.util.ConfigUtil;
+import com.threerings.getdown.util.ConnectionUtil;
 import com.threerings.getdown.util.FileUtil;
 import com.threerings.getdown.util.LaunchUtil;
 import com.threerings.getdown.util.MetaProgressObserver;
@@ -1478,7 +1479,7 @@ public class Application
         InputStream fin = null;
         FileOutputStream fout = null;
         try {
-            URLConnection uconn = targetURL.openConnection();
+            URLConnection uconn = ConnectionUtil.open(targetURL);
             // we have to tell Java not to use caches here, otherwise it will cache any request for
             // same URL for the lifetime of this JVM (based on the URL string, not the URL object);
             // if the getdown.txt file, for example, changes in the meanwhile, we would never hear

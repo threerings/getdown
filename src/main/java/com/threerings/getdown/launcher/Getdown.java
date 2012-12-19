@@ -85,6 +85,7 @@ import com.threerings.getdown.net.Downloader;
 import com.threerings.getdown.net.HTTPDownloader;
 import com.threerings.getdown.tools.Patcher;
 import com.threerings.getdown.util.ConfigUtil;
+import com.threerings.getdown.util.ConnectionUtil;
 import com.threerings.getdown.util.LaunchUtil;
 import com.threerings.getdown.util.MetaProgressObserver;
 import com.threerings.getdown.util.ProgressObserver;
@@ -319,7 +320,7 @@ public abstract class Getdown extends Thread
         URL rurl = _app.getConfigResource().getRemote();
         try {
             // try to make a HEAD request for this URL
-            URLConnection conn = rurl.openConnection();
+            URLConnection conn = ConnectionUtil.open(rurl);
             if (conn instanceof HttpURLConnection) {
                 HttpURLConnection hcon = (HttpURLConnection)conn;
                 try {
@@ -1178,7 +1179,7 @@ public abstract class Getdown extends Thread
         @Override
         public void run () {
             try {
-                HttpURLConnection ucon = (HttpURLConnection)_url.openConnection();
+                HttpURLConnection ucon = ConnectionUtil.openHttp(_url);
 
                 // if we have a tracking cookie configured, configure the request with it
                 if (_app.getTrackingCookieName() != null &&
