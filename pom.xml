@@ -35,9 +35,9 @@
   </developers>
 
   <scm>
-    <connection>scm:svn:http://getdown.googlecode.com/svn/trunk/</connection>
-    <developerConnection>scm:svn:https://getdown.googlecode.com/svn/trunk/</developerConnection>
-    <url>http://getdown.googlecode.com/svn/trunk/</url>
+    <connection>scm:git:https://code.google.com/p/getdown/</connection>
+    <developerConnection>scm:git:https://code.google.com/p/getdown/</developerConnection>
+    <url>https://code.google.com/p/getdown/</url>
   </scm>
 
   <repositories>
