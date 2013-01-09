@@ -166,6 +166,7 @@
           <options>
             <option>-keep public class com.threerings.getdown.** { *; }</option>
             <option>-keep public class ca.beq.util.win32.registry.** { *; }</option>
+            <option>-keepattributes Exceptions, InnerClasses, Signature</option>
           </options>
           <libs>
             <lib>${rt.jar.path}</lib>
