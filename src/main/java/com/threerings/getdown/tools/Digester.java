@@ -83,8 +83,9 @@ public class Digester
         rsrcs.add(app.getConfigResource());
         rsrcs.addAll(app.getCodeResources());
         rsrcs.addAll(app.getResources());
-        for (String auxgroup : app.getAuxGroups()) {
-            rsrcs.addAll(app.getResources(auxgroup));
+        for (Application.AuxGroup ag : app.getAuxGroups()) {
+            rsrcs.addAll(ag.codes);
+            rsrcs.addAll(ag.rsrcs);
         }
 
         // now generate the digest file

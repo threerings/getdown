@@ -226,6 +226,21 @@ public class Application
     }
 
     /**
+     * Contains metadata for an auxiliary resource group.
+     */
+    public static class AuxGroup {
+        public final String name;
+        public final List<Resource> codes;
+        public final List<Resource> rsrcs;
+
+        public AuxGroup (String name, List<Resource> codes, List<Resource> rsrcs) {
+            this.name = name;
+            this.codes = Collections.unmodifiableList(codes);
+            this.rsrcs = Collections.unmodifiableList(rsrcs);
+        }
+    }
+
+    /**
      * Creates an application instance with no signers.
      *
      * @see #Application(File, String, Object[], String[], String[])
@@ -298,13 +313,21 @@ public class Application
     }
 
     /**
-     * Returns a list of all auxiliary resource groups defined by the application. An auxiliary
+     * Returns the auxiliary resource group with the specified name, or null.
+     */
+    public AuxGroup getAuxGroup (String name)
+    {
+        return _auxgroups.get(name);
+    }
+
+    /**
+     * Returns the set of all auxiliary resource groups defined by the application. An auxiliary
      * resource group is a collection of resource files that are not downloaded unless a group
      * token file is present in the application directory.
      */
-    public List<String> getAuxGroups ()
+    public Iterable<AuxGroup> getAuxGroups ()
     {
-        return _auxgroups;
+        return _auxgroups.values();
     }
 
     /**
@@ -325,14 +348,18 @@ public class Application
     }
 
     /**
-     * Returns a list of the non-code {@link Resource} objects included in the specified auxiliary
-     * resource group. If the group does not exist or has no resources, an empty list will be
-     * returned.
+     * Returns all main code resources and all code resources from active auxiliary resource groups.
      */
-    public List<Resource> getResources (String group)
+    public List<Resource> getActiveCodeResources ()
     {
-        ArrayList<Resource> auxrsrcs = _auxrsrcs.get(group);
-        return (auxrsrcs == null) ? new ArrayList<Resource>() : auxrsrcs;
+        ArrayList<Resource> codes = new ArrayList<Resource>();
+        codes.addAll(getCodeResources());
+        for (AuxGroup aux : getAuxGroups()) {
+            if (isAuxGroupActive(aux.name)) {
+                codes.addAll(aux.codes);
+            }
+        }
+        return codes;
     }
 
     /**
@@ -342,9 +369,9 @@ public class Application
     {
         ArrayList<Resource> rsrcs = new ArrayList<Resource>();
         rsrcs.addAll(getResources());
-        for (String auxgroup : getAuxGroups()) {
-            if (isAuxGroupActive(auxgroup)) {
-                rsrcs.addAll(getResources(auxgroup));
+        for (AuxGroup aux : getAuxGroups()) {
+            if (isAuxGroupActive(aux.name)) {
+                rsrcs.addAll(aux.rsrcs);
             }
         }
         return rsrcs;
@@ -596,7 +623,6 @@ public class Application
         _codes.clear();
         _resources.clear();
         _auxgroups.clear();
-        _auxrsrcs.clear();
         _jvmargs.clear();
         _appargs.clear();
         _txtJvmArgs.clear();
@@ -613,11 +639,12 @@ public class Application
 
         // parse our auxiliary resource groups
         for (String auxgroup : parseList(cdata, "auxgroups")) {
+            ArrayList<Resource> codes = new ArrayList<Resource>();
+            parseResources(cdata, auxgroup + ".code", false, codes);
             ArrayList<Resource> rsrcs = new ArrayList<Resource>();
             parseResources(cdata, auxgroup + ".resource", false, rsrcs);
             parseResources(cdata, auxgroup + ".uresource", true, rsrcs);
-            _auxrsrcs.put(auxgroup, rsrcs);
-            _auxgroups.add(auxgroup);
+            _auxgroups.put(auxgroup, new AuxGroup(auxgroup, codes, rsrcs));
         }
 
         // transfer our JVM arguments
@@ -865,7 +892,7 @@ public class Application
     {
         // create our classpath
         StringBuilder cpbuf = new StringBuilder();
-        for (Resource rsrc : _codes) {
+        for (Resource rsrc : getActiveCodeResources()) {
             if (cpbuf.length() > 0) {
                 cpbuf.append(File.pathSeparator);
             }
@@ -972,7 +999,7 @@ public class Application
     {
         // create a custom class loader
         ArrayList<URL> jars = new ArrayList<URL>();
-        for (Resource rsrc : _codes) {
+        for (Resource rsrc : getActiveCodeResources()) {
             try {
                 jars.add(new URL("file", "", rsrc.getLocal().getAbsolutePath()));
             } catch (Exception e) {
@@ -1669,8 +1696,7 @@ public class Application
     protected List<Resource> _codes = new ArrayList<Resource>();
     protected List<Resource> _resources = new ArrayList<Resource>();
 
-    protected List<String> _auxgroups = new ArrayList<String>();
-    protected Map<String,ArrayList<Resource>> _auxrsrcs = new HashMap<String,ArrayList<Resource>>();
+    protected Map<String,AuxGroup> _auxgroups = new HashMap<String,AuxGroup>();
     protected Map<String,Boolean> _auxactive = new HashMap<String,Boolean>();
 
     protected List<String> _jvmargs = new ArrayList<String>();
@@ -1688,11 +1714,11 @@ public class Application
     /** If a warning has been issued about not being able to set modtimes. */
     protected boolean _warnedAboutSetLastModified;
 
-    protected static final String[] SA_PROTO = ArrayUtil.EMPTY_STRING;
-
     /** Locks gettingdown.lock in the app dir. Held the entire time updating is going on.*/
     protected FileLock _lock;
 
     /** Channel to the file underlying _lock.  Kept around solely so the lock doesn't close. */
     protected FileChannel _lockChannel;
+
+    protected static final String[] SA_PROTO = ArrayUtil.EMPTY_STRING;
 }

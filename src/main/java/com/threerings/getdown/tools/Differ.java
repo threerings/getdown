@@ -95,12 +95,17 @@ public class Differ
         createPatch(patch, orsrcs, nrsrcs, verbose);
 
         // next create patches for any auxiliary resource groups
-        for (String auxgroup : napp.getAuxGroups()) {
+        for (Application.AuxGroup ag : napp.getAuxGroups()) {
             orsrcs = new ArrayList<Resource>();
-            orsrcs.addAll(oapp.getResources(auxgroup));
+            Application.AuxGroup oag = oapp.getAuxGroup(ag.name);
+            if (oag != null) {
+                orsrcs.addAll(oag.codes);
+                orsrcs.addAll(oag.rsrcs);
+            }
             nrsrcs = new ArrayList<Resource>();
-            nrsrcs.addAll(napp.getResources(auxgroup));
-            patch = new File(nvdir, "patch-" + auxgroup + overs + ".dat");
+            nrsrcs.addAll(ag.codes);
+            nrsrcs.addAll(ag.rsrcs);
+            patch = new File(nvdir, "patch-" + ag.name + overs + ".dat");
             createPatch(patch, orsrcs, nrsrcs, verbose);
         }
     }

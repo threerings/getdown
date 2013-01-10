@@ -654,9 +654,9 @@ public abstract class Getdown extends Thread
             list.add(patch);
 
             // add the auxiliary group patch files for activated groups
-            for (String auxgroup : _app.getAuxGroups()) {
-                if (_app.isAuxGroupActive(auxgroup)) {
-                    patch = _app.getPatchResource(auxgroup);
+            for (Application.AuxGroup aux : _app.getAuxGroups()) {
+                if (_app.isAuxGroupActive(aux.name)) {
+                    patch = _app.getPatchResource(aux.name);
                     if (patch != null) {
                         list.add(patch);
                     }
