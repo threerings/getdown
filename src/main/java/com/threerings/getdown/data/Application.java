@@ -307,7 +307,7 @@ public class Application
     public List<Resource> getAllResources ()
     {
         List<Resource> allResources = new ArrayList<Resource>();
-        allResources.addAll(getCodeResources());
+        allResources.addAll(getActiveCodeResources());
         allResources.addAll(getActiveResources());
         return allResources;
     }
