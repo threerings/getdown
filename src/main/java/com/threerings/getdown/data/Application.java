@@ -302,9 +302,10 @@ public class Application
     }
 
     /**
-     * Returns a list of all the {@link Resource} objects used by this application.
+     * Returns a list of all the active {@link Resource} objects used by this application (code and
+     * non-code).
      */
-    public List<Resource> getAllResources ()
+    public List<Resource> getAllActiveResources ()
     {
         List<Resource> allResources = new ArrayList<Resource>();
         allResources.addAll(getActiveCodeResources());
@@ -1208,7 +1209,7 @@ public class Application
         ProgressObserver obs, int[] alreadyValid, Set<Resource> unpacked)
             throws InterruptedException
     {
-        List<Resource> rsrcs = getAllResources();
+        List<Resource> rsrcs = getAllActiveResources();
         List<Resource> failures = new ArrayList<Resource>();
 
         // total up the file size of the resources to validate
@@ -1301,7 +1302,7 @@ public class Application
      */
     public void clearValidationMarkers ()
     {
-        clearValidationMarkers(getAllResources().iterator());
+        clearValidationMarkers(getAllActiveResources().iterator());
     }
 
     /**

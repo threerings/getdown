@@ -508,7 +508,7 @@ public abstract class Getdown extends Thread
                     reportTrackingEvent("app_start", -1);
 
                     // redownload any that are corrupt or invalid...
-                    log.info(failures.size() + " of " + _app.getAllResources().size() +
+                    log.info(failures.size() + " of " + _app.getAllActiveResources().size() +
                              " rsrcs require update (" + alreadyValid[0] + " assumed valid).");
                     setStep(Step.REDOWNLOAD_RESOURCES);
                     download(failures);
