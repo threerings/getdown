@@ -78,9 +78,10 @@ import com.samskivert.text.MessageUtil;
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
 
-import com.threerings.getdown.data.Application;
 import com.threerings.getdown.data.Application.UpdateInterface.Step;
+import com.threerings.getdown.data.Application;
 import com.threerings.getdown.data.Resource;
+import com.threerings.getdown.data.SysProps;
 import com.threerings.getdown.net.Downloader;
 import com.threerings.getdown.net.HTTPDownloader;
 import com.threerings.getdown.tools.Patcher;
@@ -117,12 +118,11 @@ public abstract class Getdown extends Thread
         try {
             // If the silent property exists, install without bringing up any gui. If it equals
             // launch, start the application after installing. Otherwise, just install and exit.
-            String silent = System.getProperty("silent");
-            _silent = silent != null;
+            _silent = SysProps.silent();
             if (_silent) {
-                _launchInSilent = silent.equals("launch");
+                _launchInSilent = SysProps.launchInSilent();
             }
-            _delay = Integer.getInteger("delay", 0);
+            _delay = SysProps.startDelay();
         } catch (SecurityException se) {
             // don't freak out, just assume non-silent and no delay; we're probably already
             // recovering from a security failure
@@ -1127,8 +1127,9 @@ public abstract class Getdown extends Thread
      */
     protected boolean invokeDirect ()
     {
-        // allow passing -Ddirect=true to force direct invocation
-        return Boolean.getBoolean("direct");
+        // by default check a sysprop (which itself defaults to false); in applet mode this is
+        // overridden to check the applet config
+        return SysProps.direct();
     }
 
     /**

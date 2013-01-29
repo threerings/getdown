@@ -46,6 +46,7 @@ import com.samskivert.util.ArrayUtil;
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
 
+import com.threerings.getdown.data.SysProps;
 import static com.threerings.getdown.Log.log;
 
 /**
@@ -53,13 +54,13 @@ import static com.threerings.getdown.Log.log;
  */
 public class GetdownApp
 {
-    public static void main (String[] argArray)
+    public static void main (String[] argv)
     {
-        // maybe they specified the appdir in a system property
         int aidx = 0;
-        List<String> args = Arrays.asList(argArray);
-        String adarg = System.getProperty("appdir");
-        // if not, check for a command line argument
+        List<String> args = Arrays.asList(argv);
+
+        // check for app dir in a sysprop and then via argv
+        String adarg = SysProps.appDir();
         if (StringUtil.isBlank(adarg)) {
             if (args.isEmpty()) {
                 System.err.println("Usage: java -jar getdown.jar app_dir [app_id] [app args]");
@@ -68,12 +69,15 @@ public class GetdownApp
             adarg = args.get(aidx++);
         }
 
-        // look for a specific app identifier
-        String appId = (aidx < args.size()) ? args.get(aidx++) : System.getProperty("appid");
+        // check for an app identifier in a sysprop and then via argv
+        String appId = SysProps.appId();
+        if (StringUtil.isBlank(appId) && aidx < args.size()) {
+            appId = args.get(aidx++);
+        }
 
         // pass along anything after that as app args
-        String[] appArgs = (aidx < args.size()) ?
-            args.subList(aidx, args.size()).toArray(ArrayUtil.EMPTY_STRING) : null;
+        String[] appArgs = (aidx >= args.size()) ? null :
+            args.subList(aidx, args.size()).toArray(ArrayUtil.EMPTY_STRING);
 
         // ensure a valid directory was supplied
         File appDir = new File(adarg);
@@ -83,7 +87,7 @@ public class GetdownApp
         }
 
         // pipe our output into a file in the application directory
-        if (System.getProperty("no_log_redir") == null) {
+        if (!SysProps.noLogRedir()) {
             File logFile = new File(appDir, "launcher.log");
             try {
                 PrintStream logOut = new PrintStream(

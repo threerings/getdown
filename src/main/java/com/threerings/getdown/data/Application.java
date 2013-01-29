@@ -1219,7 +1219,7 @@ public class Application
         }
 
         MetaProgressObserver mpobs = new MetaProgressObserver(obs, totalSize);
-        boolean noUnpack = Boolean.getBoolean("no_unpack");
+        boolean noUnpack = SysProps.noUnpack();
         for (Resource rsrc : rsrcs) {
             if (Thread.interrupted()) {
                 throw new InterruptedException("m.applet_stopped");
@@ -1658,7 +1658,7 @@ public class Application
      */
     protected String replaceDomain (String appbase)
     {
-        String appbaseDomain = System.getProperty("appbase_domain");
+        String appbaseDomain = SysProps.appbaseDomain();
         if (appbaseDomain != null) {
             Matcher m = Pattern.compile("(http://[^/]+)(.*)").matcher(appbase);
             appbase = m.replaceAll(appbaseDomain + "$2");
