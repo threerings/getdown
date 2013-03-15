@@ -567,6 +567,10 @@ public class Application
             }
         }
 
+        // check to see if we require a particular JVM version and have a supplied JVM
+        vstr = (String)cdata.get("java_exact_version_required");
+        _javaExactVersionRequired = Boolean.parseBoolean(vstr);
+
         // this is a little weird, but when we're run from the digester, we see a String[] which
         // contains java locations for all platforms which we can't grok, but the digester doesn't
         // need to know about that; when we're run in a real application there will be only one!
@@ -799,6 +803,17 @@ public class Application
         int revis = Integer.parseInt(m.group(3));
         int patch = m.group(4) == null ? 0 : Integer.parseInt(m.group(4).substring(1));
         int version = patch + 100 * (revis + 100 * (minor + 100 * major));
+
+        if (_javaExactVersionRequired) {
+            if (version != _javaVersion) {
+                return true;
+            } else {
+                log.warning("An exact Java VM version is required.", "current", version,
+                            "required", _javaVersion);
+                return false;
+            }
+        }
+
         return version >= _javaVersion;
     }
 
@@ -1672,6 +1687,7 @@ public class Application
     protected int _trackingId;
 
     protected int _javaVersion;
+    protected boolean _javaExactVersionRequired;
     protected String _javaLocation;
 
     protected List<Resource> _codes = new ArrayList<Resource>();
