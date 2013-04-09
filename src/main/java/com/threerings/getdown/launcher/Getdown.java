@@ -593,7 +593,7 @@ public abstract class Getdown extends Thread
         // Sun, why dost thou spite me? Java doesn't know anything about file permissions (and by
         // extension then, neither does Jar), so on Joonix we have to hackily make java_vm/bin/java
         // executable by execing chmod; a pox on their children!
-        if (RunAnywhere.isLinux()) {
+        if (!RunAnywhere.isWindows()) {
             String vmbin = LaunchUtil.LOCAL_JAVA_DIR + File.separator + "bin" +
                 File.separator + "java";
             String cmd = "chmod a+rx " + _app.getLocalPath(vmbin);
