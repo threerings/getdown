@@ -1509,6 +1509,11 @@ public class Application
             // about it; turning off caches is not a performance concern, because when Getdown asks
             // to download a file, it expects it to come over the wire, not from a cache
             uconn.setUseCaches(false);
+            // configure a connect timeout if requested
+            int ctimeout = SysProps.connectTimeout();
+            if (ctimeout > 0) {
+                uconn.setConnectTimeout(ctimeout * 1000);
+            }
             fin = uconn.getInputStream();
             fout = new FileOutputStream(target);
             StreamUtil.copy(fin, fout);

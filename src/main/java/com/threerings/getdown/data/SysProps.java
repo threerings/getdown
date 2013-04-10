@@ -65,4 +65,12 @@ public class SysProps
     public static boolean direct () {
         return Boolean.getBoolean("direct");
     }
+
+    /** Specifies the connection timeout (in seconds) to use when downloading control files from
+     * the server. This is chiefly useful when you are running in versionless mode and want Getdown
+     * to more quickly timeout its startup update check if the server with which it is
+     * communicating is not available. Usage: {@code -Dconnect_timeout=N}. */
+    public static int connectTimeout () {
+        return Integer.getInteger("connect_timeout", 0);
+    }
 }
