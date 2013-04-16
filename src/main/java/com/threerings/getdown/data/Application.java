@@ -1165,7 +1165,7 @@ public class Application
                 InputStream in = null;
                 PrintStream out = null;
                 try {
-                    in = _latest.openStream();
+                    in = ConnectionUtil.open(_latest).getInputStream();
                     BufferedReader bin = new BufferedReader(new InputStreamReader(in));
                     for (String[] pair : ConfigUtil.parsePairs(bin, false)) {
                         if (pair[0].equals("version")) {
