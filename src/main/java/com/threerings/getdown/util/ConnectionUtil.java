@@ -28,8 +28,10 @@ public class ConnectionUtil
         if (userInfo != null) {
             // Remove any percent-encoding in the username/password
             userInfo = URLDecoder.decode(userInfo, "UTF-8");
-            conn.setRequestProperty("Authorization", "Basic " +
-                Base64.encodeBase64String(userInfo.getBytes("UTF-8")).replaceAll("\\n",""));
+            // Now base64 encode the auth info and make it a single line
+            String encoded = Base64.encodeBase64String(userInfo.getBytes("UTF-8")).
+                replaceAll("\\n","").replaceAll("\\r", "");
+            conn.setRequestProperty("Authorization", "Basic " + encoded);
         }
 
         return conn;
