@@ -1,4 +1,4 @@
-== What is it? ==
+## What is it?
 
 Getdown (yes, it's the funky stuff) aims to provide a system for downloading and installing a
 collection of files on a user's machine and upgrading those files as needed. Though just any
@@ -9,18 +9,18 @@ It was designed as a replacement for [http://java.sun.com/products/javawebstart/
 due to limitations in Java Web Start's architecture which are outlined in the [Rationale rationale]
 section.
 
-== How do I use it? ==
+## How do I use it?
 
 A tutorial and more detailed specification are available from the [Documentation] page. Questions
 can be posted to the [OOO Libs Google group].
 
-== How does it work? ==
+## How does it work?
 
 The main design and operation of Getdown is detailed on the [Design design] page. You can also
 browse the [javadoc documentation] and [source code] if you're interested in implementation
 details.
 
-== Where can I see it in action? ==
+## Where can I see it in action?
 
 Getdown was originally written by developers at [OOO](http://www.threerings.net/) for the
 deployment of their Java-based massively multiplayer games. Try out any of the following games to
@@ -39,7 +39,7 @@ for your installer. It is probably possible to compile Getdown with
 [GCJ](http://gcc.gnu.org/java/), which would make Getdown a viable choice for non-Java
 applications.
 
-== Obtaining Getdown ==
+## Obtaining Getdown
 
 The latest version of Getdown can be obtained thusly:
 
@@ -52,8 +52,7 @@ You can also:
   * View the [javadoc documentation] online.
   * Browse the [source code] online.
 
-
-== Building ==
+## Building
 
 Getdown is built with Maven in the standard ways. Invoke the following commands, for fun and
 profit:
@@ -65,7 +64,7 @@ profit:
 % mvn install  # builds, jars and installs in your local Maven repository
 ```
 
-== Discussion ==
+## Discussion
 
 Feel free to pop over to the [OOO Libs Google Group] to ask questions and get (and give) answers.
 
