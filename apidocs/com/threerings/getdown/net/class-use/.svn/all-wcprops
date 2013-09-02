@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/471/apidocs/com/threerings/getdown/net/class-use
+END
+Downloader.html
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/471/apidocs/com/threerings/getdown/net/class-use/Downloader.html
+END
+HTTPDownloader.html
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/471/apidocs/com/threerings/getdown/net/class-use/HTTPDownloader.html
+END
+Downloader.Observer.html
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/471/apidocs/com/threerings/getdown/net/class-use/Downloader.Observer.html
+END
+DownloadAbortedException.html
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/!svn/ver/471/apidocs/com/threerings/getdown/net/class-use/DownloadAbortedException.html
+END
