@@ -71,4 +71,4 @@ Feel free to pop over to the [OOO Libs Google Group] to ask questions and get (a
 [Documentation]: https://github.com/threerings/getdown/wiki
 [OOO Libs Google group]: http://groups.google.com/group/ooo-libs
 [source code]: https://github.com/threerings/getdown/tree/master/src/main/java/com/threerings/getdown/launcher
-[javadoc documentation]: http://getdown.googlecode.com/svn/apidocs/overview-summary.html
+[javadoc documentation]: https://threerings.github.com/getdown/apidocs/
