@@ -7,7 +7,7 @@ the collection of files that make up a Java application.
 
 It was designed as a replacement for [Java Web Start](http://java.sun.com/products/javawebstart/)
 due to limitations in Java Web Start's architecture which are outlined in the
-[rationale](wiki/Rationale) section.
+[rationale](https://github.com/threerings/getdown/wiki/Rationale) section.
 
 ## How do I use it?
 
@@ -16,9 +16,9 @@ can be posted to the [OOO Libs Google group].
 
 ## How does it work?
 
-The main design and operation of Getdown is detailed on the [design](wiki/Design) page. You can
-also browse the [javadoc documentation] and [source code] if you're interested in implementation
-details.
+The main design and operation of Getdown is detailed on the
+[design](https://github.com/threerings/getdown/wiki/Design) page. You can also browse the
+[javadoc documentation] and [source code] if you're interested in implementation details.
 
 ## Where can I see it in action?
 
