@@ -805,7 +805,7 @@ public class Application
         int version = patch + 100 * (revis + 100 * (minor + 100 * major));
 
         if (_javaExactVersionRequired) {
-            if (version != _javaVersion) {
+            if (version == _javaVersion) {
                 return true;
             } else {
                 log.warning("An exact Java VM version is required.", "current", version,
