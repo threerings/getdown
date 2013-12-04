@@ -516,26 +516,11 @@ public class Application
 
         // extract our version information
         String vstr = (String)cdata.get("version");
-        if (vstr != null) {
-            try {
-                _version = Long.parseLong(vstr);
-            } catch (Exception e) {
-                String err = MessageUtil.tcompose("m.invalid_version", vstr);
-                throw (IOException) new IOException(err).initCause(e);
-            }
-        }
+        if (vstr != null) _version = parseLong(vstr, "m.invalid_version");
 
         // check to see if we require a particular max JVM version and have a supplied JVM
-        vstr = (String)cdata.get("java_version_max");
-        if (vstr != null) {
-            try {
-                _javaVersionMax = Integer.parseInt(vstr);
-            } catch (Exception e) {
-                String err = MessageUtil.tcompose("m.invalid_java_version", vstr);
-                throw (IOException) new IOException(err).initCause(e);
-            }
-        }
-
+        vstr = (String)cdata.get("java_max_version");
+        if (vstr != null) _javaMaxVersion = (int)parseLong(vstr, "m.invalid_java_version");
 
         // if we are a versioned deployment, create a versioned appbase
         try {
@@ -570,14 +555,7 @@ public class Application
 
         // check to see if we require a particular JVM version and have a supplied JVM
         vstr = (String)cdata.get("java_version");
-        if (vstr != null) {
-            try {
-                _javaVersion = Integer.parseInt(vstr);
-            } catch (Exception e) {
-                String err = MessageUtil.tcompose("m.invalid_java_version", vstr);
-                throw (IOException) new IOException(err).initCause(e);
-            }
-        }
+        if (vstr != null) _javaMinVersion = (int)parseLong(vstr, "m.invalid_java_version");
 
         // check to see if we require a particular JVM version and have a supplied JVM
         vstr = (String)cdata.get("java_exact_version_required");
@@ -789,7 +767,7 @@ public class Application
     public boolean haveValidJavaVersion ()
     {
         // if we're doing no version checking, then yay!
-        if (_javaVersion <= 0 && _javaVersionMax <= 0) {
+        if (_javaMinVersion == 0 && _javaMaxVersion == 0) {
             return true;
         }
 
@@ -806,7 +784,7 @@ public class Application
             // if we can't parse the java version we're in weird land and should probably just try
             // our luck with what we've got rather than try to download a new jvm
             log.warning("Unable to parse VM version, hoping for the best",
-                "version", verstr, "needed", _javaVersion);
+                        "version", verstr, "needed", _javaMinVersion);
             return true;
         }
 
@@ -817,24 +795,17 @@ public class Application
         int version = patch + 100 * (revis + 100 * (minor + 100 * major));
 
         if (_javaExactVersionRequired) {
-            if (version == _javaVersion) {
+            if (version == _javaMinVersion) {
                 return true;
             } else {
                 log.warning("An exact Java VM version is required.", "current", version,
-                            "required", _javaVersion);
+                            "required", _javaMinVersion);
                 return false;
             }
         }
 
-        boolean minVersionOK = true;
-        if ( _javaVersion > 0 ) {
-         minVersionOK = version >= _javaVersion;
-        }
-        boolean maxVersionOK = true;
-        if ( _javaVersionMax > 0 ) {
-         maxVersionOK = version <= _javaVersionMax;
-        }
-        
+        boolean minVersionOK = (_javaMinVersion == 0) || (version >= _javaMinVersion);
+        boolean maxVersionOK = (_javaMaxVersion == 0) || (version <= _javaMaxVersion);
         return minVersionOK && maxVersionOK;
     }
 
@@ -1687,6 +1658,20 @@ public class Application
         return appbase;
     }
 
+    /**
+     * Parses and returns a long. {@code value} must be non-null.
+     * @throws IOException on malformed value.
+     */
+    protected static long parseLong (String value, String errkey) throws IOException
+    {
+        try {
+            return Long.parseLong(value);
+        } catch (Exception e) {
+            String err = MessageUtil.tcompose(errkey, value);
+            throw (IOException) new IOException(err).initCause(e);
+        }
+    }
+
     protected File _appdir;
     protected String _appid;
     protected File _config;
@@ -1712,8 +1697,7 @@ public class Application
     protected long _trackingStart;
     protected int _trackingId;
 
-    protected int _javaVersion;
-    protected long _javaVersionMax = -1;
+    protected int _javaMinVersion, _javaMaxVersion;
     protected boolean _javaExactVersionRequired;
     protected String _javaLocation;
 
