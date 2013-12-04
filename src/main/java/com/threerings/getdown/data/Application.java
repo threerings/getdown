@@ -556,6 +556,10 @@ public class Application
         // check to see if we require a particular JVM version and have a supplied JVM
         vstr = (String)cdata.get("java_version");
         if (vstr != null) _javaMinVersion = (int)parseLong(vstr, "m.invalid_java_version");
+        // we support java_min_version as an alias of java_version; it better expresses the check
+        // that's going on and better mirrors java_max_version
+        vstr = (String)cdata.get("java_min_version");
+        if (vstr != null) _javaMinVersion = (int)parseLong(vstr, "m.invalid_java_version");
 
         // check to see if we require a particular JVM version and have a supplied JVM
         vstr = (String)cdata.get("java_exact_version_required");
