@@ -525,6 +525,18 @@ public class Application
             }
         }
 
+        // check to see if we require a particular max JVM version and have a supplied JVM
+        vstr = (String)cdata.get("java_version_max");
+        if (vstr != null) {
+            try {
+                _javaVersionMax = Integer.parseInt(vstr);
+            } catch (Exception e) {
+                String err = MessageUtil.tcompose("m.invalid_java_version", vstr);
+                throw (IOException) new IOException(err).initCause(e);
+            }
+        }
+
+
         // if we are a versioned deployment, create a versioned appbase
         try {
             if (_version < 0) {
@@ -777,7 +789,7 @@ public class Application
     public boolean haveValidJavaVersion ()
     {
         // if we're doing no version checking, then yay!
-        if (_javaVersion <= 0) {
+        if (_javaVersion <= 0 && _javaVersionMax <= 0) {
             return true;
         }
 
@@ -814,7 +826,16 @@ public class Application
             }
         }
 
-        return version >= _javaVersion;
+        boolean minVersionOK = true;
+        if ( _javaVersion > 0 ) {
+         minVersionOK = version >= _javaVersion;
+        }
+        boolean maxVersionOK = true;
+        if ( _javaVersionMax > 0 ) {
+         maxVersionOK = version <= _javaVersionMax;
+        }
+        
+        return minVersionOK && maxVersionOK;
     }
 
     /**
@@ -1692,6 +1713,7 @@ public class Application
     protected int _trackingId;
 
     protected int _javaVersion;
+    protected long _javaVersionMax = -1;
     protected boolean _javaExactVersionRequired;
     protected String _javaLocation;
 
