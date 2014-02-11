@@ -23,6 +23,12 @@ public class SysProps
         return System.getProperty("appid");
     }
 
+    /** Configures the appbase (in lieu of providing a skeleton getdown.txt, and as a last resort
+     * fallback). Usage: {@code -Dappbase=someurl}. */
+    public static String appBase () {
+        return System.getProperty("appbase");
+    }
+
     /** If true, disables redirection of logging into {@code launcher.log}.
      * Usage: {@code -Dno_log_redir}. */
     public static boolean noLogRedir () {
