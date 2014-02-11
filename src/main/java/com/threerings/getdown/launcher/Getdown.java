@@ -221,7 +221,7 @@ public abstract class Getdown extends Thread
 
         // clear out our UI
         disposeContainer();
-        _status = null;
+        _container = null;
 
         // fire up a new thread
         new Thread(this).start();
@@ -364,7 +364,7 @@ public abstract class Getdown extends Thread
             try {
                 _ifc = _app.init(true);
             } catch (IOException ioe) {
-                log.warning("Failed to parse 'getdown.txt': " + ioe);
+                log.warning("Failed to initialize: " + ioe);
                 _app.attemptRecovery(this);
                 // and re-initalize
                 _ifc = _app.init(true);
@@ -801,7 +801,7 @@ public abstract class Getdown extends Thread
                 if (LaunchUtil.mustMonitorChildren()) {
                     // close our window if it's around
                     disposeContainer();
-                    _status = null;
+                    _container = null;
                     copyStream(stderr, System.err);
                     log.info("Process exited: " + proc.waitFor());
 
@@ -862,12 +862,15 @@ public abstract class Getdown extends Thread
 
         EventQueue.invokeLater(new Runnable() {
             public void run () {
-                if (_status == null) {
-                    _container = createContainer();
+                if (_container == null || reinit) {
+                    if (_container == null) {
+                        _container = createContainer();
+                    } else {
+                        _container.removeAll();
+                    }
                     _layers = new JLayeredPane();
                     _container.add(_layers, BorderLayout.CENTER);
-                    _patchNotes = new JButton(new AbstractAction(
-                            _msgs.getString("m.patch_notes")) {
+                    _patchNotes = new JButton(new AbstractAction(_msgs.getString("m.patch_notes")) {
                         @Override public void actionPerformed (ActionEvent event) {
                             showDocument(_ifc.patchNotesUrl);
                         }
@@ -896,8 +899,6 @@ public abstract class Getdown extends Thread
 
                     _status = new StatusPanel(_msgs);
                     _layers.add(_status);
-                    initInterface();
-                } else if (reinit) {
                     initInterface();
                 }
                 showContainer();
