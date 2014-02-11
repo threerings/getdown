@@ -65,8 +65,9 @@ public class StatusPanel extends JComponent
         int height = img == null ? -1 : img.getHeight(this);
         if (width == -1 || height == -1) {
             Rectangle bounds = ifc.progress.union(ifc.status);
-            bounds.grow(5, 5);
-            _psize = bounds.getSize();
+            // assume the x inset defines the frame padding; add it on the left, right, and bottom
+            _psize = new Dimension(bounds.x + bounds.width + bounds.x,
+                                   bounds.y + bounds.height + bounds.x);
         } else {
             _psize = new Dimension(width, height);
         }
