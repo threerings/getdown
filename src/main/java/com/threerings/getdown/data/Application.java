@@ -120,7 +120,7 @@ public class Application
         public String name;
 
         /** A background color, just in case. */
-        public Color background;
+        public Color background = Color.white;
 
         /** Background image specifiers for {@link RotatingBackgrounds}. */
         public String[] rotatingBackgrounds;
