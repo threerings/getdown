@@ -1,7 +1,7 @@
 //
 // Getdown - application installer, patcher and launcher
-// Copyright (C) 2004-2013 Three Rings Design, Inc.
-// http://code.google.com/p/getdown/source/browse/LICENSE
+// Copyright (C) 2004-2014 Three Rings Design, Inc.
+// https://raw.github.com/threerings/getdown/master/LICENSE
 
 package com.threerings.getdown.data;
 
