@@ -88,6 +88,15 @@
   </dependencies>
 
   <build>
+    <resources>
+      <resource> <!-- reiterate standard dir since we're customizing, yay! -->
+        <directory>src/main/resources</directory>
+      </resource>
+      <resource> <!-- include the LICENSE file in the jar -->
+        <directory>.</directory>
+        <includes><include>LICENSE</include></includes>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
