@@ -7,9 +7,9 @@
   <version>1.4-SNAPSHOT</version>
   <name>getdown</name>
   <description>An application installer and updater.</description>
-  <url>http://code.google.com/p/getdown/</url>
+  <url>https://github.com/threerings/getdown</url>
   <issueManagement>
-    <url>http://code.google.com/p/getdown/issues/list</url>
+    <url>https://github.com/threerings/getdown/issues</url>
   </issueManagement>
 
   <parent>
@@ -35,9 +35,9 @@
   </developers>
 
   <scm>
-    <connection>scm:git:https://code.google.com/p/getdown/</connection>
-    <developerConnection>scm:git:https://code.google.com/p/getdown/</developerConnection>
-    <url>https://code.google.com/p/getdown/</url>
+    <connection>scm:git:git://github.com/threerings/getdown.git</connection>
+    <developerConnection>scm:git:git@github.com:threerings/getdown.git</developerConnection>
+    <url>https://github.com/threerings/getdown</url>
   </scm>
 
   <repositories>
