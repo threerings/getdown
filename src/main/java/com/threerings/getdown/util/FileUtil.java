@@ -49,7 +49,7 @@ public class FileUtil
             }
             if (dest.renameTo(temp)) {
                 if (source.renameTo(dest)) {
-                    if (temp.delete()) {
+                    if (!temp.delete()) {
                         log.warning("Failed to delete intermediate file " + temp + ".");
                     }
                     return true;
