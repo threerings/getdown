@@ -162,7 +162,9 @@ public abstract class Getdown extends Thread
 
         try {
             _dead = false;
-            if (detectProxy()) {
+            // if we fail to detect a proxy, but we're allowed to run offline, then go ahead and
+            // run the app anyway because we're prepared to cope with not being able to update
+            if (detectProxy() || _app.allowOffline()) {
                 getdown();
             } else if (_silent) {
                 log.warning("Need a proxy, but we don't want to bother anyone.  Exiting.");

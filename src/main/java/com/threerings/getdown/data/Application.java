@@ -830,6 +830,14 @@ public class Application
     }
 
     /**
+     * Returns true if the app should attempt to run even if we have no Internet connection.
+     */
+    public boolean allowOffline ()
+    {
+        return _allowOffline;
+    }
+
+    /**
      * Attempts to redownload the <code>getdown.txt</code> file based on information parsed from a
      * previous call to {@link #init}.
      */
