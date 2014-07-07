@@ -498,16 +498,21 @@ public class Application
             else if ((config = getLocalPath(CONFIG_FILE + "_old")).exists()) {
                 cdata = ConfigUtil.parseConfig(config, checkPlatform);
             }
+            // otherwise, issue a warning that we found no getdown file
+            else {
+                log.info("Found no getdown.txt file", "appdir", _appdir);
+            }
         } catch (Exception e) {
             log.warning("Failure reading config file", "file", config, e);
         }
+
         // if we failed to read our config file, check for an appbase specified via a system
         // property; we can use that to bootstrap ourselves back into operation
         if (cdata == null) {
-            log.info("Found no getdown.txt file. Falling back to appbase system prop",
-                     "appbase", SysProps.appBase());
+            String appbase = SysProps.appBase();
+            log.info("Attempting to obtain 'appbase' from system property", "appbase", appbase);
             cdata = new HashMap<String,Object>();
-            cdata.put("appbase", SysProps.appBase());
+            cdata.put("appbase", appbase);
         }
 
         // first determine our application base, this way if anything goes wrong later in the
