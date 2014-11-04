@@ -580,8 +580,10 @@ public class Application
         // contains java locations for all platforms which we can't grok, but the digester doesn't
         // need to know about that; when we're run in a real application there will be only one!
         Object javaloc = cdata.get("java_location");
-        if (javaloc instanceof String) {
-            _javaLocation = (String)javaloc;
+        if (javaloc instanceof String[]) {
+          if (((String[])javaloc).length > 0) {
+            _javaLocation = ((String[]) javaloc)[0];
+          }
         }
 
         // determine whether we have any tracking configuration
