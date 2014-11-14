@@ -223,7 +223,7 @@ public class Application
     /**
      * Creates an application instance with no signers.
      *
-     * @see #Application(File, String, Object[], String[], String[])
+     * @see #Application(File, String, List, String[], String[])
      */
     public Application (File appdir, String appid)
     {

@@ -535,9 +535,9 @@ public abstract class Getdown extends Thread
     }
 
     /**
-     * Load the image at the path.  Before trying the exact path/file specified we will look to see
-     *  if we can find a localized version by sticking a _<language> in front of the "." in the
-     *  filename.
+     * Load the image at the path. Before trying the exact path/file specified we will look to see
+     * if we can find a localized version by sticking a {@code _<language>} in front of the "." in
+     * the filename.
      */
     public BufferedImage loadImage (String path)
     {
