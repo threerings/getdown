@@ -319,5 +319,23 @@
         <plugin.jar.path>/usr/share/icedtea-web/plugin.jar</plugin.jar.path>
       </properties>
     </profile>
+
+    <!-- For deploying to a local place -->
+    <profile>
+      <id>deploy-local</id>
+      <distributionManagement>
+        <repository>
+          <id>deploy-local-dir</id>
+          <name>Local Maven repository</name>
+          <url>file://${deploy.local.dir}</url>
+        </repository>
+        <snapshotRepository>
+          <id>deploy-local-dir</id>
+          <name>Local Maven repository</name>
+          <url>file://${deploy.local.dir}</url>
+        </snapshotRepository>
+      </distributionManagement>
+    </profile>
+
   </profiles>
 </project>
