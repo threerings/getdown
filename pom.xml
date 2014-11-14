@@ -1,22 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>7</version>
+  </parent>
+
   <groupId>com.threerings</groupId>
   <artifactId>getdown</artifactId>
   <packaging>jar</packaging>
   <version>1.5-SNAPSHOT</version>
+
   <name>getdown</name>
   <description>An application installer and updater.</description>
   <url>https://github.com/threerings/getdown</url>
   <issueManagement>
     <url>https://github.com/threerings/getdown/issues</url>
   </issueManagement>
-
-  <parent>
-    <groupId>org.sonatype.oss</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>7</version>
-  </parent>
 
   <licenses>
     <license>
