@@ -133,10 +133,9 @@
         </configuration>
       </plugin>
       <plugin>
-        <!-- TODO: return to stock groupId when they make it work with 4.5+: com.pyx4me -->
         <groupId>com.github.wvengen</groupId>
         <artifactId>proguard-maven-plugin</artifactId>
-        <version>2.0.6</version>
+        <version>2.0.8</version>
         <executions>
          <execution>
            <phase>package</phase>
@@ -147,12 +146,12 @@
           <dependency>
             <groupId>net.sf.proguard</groupId>
             <artifactId>proguard-base</artifactId>
-            <version>4.8</version>
+            <version>5.1</version>
             <scope>runtime</scope>
           </dependency>
         </dependencies>
         <configuration>
-          <proguardVersion>4.8</proguardVersion>
+          <proguardVersion>5.1</proguardVersion>
           <outputDirectory>${project.build.directory}</outputDirectory>
           <outjar>${project.build.finalName}.jar</outjar>
           <injar>${project.build.finalName}.jar</injar>
