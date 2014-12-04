@@ -195,6 +195,13 @@
             <manifest>
               <mainClass>com.threerings.getdown.launcher.GetdownApp</mainClass>
             </manifest>
+            <manifestEntries>
+              <Permissions>all-permissions</Permissions>
+              <Application-Name>Getdown</Application-Name>
+              <Codebase>*</Codebase>
+              <Application-Library-Allowable-Codebase>*</Application-Library-Allowable-Codebase>
+              <Caller-Allowable-Codebase>*</Caller-Allowable-Codebase>
+            </manifestEntries>
           </archive>
         </configuration>
       </plugin>
