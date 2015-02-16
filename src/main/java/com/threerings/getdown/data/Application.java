@@ -560,6 +560,12 @@ public class Application
             throw new IOException("m.missing_class");
         }
 
+        // check to see if we're using a custom java.version property and regex
+        vstr = (String)cdata.get("java_version_prop");
+        if (vstr != null) _javaVersionProp = vstr;
+        vstr = (String)cdata.get("java_version_regex");
+        if (vstr != null) _javaVersionRegex = vstr;
+
         // check to see if we require a particular JVM version and have a supplied JVM
         vstr = (String)cdata.get("java_version");
         if (vstr != null) _javaMinVersion = parseLong(vstr, "m.invalid_java_version");
@@ -789,9 +795,8 @@ public class Application
         if (vmjar != null && vmjar.isMarkedValid()) return true;
 
         try {
-            // parse the version out of the java.version system property
-            long version = SysProps.parseJavaVersion(
-                "java.version", "(\\d+)\\.(\\d+)\\.(\\d+)(_\\d+)?.*");
+            // parse the version out of the java.version (or custom) system property
+            long version = SysProps.parseJavaVersion(_javaVersionProp, _javaVersionRegex);
 
             if (_javaExactVersionRequired) {
                 if (version == _javaMinVersion) return true;
@@ -1720,6 +1725,8 @@ public class Application
     protected long _trackingStart;
     protected int _trackingId;
 
+    protected String _javaVersionProp = "java.version";
+    protected String _javaVersionRegex = "(\\d+)\\.(\\d+)\\.(\\d+)(_\\d+)?.*";
     protected long _javaMinVersion, _javaMaxVersion;
     protected boolean _javaExactVersionRequired;
     protected String _javaLocation;
