@@ -5,6 +5,9 @@
 
 package com.threerings.getdown.data;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * This class encapsulates all system properties that are read and processed by Getdown. Don't
  * stick a call to {@code System.getProperty} randomly into the code, put it in here and give it an
@@ -78,5 +81,59 @@ public class SysProps
       * communicating is not available. Usage: {@code -Dconnect_timeout=N}. */
     public static int connectTimeout () {
         return Integer.getInteger("connect_timeout", 0);
+    }
+
+    /** Parses a Java version system property using the supplied regular expression. The numbers
+      * extracted from the regexp will be placed in each consecutive hundreds position in the
+      * returned value.
+      *
+      * <p>For example, {@code java.version} takes the form {@code 1.8.0_31}, and with the regexp
+      * {@code (\d+)\.(\d+)\.(\d+)(_\d+)?} we would parse {@code 1, 8, 0, 31} and combine them into
+      * the final value {@code 1080031}.
+      *
+      * <p>Note that non-numeric characters matched by the regular expression will simply be
+      * ignored, and optional groups which do not match are treated as zero in the final version
+      * calculation.
+      *
+      * <p>One can instead parse {@code java.runtime.version} which takes the form {@code
+      * 1.8.0_31-b13}. Using regexp {@code (\d+)\.(\d+)\.(\d+)_(\d+)-b(\d+)} we would parse
+      * {@code 1, 8, 0, 31, 13} and combine them into a final value {@code 108003113}.
+      *
+      * <p>Other (or future) JVMs may provide different version properties which can be parsed as
+      * desired using this general scheme as long as the numbers appear from left to right in order
+      * of significance.
+      *
+      * @throws IllegalArgumentException if no system named {@code propName} exists, or if
+      * {@code propRegex} does not match the returned version string.
+      */
+    public static long parseJavaVersion (String propName, String propRegex) {
+        String verstr = System.getProperty(propName);
+        if (verstr == null) throw new IllegalArgumentException(
+            "No system property '" + propName + "'.");
+
+        Matcher m = Pattern.compile(propRegex).matcher(verstr);
+        if (!m.matches()) throw new IllegalArgumentException(
+            "Regexp '" + propRegex + "' does not match '" + verstr + "' (from " + propName + ")");
+
+        long vers = 0L;
+        for (int ii = 1; ii <= m.groupCount(); ii++) {
+            String valstr = m.group(ii);
+            int value = (valstr == null) ? 0 : parseInt(valstr);
+            vers *= 100;
+            vers += value;
+        }
+        return vers;
+    }
+
+    private static int parseInt (String str) {
+        int value = 0;
+        for (int ii = 0, ll = str.length(); ii < ll; ii++) {
+            char c = str.charAt(ii);
+            if (c >= '0' && c <= '9') {
+                value *= 10;
+                value += (c - '0');
+            }
+        }
+        return value;
     }
 }
