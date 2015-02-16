@@ -533,10 +533,6 @@ public class Application
         String vstr = (String)cdata.get("version");
         if (vstr != null) _version = parseLong(vstr, "m.invalid_version");
 
-        // check to see if we require a particular max JVM version and have a supplied JVM
-        vstr = (String)cdata.get("java_max_version");
-        if (vstr != null) _javaMaxVersion = (int)parseLong(vstr, "m.invalid_java_version");
-
         // if we are a versioned deployment, create a versioned appbase
         try {
             _vappbase = (_version < 0) ? new URL(_appbase) : createVAppBase(_version);
@@ -571,6 +567,10 @@ public class Application
         // that's going on and better mirrors java_max_version
         vstr = (String)cdata.get("java_min_version");
         if (vstr != null) _javaMinVersion = (int)parseLong(vstr, "m.invalid_java_version");
+
+        // check to see if we require a particular max JVM version and have a supplied JVM
+        vstr = (String)cdata.get("java_max_version");
+        if (vstr != null) _javaMaxVersion = (int)parseLong(vstr, "m.invalid_java_version");
 
         // check to see if we require a particular JVM version and have a supplied JVM
         vstr = (String)cdata.get("java_exact_version_required");
