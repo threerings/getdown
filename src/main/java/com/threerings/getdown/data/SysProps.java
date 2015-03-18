@@ -5,8 +5,7 @@
 
 package com.threerings.getdown.data;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.threerings.getdown.util.VersionUtil;
 
 /**
  * This class encapsulates all system properties that are read and processed by Getdown. Don't
@@ -111,29 +110,9 @@ public class SysProps
         if (verstr == null) throw new IllegalArgumentException(
             "No system property '" + propName + "'.");
 
-        Matcher m = Pattern.compile(propRegex).matcher(verstr);
-        if (!m.matches()) throw new IllegalArgumentException(
+        long vers = VersionUtil.parseJavaVersion(propRegex, verstr);
+        if (vers == 0L) throw new IllegalArgumentException(
             "Regexp '" + propRegex + "' does not match '" + verstr + "' (from " + propName + ")");
-
-        long vers = 0L;
-        for (int ii = 1; ii <= m.groupCount(); ii++) {
-            String valstr = m.group(ii);
-            int value = (valstr == null) ? 0 : parseInt(valstr);
-            vers *= 100;
-            vers += value;
-        }
         return vers;
-    }
-
-    private static int parseInt (String str) {
-        int value = 0;
-        for (int ii = 0, ll = str.length(); ii < ll; ii++) {
-            char c = str.charAt(ii);
-            if (c >= '0' && c <= '9') {
-                value *= 10;
-                value += (c - '0');
-            }
-        }
-        return value;
     }
 }

@@ -790,16 +790,32 @@ public class Application
         // if we're doing no version checking, then yay!
         if (_javaMinVersion == 0 && _javaMaxVersion == 0) return true;
 
-        // if we have a fully unpacked VM assume it is the right version (TODO: don't)
-        Resource vmjar = getJavaVMResource();
-        if (vmjar != null && vmjar.isMarkedValid()) return true;
-
         try {
             // parse the version out of the java.version (or custom) system property
             long version = SysProps.parseJavaVersion(_javaVersionProp, _javaVersionRegex);
 
             log.info("Checking Java version", "current", version,
                      "wantMin", _javaMinVersion, "wantMax", _javaMaxVersion);
+
+            // if we have an unpacked VM, check the 'release' file for its version
+            Resource vmjar = getJavaVMResource();
+            if (vmjar != null && vmjar.isMarkedValid()) {
+                File vmdir = new File(_appdir, LaunchUtil.LOCAL_JAVA_DIR);
+                File relfile = new File(vmdir, "release");
+                if (!relfile.exists()) {
+                    log.warning("Unpacked JVM missing 'release' file. Assuming valid version.");
+                    return true;
+                }
+
+                long vmvers = VersionUtil.readReleaseVersion(relfile, _javaVersionRegex);
+                if (vmvers == 0L) {
+                    log.warning("Unable to read version from 'release' file. Assuming valid.");
+                    return true;
+                }
+
+                version = vmvers;
+                log.info("Checking version of unpacked JVM [vers=" + version + "].");
+            }
 
             if (_javaExactVersionRequired) {
                 if (version == _javaMinVersion) return true;
