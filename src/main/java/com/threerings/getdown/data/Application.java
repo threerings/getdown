@@ -798,6 +798,9 @@ public class Application
             // parse the version out of the java.version (or custom) system property
             long version = SysProps.parseJavaVersion(_javaVersionProp, _javaVersionRegex);
 
+            log.info("Checking Java version", "current", version,
+                     "wantMin", _javaMinVersion, "wantMax", _javaMaxVersion);
+
             if (_javaExactVersionRequired) {
                 if (version == _javaMinVersion) return true;
                 else {
