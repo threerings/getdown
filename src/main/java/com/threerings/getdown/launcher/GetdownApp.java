@@ -99,6 +99,8 @@ public class GetdownApp
                     String title = StringUtil.isBlank(_ifc.name) ? "" : _ifc.name;
                     if (_frame == null) {
                         _frame = new JFrame(title);
+                        _frame.setUndecorated(_ifc.hideDecorations);
+                                  
                         _frame.addWindowListener(new WindowAdapter() {
                             @Override
                             public void windowClosing (WindowEvent evt) {
