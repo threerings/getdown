@@ -170,9 +170,9 @@ public class Application
         /** The path (relative to the appdir) to a single play again image. */
         public String playAgainImage;
 
-        public boolean  hideDecorations;
-        
-        
+        /** Whether window decorations are hidden for the UI. */
+        public boolean hideDecorations;
+
         /** The global percentages for each step. A step may have more than one, and
          * the lowest reasonable one is used if a step is revisited. */
         public Map<Step, List<Integer>> stepPercentages =
@@ -694,6 +694,7 @@ public class Application
         ui.status = parseRect(cdata, "ui.status", ui.status);
         ui.statusText = parseColor(cdata, "ui.status_text", ui.statusText);
         ui.textShadow = parseColor(cdata, "ui.text_shadow", ui.textShadow);
+        ui.hideDecorations = Boolean.parseBoolean((String)cdata.get("ui.hide_decorations"));
         ui.backgroundImage = (String)cdata.get("ui.background_image");
         if (ui.backgroundImage == null) { // support legacy format
             ui.backgroundImage = (String)cdata.get("ui.background");
@@ -728,8 +729,6 @@ public class Application
         ui.playAgain = parseRect(cdata, "ui.play_again", ui.playAgain);
         ui.playAgainImage = (String)cdata.get("ui.play_again_image");
 
-        ui.hideDecorations = Boolean.parseBoolean((String)cdata.get("ui.hide_decorations"));
-                
         // step progress percentages
         for (UpdateInterface.Step step : UpdateInterface.Step.values()) {
             String spec = (String)cdata.get("ui.percents." + step.name());
