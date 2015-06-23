@@ -102,28 +102,34 @@ public class Digest
     {
         MessageDigest md = getMessageDigest();
         StringBuilder data = new StringBuilder();
-        PrintWriter pout = new PrintWriter(
-            new OutputStreamWriter(new FileOutputStream(output), "UTF-8"));
+        PrintWriter pout = null;
+        try {
+            pout = new PrintWriter(
+                    new OutputStreamWriter(new FileOutputStream(output), "UTF-8"));
 
-        // compute and append the MD5 digest of each resource in the list
-        for (Resource rsrc : resources) {
-            String path = rsrc.getPath();
-            try {
-                String digest = rsrc.computeDigest(md, null);
-                note(data, path, digest);
-                pout.println(path + " = " + digest);
-            } catch (Throwable t) {
-                throw (IOException) new IOException(
-                    "Error computing digest for: " + rsrc).initCause(t);
+            // compute and append the MD5 digest of each resource in the list
+            for (Resource rsrc : resources) {
+                String path = rsrc.getPath();
+                try {
+                    String digest = rsrc.computeDigest(md, null);
+                    note(data, path, digest);
+                    pout.println(path + " = " + digest);
+                } catch (Throwable t) {
+                    throw (IOException) new IOException(
+                        "Error computing digest for: " + rsrc).initCause(t);
+                }
+            }
+    
+            // finally compute and append the digest for the file contents
+            md.reset();
+            byte[] contents = data.toString().getBytes("UTF-8");
+            pout.println(DIGEST_FILE + " = " + StringUtil.hexlate(md.digest(contents)));
+
+        } finally {
+            if (pout != null) {
+                pout.close();
             }
         }
-
-        // finally compute and append the digest for the file contents
-        md.reset();
-        byte[] contents = data.toString().getBytes("UTF-8");
-        pout.println(DIGEST_FILE + " = " + StringUtil.hexlate(md.digest(contents)));
-
-        pout.close();
     }
 
     /**

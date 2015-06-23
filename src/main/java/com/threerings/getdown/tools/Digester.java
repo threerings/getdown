@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.apache.commons.codec.binary.Base64;
 
+import com.samskivert.io.StreamUtil;
 import com.threerings.getdown.data.Application;
 import com.threerings.getdown.data.Digest;
 import com.threerings.getdown.data.Resource;
@@ -81,26 +82,36 @@ public class Digester
         File inputFile = new File(appdir, Digest.DIGEST_FILE);
         File signatureFile = new File(appdir, Digest.DIGEST_FILE + Application.SIGNATURE_SUFFIX);
 
-        // initialize the keystore
-        KeyStore store = KeyStore.getInstance("JKS");
-        FileInputStream storeInput = new FileInputStream(storePath);
-        store.load(storeInput, storePass.toCharArray());
-        PrivateKey key = (PrivateKey)store.getKey(storeAlias, storePass.toCharArray());
+        FileInputStream storeInput = null;
+        FileInputStream dataInput = null;
+        FileOutputStream signatureOutput = null;
+        try {
+            // initialize the keystore
+            KeyStore store = KeyStore.getInstance("JKS");
+            storeInput = new FileInputStream(storePath);
+            store.load(storeInput, storePass.toCharArray());
+            PrivateKey key = (PrivateKey)store.getKey(storeAlias, storePass.toCharArray());
 
-        // sign the digest file
-        Signature sig = Signature.getInstance("SHA1withRSA");
-        FileInputStream dataInput = new FileInputStream(inputFile);
-        byte[] buffer = new byte[8192];
-        int length;
+            // sign the digest file
+            Signature sig = Signature.getInstance("SHA1withRSA");
+            dataInput = new FileInputStream(inputFile);
+            byte[] buffer = new byte[8192];
+            int length;
+    
+            sig.initSign(key);
+            while ((length = dataInput.read(buffer)) != -1) {
+                sig.update(buffer, 0, length);
+            }
 
-        sig.initSign(key);
-        while ((length = dataInput.read(buffer)) != -1) {
-            sig.update(buffer, 0, length);
+            // Write out the signature
+            signatureOutput = new FileOutputStream(signatureFile);
+            String signed = new String(Base64.encodeBase64(sig.sign()));
+            signatureOutput.write(signed.getBytes("utf8"));
+
+        } finally {
+            StreamUtil.close(storeInput);
+            StreamUtil.close(dataInput);
+            StreamUtil.close(signatureOutput);
         }
-
-        // Write out the signature
-        FileOutputStream signatureOutput = new FileOutputStream(signatureFile);
-        String signed = new String(Base64.encodeBase64(sig.sign()));
-        signatureOutput.write(signed.getBytes("utf8"));
     }
 }

@@ -149,8 +149,6 @@ public class Patcher
         FileOutputStream fout = null;
         try {
             StreamUtil.copy(in = file.getInputStream(entry), fout = new FileOutputStream(patch));
-            StreamUtil.close(fout);
-            fout = null;
 
             // move the current version of the jar to .old
             if (!FileUtil.renameTo(target, otarget)) {
@@ -168,8 +166,7 @@ public class Patcher
 
             // now apply the patch to create the new target file
             patcher = new JarDiffPatcher();
-            fout = new FileOutputStream(target);
-            patcher.patchJar(otarget.getPath(), patch.getPath(), fout, obs);
+            patcher.patchJar(otarget.getPath(), patch.getPath(), target, obs);
 
         } catch (IOException ioe) {
             if (patcher == null) {
