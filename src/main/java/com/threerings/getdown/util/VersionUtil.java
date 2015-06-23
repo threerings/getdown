@@ -110,7 +110,6 @@ public class VersionUtil
         } finally {
             StreamUtil.close(in);
         }
-
     }
 
     private static int parseInt (String str) {

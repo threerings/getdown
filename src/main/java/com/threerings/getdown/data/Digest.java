@@ -17,6 +17,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.List;
 
+import com.samskivert.io.StreamUtil;
 import com.samskivert.text.MessageUtil;
 import com.samskivert.util.StringUtil;
 
@@ -104,8 +105,7 @@ public class Digest
         StringBuilder data = new StringBuilder();
         PrintWriter pout = null;
         try {
-            pout = new PrintWriter(
-                    new OutputStreamWriter(new FileOutputStream(output), "UTF-8"));
+            pout = new PrintWriter(new OutputStreamWriter(new FileOutputStream(output), "UTF-8"));
 
             // compute and append the MD5 digest of each resource in the list
             for (Resource rsrc : resources) {
@@ -119,16 +119,14 @@ public class Digest
                         "Error computing digest for: " + rsrc).initCause(t);
                 }
             }
-    
+
             // finally compute and append the digest for the file contents
             md.reset();
             byte[] contents = data.toString().getBytes("UTF-8");
             pout.println(DIGEST_FILE + " = " + StringUtil.hexlate(md.digest(contents)));
 
         } finally {
-            if (pout != null) {
-                pout.close();
-            }
+            StreamUtil.close(pout);
         }
     }
 

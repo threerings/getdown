@@ -82,8 +82,7 @@ public class Digester
         File inputFile = new File(appdir, Digest.DIGEST_FILE);
         File signatureFile = new File(appdir, Digest.DIGEST_FILE + Application.SIGNATURE_SUFFIX);
 
-        FileInputStream storeInput = null;
-        FileInputStream dataInput = null;
+        FileInputStream storeInput = null, dataInput = null;
         FileOutputStream signatureOutput = null;
         try {
             // initialize the keystore
@@ -97,7 +96,7 @@ public class Digester
             dataInput = new FileInputStream(inputFile);
             byte[] buffer = new byte[8192];
             int length;
-    
+
             sig.initSign(key);
             while ((length = dataInput.read(buffer)) != -1) {
                 sig.update(buffer, 0, length);
@@ -109,9 +108,9 @@ public class Digester
             signatureOutput.write(signed.getBytes("utf8"));
 
         } finally {
-            StreamUtil.close(storeInput);
-            StreamUtil.close(dataInput);
             StreamUtil.close(signatureOutput);
+            StreamUtil.close(dataInput);
+            StreamUtil.close(storeInput);
         }
     }
 }

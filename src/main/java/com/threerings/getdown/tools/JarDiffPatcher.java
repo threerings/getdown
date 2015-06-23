@@ -25,6 +25,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 
+import com.samskivert.io.StreamUtil;
 import com.threerings.getdown.util.ProgressObserver;
 
 /**
@@ -43,15 +44,12 @@ public class JarDiffPatcher implements JarDiffCodes
      *
      * @throws IOException if any problem occurs during patching.
      */
-    public void patchJar (String jarPath, String diffPath, File target,
-                          ProgressObserver observer)
+    public void patchJar (String jarPath, String diffPath, File target, ProgressObserver observer)
         throws IOException
     {
-        File oldFile = new File(jarPath);
-        File diffFile = new File(diffPath);
+        File oldFile = new File(jarPath), diffFile = new File(diffPath);
         JarOutputStream jos = null;
-        JarFile oldJar = null;
-        JarFile jarDiff = null;
+        JarFile oldJar = null, jarDiff = null;
         try {
             jos = new JarOutputStream(new FileOutputStream(target));
             oldJar = new JarFile(oldFile);
@@ -60,10 +58,10 @@ public class JarDiffPatcher implements JarDiffCodes
 
             Map<String, String> renameMap = new HashMap<String, String>();
             determineNameMapping(jarDiff, ignoreSet, renameMap);
-    
+
             // get all keys in renameMap
             String[] keys = renameMap.keySet().toArray(new String[renameMap.size()]);
-    
+
             // Files to implicit move
             Set<String> oldjarNames  = new HashSet<String>();
             Enumeration<JarEntry> oldEntries = oldJar.entries();
@@ -72,7 +70,7 @@ public class JarDiffPatcher implements JarDiffCodes
                     oldjarNames.add(oldEntries.nextElement().getName());
                 }
             }
-    
+
             // size depends on the three parameters below, which is basically the
             // counter for each loop that do the actual writes to the output file
             // since oldjarNames.size() changes in the first two loop below, we
@@ -80,11 +78,11 @@ public class JarDiffPatcher implements JarDiffCodes
             // changes
             double size = oldjarNames.size() + keys.length + jarDiff.size();
             double currentEntry = 0;
-    
+
             // Handle all remove commands
             oldjarNames.removeAll(ignoreSet);
             size -= ignoreSet.size();
-    
+
             // Add content from JARDiff
             Enumeration<JarEntry> entries = jarDiff.entries();
             if (entries != null) {
@@ -94,36 +92,36 @@ public class JarDiffPatcher implements JarDiffCodes
                         updateObserver(observer, currentEntry, size);
                         currentEntry++;
                         writeEntry(jos, entry, jarDiff);
-    
+
                         // Remove entry from oldjarNames since no implicit move is
                         // needed
                         boolean wasInOld = oldjarNames.remove(entry.getName());
-    
+
                         // Update progress counters. If it was in old, we do not
                         // need an implicit move, so adjust total size.
                         if (wasInOld) {
                             size--;
                         }
-    
+
                     } else {
                         // no write is done, decrement size
                         size--;
                     }
                 }
             }
-    
+
             // go through the renameMap and apply move for each entry
             for (String newName : keys) {
                 // Apply move <oldName> <newName> command
                 String oldName = renameMap.get(newName);
-    
+
                 // Get source JarEntry
                 JarEntry oldEntry = oldJar.getJarEntry(oldName);
                 if (oldEntry == null) {
                     String moveCmd = MOVE_COMMAND + oldName + " " + newName;
                     throw new IOException("error.badmove: " + moveCmd);
                 }
-    
+
                 // Create dest JarEntry
                 JarEntry newEntry = new JarEntry(newName);
                 newEntry.setTime(oldEntry.getTime());
@@ -133,22 +131,22 @@ public class JarDiffPatcher implements JarDiffCodes
                 newEntry.setMethod(oldEntry.getMethod());
                 newEntry.setExtra(oldEntry.getExtra());
                 newEntry.setComment(oldEntry.getComment());
-    
+
                 updateObserver(observer, currentEntry, size);
                 currentEntry++;
-    
+
                 writeEntry(jos, newEntry, oldJar.getInputStream(oldEntry));
-    
+
                 // Remove entry from oldjarNames since no implicit move is needed
                 boolean wasInOld = oldjarNames.remove(oldName);
-    
+
                 // Update progress counters. If it was in old, we do not need an
                 // implicit move, so adjust total size.
                 if (wasInOld) {
                     size--;
                 }
             }
-    
+
             // implicit move
             Iterator<String> iEntries = oldjarNames.iterator();
             if (iEntries != null) {
@@ -163,18 +161,17 @@ public class JarDiffPatcher implements JarDiffCodes
             updateObserver(observer, currentEntry, size);
 
         } finally {
-            jos = closeStream(jos);
-            oldJar = closeFile(oldJar);
-            jarDiff = closeFile(jarDiff);
+            StreamUtil.close(jos);
+            closeFile(oldJar);
+            closeFile(jarDiff);
         }
     }
 
-    protected void updateObserver (ProgressObserver observer,
-                                   double currentSize, double size)
+    protected void updateObserver (ProgressObserver observer, double currentSize, double size)
     {
-	if (observer != null) {
-	    observer.progress((int)(100*currentSize/size));
-	}
+        if (observer != null) {
+            observer.progress((int)(100*currentSize/size));
+        }
     }
 
     protected void determineNameMapping (
@@ -289,27 +286,17 @@ public class JarDiffPatcher implements JarDiffCodes
         data.close();
     }
 
-    private static JarFile closeFile(JarFile jar) {
+    private static void closeFile (JarFile jar) {
         if (jar != null) {
             try {
                 jar.close();
             } catch (IOException e) {
+                e.printStackTrace(System.err);
             }
         }
-        return null;
     }
 
-    private static JarOutputStream closeStream(JarOutputStream jar) {
-        if (jar != null) {
-            try {
-                jar.close();
-            } catch (IOException e) {
-            }
-        }
-        return null;
-    }
-
-        protected static final int DEFAULT_READ_SIZE = 2048;
+    protected static final int DEFAULT_READ_SIZE = 2048;
 
     protected static byte[] newBytes = new byte[DEFAULT_READ_SIZE];
     protected static byte[] oldBytes = new byte[DEFAULT_READ_SIZE];
