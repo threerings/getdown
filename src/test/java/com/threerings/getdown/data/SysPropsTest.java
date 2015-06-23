@@ -6,7 +6,6 @@
 package com.threerings.getdown.data;
 
 import org.junit.*;
-import static org.junit.Assert.*;
 
 public class SysPropsTest {
 
