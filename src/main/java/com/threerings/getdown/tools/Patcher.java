@@ -149,6 +149,8 @@ public class Patcher
         FileOutputStream fout = null;
         try {
             StreamUtil.copy(in = file.getInputStream(entry), fout = new FileOutputStream(patch));
+            StreamUtil.close(fout);
+            fout = null;
 
             // move the current version of the jar to .old
             if (!FileUtil.renameTo(target, otarget)) {
