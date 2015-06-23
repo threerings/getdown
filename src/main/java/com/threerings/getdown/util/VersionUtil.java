@@ -32,11 +32,10 @@ public class VersionUtil
      */
     public static long readVersion (File vfile)
     {
-        FileInputStream fin = null;
         long fileVersion = -1;
+        BufferedReader bin = null;
         try {
-            fin = new FileInputStream(vfile);
-            BufferedReader bin = new BufferedReader(new InputStreamReader(fin));
+            bin = new BufferedReader(new InputStreamReader(new FileInputStream(vfile)));
             String vstr = bin.readLine();
             if (!StringUtil.isBlank(vstr)) {
                 fileVersion = Long.parseLong(vstr);
@@ -44,7 +43,7 @@ public class VersionUtil
         } catch (Exception e) {
             log.info("Unable to read version file: " + e.getMessage());
         } finally {
-            StreamUtil.close(fin);
+            StreamUtil.close(bin);
         }
 
         return fileVersion;
@@ -89,15 +88,15 @@ public class VersionUtil
      */
     public static long readReleaseVersion (File relfile, String versRegex)
     {
+        BufferedReader in = null;
         try {
-            BufferedReader in = new BufferedReader(new FileReader(relfile));
+            in = new BufferedReader(new FileReader(relfile));
             String line = null, relvers = null;
             while ((line = in.readLine()) != null) {
                 if (line.startsWith("JAVA_VERSION=")) {
                     relvers = line.substring("JAVA_VERSION=".length()).replace('"', ' ').trim();
                 }
             }
-            in.close();
 
             if (relvers == null) {
                 log.warning("No JAVA_VERSION line in 'release' file", "file", relfile);
@@ -108,6 +107,8 @@ public class VersionUtil
         } catch (Exception e) {
             log.warning("Failed to read version from 'release' file", "file", relfile, e);
             return 0L;
+        } finally {
+            StreamUtil.close(in);
         }
 
     }
