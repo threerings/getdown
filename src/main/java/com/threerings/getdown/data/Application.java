@@ -5,18 +5,8 @@
 
 package com.threerings.getdown.data;
 
-import com.samskivert.io.StreamUtil;
-import com.samskivert.text.MessageUtil;
-import com.samskivert.util.ArrayUtil;
-import com.samskivert.util.RandomUtil;
-import com.samskivert.util.RunAnywhere;
-import com.samskivert.util.StringUtil;
-import com.threerings.getdown.launcher.RotatingBackgrounds;
-import com.threerings.getdown.util.*;
-import org.apache.commons.codec.binary.Base64;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Rectangle;
 import java.io.*;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -29,10 +19,22 @@ import java.nio.channels.OverlappingFileLockException;
 import java.security.*;
 import java.security.cert.Certificate;
 import java.util.*;
-import java.util.List;
-import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.swing.JApplet;
+
+import com.samskivert.io.StreamUtil;
+import com.samskivert.text.MessageUtil;
+import com.samskivert.util.ArrayUtil;
+import com.samskivert.util.RandomUtil;
+import com.samskivert.util.RunAnywhere;
+import com.samskivert.util.StringUtil;
+
+import org.apache.commons.codec.binary.Base64;
+
+import com.threerings.getdown.launcher.RotatingBackgrounds;
+import com.threerings.getdown.util.*;
 
 import static com.threerings.getdown.Log.log;
 
@@ -594,8 +596,8 @@ public class Application
         _txtJvmArgs.clear();
 
         // parse our code resources
-        if (ConfigUtil.getMultiValue(cdata, "code") == null
-                && ConfigUtil.getMultiValue(cdata, "ucode") == null) {
+        if (ConfigUtil.getMultiValue(cdata, "code") == null &&
+            ConfigUtil.getMultiValue(cdata, "ucode") == null) {
             throw new IOException("m.missing_code");
         }
         parseResources(cdata, "code", false, _codes);
@@ -984,7 +986,7 @@ public class Application
         for (String assignment : envvar) {
             envAssignments.add(processArg(assignment));
         }
-        for (Entry<String, String> environmentEntry : System.getenv().entrySet()) {
+        for (Map.Entry<String, String> environmentEntry : System.getenv().entrySet()) {
             envAssignments.add(environmentEntry.getKey() + "=" + environmentEntry.getValue());
         }
         String[] envp = envAssignments.toArray(new String[envAssignments.size()]);

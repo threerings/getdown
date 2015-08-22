@@ -5,11 +5,6 @@
 
 package com.threerings.getdown.data;
 
-import com.samskivert.io.StreamUtil;
-import com.samskivert.util.FileUtil;
-import com.samskivert.util.StringUtil;
-import com.threerings.getdown.util.ProgressObserver;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -21,6 +16,12 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+
+import com.samskivert.io.StreamUtil;
+import com.samskivert.util.StringUtil;
+
+import com.threerings.getdown.util.FileUtil;
+import com.threerings.getdown.util.ProgressObserver;
 
 import static com.threerings.getdown.Log.log;
 
@@ -37,17 +38,18 @@ public class Resource
         _path = path;
         _remote = remote;
         _local = local;
-        _marker = new File(_local.getPath() + "v");
+        String lpath = _local.getPath();
+        _marker = new File(lpath + "v");
 
         _unpack = unpack;
-        _isJar = _local.getPath().endsWith(".jar");
-        _isPacked200Jar = _local.getPath().endsWith(".jar.pack") || _local.getPath().endsWith(".jar.pack.gz");
-        if(_unpack && _isJar){
-           _unpacked = _local.getParentFile();
-        } else if(_unpack && _isPacked200Jar){
-            String jarExtension = ".jar";
-           _unpacked = new File(_local.getParent(),
-                   _local.getName().substring(0, _local.getName().lastIndexOf(jarExtension) + jarExtension.length()));
+        _isJar = lpath.endsWith(".jar");
+        _isPacked200Jar = (lpath.endsWith(".jar.pack") || lpath.endsWith(".jar.pack.gz"));
+        if (_unpack && _isJar) {
+            _unpacked = _local.getParentFile();
+        } else if(_unpack && _isPacked200Jar) {
+            String dotJar = ".jar", lname = _local.getName();
+            String uname = lname.substring(0, lname.lastIndexOf(dotJar) + dotJar.length());
+            _unpacked = new File(_local.getParent(), uname);
         }
     }
 
@@ -68,21 +70,19 @@ public class Resource
     }
 
     /**
-     *  Returns the location of the unpacked resource
+     *  Returns the location of the unpacked resource.
      */
-    public File getUnpacked(){
+    public File getUnpacked ()
+    {
         return _unpacked;
     }
 
     /**
-     *  Returns the final target of this resource, wheter it has been unpacked or not
+     *  Returns the final target of this resource, whether it has been unpacked or not.
      */
-    public File getFinalTarget(){
-       if(shouldUnpack()){
-           return getUnpacked();
-       } else{
-           return getLocal();
-       }
+    public File getFinalTarget ()
+    {
+        return shouldUnpack() ? getUnpacked() : getLocal();
     }
 
     /**
@@ -162,10 +162,10 @@ public class Resource
             return false;
         }
         try {
-            if(_isJar){
+            if (_isJar) {
                 return FileUtil.unpackJar(new JarFile(_local), _unpacked);
             } else{
-                return com.threerings.getdown.util.FileUtil.unpackPacked200Jar(_local, _unpacked);
+                return FileUtil.unpackPacked200Jar(_local, _unpacked);
             }
         } catch (IOException ioe) {
             log.warning("Failed to create JarFile from '" + _local + "': " + ioe);
@@ -174,8 +174,8 @@ public class Resource
     }
 
     /**
-     * Wipes this resource file along with any "validated" marker file
-     * that may be associated with it.
+     * Wipes this resource file along with any "validated" marker file that may be associated with
+     * it.
      */
     public void erase ()
     {
