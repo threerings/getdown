@@ -5,17 +5,14 @@
 
 package com.threerings.getdown.util;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.Reader;
+import com.samskivert.io.StreamUtil;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.samskivert.io.StreamUtil;
+import java.util.jar.JarOutputStream;
+import java.util.jar.Pack200;
+import java.util.zip.GZIPInputStream;
 
 import static com.threerings.getdown.Log.log;
 
@@ -95,5 +92,29 @@ public class FileUtil
             StreamUtil.close(in);
         }
         return lines;
+    }
+
+    public static boolean unpackPacked200Jar(File packedJar, File target){
+        InputStream packedJarIs = null;
+        FileOutputStream extractedJarFileOs = null;
+        JarOutputStream jarOutputStream = null;
+        try{
+            extractedJarFileOs = new FileOutputStream(target);
+            jarOutputStream = new JarOutputStream(extractedJarFileOs);
+            packedJarIs = new FileInputStream(packedJar);
+            if(packedJar.getName().endsWith(".gz")){
+                packedJarIs = new GZIPInputStream(packedJarIs);
+            }
+            Pack200.Unpacker unpacker = Pack200.newUnpacker();
+            unpacker.unpack(packedJarIs, jarOutputStream);
+            return true;
+        } catch(IOException e){
+            log.warning("Failed to unpack packed 200 jar file", "jar", packedJar, "error", e);
+            return false;
+        } finally {
+            StreamUtil.close(jarOutputStream);
+            StreamUtil.close(extractedJarFileOs);
+            StreamUtil.close(packedJarIs);
+        }
     }
 }
