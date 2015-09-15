@@ -5,10 +5,7 @@
 
 package com.threerings.getdown.data;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.util.Collections;
@@ -16,12 +13,14 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.jar.JarInputStream;
 
 import com.samskivert.io.StreamUtil;
 import com.samskivert.util.StringUtil;
 
 import com.threerings.getdown.util.FileUtil;
 import com.threerings.getdown.util.ProgressObserver;
+import sun.misc.IOUtils;
 
 import static com.threerings.getdown.Log.log;
 
@@ -42,8 +41,8 @@ public class Resource
         _marker = new File(lpath + "v");
 
         _unpack = unpack;
-        _isJar = lpath.endsWith(".jar");
-        _isPacked200Jar = (lpath.endsWith(".jar.pack") || lpath.endsWith(".jar.pack.gz"));
+        _isJar = isJar(lpath);
+        _isPacked200Jar = isPacked200Jar(lpath);
         if (_unpack && _isJar) {
             _unpacked = _local.getParentFile();
         } else if(_unpack && _isPacked200Jar) {
@@ -218,6 +217,14 @@ public class Resource
         return _path;
     }
 
+    private static boolean isJar(String path){
+        return path.endsWith(".jar");
+    }
+
+    private static boolean isPacked200Jar(String path){
+        return path.endsWith(".jar.pack") || path.endsWith(".jar.pack.gz");
+    }
+
     /**
      * Computes the MD5 hash of the supplied file.
      */
@@ -229,12 +236,25 @@ public class Resource
         byte[] buffer = new byte[DIGEST_BUFFER_SIZE];
         int read;
 
+        boolean isJar = isJar(target.getPath());
+        boolean isPacked200Jar = isPacked200Jar(target.getPath());
+
         // if this is a jar file, we need to compute the digest in a
         // timestamp and file order agnostic manner to properly correlate
         // jardiff patched jars with their unpatched originals
-        if (target.getPath().endsWith(".jar")) {
-            JarFile jar = new JarFile(target);
+        if(isJar || isPacked200Jar){
+            File tmpJarFile = null;
+            JarFile jar = null;
             try {
+                // if this is a compressed jar file, we need to uncompress it to compute the jar file digest
+                if(isPacked200Jar){
+                    tmpJarFile = new File(target.getPath() + ".tmp");
+                    FileUtil.unpackPacked200Jar(target, tmpJarFile);
+                    jar = new JarFile(tmpJarFile);
+                } else{
+                    jar = new JarFile(target);
+                }
+
                 List<JarEntry> entries = Collections.list(jar.entries());
                 Collections.sort(entries, ENTRY_COMP);
 
@@ -261,12 +281,16 @@ public class Resource
 
             } finally {
                 try {
-                    jar.close();
+                    if(jar != null){
+                        jar.close();
+                    }
                 } catch (IOException ioe) {
                     log.warning("Error closing jar [path=" + target + ", error=" + ioe + "].");
                 }
+                if(tmpJarFile != null){
+                    tmpJarFile.delete();
+                }
             }
-
         } else {
             long totalSize = target.length(), position = 0L;
             FileInputStream fin = null;
