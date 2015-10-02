@@ -20,7 +20,6 @@ import com.samskivert.util.StringUtil;
 
 import com.threerings.getdown.util.FileUtil;
 import com.threerings.getdown.util.ProgressObserver;
-import sun.misc.IOUtils;
 
 import static com.threerings.getdown.Log.log;
 
@@ -186,11 +185,7 @@ public class Resource
         }
     }
 
-    /**
-     * If our path is equal, we are equal.
-     */
-    @Override
-    public boolean equals (Object other)
+    @Override public boolean equals (Object other)
     {
         if (other instanceof Resource) {
             return _path.equals(((Resource)other)._path);
@@ -199,37 +194,20 @@ public class Resource
         }
     }
 
-    /**
-     * We hash on our path.
-     */
-    @Override
-    public int hashCode ()
+    @Override public int hashCode ()
     {
         return _path.hashCode();
     }
 
-    /**
-     * Returns a string representation of this instance.
-     */
-    @Override
-    public String toString ()
+    @Override public String toString ()
     {
         return _path;
-    }
-
-    private static boolean isJar(String path){
-        return path.endsWith(".jar");
-    }
-
-    private static boolean isPacked200Jar(String path){
-        return path.endsWith(".jar.pack") || path.endsWith(".jar.pack.gz");
     }
 
     /**
      * Computes the MD5 hash of the supplied file.
      */
-    public static String computeDigest (
-        File target, MessageDigest md, ProgressObserver obs)
+    public static String computeDigest (File target, MessageDigest md, ProgressObserver obs)
         throws IOException
     {
         md.reset();
@@ -239,15 +217,14 @@ public class Resource
         boolean isJar = isJar(target.getPath());
         boolean isPacked200Jar = isPacked200Jar(target.getPath());
 
-        // if this is a jar file, we need to compute the digest in a
-        // timestamp and file order agnostic manner to properly correlate
-        // jardiff patched jars with their unpatched originals
-        if(isJar || isPacked200Jar){
+        // if this is a jar, we need to compute the digest in a "timestamp and file order" agnostic
+        // manner to properly correlate jardiff patched jars with their unpatched originals
+        if (isJar || isPacked200Jar){
             File tmpJarFile = null;
             JarFile jar = null;
             try {
-                // if this is a compressed jar file, we need to uncompress it to compute the jar file digest
-                if(isPacked200Jar){
+                // if this is a compressed jar file, uncompress it to compute the jar file digest
+                if (isPacked200Jar){
                     tmpJarFile = new File(target.getPath() + ".tmp");
                     FileUtil.unpackPacked200Jar(target, tmpJarFile);
                     jar = new JarFile(tmpJarFile);
@@ -280,17 +257,18 @@ public class Resource
                 }
 
             } finally {
-                try {
-                    if(jar != null){
+                if (jar != null) {
+                    try {
                         jar.close();
+                    } catch (IOException ioe) {
+                        log.warning("Error closing jar", "path", target, "jar", jar, "error", ioe);
                     }
-                } catch (IOException ioe) {
-                    log.warning("Error closing jar [path=" + target + ", error=" + ioe + "].");
                 }
-                if(tmpJarFile != null){
+                if (tmpJarFile != null) {
                     tmpJarFile.delete();
                 }
             }
+
         } else {
             long totalSize = target.length(), position = 0L;
             FileInputStream fin = null;
@@ -309,12 +287,21 @@ public class Resource
     }
 
     /** Helper function to simplify the process of reporting progress. */
-    protected static void updateProgress (
-        ProgressObserver obs, long pos, long total)
+    protected static void updateProgress (ProgressObserver obs, long pos, long total)
     {
         if (obs != null) {
             obs.progress((int)(100 * pos / total));
         }
+    }
+
+    protected static boolean isJar (String path)
+    {
+        return path.endsWith(".jar");
+    }
+
+    protected static boolean isPacked200Jar (String path)
+    {
+        return path.endsWith(".jar.pack") || path.endsWith(".jar.pack.gz");
     }
 
     protected String _path;
@@ -323,9 +310,8 @@ public class Resource
     protected boolean _unpack, _isJar, _isPacked200Jar;
 
     /** Used to sort the entries in a jar file. */
-    protected static final Comparator<JarEntry> ENTRY_COMP =
-            new Comparator<JarEntry>() {
-        public int compare (JarEntry e1, JarEntry e2) {
+    protected static final Comparator<JarEntry> ENTRY_COMP = new Comparator<JarEntry>() {
+        @Override public int compare (JarEntry e1, JarEntry e2) {
             return e1.getName().compareTo(e2.getName());
         }
     };
