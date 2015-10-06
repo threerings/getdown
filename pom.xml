@@ -19,6 +19,10 @@
     <url>https://github.com/threerings/getdown/issues</url>
   </issueManagement>
 
+  <prerequisites>
+    <maven>3.3.0</maven>
+  </prerequisites>
+
   <licenses>
     <license>
       <name>GNU Lesser General Public License (LGPL), Version 2.1</name>
@@ -98,11 +102,12 @@
         <includes><include>LICENSE</include></includes>
       </resource>
     </resources>
+
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.1</version>
+        <version>3.3</version>
         <configuration>
           <source>1.5</source>
           <target>1.5</target>
@@ -116,23 +121,26 @@
           </compilerArgs>
         </configuration>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
-        <version>2.4.3</version>
+        <version>2.7</version>
         <configuration>
           <encoding>UTF-8</encoding>
         </configuration>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>2.7</version>
+        <version>2.10.3</version>
         <configuration>
           <quiet>true</quiet>
           <show>public</show>
         </configuration>
       </plugin>
+
       <plugin>
         <groupId>com.github.wvengen</groupId>
         <artifactId>proguard-maven-plugin</artifactId>
@@ -186,10 +194,11 @@
           <addMavenDescriptor>false</addMavenDescriptor>
         </configuration>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>2.3.1</version>
+        <version>2.6</version>
         <configuration>
           <archive>
             <manifest>
@@ -260,7 +269,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
-            <version>1.1</version>
+            <version>1.6</version>
             <executions>
               <execution>
                 <id>sign-artifacts</id>
