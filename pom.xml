@@ -214,6 +214,19 @@
           </archive>
         </configuration>
       </plugin>
+
+      <plugin>
+        <groupId>org.sonatype.plugins</groupId>
+        <artifactId>nexus-staging-maven-plugin</artifactId>
+        <version>1.6.6</version>
+        <extensions>true</extensions>
+        <inherited>false</inherited>
+        <configuration>
+          <serverId>ossrh-releases</serverId>
+          <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+          <stagingProfileId>aa555c46fc37d0</stagingProfileId>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
