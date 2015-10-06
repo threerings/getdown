@@ -142,6 +142,9 @@ public class Application
         /** Whether window decorations are hidden for the UI. */
         public boolean hideDecorations;
 
+        /** Whether progress text should be hidden or not. */
+        public boolean hideProgressText;
+
         /** The global percentages for each step. A step may have more than one, and
          * the lowest reasonable one is used if a step is revisited. */
         public Map<Step, List<Integer>> stepPercentages =
@@ -156,7 +159,8 @@ public class Application
                 ", pb=" + progressBar + ", srect=" + status + ", st=" + statusText +
                 ", shadow=" + textShadow + ", err=" + installError + ", nrect=" + patchNotes +
                 ", notes=" + patchNotesUrl + ", stepPercentages=" + stepPercentages +
-                ", parect=" + playAgain + ", paimage=" + playAgainImage + "]";
+                ", parect=" + playAgain + ", paimage=" + playAgainImage +
+                ", hideProgressText" + hideProgressText + "]";
         }
 
         /** Initializer */
@@ -662,6 +666,7 @@ public class Application
         _name = ui.name = (String)cdata.get("ui.name");
         ui.progress = parseRect(cdata, "ui.progress", ui.progress);
         ui.progressText = parseColor(cdata, "ui.progress_text", ui.progressText);
+        ui.hideProgressText =  Boolean.parseBoolean((String)cdata.get("ui.hide_progress_text"));
         ui.progressBar = parseColor(cdata, "ui.progress_bar", ui.progressBar);
         ui.status = parseRect(cdata, "ui.status", ui.status);
         ui.statusText = parseColor(cdata, "ui.status_text", ui.statusText);
