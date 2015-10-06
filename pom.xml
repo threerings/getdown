@@ -287,16 +287,7 @@
       </build>
     </profile>
 
-    <!-- finagling to deal with rt.jar not existing on Macs, thanks Apple! -->
-    <profile>
-      <id>mac</id>
-      <activation>
-        <file><exists>${java.home}/../Classes/classes.jar</exists></file>
-      </activation>
-      <properties>
-        <rt.jar.path>${java.home}/../Classes/classes.jar</rt.jar.path>
-      </properties>
-    </profile>
+    <!-- finagling to find rt.jar -->
     <profile>
       <id>non-mac-jre</id>
       <activation>
