@@ -528,10 +528,10 @@ public class Application
             }
         }
 
-        String prefix = StringUtil.isBlank(_appid) ? "" : (_appid + ".");
+        String appPrefix = StringUtil.isBlank(_appid) ? "" : (_appid + ".");
 
         // determine our application class name
-        _class = (String)cdata.get(prefix + "class");
+        _class = (String)cdata.get(appPrefix + "class");
         if (_class == null) {
             throw new IOException("m.missing_class");
         }
@@ -622,9 +622,13 @@ public class Application
             _auxgroups.put(auxgroup, new AuxGroup(auxgroup, codes, rsrcs));
         }
 
-        // transfer our JVM arguments
+        // transfer our JVM arguments (we include both "global" args and app_id-prefixed args)
         String[] jvmargs = ConfigUtil.getMultiValue(cdata, "jvmarg");
         addAll(jvmargs, _jvmargs);
+        if (appPrefix.length() > 0) {
+            jvmargs = ConfigUtil.getMultiValue(cdata, appPrefix + "jvmarg");
+            addAll(jvmargs, _jvmargs);
+        }
 
         // Add the launch specific JVM arguments
         addAll(_extraJvmArgs, _jvmargs);
@@ -633,7 +637,7 @@ public class Application
         _optimumJvmArgs = ConfigUtil.getMultiValue(cdata, "optimum_jvmarg");
 
         // transfer our application arguments
-        String[] appargs = ConfigUtil.getMultiValue(cdata, prefix + "apparg");
+        String[] appargs = ConfigUtil.getMultiValue(cdata, appPrefix + "apparg");
         addAll(appargs, _appargs);
 
         // add the launch specific application arguments
