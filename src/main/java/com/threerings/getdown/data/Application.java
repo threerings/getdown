@@ -624,32 +624,20 @@ public class Application
 
         // transfer our JVM arguments
         String[] jvmargs = ConfigUtil.getMultiValue(cdata, "jvmarg");
-        if (jvmargs != null) {
-            for (String jvmarg : jvmargs) {
-                _jvmargs.add(jvmarg);
-            }
-        }
+        addAll(jvmargs, _jvmargs);
 
         // Add the launch specific JVM arguments
-        for (String arg : _extraJvmArgs) {
-            _jvmargs.add(arg);
-        }
+        addAll(_extraJvmArgs, _jvmargs);
 
         // get the set of optimum JVM arguments
         _optimumJvmArgs = ConfigUtil.getMultiValue(cdata, "optimum_jvmarg");
 
         // transfer our application arguments
         String[] appargs = ConfigUtil.getMultiValue(cdata, prefix + "apparg");
-        if (appargs != null) {
-            for (String apparg : appargs) {
-                _appargs.add(apparg);
-            }
-        }
+        addAll(appargs, _appargs);
 
         // add the launch specific application arguments
-        for (String arg : _extraAppArgs) {
-            _appargs.add(arg);
-        }
+        addAll(_extraAppArgs, _appargs);
 
         // look for custom arguments
         fillAssignmentListFromPairs("extra.txt", _txtJvmArgs);
@@ -1566,6 +1554,15 @@ public class Application
         String value = (String)cdata.get(name);
         Rectangle rect = parseRect(name, value);
         return (rect == null) ? def : rect;
+    }
+
+    /** Helper function to add all values in {@code values} (if non-null) to {@code target}. */
+    protected static void addAll (String[] values, List<String> target) {
+        if (values != null) {
+            for (String value : values) {
+                target.add(value);
+            }
+        }
     }
 
     /**
