@@ -918,6 +918,8 @@ public class Application
         if ((proxyHost = System.getProperty("http.proxyHost")) != null) {
             args.add("-Dhttp.proxyHost=" + proxyHost);
             args.add("-Dhttp.proxyPort=" + System.getProperty("http.proxyPort"));
+            args.add("-Dhttps.proxyHost=" + proxyHost);
+            args.add("-Dhttps.proxyPort=" + System.getProperty("http.proxyPort"));
         }
 
         // add the marker indicating the app is running in getdown

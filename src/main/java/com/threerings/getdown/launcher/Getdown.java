@@ -344,8 +344,10 @@ public abstract class Getdown extends Thread
     {
         if (!StringUtil.isBlank(host)) {
             System.setProperty("http.proxyHost", host);
+            System.setProperty("https.proxyHost", host);
             if (!StringUtil.isBlank(port)) {
                 System.setProperty("http.proxyPort", port);
+                System.setProperty("https.proxyPort", port);
             }
             log.info("Using proxy", "host", host, "port", port);
         }
