@@ -1048,6 +1048,7 @@ public class Application
         System.setProperty("applet", "true");
 
         try {
+            Thread.currentThread().setContextClassLoader(loader);
             Class<?> appclass = loader.loadClass(_class);
             String[] args = _appargs.toArray(new String[_appargs.size()]);
             Method main;
