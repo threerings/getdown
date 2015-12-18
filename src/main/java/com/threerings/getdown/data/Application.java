@@ -1051,19 +1051,22 @@ public class Application
         // make a note that we're running in "applet" mode
         System.setProperty("applet", "true");
 
+        // prepare our app arguments
+        String[] args = new String[_appargs.size()];
+        for (int ii = 0; ii < args.length; ii++) args[ii] = processArg(_appargs.get(ii));
+
         try {
             log.info("Loading " + _class);
             Class<?> appclass = loader.loadClass(_class);
-            String[] args = _appargs.toArray(new String[_appargs.size()]);
             Method main;
             try {
                 // first see if the class has a special applet-aware main
                 main = appclass.getMethod("main", JApplet.class, SA_PROTO.getClass());
-                log.info("Invoking main(JApplet,String[]) with args: " + _appargs);
+                log.info("Invoking main(JApplet, {" + StringUtil.join(args, ", ") + "})");
                 main.invoke(null, new Object[] { applet, args });
             } catch (NoSuchMethodException nsme) {
                 main = appclass.getMethod("main", SA_PROTO.getClass());
-                log.info("Invoking main(String[]) with args: " + _appargs);
+                log.info("Invoking main({" + StringUtil.join(args, ", ") + "})");
                 main.invoke(null, new Object[] { args });
             }
         } catch (Exception e) {
