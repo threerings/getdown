@@ -1016,6 +1016,10 @@ public class Application
                 return perms;
             }
         };
+        Thread.currentThread().setContextClassLoader(loader);
+
+        log.info("Configured URL class loader:");
+        for (URL url : jars) log.info("  " + url);
 
         // configure any system properties that we can
         for (String jvmarg : _jvmargs) {
@@ -1048,16 +1052,18 @@ public class Application
         System.setProperty("applet", "true");
 
         try {
-            Thread.currentThread().setContextClassLoader(loader);
+            log.info("Loading " + _class);
             Class<?> appclass = loader.loadClass(_class);
             String[] args = _appargs.toArray(new String[_appargs.size()]);
             Method main;
             try {
                 // first see if the class has a special applet-aware main
                 main = appclass.getMethod("main", JApplet.class, SA_PROTO.getClass());
+                log.info("Invoking main(JApplet,String[]) with args: " + _appargs);
                 main.invoke(null, new Object[] { applet, args });
             } catch (NoSuchMethodException nsme) {
                 main = appclass.getMethod("main", SA_PROTO.getClass());
+                log.info("Invoking main(String[]) with args: " + _appargs);
                 main.invoke(null, new Object[] { args });
             }
         } catch (Exception e) {
