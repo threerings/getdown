@@ -171,7 +171,14 @@ public class GetdownApp
                 }
                 @Override
                 protected void exit (int exitCode) {
-                    System.exit(exitCode);
+                    if (invokeDirect()) {
+                        // Makes sure the "download" window really does go away (stays if nothing to download)
+                        disposeContainer();
+                    }
+                    else {
+                        // Calling exit on an directly invoked app would exit the app now! We call only for non-direct!
+                        System.exit(exitCode);
+                    }
                 }
                 protected JFrame _frame;
             };
