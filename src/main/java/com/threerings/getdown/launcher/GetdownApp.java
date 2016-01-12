@@ -132,6 +132,7 @@ public class GetdownApp
                     _frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
                     return _frame.getContentPane();
                 }
+
                 @Override
                 protected void showContainer () {
                     if (_frame != null) {
@@ -140,6 +141,7 @@ public class GetdownApp
                         _frame.setVisible(true);
                     }
                 }
+
                 @Override
                 protected void disposeContainer () {
                     if (_frame != null) {
@@ -147,6 +149,7 @@ public class GetdownApp
                         _frame = null;
                     }
                 }
+
                 @Override
                 protected void showDocument (String url) {
                     String[] cmdarray;
@@ -170,14 +173,14 @@ public class GetdownApp
                         log.warning("Failed to open browser.", "cmdarray", cmdarray, e);
                     }
                 }
+
                 @Override
                 protected void exit (int exitCode) {
+                    // if we're running the app in the same JVM, don't call System.exit, but do
+                    // make double sure that the download window is closed.
                     if (invokeDirect()) {
-                        // Makes sure the "download" window really does go away (stays if nothing to download)
                         disposeContainer();
-                    }
-                    else {
-                        // Calling exit on an directly invoked app would exit the app now! We call only for non-direct!
+                    } else {
                         System.exit(exitCode);
                     }
                 }
