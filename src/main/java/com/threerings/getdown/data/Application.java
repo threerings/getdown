@@ -87,7 +87,7 @@ public class Application
 
         /** The human readable name of this application. */
         public String name;
-
+        
         /** A background color, just in case. */
         public Color background = Color.white;
 
@@ -536,6 +536,9 @@ public class Application
             throw new IOException("m.missing_class");
         }
 
+        // check if the user has requested a custom classpath
+        _customClasspath = (String)cdata.get("custom_classpath");
+        
         // check to see if we're using a custom java.version property and regex
         vstr = (String)cdata.get("java_version_prop");
         if (vstr != null) _javaVersionProp = vstr;
@@ -891,12 +894,18 @@ public class Application
     {
         // create our classpath
         StringBuilder cpbuf = new StringBuilder();
-        for (Resource rsrc : getActiveCodeResources()) {
-            if (cpbuf.length() > 0) {
-                cpbuf.append(File.pathSeparator);
-            }
-            cpbuf.append(rsrc.getFinalTarget().getAbsolutePath());
+        if(StringUtil.isBlank(_customClasspath)){
+	        for (Resource rsrc : getActiveCodeResources()) {
+	            if (cpbuf.length() > 0) {
+	                cpbuf.append(File.pathSeparator);
+	            }
+	            cpbuf.append(rsrc.getFinalTarget().getAbsolutePath());
+	        }
         }
+        else {
+        	cpbuf.append(_customClasspath);
+        }
+        log.info("Classpath: " + _customClasspath);
 
         ArrayList<String> args = new ArrayList<String>();
 
@@ -1717,6 +1726,7 @@ public class Application
     protected String _appid;
     protected File _config;
     protected Digest _digest;
+    protected String _customClasspath;
 
     protected long _version = -1;
     protected long _targetVersion = -1;
