@@ -1095,12 +1095,18 @@ public class Application
         // Look for and replace any environment variables
         StringBuffer sb = new StringBuffer();
         Matcher matcher = ENV_VAR_PATTERN.matcher(arg);
+        boolean environmentVariablesSubstituted = false;
         while(matcher.find()){
+        	environmentVariablesSubstituted=true;
         	String env_var = matcher.group(1);
         	String replacement = System.getenv(env_var);
         	if(replacement != null){
         		matcher.appendReplacement(sb, replacement);
         	}
+        }
+        
+        if(environmentVariablesSubstituted){
+        	arg = sb.toString();
         }
         
         return arg;
