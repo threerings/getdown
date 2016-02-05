@@ -57,6 +57,9 @@ public class Application
     /** Suffix used for control file signatures. */
     public static final String SIGNATURE_SUFFIX = ".sig";
 
+    /** Pattern to allow interpolation of Environment Variables **/
+    public static final Pattern ENV_VAR_PATTERN = Pattern.compile("%ENV\\((.*?)\\)%");
+    
     /** Used to communicate information about the UI displayed when updating the application. */
     public static class UpdateInterface
     {
@@ -1088,6 +1091,18 @@ public class Application
     {
         arg = arg.replace("%APPDIR%", _appdir.getAbsolutePath());
         arg = arg.replace("%VERSION%", String.valueOf(_version));
+        
+        // Look for and replace any environment variables
+        StringBuffer sb = new StringBuffer();
+        Matcher matcher = ENV_VAR_PATTERN.matcher(arg);
+        while(matcher.find()){
+        	String env_var = matcher.group(1);
+        	String replacement = System.getenv(env_var);
+        	if(replacement != null){
+        		matcher.appendReplacement(sb, replacement);
+        	}
+        }
+        
         return arg;
     }
 
