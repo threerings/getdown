@@ -1090,6 +1090,21 @@ public class Application
     {
         arg = arg.replace("%APPDIR%", _appdir.getAbsolutePath());
         arg = arg.replace("%VERSION%", String.valueOf(_version));
+
+        // if this argument contains %ENV.FOO% replace those with the associated values looked up
+        // from the environment
+        if (arg.contains(ENV_VAR_PREFIX)) {
+            StringBuffer sb = new StringBuffer();
+            Matcher matcher = ENV_VAR_PATTERN.matcher(arg);
+            while (matcher.find()) {
+                String varName = matcher.group(1), varValue = System.getenv(varName);
+                if (varName == null) varName = "MISSING:" + varName;
+                matcher.appendReplacement(sb, varValue);
+            }
+            matcher.appendTail(sb);
+            arg = sb.toString();
+        }
+
         return arg;
     }
 
@@ -1783,4 +1798,7 @@ public class Application
     protected FileChannel _lockChannel;
 
     protected static final String[] SA_PROTO = ArrayUtil.EMPTY_STRING;
+
+    protected static final String ENV_VAR_PREFIX = "%ENV.";
+    protected static final Pattern ENV_VAR_PATTERN = Pattern.compile("%ENV\\.(.*?)%");
 }
