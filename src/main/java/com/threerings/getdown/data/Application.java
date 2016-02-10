@@ -57,6 +57,9 @@ public class Application
     /** Suffix used for control file signatures. */
     public static final String SIGNATURE_SUFFIX = ".sig";
 
+    /** A special classname that means 'use -jar code.jar' instead of a classname. */
+    public static final String MANIFEST_CLASS = "manifest";
+
     /** Used to communicate information about the UI displayed when updating the application. */
     public static class UpdateInterface
     {
@@ -889,7 +892,15 @@ public class Application
     public Process createProcess (boolean optimum)
         throws IOException
     {
-        // create our classpath
+        ArrayList<String> args = new ArrayList<String>();
+
+        // reconstruct the path to the JVM
+        args.add(LaunchUtil.getJVMPath(_appdir, _windebug || optimum));
+
+        // check whether we're using -jar mode or -classpath mode
+        boolean dashJarMode = MANIFEST_CLASS.equals(_class);
+
+        // add the -classpath arguments if we're not in -jar mode
         StringBuilder cpbuf = new StringBuilder();
         for (Resource rsrc : getActiveCodeResources()) {
             if (cpbuf.length() > 0) {
@@ -897,15 +908,10 @@ public class Application
             }
             cpbuf.append(rsrc.getFinalTarget().getAbsolutePath());
         }
-
-        ArrayList<String> args = new ArrayList<String>();
-
-        // reconstruct the path to the JVM
-        args.add(LaunchUtil.getJVMPath(_appdir, _windebug || optimum));
-
-        // add the classpath arguments
-        args.add("-classpath");
-        args.add(cpbuf.toString());
+        if (!dashJarMode) {
+            args.add("-classpath");
+            args.add(cpbuf.toString());
+        }
 
         // we love our Mac users, so we do nice things to preserve our application identity
         if (RunAnywhere.isMacOS()) {
@@ -951,8 +957,13 @@ public class Application
             args.add(processArg(string));
         }
 
-        // add the application class name
-        args.add(_class);
+        // if we're in -jar mode add those arguments, otherwise add the app class name
+        if (dashJarMode) {
+            args.add("-jar");
+            args.add(cpbuf.toString());
+        } else {
+            args.add(_class);
+        }
 
         // finally add the application arguments
         for (String string : _appargs) {
