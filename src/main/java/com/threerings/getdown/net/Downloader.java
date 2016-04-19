@@ -180,7 +180,8 @@ public abstract class Downloader extends Thread
         throws IOException
     {
         // update the actual size for this resource (but don't let it shrink)
-        _sizes.put(rsrc, actualSize = Math.max(actualSize, _sizes.get(rsrc)));
+        actualSize = Math.max(actualSize, _sizes.get(rsrc));
+        _sizes.put(rsrc, actualSize);
 
         // update the current downloaded size for said resource; don't allow the downloaded bytes
         // to exceed the original claimed size of the resource, otherwise our progress will get

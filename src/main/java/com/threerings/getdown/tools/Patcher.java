@@ -148,7 +148,9 @@ public class Patcher
         InputStream in = null;
         FileOutputStream fout = null;
         try {
-            StreamUtil.copy(in = file.getInputStream(entry), fout = new FileOutputStream(patch));
+            in = file.getInputStream(entry);
+            fout = new FileOutputStream(patch);
+            StreamUtil.copy(in, fout);
             StreamUtil.close(fout);
             fout = null;
 

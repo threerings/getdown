@@ -46,11 +46,13 @@ public class AbortPanel extends JFrame
         add(new Spacer(5, 5));
 
         JPanel row = GroupLayout.makeButtonBox(GroupLayout.CENTER);
-        JButton button;
-        row.add(button = new JButton(get("m.abort_ok")));
+        JButton button = new JButton(get("m.abort_ok"));
+        row.add(button);
         button.setActionCommand("ok");
         button.addActionListener(this);
-        row.add(button = new JButton(get("m.abort_cancel")));
+        
+        button = new JButton(get("m.abort_cancel"));
+        row.add(button);
         button.setActionCommand("cancel");
         button.addActionListener(this);
         getRootPane().setDefaultButton(button);
