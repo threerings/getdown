@@ -141,10 +141,8 @@ public class Resource
      */
     public void clearMarker ()
     {
-        if (_marker.exists()) {
-            if (!_marker.delete()) {
-                log.warning("Failed to erase marker file '" + _marker + "'.");
-            }
+        if (_marker.exists() && !_marker.delete()) {
+            log.warning("Failed to erase marker file '" + _marker + "'.");
         }
     }
 
@@ -178,10 +176,8 @@ public class Resource
     public void erase ()
     {
         clearMarker();
-        if (_local.exists()) {
-            if (!_local.delete()) {
-                log.warning("Failed to erase resource '" + _local + "'.");
-            }
+        if (_local.exists() && !_local.delete()) {
+            log.warning("Failed to erase resource '" + _local + "'.");
         }
     }
 
