@@ -76,7 +76,7 @@ public class JarDiffPatcher implements JarDiffCodes
             // since oldjarNames.size() changes in the first two loop below, we
             // need to adjust the size accordingly also when oldjarNames.size()
             // changes
-            double size = oldjarNames.size() + keys.length + jarDiff.size();
+            double size = (double)oldjarNames.size() + keys.length + jarDiff.size();
             double currentEntry = 0;
 
             // Handle all remove commands
