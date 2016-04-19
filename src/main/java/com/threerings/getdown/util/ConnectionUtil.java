@@ -15,6 +15,10 @@ import org.apache.commons.codec.binary.Base64;
 
 public class ConnectionUtil
 {
+    private ConnectionUtil() {
+        
+    }
+    
     /**
      * Opens a connection to a URL, setting the authentication header if user info is present.
      */

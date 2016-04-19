@@ -15,6 +15,11 @@ import com.threerings.getdown.util.VersionUtil;
  */
 public class SysProps
 {
+    
+    private SysProps() {
+        
+    }
+    
     /** Configures the appdir (in lieu of passing it in argv). Usage: {@code -Dappdir=foo}. */
     public static String appDir () {
         return System.getProperty("appdir");

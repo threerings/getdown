@@ -34,6 +34,10 @@ import static com.threerings.getdown.Log.log;
  */
 public class GetdownApp
 {
+    private GetdownApp() {
+        
+    }
+    
     public static void main (String[] argv)
     {
         int aidx = 0;

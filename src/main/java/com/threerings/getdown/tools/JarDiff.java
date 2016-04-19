@@ -62,6 +62,10 @@ public class JarDiff implements JarDiffCodes
     // The JARDiff.java is the stand-alone jardiff.jar tool. Thus, we do not depend on Globals.java
     // and other stuff here. Instead, we use an explicit _debug flag.
     private static boolean _debug;
+    
+    private JarDiff() {
+        
+    }
 
     /**
      * Creates a patch from the two passed in files, writing the result to <code>os</code>.

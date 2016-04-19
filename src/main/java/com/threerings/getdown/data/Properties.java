@@ -10,6 +10,10 @@ package com.threerings.getdown.data;
  */
 public class Properties
 {
+    private Properties() {
+        
+    }
+    
     /** This property will be set to "true" on the application when it is being run by getdown. */
     public static final String GETDOWN = "com.threerings.getdown";
 

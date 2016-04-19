@@ -22,6 +22,10 @@ import static com.threerings.getdown.Log.log;
  */
 public class LaunchUtil
 {
+    private LaunchUtil() {
+        
+    }
+    
     /** The directory into which a local VM installation should be unpacked. */
     public static final String LOCAL_JAVA_DIR = "java_vm";
 
