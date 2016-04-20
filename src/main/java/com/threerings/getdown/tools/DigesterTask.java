@@ -64,11 +64,9 @@ public class DigesterTask extends Task
         }
 
         // make sure _storepass and _keyalias are set, if _storepath is set
-        if (_storepath != null) {
-            if (_storepass == null || _storealias == null) {
-                throw new BuildException(
+        if (_storepath != null && (_storepass == null || _storealias == null)) {
+            throw new BuildException(
                     "Must specify both a keystore password and a private key alias.");
-            }
         }
 
         try {

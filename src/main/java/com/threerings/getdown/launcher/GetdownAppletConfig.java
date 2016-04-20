@@ -343,10 +343,8 @@ public class GetdownAppletConfig
     protected void ensureAppdirExists () throws Exception
     {
         // if our application directory does not exist, auto-create it
-        if (!appdir.exists() || !appdir.isDirectory()) {
-            if (!appdir.mkdirs()) {
-                throw new Exception("m.create_appdir_failed");
-            }
+        if ((!appdir.exists() || !appdir.isDirectory()) && !appdir.mkdirs()) {
+            throw new Exception("m.create_appdir_failed");
         }
     }
 

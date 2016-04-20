@@ -106,10 +106,8 @@ public class Patcher
 
         // make sure the file's parent directory exists
         File pdir = target.getParentFile();
-        if (!pdir.exists()) {
-            if (!pdir.mkdirs()) {
-                log.warning("Failed to create parent for '" + target + "'.");
-            }
+        if (!pdir.exists() && !pdir.mkdirs()) {
+            log.warning("Failed to create parent for '" + target + "'.");
         }
 
         InputStream in = null;
