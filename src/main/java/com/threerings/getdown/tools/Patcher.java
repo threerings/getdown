@@ -49,7 +49,7 @@ public class Patcher
      * with the patcher so that the user interface is not blocked for the
      * duration of the patch.
      */
-    public void patch (File appdir, File patch, ProgressObserver obs)
+    public void applyPatch (File appdir, File patch, ProgressObserver obs)
         throws IOException
     {
         // save this information for later
@@ -204,7 +204,7 @@ public class Patcher
 
         Patcher patcher = new Patcher();
         try {
-            patcher.patch(new File(args[0]), new File(args[1]), null);
+            patcher.applyPatch(new File(args[0]), new File(args[1]), null);
         } catch (IOException ioe) {
             System.err.println("Error: " + ioe.getMessage());
             System.exit(-1);

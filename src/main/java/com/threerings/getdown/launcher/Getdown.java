@@ -671,7 +671,7 @@ public abstract class Getdown extends Thread
                 mprog.startElement(1);
                 try {
                     Patcher patcher = new Patcher();
-                    patcher.patch(prsrc.getLocal().getParentFile(), prsrc.getLocal(), mprog);
+                    patcher.applyPatch(prsrc.getLocal().getParentFile(), prsrc.getLocal(), mprog);
                 } catch (Exception e) {
                     log.warning("Failed to apply patch", "prsrc", prsrc, e);
                 }

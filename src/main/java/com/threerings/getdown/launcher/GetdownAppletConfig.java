@@ -59,9 +59,9 @@ public class GetdownAppletConfig
      * When a number is reached for which no value exists, we stop looking. */
     public static final String APPARG_PREFIX = "appargs";
 
-    public String appbase;
+    public String appBase;
 
-    public String appname;
+    public String appName;
 
     /** The list of background images and their display time */
     public String imgpath;
@@ -108,10 +108,10 @@ public class GetdownAppletConfig
         _applet = applet;
         _prefix = paramPrefix;
 
-        appbase = getParameter(APPBASE, "");
-        appname = getParameter(APPNAME, "");
-        log.info("App Base: " + appbase);
-        log.info("App Name: " + appname);
+        appBase = getParameter(APPBASE, "");
+        appName = getParameter(APPNAME, "");
+        log.info("App Base: " + appBase);
+        log.info("App Name: " + appName);
 
         imgpath = getParameter(BGIMAGE);
         errorimgpath = getParameter(ERRORBGIMAGE);
@@ -146,7 +146,7 @@ public class GetdownAppletConfig
             root = ".getdown";
         }
         appdir = new File(System.getProperty("user.home") + File.separator + root + File.separator
-            + appname);
+            + appName);
 
         installerFileContents = getParameter("installer");
 
@@ -368,10 +368,10 @@ public class GetdownAppletConfig
             try {
                 Map<String,Object> cdata = ConfigUtil.parseConfig(gdfile, false);
                 String oappbase = StringUtil.trim((String)cdata.get(APPBASE));
-                createGetdown = (appbase != null && !appbase.trim().equals(oappbase));
+                createGetdown = (appBase != null && !appBase.trim().equals(oappbase));
                 if (createGetdown) {
                     log.warning("Recreating getdown.txt due to appbase mismatch",
-                                "nappbase", appbase, "oappbase", oappbase);
+                                "nappbase", appBase, "oappbase", oappbase);
                 }
             } catch (Exception e) {
                 log.warning("Failure checking validity of getdown.txt, forcing recreate.",
@@ -380,10 +380,10 @@ public class GetdownAppletConfig
             }
         }
         if (createGetdown) {
-            if (StringUtil.isBlank(appbase)) {
+            if (StringUtil.isBlank(appBase)) {
                 throw new Exception("m.missing_appbase");
             }
-            if (!writeToFile(gdfile, "appbase = " + appbase)) {
+            if (!writeToFile(gdfile, "appbase = " + appBase)) {
                 throw new Exception("m.create_getdown_failed");
             }
         }
