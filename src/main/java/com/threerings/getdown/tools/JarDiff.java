@@ -43,6 +43,7 @@ package com.threerings.getdown.tools;
 
 import java.io.*;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.jar.*;
 
 /**
@@ -168,9 +169,9 @@ public class JarDiff implements JarDiffCodes
             if (_debug) {
                 //DEBUG:  print out moved map
                 System.out.println("MOVED MAP!!!");
-                for (String newName : moved.keySet()) {
-                    String oldName = moved.get(newName);
-                    System.out.println("key is " + newName + " value is " + oldName);
+                for (Entry<String, String> movedEntries : moved.entrySet()) {
+                    String oldName = movedEntries.getValue();
+                    System.out.println("key is " + movedEntries.getKey() + " value is " + oldName);
                 }
 
                 //DEBUG:  print out IMOVE map
@@ -235,13 +236,13 @@ public class JarDiff implements JarDiffCodes
         }
 
         // And those that have moved
-        for (String newName : movedMap.keySet()) {
-            String oldName = movedMap.get(newName);
+        for (Entry<String, String> movedEntries : movedMap.entrySet()) {
+            String oldName = movedEntries.getValue();
             writer.write(MOVE_COMMAND);
             writer.write(" ");
             writeEscapedString(writer, oldName);
             writer.write(" ");
-            writeEscapedString(writer, newName);
+            writeEscapedString(writer, movedEntries.getKey());
             writer.write("\r\n");
         }
 

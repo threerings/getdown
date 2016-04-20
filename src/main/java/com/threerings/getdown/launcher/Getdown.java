@@ -391,7 +391,7 @@ public abstract class Getdown extends Thread
                 // Store the config modtime before waiting the delay amount of time
                 long lastConfigModtime = config.lastModified();
                 log.info("Waiting " + _delay + " minutes before beginning actual work.");
-                Thread.sleep(_delay * 60 * 1000);
+                Thread.sleep((long)_delay * 60 * 1000);
                 if (lastConfigModtime < config.lastModified()) {
                     log.warning("getdown.txt was modified while getdown was waiting.");
                     throw new MultipleGetdownRunning();
