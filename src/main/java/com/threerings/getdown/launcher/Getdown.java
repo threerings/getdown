@@ -39,6 +39,7 @@ import java.net.URLConnection;
 import java.security.cert.Certificate;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -68,7 +69,7 @@ import com.threerings.getdown.tools.Patcher;
 import com.threerings.getdown.util.ConfigUtil;
 import com.threerings.getdown.util.ConnectionUtil;
 import com.threerings.getdown.util.LaunchUtil;
-import com.threerings.getdown.util.MetaProgressObserver;
+import com.threerings.getdown.util.ProgressAggregator;
 import com.threerings.getdown.util.ProgressObserver;
 import com.threerings.getdown.util.VersionUtil;
 
@@ -665,13 +666,14 @@ public abstract class Getdown extends Thread
             setStep(Step.PATCH);
             updateStatus("m.patching");
 
-            // create a new ProgressObserver that divides the different patching phases
-            MetaProgressObserver mprog = new MetaProgressObserver(_progobs, list.size());
-            for (Resource prsrc : list) {
-                mprog.startElement(1);
+            long[] sizes = new long[list.size()];
+            Arrays.fill(sizes, 1L);
+            ProgressAggregator pragg = new ProgressAggregator(_progobs, sizes);
+            int ii = 0; for (Resource prsrc : list) {
+                ProgressObserver pobs = pragg.startElement(ii++);
                 try {
                     Patcher patcher = new Patcher();
-                    patcher.patch(prsrc.getLocal().getParentFile(), prsrc.getLocal(), mprog);
+                    patcher.patch(prsrc.getLocal().getParentFile(), prsrc.getLocal(), pobs);
                 } catch (Exception e) {
                     log.warning("Failed to apply patch", "prsrc", prsrc, e);
                 }

@@ -1237,6 +1237,9 @@ public class Application
      * that do not exist or fail the verification process will be returned. If all resources are
      * ready to go, null will be returned and the application is considered ready to run.
      *
+     * @param obs a progress observer that will be notified of verification progress. NOTE: this
+     * observer may be called from arbitrary threads, so if you update a UI based on calls to it,
+     * you have to take care to get back to your UI thread.
      * @param alreadyValid if non-null a 1 element array that will have the number of "already
      * validated" resources filled in.
      * @param unpacked a set to populate with unpacked resources.
@@ -1247,30 +1250,31 @@ public class Application
         List<Resource> rsrcs = getAllActiveResources();
         List<Resource> failures = new ArrayList<Resource>();
 
-        // total up the file size of the resources to validate
-        long totalSize = 0L;
-        for (Resource rsrc : rsrcs) {
-            totalSize += rsrc.getLocal().length();
+        // obtain the sizes of the resources to validate
+        long[] sizes = new long[rsrcs.size()];
+        for (int ii = 0; ii < sizes.length; ii++) {
+            sizes[ii] = rsrcs.get(ii).getLocal().length();
         }
 
-        MetaProgressObserver mpobs = new MetaProgressObserver(obs, totalSize);
+        ProgressAggregator pagg = new ProgressAggregator(obs, sizes);
         boolean noUnpack = SysProps.noUnpack();
-        for (Resource rsrc : rsrcs) {
+        for (int ii = 0; ii < sizes.length; ii++) {
+            Resource rsrc = rsrcs.get(ii);
             if (Thread.interrupted()) {
                 throw new InterruptedException("m.applet_stopped");
             }
-            mpobs.startElement(rsrc.getLocal().length());
 
+            ProgressObserver robs = pagg.startElement(ii);
             if (rsrc.isMarkedValid()) {
                 if (alreadyValid != null) {
                     alreadyValid[0]++;
                 }
-                mpobs.progress(100);
+                robs.progress(100);
                 continue;
             }
 
             try {
-                if (_digest.validateResource(rsrc, mpobs)) {
+                if (_digest.validateResource(rsrc, robs)) {
                     // unpack this resource if appropriate
                     if (noUnpack || !rsrc.shouldUnpack()) {
                         // finally note that this resource is kosher
@@ -1290,7 +1294,7 @@ public class Application
                     "rsrc", rsrc, "error", e);
 
             } finally {
-                mpobs.progress(100);
+                robs.progress(100);
             }
             failures.add(rsrc);
         }
@@ -1308,27 +1312,31 @@ public class Application
     {
         List<Resource> rsrcs = getActiveResources();
 
-        // total up the file size of the resources to unpack
-        long totalSize = 0L;
+        // remove resources that we don't want to unpack
         for (Iterator<Resource> it = rsrcs.iterator(); it.hasNext(); ) {
             Resource rsrc = it.next();
-            if (rsrc.shouldUnpack() && !unpacked.contains(rsrc)) {
-                totalSize += rsrc.getLocal().length();
-            } else {
+            if (!rsrc.shouldUnpack() || unpacked.contains(rsrc)) {
                 it.remove();
             }
         }
 
-        MetaProgressObserver mpobs = new MetaProgressObserver(obs, totalSize);
-        for (Resource rsrc : rsrcs) {
+        // obtain the sizes of the resources to unpack
+        long[] sizes = new long[rsrcs.size()];
+        for (int ii = 0; ii < sizes.length; ii++) {
+            sizes[ii] = rsrcs.get(ii).getLocal().length();
+        }
+
+        ProgressAggregator pagg = new ProgressAggregator(obs, sizes);
+        for (int ii = 0; ii < sizes.length; ii++) {
             if (Thread.interrupted()) {
                 throw new InterruptedException("m.applet_stopped");
             }
-            mpobs.startElement(rsrc.getLocal().length());
+            Resource rsrc = rsrcs.get(ii);
+            ProgressObserver pobs = pagg.startElement(ii);
             if (!rsrc.unpack()) {
                 log.info("Failure unpacking resource", "rsrc", rsrc);
             }
-            mpobs.progress(100);
+            pobs.progress(100);
         }
     }
 
