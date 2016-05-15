@@ -1241,9 +1241,8 @@ public class Application
      * validated" resources filled in.
      * @param unpacked a set to populate with unpacked resources.
      */
-    public List<Resource> verifyResources (
-        ProgressObserver obs, int[] alreadyValid, Set<Resource> unpacked)
-            throws InterruptedException
+    public List<Resource> verifyResources (ProgressObserver obs, int[] alreadyValid,
+                                           Set<Resource> unpacked) throws InterruptedException
     {
         List<Resource> rsrcs = getAllActiveResources();
         List<Resource> failures = new ArrayList<Resource>();
