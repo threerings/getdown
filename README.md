@@ -22,9 +22,8 @@ The main design and operation of Getdown is detailed on the
 
 ## Where can I see it in action?
 
-Getdown was originally written by developers at [OOO](http://www.threerings.net/) for the
-deployment of their Java-based massively multiplayer games. Try out any of the following games to
-see it in action:
+Getdown was originally written by developers at [OOO] for the deployment of their Java-based
+massively multiplayer games. Try out any of the following games to see it in action:
 
   * [Puzzle Pirates](http://www.puzzlepirates.com/) - OOO
   * [Bang! Howdy](http://banghowdy.com) - OOO
@@ -73,3 +72,4 @@ Feel free to pop over to the [OOO Libs Google Group] to ask questions and get (a
 [OOO Libs Google group]: http://groups.google.com/group/ooo-libs
 [source code]: https://github.com/threerings/getdown/tree/master/src/main/java/com/threerings/getdown/launcher
 [javadoc documentation]: https://threerings.github.com/getdown/apidocs/
+[OOO]: https://en.wikipedia.org/wiki/Three_Rings_Design
