@@ -42,11 +42,11 @@ public class FileUtil extends com.samskivert.util.FileUtil
                 log.warning("Failed to delete old intermediate file " + temp + ".");
                 // the subsequent code will probably fail
             }
-            if (dest.renameTo(temp)) {
-                if (source.renameTo(dest) && !temp.delete()) {
+            if (dest.renameTo(temp) && source.renameTo(dest)) {
+                if (!temp.delete()) {
                     log.warning("Failed to delete intermediate file " + temp + ".");
-                    return true;
                 }
+                return true;
             }
         }
 
