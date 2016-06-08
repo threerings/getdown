@@ -184,6 +184,19 @@ public class GetdownApp
                         System.exit(exitCode);
                     }
                 }
+
+                @Override
+                protected void fail(String message) {
+                    // If the frame was set to be undecorated, make window decoration available
+                    // to allow the user to close the window
+                    if(_frame != null && _frame.isUndecorated()){
+                        _frame.dispose();
+                        _frame.setUndecorated(false);
+                        showContainer();
+                    }
+                    super.fail(message);
+                }
+
                 protected JFrame _frame;
             };
             app.start();
