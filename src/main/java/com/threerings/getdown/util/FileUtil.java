@@ -57,6 +57,7 @@ public class FileUtil extends com.samskivert.util.FileUtil
             fin = new FileInputStream(source);
             fout = new FileOutputStream(dest);
             StreamUtil.copy(fin, fout);
+            fin.close(); // needed otherwise cannot delete source
             if (!source.delete()) {
                 log.warning("Failed to delete " + source +
                             " after brute force copy to " + dest + ".");

@@ -68,6 +68,7 @@ import com.threerings.getdown.net.HTTPDownloader;
 import com.threerings.getdown.tools.Patcher;
 import com.threerings.getdown.util.ConfigUtil;
 import com.threerings.getdown.util.ConnectionUtil;
+import com.threerings.getdown.util.FileUtil;
 import com.threerings.getdown.util.LaunchUtil;
 import com.threerings.getdown.util.ProgressAggregator;
 import com.threerings.getdown.util.ProgressObserver;
@@ -100,6 +101,7 @@ public abstract class Getdown extends Thread
             // If the silent property exists, install without bringing up any gui. If it equals
             // launch, start the application after installing. Otherwise, just install and exit.
             _silent = SysProps.silent();
+            _install = SysProps.install();
             if (_silent) {
                 _launchInSilent = SysProps.launchInSilent();
             }
@@ -409,6 +411,9 @@ public abstract class Getdown extends Thread
 
             // we'll keep track of all the resources we unpack
             Set<Resource> unpacked = new HashSet<Resource>();
+            
+            toBeInstalledResouces = new ArrayList<Resource>();
+            readyToInstall = false;
 
             //setStep(Step.START);
             for (int ii = 0; ii < MAX_LOOPS; ii++) {
@@ -442,6 +447,7 @@ public abstract class Getdown extends Thread
                 setStep(Step.VERIFY_RESOURCES);
                 setStatusAsync("m.validating", -1, -1L, false);
                 List<Resource> failures = _app.verifyResources(_progobs, alreadyValid, unpacked);
+                addToBeInstalledResources(failures);
                 if (failures == null) {
                     log.info("Resources verified.");
 
@@ -470,6 +476,10 @@ public abstract class Getdown extends Thread
                             }
                         }
                     }
+
+                    readyToInstall = true;
+                    if (_install)
+                    	install();
 
                     // Only launch if we aren't in silent mode. Some mystery program starting out
                     // of the blue would be disconcerting.
@@ -531,7 +541,16 @@ public abstract class Getdown extends Thread
         }
     }
 
-    // documentation inherited from interface
+    private void addToBeInstalledResources(List<Resource> resources) {
+    	if (resources == null)
+    		return;
+    	else
+    		for (Resource r : resources)
+    			if (!toBeInstalledResouces.contains(r))
+    				toBeInstalledResouces.add(r);
+	}
+
+	// documentation inherited from interface
     public void updateStatus (String message)
     {
         setStatusAsync(message, -1, -1L, true);
@@ -754,7 +773,28 @@ public abstract class Getdown extends Thread
             throw new MultipleGetdownRunning();
         }
     }
-
+    
+    public static void install ()
+    		throws IOException, InterruptedException
+    {
+    	if (readyToInstall) {
+    		log.info("Installing downloaded resources:");
+	    	for (Resource resource : toBeInstalledResouces) {
+	    		log.info(resource);
+				if (!FileUtil.renameTo(resource.getLocalNew(), resource.getLocal()))
+					throw new IOException("Failed to rename(" + resource.getLocalNew() + ", " + resource.getLocal() + ")");
+				if (Thread.interrupted()) {
+					throw new InterruptedException("m.applet_stopped");
+				}
+	    	}
+	    	toBeInstalledResouces.clear();
+	    	readyToInstall = false;
+	    	log.info("Install completed.");
+    	} else {
+    		log.info("Nothing to install.");
+    	}
+    }
+    
     /**
      * Called to launch the application if everything is determined to be ready to go.
      */
@@ -1219,6 +1259,7 @@ public abstract class Getdown extends Thread
 
     protected boolean _dead;
     protected boolean _silent;
+    protected boolean _install;
     protected boolean _launchInSilent;
     protected long _startup;
 
@@ -1239,4 +1280,6 @@ public abstract class Getdown extends Thread
     protected static final long PLAY_AGAIN_TIME = 3000L;
     protected static final String PROXY_REGISTRY =
         "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings";
+    protected static List<Resource> toBeInstalledResouces;
+    protected static boolean readyToInstall;
 }
