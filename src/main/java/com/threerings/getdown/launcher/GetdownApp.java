@@ -186,10 +186,10 @@ public class GetdownApp
                 }
 
                 @Override
-                protected void fail(String message) {
-                    // If the frame was set to be undecorated, make window decoration available
+                protected void fail (String message) {
+                    // if the frame was set to be undecorated, make window decoration available
                     // to allow the user to close the window
-                    if(_frame != null && _frame.isUndecorated()){
+                    if (_frame != null && _frame.isUndecorated()) {
                         _frame.dispose();
                         _frame.setUndecorated(false);
                         showContainer();
