@@ -5,9 +5,9 @@
 
 package com.threerings.getdown.launcher;
 
-import java.awt.Image;
-
 import static com.threerings.getdown.Log.log;
+
+import java.awt.Image;
 
 public class RotatingBackgrounds
 {
@@ -31,7 +31,7 @@ public class RotatingBackgrounds
 
     /**
      * Create a sequence of images to be rotated through from <code>backgrounds</code>.
-     * 
+     *
      * Each String in backgrounds should be the path to the image, a semicolon, and the minimum
      * amount of time to display the image in seconds. Each image will be active for an equal
      * percentage of the download process, unless one hasn't been active for its minimum display
@@ -78,7 +78,7 @@ public class RotatingBackgrounds
         }
         long now = System.currentTimeMillis();
         if (current != images.length - 1
-            && (current == -1 || (progress >= percentages[current + 1] && 
+            && (current == -1 || (progress >= percentages[current + 1] &&
                     (now - currentDisplayStart) / 1000 > minDisplayTime[current]))) {
             current++;
             currentDisplayStart = now;
@@ -110,18 +110,18 @@ public class RotatingBackgrounds
 
     /** Time at which the currently displayed image was first displayed in millis. */
     protected long currentDisplayStart;
-    
+
     /** The index of the currently displayed image or -1 if we haven't displayed any. */
     protected int current = -1;
-    
+
     protected Image[] images;
-    
+
     /** The image to display if getdown has failed due to an error. */
     protected Image errorImage;
-    
+
     /** Percentage at which each image should be displayed. */
     protected int[] percentages;
-    
+
     /** Time to show each image in seconds. */
     protected int[] minDisplayTime;
 }

@@ -5,22 +5,20 @@
 
 package com.threerings.getdown.tools;
 
+import static com.threerings.getdown.Log.log;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
 import java.util.Enumeration;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
 import com.samskivert.io.StreamUtil;
-
 import com.threerings.getdown.util.FileUtil;
 import com.threerings.getdown.util.ProgressObserver;
-
-import static com.threerings.getdown.Log.log;
 
 /**
  * Applies a unified patch file to an application directory, providing

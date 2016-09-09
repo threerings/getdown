@@ -5,12 +5,13 @@
 
 package com.threerings.getdown.util;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;
 
-import org.junit.*;
-import static org.junit.Assert.*;
+import org.junit.Test;
 
 /**
  * Tests {@link FileUtil}.

@@ -5,11 +5,12 @@
 
 package com.threerings.getdown.launcher;
 
+import static com.threerings.getdown.Log.log;
+
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
@@ -23,8 +24,6 @@ import com.samskivert.swing.GroupLayout;
 import com.samskivert.swing.Spacer;
 import com.samskivert.swing.VGroupLayout;
 import com.samskivert.text.MessageUtil;
-
-import static com.threerings.getdown.Log.log;
 
 /**
  * Displays an interface with which the user can configure their proxy

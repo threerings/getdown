@@ -5,14 +5,16 @@
 
 package com.threerings.getdown.util;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;
 
-import com.samskivert.util.RandomUtil;
+import org.junit.Test;
 
-import org.junit.*;
-import static org.junit.Assert.*;
+import com.samskivert.util.RandomUtil;
 
 /**
  * Tests {@link ConfigUtil}.

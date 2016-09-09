@@ -5,7 +5,12 @@
 
 package com.threerings.getdown.data;
 
-import java.io.*;
+import static com.threerings.getdown.Log.log;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.util.Collections;
@@ -13,15 +18,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.jar.JarInputStream;
 
 import com.samskivert.io.StreamUtil;
 import com.samskivert.util.StringUtil;
-
 import com.threerings.getdown.util.FileUtil;
 import com.threerings.getdown.util.ProgressObserver;
-
-import static com.threerings.getdown.Log.log;
 
 /**
  * Models a single file resource used by an {@link Application}.

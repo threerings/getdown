@@ -5,6 +5,8 @@
 
 package com.threerings.getdown.launcher;
 
+import static com.threerings.getdown.Log.log;
+
 import java.awt.Container;
 import java.awt.Image;
 import java.io.DataInputStream;
@@ -19,22 +21,19 @@ import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JApplet;
 import javax.swing.JPanel;
 
-import netscape.javascript.JSObject;
-
 import com.threerings.getdown.data.Application;
 import com.threerings.getdown.data.Properties;
 
-import static com.threerings.getdown.Log.log;
+import netscape.javascript.JSObject;
 
 /**
  * An applet that can be used to launch a Getdown application (when signed and given privileges).

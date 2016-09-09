@@ -7,7 +7,6 @@ package com.threerings.getdown.tools;
 
 import java.io.File;
 import java.io.IOException;
-
 import java.security.GeneralSecurityException;
 
 import org.apache.tools.ant.BuildException;

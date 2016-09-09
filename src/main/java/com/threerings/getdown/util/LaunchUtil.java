@@ -5,16 +5,17 @@
 
 package com.threerings.getdown.util;
 
+import static com.threerings.getdown.Log.log;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+
 import com.samskivert.io.StreamUtil;
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
-
-import static com.threerings.getdown.Log.log;
 
 /**
  * Useful routines for launching Java applications from within other Java

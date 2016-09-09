@@ -5,6 +5,8 @@
 
 package com.threerings.getdown.util;
 
+import static com.threerings.getdown.Log.log;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -18,9 +20,7 @@ import java.util.regex.Pattern;
 
 import com.samskivert.io.StreamUtil;
 import com.samskivert.util.StringUtil;
-
 import com.threerings.getdown.data.SysProps;
-import static com.threerings.getdown.Log.log;
 
 /**
  * Version related utilities.

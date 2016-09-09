@@ -5,9 +5,21 @@
 
 package com.threerings.getdown.data;
 
+import static com.threerings.getdown.Log.log;
+
 import java.awt.Color;
 import java.awt.Rectangle;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.io.RandomAccessFile;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -16,13 +28,29 @@ import java.net.URLConnection;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
-import java.security.*;
+import java.security.AllPermission;
+import java.security.CodeSource;
+import java.security.GeneralSecurityException;
+import java.security.PermissionCollection;
+import java.security.Permissions;
+import java.security.Signature;
 import java.security.cert.Certificate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.swing.JApplet;
+
+import org.apache.commons.codec.binary.Base64;
 
 import com.samskivert.io.StreamUtil;
 import com.samskivert.text.MessageUtil;
@@ -30,13 +58,14 @@ import com.samskivert.util.ArrayUtil;
 import com.samskivert.util.RandomUtil;
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
-
-import org.apache.commons.codec.binary.Base64;
-
 import com.threerings.getdown.launcher.RotatingBackgrounds;
-import com.threerings.getdown.util.*;
-
-import static com.threerings.getdown.Log.log;
+import com.threerings.getdown.util.ConfigUtil;
+import com.threerings.getdown.util.ConnectionUtil;
+import com.threerings.getdown.util.FileUtil;
+import com.threerings.getdown.util.LaunchUtil;
+import com.threerings.getdown.util.ProgressAggregator;
+import com.threerings.getdown.util.ProgressObserver;
+import com.threerings.getdown.util.VersionUtil;
 
 /**
  * Parses and provide access to the information contained in the <code>getdown.txt</code>

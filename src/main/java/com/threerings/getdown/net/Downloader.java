@@ -5,16 +5,15 @@
 
 package com.threerings.getdown.net;
 
+import static com.threerings.getdown.Log.log;
+
 import java.io.File;
 import java.io.IOException;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.threerings.getdown.data.Resource;
-
-import static com.threerings.getdown.Log.log;
 
 /**
  * Handles the download of a collection of files, first issuing HTTP head requests to obtain size
@@ -209,7 +208,7 @@ public abstract class Downloader extends Thread
                     throw new DownloadAbortedException();
                 }
             }
-        }   
+        }
     }
 
     /**

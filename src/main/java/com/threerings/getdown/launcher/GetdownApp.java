@@ -5,6 +5,8 @@
 
 package com.threerings.getdown.launcher;
 
+import static com.threerings.getdown.Log.log;
+
 import java.awt.Container;
 import java.awt.Image;
 import java.awt.event.WindowAdapter;
@@ -25,9 +27,7 @@ import com.samskivert.swing.util.SwingUtil;
 import com.samskivert.util.ArrayUtil;
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
-
 import com.threerings.getdown.data.SysProps;
-import static com.threerings.getdown.Log.log;
 
 /**
  * The main application entry point for Getdown.

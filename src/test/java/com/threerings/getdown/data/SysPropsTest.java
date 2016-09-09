@@ -5,7 +5,7 @@
 
 package com.threerings.getdown.data;
 
-import org.junit.*;
+import org.junit.Test;
 
 public class SysPropsTest {
 

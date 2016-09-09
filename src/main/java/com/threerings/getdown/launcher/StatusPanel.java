@@ -5,6 +5,8 @@
 
 package com.threerings.getdown.launcher;
 
+import static com.threerings.getdown.Log.log;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -28,10 +30,7 @@ import com.samskivert.swing.util.SwingUtil;
 import com.samskivert.text.MessageUtil;
 import com.samskivert.util.StringUtil;
 import com.samskivert.util.Throttle;
-
 import com.threerings.getdown.data.Application.UpdateInterface;
-
-import static com.threerings.getdown.Log.log;
 
 /**
  * Displays download and patching status.

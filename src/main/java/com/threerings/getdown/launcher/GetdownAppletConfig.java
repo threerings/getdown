@@ -5,6 +5,8 @@
 
 package com.threerings.getdown.launcher;
 
+import static com.threerings.getdown.Log.log;
+
 import java.awt.Color;
 import java.awt.Rectangle;
 import java.io.File;
@@ -23,11 +25,7 @@ import javax.swing.JApplet;
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
 import com.threerings.getdown.data.Application;
-import com.threerings.getdown.launcher.ImageLoader;
-import com.threerings.getdown.launcher.RotatingBackgrounds;
 import com.threerings.getdown.util.ConfigUtil;
-
-import static com.threerings.getdown.Log.log;
 
 public class GetdownAppletConfig
 {
