@@ -68,11 +68,10 @@ import com.threerings.getdown.util.ProgressObserver;
 import com.threerings.getdown.util.VersionUtil;
 
 /**
- * Parses and provide access to the information contained in the <code>getdown.txt</code>
+ * Parses and provide access to the information contained in the {@code getdown.txt}
  * configuration file.
  */
-public class Application
-{
+public class Application {
     /** The name of our configuration file. */
     public static final String CONFIG_FILE = "getdown.txt";
 
@@ -90,14 +89,12 @@ public class Application
     public static final String MANIFEST_CLASS = "manifest";
 
     /** Used to communicate information about the UI displayed when updating the application. */
-    public static class UpdateInterface
-    {
+    public static class UpdateInterface {
         /**
          * The major steps involved in updating, along with some arbitrary percentages
          * assigned to them, to mark global progress.
          */
-        public enum Step
-        {
+        public enum Step {
             UPDATE_JAVA(10),
             VERIFY_METADATA(15, 65, 95),
             DOWNLOAD(40),
@@ -111,8 +108,7 @@ public class Application
             public final List<Integer> defaultPercents;
 
             /** Enum constructor. */
-            Step (int... percents)
-            {
+            Step(int... percents) {
                 this.defaultPercents = intsToList(percents);
             }
         }
@@ -184,15 +180,14 @@ public class Application
 
         /** Generates a string representation of this instance. */
         @Override
-        public String toString ()
-        {
-            return "[name=" + name + ", bg=" + background + ", bg=" + backgroundImage +
-                ", pi=" + progressImage + ", prect=" + progress + ", pt=" + progressText +
-                ", pb=" + progressBar + ", srect=" + status + ", st=" + statusText +
-                ", shadow=" + textShadow + ", err=" + installError + ", nrect=" + patchNotes +
-                ", notes=" + patchNotesUrl + ", stepPercentages=" + stepPercentages +
-                ", parect=" + playAgain + ", paimage=" + playAgainImage +
-                ", hideProgressText" + hideProgressText + "]";
+        public String toString() {
+            return "[name=" + name + ", bg=" + background + ", bg=" + backgroundImage
+                + ", pi=" + progressImage + ", prect=" + progress + ", pt=" + progressText
+                + ", pb=" + progressBar + ", srect=" + status + ", st=" + statusText
+                + ", shadow=" + textShadow + ", err=" + installError + ", nrect=" + patchNotes
+                + ", notes=" + patchNotesUrl + ", stepPercentages=" + stepPercentages
+                + ", parect=" + playAgain + ", paimage=" + playAgainImage
+                + ", hideProgressText" + hideProgressText + "]";
         }
 
         /** Initializer */
@@ -207,10 +202,9 @@ public class Application
      * Used by {@link #verifyMetadata} to communicate status in circumstances where it needs to
      * take network actions.
      */
-    public static interface StatusDisplay
-    {
+    public interface StatusDisplay {
         /** Requests that the specified status message be displayed. */
-        public void updateStatus (String message);
+        public void updateStatus(String message);
     }
 
     /**
@@ -221,7 +215,7 @@ public class Application
         public final List<Resource> codes;
         public final List<Resource> rsrcs;
 
-        public AuxGroup (String name, List<Resource> codes, List<Resource> rsrcs) {
+        public AuxGroup(String name, List<Resource> codes, List<Resource> rsrcs) {
             this.name = name;
             this.codes = Collections.unmodifiableList(codes);
             this.rsrcs = Collections.unmodifiableList(rsrcs);
@@ -233,13 +227,12 @@ public class Application
      *
      * @see #Application(File, String, List, String[], String[])
      */
-    public Application (File appdir, String appid)
-    {
+    public Application(File appdir, String appid) {
         this(appdir, appid, null, null, null);
     }
 
     /**
-     * Creates an application instance which records the location of the <code>getdown.txt</code>
+     * Creates an application instance which records the location of the {@code getdown.txt}
      * configuration file from the supplied application directory.
      *
      * @param appid usually null but a string identifier if a secondary application is desired to
@@ -250,22 +243,20 @@ public class Application
      * @param appargs additional arguments to pass on to launched application; these will be added
      * after the args in the getdown.txt file.
      */
-    public Application (File appdir, String appid, List<Certificate> signers,
-                        String[] jvmargs, String[] appargs)
-    {
+    public Application(File appdir, String appid, List<Certificate> signers, String[] jvmargs,
+            String[] appargs) {
         _appdir = appdir;
         _appid = appid;
-        _signers = (signers == null) ? Collections.<Certificate>emptyList() : signers;
+        _signers = signers == null ? Collections.<Certificate>emptyList() : signers;
         _config = getLocalPath(CONFIG_FILE);
-        _extraJvmArgs = (jvmargs == null) ? ArrayUtil.EMPTY_STRING : jvmargs;
-        _extraAppArgs = (appargs == null) ? ArrayUtil.EMPTY_STRING : appargs;
+        _extraJvmArgs = jvmargs == null ? ArrayUtil.EMPTY_STRING : jvmargs;
+        _extraAppArgs = appargs == null ? ArrayUtil.EMPTY_STRING : appargs;
     }
 
     /**
      * Returns a resource that refers to the application configuration file itself.
      */
-    public Resource getConfigResource ()
-    {
+    public Resource getConfigResource() {
         try {
             return createResource(CONFIG_FILE, false);
         } catch (Exception e) {
@@ -276,16 +267,14 @@ public class Application
     /**
      * Returns a list of the code {@link Resource} objects used by this application.
      */
-    public List<Resource> getCodeResources ()
-    {
+    public List<Resource> getCodeResources() {
         return _codes;
     }
 
     /**
      * Returns a list of the non-code {@link Resource} objects used by this application.
      */
-    public List<Resource> getResources ()
-    {
+    public List<Resource> getResources() {
         return _resources;
     }
 
@@ -293,8 +282,7 @@ public class Application
      * Returns a list of all the active {@link Resource} objects used by this application (code and
      * non-code).
      */
-    public List<Resource> getAllActiveResources ()
-    {
+    public List<Resource> getAllActiveResources() {
         List<Resource> allResources = new ArrayList<Resource>();
         allResources.addAll(getActiveCodeResources());
         allResources.addAll(getActiveResources());
@@ -304,8 +292,7 @@ public class Application
     /**
      * Returns the auxiliary resource group with the specified name, or null.
      */
-    public AuxGroup getAuxGroup (String name)
-    {
+    public AuxGroup getAuxGroup(String name) {
         return _auxgroups.get(name);
     }
 
@@ -314,8 +301,7 @@ public class Application
      * resource group is a collection of resource files that are not downloaded unless a group
      * token file is present in the application directory.
      */
-    public Iterable<AuxGroup> getAuxGroups ()
-    {
+    public Iterable<AuxGroup> getAuxGroups() {
         return _auxgroups.values();
     }
 
@@ -324,8 +310,7 @@ public class Application
      * groups should be ignored, activated groups should be downloaded and patched along with the
      * main resources.
      */
-    public boolean isAuxGroupActive (String auxgroup)
-    {
+    public boolean isAuxGroupActive(String auxgroup) {
         Boolean active = _auxactive.get(auxgroup);
         if (active == null) {
             // TODO: compare the contents with the MD5 hash of the auxgroup name and the client's
@@ -339,8 +324,7 @@ public class Application
     /**
      * Returns all main code resources and all code resources from active auxiliary resource groups.
      */
-    public List<Resource> getActiveCodeResources ()
-    {
+    public List<Resource> getActiveCodeResources() {
         ArrayList<Resource> codes = new ArrayList<Resource>();
         codes.addAll(getCodeResources());
         for (AuxGroup aux : getAuxGroups()) {
@@ -354,8 +338,7 @@ public class Application
     /**
      * Returns all non-code resources and all resources from active auxiliary resource groups.
      */
-    public List<Resource> getActiveResources ()
-    {
+    public List<Resource> getActiveResources() {
         ArrayList<Resource> rsrcs = new ArrayList<Resource>();
         rsrcs.addAll(getResources());
         for (AuxGroup aux : getAuxGroups()) {
@@ -373,15 +356,14 @@ public class Application
      * @param auxgroup the auxiliary resource group for which a patch resource is desired or null
      * for the main application patch resource.
      */
-    public Resource getPatchResource (String auxgroup)
-    {
+    public Resource getPatchResource(String auxgroup) {
         if (_targetVersion <= _version) {
             log.warning("Requested patch resource for up-to-date or non-versioned application",
                 "cvers", _version, "tvers", _targetVersion);
             return null;
         }
 
-        String infix = (auxgroup == null) ? "" : ("-" + auxgroup);
+        String infix = auxgroup == null ? "" : "-" + auxgroup;
         String pfile = "patch" + infix + _version + ".dat";
         try {
             URL remote = new URL(createVAppBase(_targetVersion), encodePath(pfile));
@@ -398,8 +380,7 @@ public class Application
      * place of the installed VM (in the case where the VM that launched Getdown does not meet the
      * application's version requirements) or null if no VM is available for this platform.
      */
-    public Resource getJavaVMResource ()
-    {
+    public Resource getJavaVMResource() {
         if (StringUtil.isBlank(_javaLocation)) {
             return null;
         }
@@ -419,8 +400,7 @@ public class Application
      * Returns a resource that can be used to download an archive containing all files belonging to
      * the application.
      */
-    public Resource getFullResource ()
-    {
+    public Resource getFullResource() {
         String file = "full";
         try {
             URL remote = new URL(createVAppBase(_targetVersion), encodePath(file));
@@ -438,8 +418,7 @@ public class Application
      *
      * @param event the event to be reported: start, jvm_start, jvm_complete, complete.
      */
-    public URL getTrackingURL (String event)
-    {
+    public URL getTrackingURL(String event) {
         try {
             String suffix = _trackingURLSuffix == null ? "" : _trackingURLSuffix;
             String ga = getGATrackingCode();
@@ -455,8 +434,7 @@ public class Application
      * initial download. Returns null if no tracking request was configured for the specified
      * percentage.
      */
-    public URL getTrackingProgressURL (int percent)
-    {
+    public URL getTrackingProgressURL(int percent) {
         if (_trackingPcts == null || !_trackingPcts.contains(percent)) {
             return null;
         }
@@ -466,16 +444,14 @@ public class Application
     /**
      * Returns the name of our tracking cookie or null if it was not set.
      */
-    public String getTrackingCookieName ()
-    {
+    public String getTrackingCookieName() {
         return _trackingCookieName;
     }
 
     /**
      * Returns the name of our tracking cookie system property or null if it was not set.
      */
-    public String getTrackingCookieProperty ()
-    {
+    public String getTrackingCookieProperty() {
         return _trackingCookieProperty;
     }
 
@@ -490,11 +466,10 @@ public class Application
      * @exception IOException thrown if there is an error reading the file or an error encountered
      * during its parsing.
      */
-    public UpdateInterface init (boolean checkPlatform)
-        throws IOException
-    {
-        Map<String,Object> cdata = null;
+    public UpdateInterface init(boolean checkPlatform) throws IOException {
+        Map<String, Object> cdata = null;
         File config = _config;
+
         try {
             // if we have a configuration file, read the data from it
             if (config.exists()) {
@@ -519,13 +494,13 @@ public class Application
         if (cdata == null) {
             String appbase = SysProps.appBase();
             log.info("Attempting to obtain 'appbase' from system property", "appbase", appbase);
-            cdata = new HashMap<String,Object>();
+            cdata = new HashMap<String, Object>();
             cdata.put("appbase", appbase);
         }
 
         // first determine our application base, this way if anything goes wrong later in the
         // process, our caller can use the appbase to download a new configuration file
-        _appbase = (String)cdata.get("appbase");
+        _appbase = (String) cdata.get("appbase");
         if (_appbase == null) {
             throw new RuntimeException("m.missing_appbase");
         }
@@ -538,19 +513,22 @@ public class Application
         _appbase = replaceDomain(_appbase);
 
         // extract our version information
-        String vstr = (String)cdata.get("version");
-        if (vstr != null) _version = parseLong(vstr, "m.invalid_version");
+        String vstr = (String) cdata.get("version");
+
+        if (vstr != null) {
+            _version = parseLong(vstr, "m.invalid_version");
+        }
 
         // if we are a versioned deployment, create a versioned appbase
         try {
-            _vappbase = (_version < 0) ? new URL(_appbase) : createVAppBase(_version);
+            _vappbase = _version < 0 ? new URL(_appbase) : createVAppBase(_version);
         } catch (MalformedURLException mue) {
             String err = MessageUtil.tcompose("m.invalid_appbase", _appbase);
             throw (IOException) new IOException(err).initCause(mue);
         }
 
         // check for a latest config URL
-        String latest = (String)cdata.get("latest");
+        String latest = (String) cdata.get("latest");
         if (latest != null) {
             latest = replaceDomain(latest);
             try {
@@ -560,34 +538,44 @@ public class Application
             }
         }
 
-        String appPrefix = StringUtil.isBlank(_appid) ? "" : (_appid + ".");
+        String appPrefix = StringUtil.isBlank(_appid) ? "" : _appid + ".";
 
         // determine our application class name
-        _class = (String)cdata.get(appPrefix + "class");
+        _class = (String) cdata.get(appPrefix + "class");
         if (_class == null) {
             throw new IOException("m.missing_class");
         }
 
         // check to see if we're using a custom java.version property and regex
-        vstr = (String)cdata.get("java_version_prop");
-        if (vstr != null) _javaVersionProp = vstr;
-        vstr = (String)cdata.get("java_version_regex");
-        if (vstr != null) _javaVersionRegex = vstr;
+        vstr = (String) cdata.get("java_version_prop");
+        if (vstr != null) {
+            _javaVersionProp = vstr;
+        }
+        vstr = (String) cdata.get("java_version_regex");
+        if (vstr != null) {
+            _javaVersionRegex = vstr;
+        }
 
         // check to see if we require a particular JVM version and have a supplied JVM
-        vstr = (String)cdata.get("java_version");
-        if (vstr != null) _javaMinVersion = parseLong(vstr, "m.invalid_java_version");
+        vstr = (String) cdata.get("java_version");
+        if (vstr != null) {
+            _javaMinVersion = parseLong(vstr, "m.invalid_java_version");
+        }
         // we support java_min_version as an alias of java_version; it better expresses the check
         // that's going on and better mirrors java_max_version
-        vstr = (String)cdata.get("java_min_version");
-        if (vstr != null) _javaMinVersion = parseLong(vstr, "m.invalid_java_version");
+        vstr = (String) cdata.get("java_min_version");
+        if (vstr != null) {
+            _javaMinVersion = parseLong(vstr, "m.invalid_java_version");
+        }
 
         // check to see if we require a particular max JVM version and have a supplied JVM
-        vstr = (String)cdata.get("java_max_version");
-        if (vstr != null) _javaMaxVersion = parseLong(vstr, "m.invalid_java_version");
+        vstr = (String) cdata.get("java_max_version");
+        if (vstr != null) {
+            _javaMaxVersion = parseLong(vstr, "m.invalid_java_version");
+        }
 
         // check to see if we require a particular JVM version and have a supplied JVM
-        vstr = (String)cdata.get("java_exact_version_required");
+        vstr = (String) cdata.get("java_exact_version_required");
         _javaExactVersionRequired = Boolean.parseBoolean(vstr);
 
         // this is a little weird, but when we're run from the digester, we see a String[] which
@@ -595,14 +583,14 @@ public class Application
         // need to know about that; when we're run in a real application there will be only one!
         Object javaloc = cdata.get("java_location");
         if (javaloc instanceof String) {
-            _javaLocation = (String)javaloc;
+            _javaLocation = (String) javaloc;
         }
 
         // determine whether we have any tracking configuration
-        _trackingURL = (String)cdata.get("tracking_url");
+        _trackingURL = (String) cdata.get("tracking_url");
 
         // check for tracking progress percent configuration
-        String trackPcts = (String)cdata.get("tracking_percents");
+        String trackPcts = (String) cdata.get("tracking_percents");
         if (!StringUtil.isBlank(trackPcts)) {
             _trackingPcts = new HashSet<Integer>();
             for (int pct : StringUtil.parseIntArray(trackPcts)) {
@@ -614,14 +602,14 @@ public class Application
         }
 
         // Check for tracking cookie configuration
-        _trackingCookieName = (String)cdata.get("tracking_cookie_name");
-        _trackingCookieProperty = (String)cdata.get("tracking_cookie_property");
+        _trackingCookieName = (String) cdata.get("tracking_cookie_name");
+        _trackingCookieProperty = (String) cdata.get("tracking_cookie_property");
 
         // Some app may need an extra suffix added to the tracking URL
-        _trackingURLSuffix = (String)cdata.get("tracking_url_suffix");
+        _trackingURLSuffix = (String) cdata.get("tracking_url_suffix");
 
         // Some app may need to generate google analytics code
-        _trackingGAHash = (String)cdata.get("tracking_ga_hash");
+        _trackingGAHash = (String) cdata.get("tracking_ga_hash");
 
         // clear our arrays as we may be reinitializing
         _codes.clear();
@@ -632,8 +620,8 @@ public class Application
         _txtJvmArgs.clear();
 
         // parse our code resources
-        if (ConfigUtil.getMultiValue(cdata, "code") == null &&
-            ConfigUtil.getMultiValue(cdata, "ucode") == null) {
+        if (ConfigUtil.getMultiValue(cdata, "code") == null
+                && ConfigUtil.getMultiValue(cdata, "ucode") == null) {
             throw new IOException("m.missing_code");
         }
         parseResources(cdata, "code", false, _codes);
@@ -679,7 +667,7 @@ public class Application
         fillAssignmentListFromPairs("extra.txt", _txtJvmArgs);
 
         // determine whether we want to allow offline operation (defaults to false)
-        _allowOffline = Boolean.parseBoolean((String)cdata.get("allow_offline"));
+        _allowOffline = Boolean.parseBoolean((String) cdata.get("allow_offline"));
 
         // look for a debug.txt file which causes us to run in java.exe on Windows so that we can
         // obtain a thread dump of the running JVM
@@ -687,39 +675,39 @@ public class Application
 
         // parse and return our application config
         UpdateInterface ui = new UpdateInterface();
-        _name = ui.name = (String)cdata.get("ui.name");
+        _name = ui.name = (String) cdata.get("ui.name");
         ui.progress = parseRect(cdata, "ui.progress", ui.progress);
         ui.progressText = parseColor(cdata, "ui.progress_text", ui.progressText);
-        ui.hideProgressText =  Boolean.parseBoolean((String)cdata.get("ui.hide_progress_text"));
+        ui.hideProgressText =  Boolean.parseBoolean((String) cdata.get("ui.hide_progress_text"));
         ui.progressBar = parseColor(cdata, "ui.progress_bar", ui.progressBar);
         ui.status = parseRect(cdata, "ui.status", ui.status);
         ui.statusText = parseColor(cdata, "ui.status_text", ui.statusText);
         ui.textShadow = parseColor(cdata, "ui.text_shadow", ui.textShadow);
-        ui.hideDecorations = Boolean.parseBoolean((String)cdata.get("ui.hide_decorations"));
-        ui.backgroundImage = (String)cdata.get("ui.background_image");
+        ui.hideDecorations = Boolean.parseBoolean((String) cdata.get("ui.hide_decorations"));
+        ui.backgroundImage = (String) cdata.get("ui.background_image");
         if (ui.backgroundImage == null) { // support legacy format
-            ui.backgroundImage = (String)cdata.get("ui.background");
+            ui.backgroundImage = (String) cdata.get("ui.background");
         }
         // and now ui.background can refer to the background color, but fall back to black
         // or white, depending on the brightness of the progressText
-        Color defaultBackground = (.5f < Color.RGBtoHSB(
+        Color defaultBackground = .5f < Color.RGBtoHSB(
                 ui.progressText.getRed(), ui.progressText.getGreen(), ui.progressText.getBlue(),
-                null)[2])
+                null)[2]
             ? Color.BLACK
             : Color.WHITE;
         ui.background = parseColor(cdata, "ui.background", defaultBackground);
-        ui.progressImage = (String)cdata.get("ui.progress_image");
+        ui.progressImage = (String) cdata.get("ui.progress_image");
         ui.rotatingBackgrounds = ConfigUtil.getMultiValue(cdata, "ui.rotating_background");
         ui.iconImages = ConfigUtil.getMultiValue(cdata, "ui.icon");
-        ui.errorBackground = (String)cdata.get("ui.error_background");
-        _dockIconPath = (String)cdata.get("ui.mac_dock_icon");
+        ui.errorBackground = (String) cdata.get("ui.error_background");
+        _dockIconPath = (String) cdata.get("ui.mac_dock_icon");
         if (_dockIconPath == null) {
             _dockIconPath = "../desktop.icns"; // use a sensible default
         }
 
         // On an installation error, where do we point the user.
         String installError = parseUrl(cdata, "ui.install_error", null);
-        ui.installError = (installError == null) ?
+        ui.installError = installError == null ?
             "m.default_install_error" : MessageUtil.taint(installError);
 
         // the patch notes bits
@@ -728,11 +716,11 @@ public class Application
 
         // the play again bits
         ui.playAgain = parseRect(cdata, "ui.play_again", ui.playAgain);
-        ui.playAgainImage = (String)cdata.get("ui.play_again_image");
+        ui.playAgainImage = (String) cdata.get("ui.play_again_image");
 
         // step progress percentages
         for (UpdateInterface.Step step : UpdateInterface.Step.values()) {
-            String spec = (String)cdata.get("ui.percents." + step.name());
+            String spec = (String) cdata.get("ui.percents." + step.name());
             if (spec != null) {
                 try {
                     ui.stepPercentages.put(step, intsToList(StringUtil.parseIntArray(spec)));
@@ -748,8 +736,7 @@ public class Application
     /**
      * Adds strings of the form pair0=pair1 to collector for each pair parsed out of pairLocation.
      */
-    protected void fillAssignmentListFromPairs (String pairLocation, List<String> collector)
-    {
+    protected void fillAssignmentListFromPairs(String pairLocation, List<String> collector) {
         File pairFile = getLocalPath(pairLocation);
         if (pairFile.exists()) {
             try {
@@ -771,17 +758,14 @@ public class Application
      * Returns a URL from which the specified path can be fetched. Our application base URL is
      * properly versioned and combined with the supplied path.
      */
-    public URL getRemoteURL (String path)
-        throws MalformedURLException
-    {
+    public URL getRemoteURL(String path) throws MalformedURLException {
         return new URL(_vappbase, encodePath(path));
     }
 
     /**
      * Returns the local path to the specified resource.
      */
-    public File getLocalPath (String path)
-    {
+    public File getLocalPath(String path) {
         return new File(_appdir, path);
     }
 
@@ -790,10 +774,11 @@ public class Application
      * version requirements or have what appears to be a version of the JVM that meets our
      * requirements.
      */
-    public boolean haveValidJavaVersion ()
-    {
+    public boolean haveValidJavaVersion() {
         // if we're doing no version checking, then yay!
-        if (_javaMinVersion == 0 && _javaMaxVersion == 0) return true;
+        if (_javaMinVersion == 0 && _javaMaxVersion == 0) {
+            return true;
+        }
 
         try {
             // parse the version out of the java.version (or custom) system property
@@ -823,16 +808,17 @@ public class Application
             }
 
             if (_javaExactVersionRequired) {
-                if (version == _javaMinVersion) return true;
-                else {
+                if (version == _javaMinVersion) {
+                    return true;
+                } else {
                     log.warning("An exact Java VM version is required.", "current", version,
                                 "required", _javaMinVersion);
                     return false;
                 }
             }
 
-            boolean minVersionOK = (_javaMinVersion == 0) || (version >= _javaMinVersion);
-            boolean maxVersionOK = (_javaMaxVersion == 0) || (version <= _javaMaxVersion);
+            boolean minVersionOK = _javaMinVersion == 0 || version >= _javaMinVersion;
+            boolean maxVersionOK = _javaMaxVersion == 0 || version <= _javaMaxVersion;
             return minVersionOK && maxVersionOK;
 
         } catch (RuntimeException re) {
@@ -849,16 +835,14 @@ public class Application
      * whether the launch is successful and, if necessary, trying again without the optimum
      * arguments.
      */
-    public boolean hasOptimumJvmArgs ()
-    {
+    public boolean hasOptimumJvmArgs() {
         return _optimumJvmArgs != null;
     }
 
     /**
      * Returns true if the app should attempt to run even if we have no Internet connection.
      */
-    public boolean allowOffline ()
-    {
+    public boolean allowOffline() {
         return _allowOffline;
     }
 
@@ -866,9 +850,7 @@ public class Application
      * Attempts to redownload the <code>getdown.txt</code> file based on information parsed from a
      * previous call to {@link #init}.
      */
-    public void attemptRecovery (StatusDisplay status)
-        throws IOException
-    {
+    public void attemptRecovery(StatusDisplay status) throws IOException {
         status.updateStatus("m.updating_metadata");
         downloadConfigFile();
     }
@@ -877,9 +859,7 @@ public class Application
      * Downloads and replaces the <code>getdown.txt</code> and <code>digest.txt</code> files with
      * those for the target version of our application.
      */
-    public void updateMetadata ()
-        throws IOException
-    {
+    public void updateMetadata() throws IOException {
         try {
             // update our versioned application base with the target version
             _vappbase = createVAppBase(_targetVersion);
@@ -894,7 +874,6 @@ public class Application
             // start the whole process over again
             downloadDigestFile();
             downloadConfigFile();
-
         } catch (IOException ex) {
             // if we are allowing offline execution, we want to allow the application to run in its
             // current form rather than aborting the entire process; to do this, we delete the
@@ -918,9 +897,7 @@ public class Application
      * @param optimum whether or not to include the set of optimum arguments (as opposed to falling
      * back).
      */
-    public Process createProcess (boolean optimum)
-        throws IOException
-    {
+    public Process createProcess(boolean optimum) throws IOException {
         ArrayList<String> args = new ArrayList<String>();
 
         // reconstruct the path to the JVM
@@ -962,7 +939,7 @@ public class Application
 
         // pass along any pass-through arguments
         for (Map.Entry<Object, Object> entry : System.getProperties().entrySet()) {
-            String key = (String)entry.getKey();
+            String key = (String) entry.getKey();
             if (key.startsWith(PROP_PASSTHROUGH_PREFIX)) {
                 key = key.substring(PROP_PASSTHROUGH_PREFIX.length());
                 args.add("-D" + key + "=" + entry.getValue());
@@ -1012,8 +989,7 @@ public class Application
      * If the application didn't provide any environment variables, null is returned to just use
      * the existing environment.
      */
-    protected String[] createEnvironment ()
-    {
+    protected String[] createEnvironment() {
         List<String> envvar = new ArrayList<String>();
         fillAssignmentListFromPairs("env.txt", envvar);
         if (envvar.isEmpty()) {
@@ -1036,8 +1012,7 @@ public class Application
     /**
      * Runs this application directly in the current VM.
      */
-    public void invokeDirect (JApplet applet)
-    {
+    public void invokeDirect(JApplet applet) {
         // create a custom class loader
         ArrayList<URL> jars = new ArrayList<URL>();
         for (Resource rsrc : getActiveCodeResources()) {
@@ -1050,7 +1025,7 @@ public class Application
         URLClassLoader loader = new URLClassLoader(
             jars.toArray(new URL[jars.size()]),
             ClassLoader.getSystemClassLoader()) {
-            @Override protected PermissionCollection getPermissions (CodeSource code) {
+            @Override protected PermissionCollection getPermissions(CodeSource code) {
                 Permissions perms = new Permissions();
                 perms.add(new AllPermission());
                 return perms;
@@ -1059,7 +1034,9 @@ public class Application
         Thread.currentThread().setContextClassLoader(loader);
 
         log.info("Configured URL class loader:");
-        for (URL url : jars) log.info("  " + url);
+        for (URL url : jars) {
+            log.info("  " + url);
+        }
 
         // configure any system properties that we can
         for (String jvmarg : _jvmargs) {
@@ -1077,10 +1054,10 @@ public class Application
         // pass along any pass-through arguments
         Map<String, String> passProps = new HashMap<String, String>();
         for (Map.Entry<Object, Object> entry : System.getProperties().entrySet()) {
-            String key = (String)entry.getKey();
+            String key = (String) entry.getKey();
             if (key.startsWith(PROP_PASSTHROUGH_PREFIX)) {
                 key = key.substring(PROP_PASSTHROUGH_PREFIX.length());
-                passProps.put(key, (String)entry.getValue());
+                passProps.put(key, (String) entry.getValue());
             }
         }
         // we can't set these in the above loop lest we get a ConcurrentModificationException
@@ -1093,7 +1070,9 @@ public class Application
 
         // prepare our app arguments
         String[] args = new String[_appargs.size()];
-        for (int ii = 0; ii < args.length; ii++) args[ii] = processArg(_appargs.get(ii));
+        for (int ii = 0; ii < args.length; ii++) {
+            args[ii] = processArg(_appargs.get(ii));
+        }
 
         try {
             log.info("Loading " + _class);
@@ -1115,8 +1094,7 @@ public class Application
     }
 
     /** Replaces the application directory and version in any argument. */
-    protected String processArg (String arg)
-    {
+    protected String processArg(String arg) {
         arg = arg.replace("%APPDIR%", _appdir.getAbsolutePath());
         arg = arg.replace("%VERSION%", String.valueOf(_version));
 
@@ -1127,7 +1105,9 @@ public class Application
             Matcher matcher = ENV_VAR_PATTERN.matcher(arg);
             while (matcher.find()) {
                 String varName = matcher.group(1), varValue = System.getenv(varName);
-                if (varName == null) varName = "MISSING:" + varName;
+                if (varName == null) {
+                    varName = "MISSING:" + varName;
+                }
                 matcher.appendReplacement(sb, varValue);
             }
             matcher.appendTail(sb);
@@ -1149,18 +1129,10 @@ public class Application
      * @exception IOException thrown if we encounter an unrecoverable error while verifying the
      * metadata.
      */
-    public boolean verifyMetadata (StatusDisplay status)
-        throws IOException
-    {
+    public boolean verifyMetadata(StatusDisplay status) throws IOException {
         log.info("Verifying application: " + _vappbase);
         log.info("Version: " + _version);
         log.info("Class: " + _class);
-//         log.info("Code: " +
-//                  StringUtil.toString(getCodeResources().iterator()));
-//         log.info("Resources: " +
-//                  StringUtil.toString(getActiveResources().iterator()));
-//         log.info("JVM Args: " + StringUtil.toString(_jvmargs.iterator()));
-//         log.info("App Args: " + StringUtil.toString(_appargs.iterator()));
 
         // this will read in the contents of the digest file and validate itself
         try {
@@ -1174,7 +1146,7 @@ public class Application
         if (_version == -1) {
             // make a note of the old meta-digest, if this changes we need to revalidate all of our
             // resources as one or more of them have also changed
-            String olddig = (_digest == null) ? "" : _digest.getMetaDigest();
+            String olddig = _digest == null ? "" : _digest.getMetaDigest();
             try {
                 status.updateStatus("m.checking");
                 downloadDigestFile();
@@ -1273,9 +1245,8 @@ public class Application
      * validated" resources filled in.
      * @param unpacked a set to populate with unpacked resources.
      */
-    public List<Resource> verifyResources (ProgressObserver obs, int[] alreadyValid,
-                                           Set<Resource> unpacked) throws InterruptedException
-    {
+    public List<Resource> verifyResources(ProgressObserver obs, int[] alreadyValid,
+            Set<Resource> unpacked) throws InterruptedException {
         List<Resource> rsrcs = getAllActiveResources();
         List<Resource> failures = new ArrayList<Resource>();
 
@@ -1328,7 +1299,7 @@ public class Application
             failures.add(rsrc);
         }
 
-        return (failures.size() == 0) ? null : failures;
+        return failures.size() == 0 ? null : failures;
     }
 
     /**
@@ -1336,13 +1307,12 @@ public class Application
      *
      * @param unpacked a set of resources to skip because they're already unpacked.
      */
-    public void unpackResources (ProgressObserver obs, Set<Resource> unpacked)
-        throws InterruptedException
-    {
+    public void unpackResources(ProgressObserver obs, Set<Resource> unpacked)
+            throws InterruptedException {
         List<Resource> rsrcs = getActiveResources();
 
         // remove resources that we don't want to unpack
-        for (Iterator<Resource> it = rsrcs.iterator(); it.hasNext(); ) {
+        for (Iterator<Resource> it = rsrcs.iterator(); it.hasNext();) {
             Resource rsrc = it.next();
             if (!rsrc.shouldUnpack() || unpacked.contains(rsrc)) {
                 it.remove();
@@ -1372,8 +1342,7 @@ public class Application
     /**
      * Clears all validation marker files.
      */
-    public void clearValidationMarkers ()
-    {
+    public void clearValidationMarkers() {
         clearValidationMarkers(getAllActiveResources().iterator());
     }
 
@@ -1381,25 +1350,21 @@ public class Application
      * Returns the version number for the application.  Should only be called after successful
      * return of verifyMetadata.
      */
-    public long getVersion ()
-    {
+    public long getVersion() {
         return _version;
     }
 
     /**
      * Creates a versioned application base URL for the specified version.
      */
-    protected URL createVAppBase (long version)
-        throws MalformedURLException
-    {
+    protected URL createVAppBase(long version) throws MalformedURLException {
         return new URL(_appbase.replace("%VERSION%", "" + version));
     }
 
     /**
      * Clears all validation marker files for the resources in the supplied iterator.
      */
-    protected void clearValidationMarkers (Iterator<Resource> iter)
-    {
+    protected void clearValidationMarkers(Iterator<Resource> iter) {
         while (iter.hasNext()) {
             iter.next().clearMarker();
         }
@@ -1408,9 +1373,7 @@ public class Application
     /**
      * Downloads a new copy of CONFIG_FILE.
      */
-    protected void downloadConfigFile ()
-        throws IOException
-    {
+    protected void downloadConfigFile() throws IOException {
         downloadControlFile(CONFIG_FILE, false);
     }
 
@@ -1418,8 +1381,7 @@ public class Application
      * @return true if gettingdown.lock was unlocked, already locked by this application or if
      * we're not locking at all.
      */
-    public synchronized boolean lockForUpdates ()
-    {
+    public synchronized boolean lockForUpdates() {
         if (_lock != null && _lock.isValid()) {
             return true;
         }
@@ -1445,8 +1407,7 @@ public class Application
     /**
      * Release gettingdown.lock
      */
-    public synchronized void releaseLock ()
-    {
+    public synchronized void releaseLock() {
         if (_lock != null) {
             log.info("Releasing lock");
             try {
@@ -1468,9 +1429,7 @@ public class Application
      * Downloads a copy of Digest.DIGEST_FILE and validates its signature.
      * @throws IOException
      */
-    protected void downloadDigestFile ()
-        throws IOException
-    {
+    protected void downloadDigestFile() throws IOException {
         downloadControlFile(Digest.DIGEST_FILE, true);
     }
 
@@ -1486,9 +1445,7 @@ public class Application
      *
      * <p> TODO: Switch to PKCS #7 or CMS.
      */
-    protected void downloadControlFile (String path, boolean validateSignature)
-        throws IOException
-    {
+    protected void downloadControlFile(String path, boolean validateSignature) throws IOException {
         File target = downloadFile(path);
 
         if (validateSignature) {
@@ -1559,9 +1516,7 @@ public class Application
      * Download a path to a temporary file, returning a {@link File} instance with the path
      * contents.
      */
-    protected File downloadFile (String path)
-        throws IOException
-    {
+    protected File downloadFile(String path) throws IOException {
         File target = getLocalPath(path + "_new");
 
         URL targetURL = null;
@@ -1603,16 +1558,13 @@ public class Application
     }
 
     /** Helper function for creating {@link Resource} instances. */
-    protected Resource createResource (String path, boolean unpack)
-        throws MalformedURLException
-    {
+    protected Resource createResource(String path, boolean unpack) throws MalformedURLException {
         return new Resource(path, getRemoteURL(path), getLocalPath(path), unpack);
     }
 
     /** Used to parse resources with the specified name. */
-    protected void parseResources (Map<String,Object> cdata, String name, boolean unpack,
-                                   List<Resource> list)
-    {
+    protected void parseResources(Map<String, Object> cdata, String name, boolean unpack,
+            List<Resource> list) {
         String[] rsrcs = ConfigUtil.getMultiValue(cdata, name);
         if (rsrcs == null) {
             return;
@@ -1627,15 +1579,14 @@ public class Application
     }
 
     /** Used to parse rectangle specifications from the config file. */
-    protected Rectangle parseRect (Map<String,Object> cdata, String name, Rectangle def)
-    {
-        String value = (String)cdata.get(name);
+    protected Rectangle parseRect(Map<String, Object> cdata, String name, Rectangle def) {
+        String value = (String) cdata.get(name);
         Rectangle rect = parseRect(name, value);
-        return (rect == null) ? def : rect;
+        return rect == null ? def : rect;
     }
 
     /** Helper function to add all values in {@code values} (if non-null) to {@code target}. */
-    protected static void addAll (String[] values, List<String> target) {
+    protected static void addAll(String[] values, List<String> target) {
         if (values != null) {
             for (String value : values) {
                 target.add(value);
@@ -1646,8 +1597,7 @@ public class Application
     /**
      * Make an immutable List from the specified int array.
      */
-    public static List<Integer> intsToList (int[] values)
-    {
+    public static List<Integer> intsToList(int[] values) {
         List<Integer> list = new ArrayList<Integer>(values.length);
         for (int val : values) {
             list.add(val);
@@ -1659,8 +1609,7 @@ public class Application
      * Takes a comma-separated String of four integers and returns a rectangle using those ints as
      * the its x, y, width, and height.
      */
-    public static Rectangle parseRect (String name, String value)
-    {
+    public static Rectangle parseRect(String name, String value) {
         if (!StringUtil.isBlank(value)) {
             int[] v = StringUtil.parseIntArray(value);
             if (v != null && v.length == 4) {
@@ -1672,19 +1621,17 @@ public class Application
     }
 
     /** Used to parse color specifications from the config file. */
-    protected Color parseColor (Map<String, Object> cdata, String name, Color def)
-    {
-        String value = (String)cdata.get(name);
+    protected Color parseColor(Map<String, Object> cdata, String name, Color def) {
+        String value = (String) cdata.get(name);
         Color color = parseColor(value);
-        return (color == null) ? def : color;
+        return color == null ? def : color;
     }
 
     /**
      * Parses the given hex color value (e.g. FFFFF) and returns a Color object with that value. If
      * the given value is null of not a valid hexadecimal number, this will return null.
      */
-    public static Color parseColor (String hexValue)
-    {
+    public static Color parseColor(String hexValue) {
         if (!StringUtil.isBlank(hexValue)) {
             try {
                 return new Color(Integer.parseInt(hexValue, 16));
@@ -1696,28 +1643,25 @@ public class Application
     }
 
     /** Parses a list of strings from the config file. */
-    protected String[] parseList (Map<String, Object> cdata, String name)
-    {
-        String value = (String)cdata.get(name);
-        return (value == null) ? ArrayUtil.EMPTY_STRING : StringUtil.parseStringArray(value);
+    protected String[] parseList(Map<String, Object> cdata, String name) {
+        String value = (String) cdata.get(name);
+        return value == null ? ArrayUtil.EMPTY_STRING : StringUtil.parseStringArray(value);
     }
 
     /**
      * Parses a URL from the config file, checking first for a localized version.
      */
-    protected String parseUrl (Map<String, Object> cdata, String name, String def)
-    {
-        String value = (String)cdata.get(name + "." + Locale.getDefault().getLanguage());
+    protected String parseUrl(Map<String, Object> cdata, String name, String def) {
+        String value = (String) cdata.get(name + "." + Locale.getDefault().getLanguage());
         if (!StringUtil.isBlank(value)) {
             return value;
         }
-        value = (String)cdata.get(name);
+        value = (String) cdata.get(name);
         return StringUtil.isBlank(value) ? def : value;
     }
 
     /** Possibly generates and returns a google analytics tracking cookie. */
-    protected String getGATrackingCode ()
-    {
+    protected String getGATrackingCode() {
         if (_trackingGAHash == null) {
             return "";
         }
@@ -1742,8 +1686,7 @@ public class Application
     /**
      * If appbase_domain property is set, replace the domain on the provided string.
      */
-    protected String replaceDomain (String appbase)
-    {
+    protected String replaceDomain(String appbase) {
         String appbaseDomain = SysProps.appbaseDomain();
         if (appbaseDomain != null) {
             Matcher m = Pattern.compile("(http://[^/]+)(.*)").matcher(appbase);
@@ -1755,8 +1698,7 @@ public class Application
     /**
      * Encodes a path for use in a URL.
      */
-    protected static String encodePath (String path)
-    {
+    protected static String encodePath(String path) {
         // URLEncoder is too fancy for paths, we want to keep /
         return path.replace(" ", "%20");
     }
@@ -1765,8 +1707,7 @@ public class Application
      * Parses and returns a long. {@code value} must be non-null.
      * @throws IOException on malformed value.
      */
-    protected static long parseLong (String value, String errkey) throws IOException
-    {
+    protected static long parseLong(String value, String errkey) throws IOException {
         try {
             return Long.parseLong(value);
         } catch (Exception e) {
@@ -1809,8 +1750,8 @@ public class Application
     protected List<Resource> _codes = new ArrayList<Resource>();
     protected List<Resource> _resources = new ArrayList<Resource>();
 
-    protected Map<String,AuxGroup> _auxgroups = new HashMap<String,AuxGroup>();
-    protected Map<String,Boolean> _auxactive = new HashMap<String,Boolean>();
+    protected Map<String, AuxGroup> _auxgroups = new HashMap<String, AuxGroup>();
+    protected Map<String, Boolean> _auxactive = new HashMap<String, Boolean>();
 
     protected List<String> _jvmargs = new ArrayList<String>();
     protected List<String> _appargs = new ArrayList<String>();

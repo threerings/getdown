@@ -27,13 +27,11 @@ import com.threerings.getdown.util.ProgressObserver;
 /**
  * Models a single file resource used by an {@link Application}.
  */
-public class Resource
-{
+public class Resource {
     /**
      * Creates a resource with the supplied remote URL and local path.
      */
-    public Resource (String path, URL remote, File local, boolean unpack)
-    {
+    public Resource(String path, URL remote, File local, boolean unpack) {
         _path = path;
         _remote = remote;
         _local = local;
@@ -55,40 +53,35 @@ public class Resource
     /**
      * Returns the path associated with this resource.
      */
-    public String getPath ()
-    {
+    public String getPath() {
         return _path;
     }
 
     /**
      * Returns the local location of this resource.
      */
-    public File getLocal ()
-    {
+    public File getLocal() {
         return _local;
     }
 
     /**
      *  Returns the location of the unpacked resource.
      */
-    public File getUnpacked ()
-    {
+    public File getUnpacked() {
         return _unpacked;
     }
 
     /**
      *  Returns the final target of this resource, whether it has been unpacked or not.
      */
-    public File getFinalTarget ()
-    {
+    public File getFinalTarget() {
         return shouldUnpack() ? getUnpacked() : getLocal();
     }
 
     /**
      * Returns the remote location of this resource.
      */
-    public URL getRemote ()
-    {
+    public URL getRemote() {
         return _remote;
     }
 
@@ -96,8 +89,7 @@ public class Resource
      * Returns true if this resource should be unpacked as a part of the
      * validation process.
      */
-    public boolean shouldUnpack ()
-    {
+    public boolean shouldUnpack() {
         return _unpack;
     }
 
@@ -105,9 +97,7 @@ public class Resource
      * Computes the MD5 hash of this resource's underlying file.
      * <em>Note:</em> This is both CPU and I/O intensive.
      */
-    public String computeDigest (MessageDigest md, ProgressObserver obs)
-        throws IOException
-    {
+    public String computeDigest(MessageDigest md, ProgressObserver obs) throws IOException {
         return computeDigest(_local, md, obs);
     }
 
@@ -115,8 +105,7 @@ public class Resource
      * Returns true if this resource has an associated "validated" marker
      * file.
      */
-    public boolean isMarkedValid ()
-    {
+    public boolean isMarkedValid() {
         if (!_local.exists()) {
             clearMarker();
             return false;
@@ -131,17 +120,14 @@ public class Resource
      *
      * @throws IOException if we fail to create the marker file.
      */
-    public void markAsValid ()
-        throws IOException
-    {
+    public void markAsValid() throws IOException {
         _marker.createNewFile();
     }
 
     /**
      * Removes any "validated" marker file associated with this resource.
      */
-    public void clearMarker ()
-    {
+    public void clearMarker() {
         if (_marker.exists() && !_marker.delete()) {
             log.warning("Failed to erase marker file '" + _marker + "'.");
         }
@@ -151,8 +137,7 @@ public class Resource
      * Unpacks this resource file into the directory that contains it. Returns
      * false if an error occurs while unpacking it.
      */
-    public boolean unpack ()
-    {
+    public boolean unpack() {
         // sanity check
         if (!_isJar && !_isPacked200Jar) {
             log.warning("Requested to unpack non-jar file '" + _local + "'.");
@@ -161,7 +146,7 @@ public class Resource
         try {
             if (_isJar) {
                 return FileUtil.unpackJar(new JarFile(_local), _unpacked);
-            } else{
+            } else {
                 return FileUtil.unpackPacked200Jar(_local, _unpacked);
             }
         } catch (IOException ioe) {
@@ -174,39 +159,37 @@ public class Resource
      * Wipes this resource file along with any "validated" marker file that may be associated with
      * it.
      */
-    public void erase ()
-    {
+    public void erase() {
         clearMarker();
         if (_local.exists() && !_local.delete()) {
             log.warning("Failed to erase resource '" + _local + "'.");
         }
     }
 
-    @Override public boolean equals (Object other)
-    {
+    @Override
+    public boolean equals(Object other) {
         if (other instanceof Resource) {
-            return _path.equals(((Resource)other)._path);
+            return _path.equals(((Resource) other)._path);
         } else {
             return false;
         }
     }
 
-    @Override public int hashCode ()
-    {
+    @Override
+    public int hashCode() {
         return _path.hashCode();
     }
 
-    @Override public String toString ()
-    {
+    @Override
+    public String toString() {
         return _path;
     }
 
     /**
      * Computes the MD5 hash of the supplied file.
      */
-    public static String computeDigest (File target, MessageDigest md, ProgressObserver obs)
-        throws IOException
-    {
+    public static String computeDigest(File target, MessageDigest md, ProgressObserver obs)
+            throws IOException {
         md.reset();
         byte[] buffer = new byte[DIGEST_BUFFER_SIZE];
         int read;
@@ -216,16 +199,16 @@ public class Resource
 
         // if this is a jar, we need to compute the digest in a "timestamp and file order" agnostic
         // manner to properly correlate jardiff patched jars with their unpatched originals
-        if (isJar || isPacked200Jar){
+        if (isJar || isPacked200Jar) {
             File tmpJarFile = null;
             JarFile jar = null;
             try {
                 // if this is a compressed jar file, uncompress it to compute the jar file digest
-                if (isPacked200Jar){
+                if (isPacked200Jar) {
                     tmpJarFile = new File(target.getPath() + ".tmp");
                     FileUtil.unpackPacked200Jar(target, tmpJarFile);
                     jar = new JarFile(tmpJarFile);
-                } else{
+                } else {
                     jar = new JarFile(target);
                 }
 
@@ -284,20 +267,17 @@ public class Resource
     }
 
     /** Helper function to simplify the process of reporting progress. */
-    protected static void updateProgress (ProgressObserver obs, long pos, long total)
-    {
+    protected static void updateProgress(ProgressObserver obs, long pos, long total) {
         if (obs != null) {
-            obs.progress((int)(100 * pos / total));
+            obs.progress((int) (100 * pos / total));
         }
     }
 
-    protected static boolean isJar (String path)
-    {
+    protected static boolean isJar(String path) {
         return path.endsWith(".jar");
     }
 
-    protected static boolean isPacked200Jar (String path)
-    {
+    protected static boolean isPacked200Jar(String path) {
         return path.endsWith(".jar.pack") || path.endsWith(".jar.pack.gz");
     }
 
@@ -308,7 +288,8 @@ public class Resource
 
     /** Used to sort the entries in a jar file. */
     protected static final Comparator<JarEntry> ENTRY_COMP = new Comparator<JarEntry>() {
-        @Override public int compare (JarEntry e1, JarEntry e2) {
+        @Override
+        public int compare(JarEntry e1, JarEntry e2) {
             return e1.getName().compareTo(e2.getName());
         }
     };

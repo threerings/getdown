@@ -21,28 +21,24 @@ import com.threerings.getdown.util.ConnectionUtil;
 /**
  * Implements downloading files over HTTP
  */
-public class HTTPDownloader extends Downloader
-{
-    public HTTPDownloader (List<Resource> resources, Observer obs)
-    {
+public class HTTPDownloader extends Downloader {
+    public HTTPDownloader(List<Resource> resources, Observer obs) {
         super(resources, obs);
     }
 
     @Override
-    protected long checkSize (Resource rsrc)
-        throws IOException
-    {
+    protected long checkSize(Resource rsrc) throws IOException {
         URLConnection conn = ConnectionUtil.open(rsrc.getRemote());
         try {
             // if we're accessing our data via HTTP, we only need a HEAD request
             if (conn instanceof HttpURLConnection) {
-                HttpURLConnection hcon = (HttpURLConnection)conn;
+                HttpURLConnection hcon = (HttpURLConnection) conn;
                 hcon.setRequestMethod("HEAD");
                 hcon.connect();
                 // make sure we got a satisfactory response code
                 if (hcon.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                    throw new IOException("Unable to check up-to-date for " +
-                                          rsrc.getRemote() + ": " + hcon.getResponseCode());
+                    throw new IOException("Unable to check up-to-date for "
+                            + rsrc.getRemote() + ": " + hcon.getResponseCode());
                 }
             }
             return conn.getContentLength();
@@ -54,19 +50,17 @@ public class HTTPDownloader extends Downloader
     }
 
     @Override
-    protected void doDownload (Resource rsrc)
-        throws IOException
-    {
+    protected void doDownload(Resource rsrc) throws IOException {
         // download the resource from the specified URL
         URLConnection conn = ConnectionUtil.open(rsrc.getRemote());
         conn.connect();
 
         // make sure we got a satisfactory response code
         if (conn instanceof HttpURLConnection) {
-            HttpURLConnection hcon = (HttpURLConnection)conn;
+            HttpURLConnection hcon = (HttpURLConnection) conn;
             if (hcon.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                throw new IOException("Unable to download resource " + rsrc.getRemote() + ": " +
-                                      hcon.getResponseCode());
+                throw new IOException("Unable to download resource " + rsrc.getRemote() + ": "
+                        + hcon.getResponseCode());
             }
         }
 

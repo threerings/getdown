@@ -23,8 +23,7 @@ import com.samskivert.util.StringUtil;
  * Parses a file containing key/value pairs and returns a {@link HashMap} with the values. Keys may
  * be repeated, in which case they will be made to reference an array of values.
  */
-public class ConfigUtil
-{
+public class ConfigUtil {
     /**
      * Parses a configuration file containing key/value pairs. The file must be in the UTF-8
      * encoding.
@@ -35,9 +34,7 @@ public class ConfigUtil
      * @return a list of <code>String[]</code> instances containing the key/value pairs in the
      * order they were parsed from the file.
      */
-    public static List<String[]> parsePairs (File config, boolean checkPlatform)
-        throws IOException
-    {
+    public static List<String[]> parsePairs(File config, boolean checkPlatform) throws IOException {
         // annoyingly FileReader does not allow encoding to be specified (uses platform default)
         return parsePairs(
             new InputStreamReader(new FileInputStream(config), "UTF-8"), checkPlatform);
@@ -46,9 +43,8 @@ public class ConfigUtil
     /**
      * See {@link #parsePairs(File,boolean)}.
      */
-    public static List<String[]> parsePairs (Reader config, boolean checkPlatform)
-        throws IOException
-    {
+    public static List<String[]> parsePairs(Reader config, boolean checkPlatform)
+            throws IOException {
         return parsePairs(
             config,
             checkPlatform ? StringUtil.deNull(System.getProperty("os.name")).toLowerCase() : null,
@@ -62,9 +58,8 @@ public class ConfigUtil
      * @return a map from keys to values, where a value will be an array of strings if more than
      * one key/value pair in the config file was associated with the same key.
      */
-    public static Map<String, Object> parseConfig (File config, boolean checkPlatform)
-        throws IOException
-    {
+    public static Map<String, Object> parseConfig(File config, boolean checkPlatform)
+            throws IOException {
         Map<String, Object> data = new HashMap<String, Object>();
 
         // I thought that we could use HashMap<String, String[]> and put new String[] {pair[1]} for
@@ -75,7 +70,7 @@ public class ConfigUtil
             if (value == null) {
                 data.put(pair[0], pair[1]);
             } else if (value instanceof String) {
-                data.put(pair[0], new String[] { (String)value, pair[1] });
+                data.put(pair[0], new String[] { (String) value, pair[1] });
             } else if (value instanceof String[]) {
                 String[] values = (String[])value;
                 String[] nvalues = new String[values.length+1];
@@ -92,20 +87,18 @@ public class ConfigUtil
      * Massages a single string into an array and leaves existing array values as is. Simplifies
      * access to parameters that are expected to be arrays.
      */
-    public static String[] getMultiValue (Map<String, Object> data, String name)
-    {
+    public static String[] getMultiValue(Map<String, Object> data, String name) {
         Object value = data.get(name);
         if (value instanceof String) {
-            return new String[] { (String)value };
+            return new String[] { (String) value };
         } else {
-            return (String[])value;
+            return (String[]) value;
         }
     }
 
     /** A helper function for {@link #parsePairs(Reader,boolean}. */
-    protected static List<String[]> parsePairs (Reader config, String osname, String osarch)
-        throws IOException
-    {
+    protected static List<String[]> parsePairs(Reader config, String osname, String osarch)
+            throws IOException {
         List<String[]> pairs = new ArrayList<String[]>();
         for (String line : FileUtil.readLines(config)) {
             // nix comments
@@ -125,7 +118,7 @@ public class ConfigUtil
             int eidx = line.indexOf("=");
             if (eidx != -1) {
                 pair[0] = line.substring(0, eidx).trim();
-                pair[1] = line.substring(eidx+1).trim();
+                pair[1] = line.substring(eidx + 1).trim();
             } else {
                 pair[0] = line;
                 pair[1] = "";
@@ -146,7 +139,7 @@ public class ConfigUtil
                     continue;
                 }
                 // otherwise filter out the qualifier text
-                pair[1] = pair[1].substring(qidx+1).trim();
+                pair[1] = pair[1].substring(qidx + 1).trim();
             }
 
             pairs.add(pair);
@@ -166,29 +159,31 @@ public class ConfigUtil
      * Examples: [linux-amd64,linux-x86_64], [windows], [mac os x], [!windows]. Negative qualifiers
      * must appear alone, they cannot be used with other qualifiers (positive or negative).
      */
-    protected static boolean checkQualifiers (String quals, String osname, String osarch)
-    {
+    protected static boolean checkQualifiers(String quals, String osname, String osarch) {
         if (quals.startsWith("!")) {
-            if (quals.indexOf(",") != -1) { // sanity check
-                log.warning("Multiple qualifiers cannot be used when one of the qualifiers " +
-                            "is negative", "quals", quals);
+            // sanity check
+            if (quals.indexOf(",") != -1) {
+                log.warning("Multiple qualifiers cannot be used when one of the qualifiers "
+                        + "is negative", "quals", quals);
                 return false;
             }
             return !checkQualifier(quals.substring(1), osname, osarch);
         }
         for (String qual : quals.split(",")) {
             if (checkQualifier(qual, osname, osarch)) {
-                return true; // if we have a positive match, we can immediately return true
+                // if we have a positive match, we can immediately return true
+                return true;
             }
         }
-        return false; // we had no positive matches, so return false
+
+        // we had no positive matches, so return false
+        return false;
     }
 
     /** A helper function for {@link #checkQualifiers}. */
-    protected static boolean checkQualifier (String qual, String osname, String osarch)
-    {
+    protected static boolean checkQualifier(String qual, String osname, String osarch) {
         String[] bits = qual.trim().toLowerCase().split("-");
-        String os = bits[0], arch = (bits.length > 1) ? bits[1] : "";
-        return (osname.indexOf(os) != -1) && (osarch.indexOf(arch) != -1);
+        String os = bits[0], arch = bits.length > 1 ? bits[1] : "";
+        return osname.indexOf(os) != -1 && osarch.indexOf(arch) != -1;
     }
 }

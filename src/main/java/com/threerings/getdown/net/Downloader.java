@@ -20,20 +20,18 @@ import com.threerings.getdown.data.Resource;
  * information and then downloading the files individually, reporting progress back via a callback
  * interface.
  */
-public abstract class Downloader extends Thread
-{
+public abstract class Downloader extends Thread {
     /**
      * An interface used to communicate status back to an external entity.  <em>Note:</em> these
      * methods are all called on the download thread, so implementors must take care to only
      * execute thread-safe code or simply pass a message to the AWT thread, for example.
      */
-    public interface Observer
-    {
+    public interface Observer {
         /**
          * Called before the downloader begins the series of HTTP head requests to determine the
          * size of the files it needs to download.
          */
-        public void resolvingDownloads ();
+        public void resolvingDownloads();
 
         /**
          * Called to inform the observer of ongoing progress toward completion of the overall
@@ -46,16 +44,16 @@ public abstract class Downloader extends Thread
          *
          * @return true if the download should continue, false if it should be aborted.
          */
-        public boolean downloadProgress (int percent, long remaining);
+        public boolean downloadProgress(int percent, long remaining);
 
         /**
          * Called if a failure occurs while checking for an update or downloading a file.
          *
          * @param rsrc the resource that was being downloaded when the error occurred, or
-         * <code>null</code> if the failure occurred while resolving downloads.
+         * {@code null} if the failure occurred while resolving downloads.
          * @param e the exception detailing the failure.
          */
-        public void downloadFailed (Resource rsrc, Exception e);
+        public void downloadFailed(Resource rsrc, Exception e);
     }
 
     /**
@@ -63,8 +61,7 @@ public abstract class Downloader extends Thread
      * the specified observer. The {@link #download} method must be called on the downloader to
      * initiate the download process.
      */
-    public Downloader (List<Resource> resources, Observer obs)
-    {
+    public Downloader(List<Resource> resources, Observer obs) {
         super("Downloader");
         _resources = resources;
         _obs = obs;
@@ -74,8 +71,7 @@ public abstract class Downloader extends Thread
      * This method is invoked as the downloader thread and performs the actual downloading.
      */
     @Override
-    public void run ()
-    {
+    public void run() {
         download();
     }
 
@@ -85,8 +81,7 @@ public abstract class Downloader extends Thread
      * @return true if the download completed or failed for unexpected reasons (in which case the
      * observer will have been notified), false if it was aborted by the observer.
      */
-    public boolean download ()
-    {
+    public boolean download() {
         Resource current = null;
         try {
             // let the observer know that we're computing download size
@@ -132,28 +127,24 @@ public abstract class Downloader extends Thread
     /**
      * Notes the amount of data needed to download the given resource..
      */
-    protected void discoverSize (Resource rsrc)
-        throws IOException
-    {
+    protected void discoverSize(Resource rsrc) throws IOException {
         _sizes.put(rsrc, Math.max(checkSize(rsrc), 0L));
     }
 
     /**
      * Performs the protocol-specific portion of checking download size.
      */
-    protected abstract long checkSize (Resource rsrc) throws IOException;
+    protected abstract long checkSize(Resource rsrc) throws IOException;
 
     /**
      * Downloads the specified resource from its remote location to its local location.
      */
-    protected void download (Resource rsrc)
-        throws IOException
-    {
+    protected void download(Resource rsrc) throws IOException {
         // make sure the resource's target directory exists
         File parent = new File(rsrc.getLocal().getParent());
         if (!parent.exists() && !parent.mkdirs()) {
-            log.warning("Failed to create target directory for resource '" + rsrc + "'. " +
-                    "Download will certainly fail.");
+            log.warning("Failed to create target directory for resource '" + rsrc + "'. "
+                    + "Download will certainly fail.");
         }
         doDownload(rsrc);
     }
@@ -171,9 +162,8 @@ public abstract class Downloader extends Thread
      * updated sizes here we can recover from receiving bogus information in the earlier {@link
      * #checkSize} phase.
      */
-    protected void updateObserver (Resource rsrc, long currentSize, long actualSize)
-        throws IOException
-    {
+    protected void updateObserver(Resource rsrc, long currentSize, long actualSize)
+            throws IOException {
         // update the actual size for this resource (but don't let it shrink)
         _sizes.put(rsrc, actualSize = Math.max(actualSize, _sizes.get(rsrc)));
 
@@ -184,7 +174,7 @@ public abstract class Downloader extends Thread
 
         // notify the observer if it's been sufficiently long since our last notification
         long now = System.currentTimeMillis();
-        if ((now - _lastUpdate) >= UPDATE_DELAY) {
+        if (now - _lastUpdate >= UPDATE_DELAY) {
             _lastUpdate = now;
 
             // total up our current and total bytes
@@ -193,17 +183,17 @@ public abstract class Downloader extends Thread
 
             // compute our bytes per second
             long secs = (now - _start) / 1000L;
-            long bps = (secs == 0) ? 0 : (downloaded / secs);
+            long bps = secs == 0 ? 0 : downloaded / secs;
 
             // compute our percentage completion
-            int pctdone = (totalSize == 0) ? 0 : (int)((downloaded * 100f) / totalSize);
+            int pctdone = totalSize == 0 ? 0 : (int)(downloaded * 100f / totalSize);
 
             // estimate our time remaining
-            long remaining = (bps <= 0 || totalSize == 0) ? -1 : (totalSize - downloaded) / bps;
+            long remaining = bps <= 0 || totalSize == 0 ? -1 : (totalSize - downloaded) / bps;
 
             // make sure we only report 100% exactly once
             if (pctdone < 100 || !_complete) {
-                _complete = (pctdone == 100);
+                _complete = pctdone == 100;
                 if (!_obs.downloadProgress(pctdone, remaining)) {
                     throw new DownloadAbortedException();
                 }
@@ -214,8 +204,7 @@ public abstract class Downloader extends Thread
     /**
      * Sums the supplied values.
      */
-    protected static long sum (Iterable<Long> values)
-    {
+    protected static long sum(Iterable<Long> values) {
         long acc = 0L;
         for (Long value : values) {
             acc += value;
@@ -227,7 +216,7 @@ public abstract class Downloader extends Thread
      * Accomplishes the copying of the resource from remote location to local location using
      * protocol-specific code
      */
-    protected abstract void doDownload (Resource rsrc) throws IOException;
+    protected abstract void doDownload(Resource rsrc) throws IOException;
 
     /** The list of resources to be downloaded. */
     protected List<Resource> _resources;

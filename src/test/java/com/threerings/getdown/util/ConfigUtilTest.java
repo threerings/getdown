@@ -19,8 +19,7 @@ import com.samskivert.util.RandomUtil;
 /**
  * Tests {@link ConfigUtil}.
  */
-public class ConfigUtilTest
-{
+public class ConfigUtilTest {
     public static class Pair {
         public final String key;
         public final String value;
@@ -38,8 +37,8 @@ public class ConfigUtilTest
         new Pair("nine", "ten"),
     };
 
-    @Test public void testSimplePairs () throws IOException
-    {
+    @Test
+    public void testSimplePairs() throws IOException {
         List<String[]> pairs = ConfigUtil.parsePairs(toReader(SIMPLE_PAIRS), true);
         for (int ii = 0; ii < SIMPLE_PAIRS.length; ii++) {
             assertEquals(SIMPLE_PAIRS[ii].key, pairs.get(ii)[0]);
@@ -47,8 +46,8 @@ public class ConfigUtilTest
         }
     }
 
-    @Test public void testQualifiedPairs () throws IOException
-    {
+    @Test
+    public void testQualifiedPairs() throws IOException {
         Pair linux = new Pair("one", "[linux] two");
         Pair mac = new Pair("three", "[mac os x] four");
         Pair linuxAndMac = new Pair("five", "[linux, mac os x] six");
@@ -130,8 +129,7 @@ public class ConfigUtilTest
         assertTrue(!exists(parsed, notWin.key));
     }
 
-    protected static boolean exists (List<String[]> pairs, String key)
-    {
+    protected static boolean exists(List<String[]> pairs, String key) {
         for (String[] pair : pairs) {
             if (pair[0].equals(key)) {
                 return true;
@@ -140,8 +138,7 @@ public class ConfigUtilTest
         return false;
     }
 
-    protected static StringReader toReader (Pair[] pairs)
-    {
+    protected static StringReader toReader(Pair[] pairs) {
         StringBuilder builder = new StringBuilder();
         for (Pair pair : pairs) {
             // throw some whitespace in to ensure it's trimmed
@@ -153,8 +150,7 @@ public class ConfigUtilTest
         return new StringReader(builder.toString());
     }
 
-    protected static String whitespace ()
-    {
+    protected static String whitespace() {
         return RandomUtil.getBoolean() ? " " : "";
     }
 }

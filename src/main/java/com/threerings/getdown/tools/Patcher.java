@@ -26,8 +26,7 @@ import com.threerings.getdown.util.ProgressObserver;
  * patcher is not thread safe. Create a separate patcher instance for each
  * patching action that is desired.
  */
-public class Patcher
-{
+public class Patcher {
     /** A suffix appended to file names to indicate that a file should be newly created. */
     public static final String CREATE = ".create";
 
@@ -47,15 +46,13 @@ public class Patcher
      * with the patcher so that the user interface is not blocked for the
      * duration of the patch.
      */
-    public void patch (File appdir, File patch, ProgressObserver obs)
-        throws IOException
-    {
+    public void patch(File appdir, File patch, ProgressObserver obs) throws IOException {
         // save this information for later
         _obs = obs;
         _plength = patch.length();
 
         JarFile file = new JarFile(patch);
-        Enumeration<JarEntry> entries = file.entries(); // old skool!
+        Enumeration<JarEntry> entries = file.entries();
         while (entries.hasMoreElements()) {
             JarEntry entry = entries.nextElement();
             String path = entry.getName();
@@ -90,13 +87,11 @@ public class Patcher
         file.close();
     }
 
-    protected String strip (String path, String suffix)
-    {
+    protected String strip(String path, String suffix) {
         return path.substring(0, path.length() - suffix.length());
     }
 
-    protected void createFile (JarFile file, ZipEntry entry, File target)
-    {
+    protected void createFile(JarFile file, ZipEntry entry, File target) {
         // create our copy buffer if necessary
         if (_buffer == null) {
             _buffer = new byte[COPY_BUFFER_SIZE];
@@ -129,9 +124,7 @@ public class Patcher
         }
     }
 
-    protected void patchFile (JarFile file, ZipEntry entry,
-                              File appdir, String path)
-    {
+    protected void patchFile(JarFile file, ZipEntry entry, File appdir, String path) {
         File target = new File(appdir, path);
         File patch = new File(appdir, entry.getName());
         File otarget = new File(appdir, path + ".old");
@@ -157,8 +150,9 @@ public class Patcher
             // we'll need this to pass progress along to our observer
             final long elength = entry.getCompressedSize();
             ProgressObserver obs = new ProgressObserver() {
-                public void progress (int percent) {
-                    updateProgress((int)(percent * elength / 100));
+                @Override
+                public void progress(int percent) {
+                    updateProgress((int) (percent * elength / 100));
                 }
             };
 
@@ -186,15 +180,13 @@ public class Patcher
         }
     }
 
-    protected void updateProgress (int progress)
-    {
+    protected void updateProgress(int progress) {
         if (_obs != null) {
             _obs.progress((int)(100 * (_complete + progress) / _plength));
         }
     }
 
-    public static void main (String[] args)
-    {
+    public static void main(String[] args) {
         if (args.length != 2) {
             System.err.println("Usage: Patcher appdir patch_file");
             System.exit(-1);

@@ -17,10 +17,8 @@ import org.apache.commons.codec.binary.Base64;
  * Produces a signed hash of the appbase, appname, and image path to ensure that signed copies of
  * Getdown are not hijacked to run malicious code.
  */
-public class AppletParamSigner
-{
-    public static void main (String[] args)
-    {
+public class AppletParamSigner {
+    public static void main(String[] args) {
         try {
             if (args.length != 7) {
                 System.err.println("AppletParamSigner keystore storepass alias keypass " +
@@ -40,7 +38,7 @@ public class AppletParamSigner
             KeyStore store = KeyStore.getInstance("JKS");
             store.load(new BufferedInputStream(new FileInputStream(keystore)),
                        storepass.toCharArray());
-            PrivateKey key = (PrivateKey)store.getKey(alias, keypass.toCharArray());
+            PrivateKey key = (PrivateKey) store.getKey(alias, keypass.toCharArray());
             Signature sig = Signature.getInstance("SHA1withRSA");
             sig.initSign(key);
             sig.update(params.getBytes());

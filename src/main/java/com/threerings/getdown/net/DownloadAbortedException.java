@@ -10,6 +10,5 @@ import java.io.IOException;
 /**
  * Used to terminate the download process in its midst.
  */
-public class DownloadAbortedException extends IOException
-{
+public class DownloadAbortedException extends IOException {
 }

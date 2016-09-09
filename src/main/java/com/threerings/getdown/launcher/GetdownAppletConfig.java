@@ -27,8 +27,7 @@ import com.samskivert.util.StringUtil;
 import com.threerings.getdown.data.Application;
 import com.threerings.getdown.util.ConfigUtil;
 
-public class GetdownAppletConfig
-{
+public class GetdownAppletConfig {
     public static final String APPBASE = "appbase";
     public static final String APPNAME = "appname";
     public static final String BGIMAGE = "bgimage";
@@ -96,13 +95,11 @@ public class GetdownAppletConfig
 
     public Color statusColor;
 
-    public GetdownAppletConfig (JApplet applet)
-    {
+    public GetdownAppletConfig(JApplet applet) {
         this(applet, null);
     }
 
-    public GetdownAppletConfig (JApplet applet, String paramPrefix)
-    {
+    public GetdownAppletConfig(JApplet applet, String paramPrefix) {
         _applet = applet;
         _prefix = paramPrefix;
 
@@ -191,8 +188,7 @@ public class GetdownAppletConfig
      * Does all the fiddly initialization of Getdown and throws an exception if something goes
      * horribly wrong.
      */
-    public void init () throws Exception
-    {
+    public void init() throws Exception {
         securityCheck();
         setSystemProperties();
         ensureAppdirExists();
@@ -214,8 +210,7 @@ public class GetdownAppletConfig
     /**
      * Sets getdown status panel size and text color from applet params.
      */
-    public void config (Getdown getdown)
-    {
+    public void config(Getdown getdown) {
         if (statusBounds != null) {
             getdown._ifc.status = statusBounds;
         }
@@ -227,29 +222,25 @@ public class GetdownAppletConfig
     /**
      * Gets the value of the named parameter. If the param is not set, this will return null.
      */
-    public String getParameter (String param)
-    {
-        return (_prefix == null) ?
-            _applet.getParameter(param) :
-            _applet.getParameter(_prefix + PARAM_DELIMITER + param);
+    public String getParameter(String param) {
+        return _prefix == null ? _applet.getParameter(param)
+                : _applet.getParameter(_prefix + PARAM_DELIMITER + param);
     }
 
     /**
      * Gets the value of an optional Applet parameter. If the param is not set, the default value is
      * returned.
      */
-    public String getParameter (String param, String defaultValue)
-    {
+    public String getParameter(String param, String defaultValue) {
         String value = getParameter(param);
-        return (value == null) ? defaultValue : value;
+        return value == null ? defaultValue : value;
     }
 
     /**
      * Uses the Applet context to redirect the browser to a URL (intended for use when the applet
      * is done downloading). If the redirect_on_finish parameter was not set, this does nothing.
      */
-    public void redirect ()
-    {
+    public void redirect() {
         if (redirectUrl != null) {
             if (redirectTarget == null) {
                 _applet.getAppletContext().showDocument(redirectUrl);
@@ -264,8 +255,7 @@ public class GetdownAppletConfig
      * the images have not been loaded yet. The locations of the images are pulled from the Applet
      * parameters.
      */
-    public RotatingBackgrounds getBackgroundImages (ImageLoader loader)
-    {
+    public RotatingBackgrounds getBackgroundImages(ImageLoader loader) {
         if (bgimages == null) {
             // Load background images
             bgimages = getBackgroundImages(imgpath, errorimgpath, loader);
@@ -277,9 +267,8 @@ public class GetdownAppletConfig
      * Gets the rotation background images and error image.The given image loader will be used if
      * the images have not been loaded yet.
      */
-    public static RotatingBackgrounds getBackgroundImages (String imageParam,
-        String errorImagePath, ImageLoader loader)
-    {
+    public static RotatingBackgrounds getBackgroundImages(String imageParam,
+            String errorImagePath, ImageLoader loader) {
         // Parse the image parameter and load the background images
         RotatingBackgrounds images;
         if (imageParam == null) {
@@ -295,11 +284,10 @@ public class GetdownAppletConfig
     /**
      * Parses parameters named {@code prefix0}, {@code prefix1}, ... into a list.
      */
-    protected List<String> parseArgList (String prefix)
-    {
+    protected List<String> parseArgList(String prefix) {
         List<String> arglist = new ArrayList<String>();
         String value;
-        for (int ii = 0; (value = getParameter(prefix + ii)) != null; ii++) {
+        for (int i = 0; (value = getParameter(prefix + i)) != null; i++) {
             arglist.add(value);
         }
         return arglist;
@@ -308,8 +296,7 @@ public class GetdownAppletConfig
     /**
      * This checks whether the user has accepted our signed
      */
-    protected void securityCheck () throws Exception
-    {
+    protected void securityCheck() throws Exception {
         // getdown requires full read/write permissions to the system; if we don't have this, then
         // we need to not do anything unsafe, and display a message to the user telling them they
         // need to (groan) close out of the web browser entirely and re-launch the browser, go to
@@ -327,10 +314,9 @@ public class GetdownAppletConfig
     }
 
     /**
-     * Dumps the contents of the <code>properties</code> into the System properties.
+     * Dumps the contents of the {@code properties} into the System properties.
      */
-    protected void setSystemProperties ()
-    {
+    protected void setSystemProperties() {
         System.getProperties().putAll(_properties);
     }
 
@@ -338,8 +324,7 @@ public class GetdownAppletConfig
      * Makes sire that the appdir directory exists, creating it if necessary. Throws an exception if
      * the directory does not exist and cannot be created.
      */
-    protected void ensureAppdirExists () throws Exception
-    {
+    protected void ensureAppdirExists() throws Exception {
         // if our application directory does not exist, auto-create it
         if ((!appdir.exists() || !appdir.isDirectory()) && !appdir.mkdirs()) {
             throw new Exception("m.create_appdir_failed");
@@ -349,8 +334,7 @@ public class GetdownAppletConfig
     /**
      * Writes the installer.txt and getdown.txt files to the local file system as needed.
      */
-    protected void createFiles () throws Exception
-    {
+    protected void createFiles() throws Exception {
         // if an installer.txt file is desired, create that
         if (!StringUtil.isBlank(installerFileContents)) {
             File infile = new File(appdir, "installer.txt");
@@ -364,9 +348,9 @@ public class GetdownAppletConfig
         boolean createGetdown = !gdfile.exists();
         if (!createGetdown) {
             try {
-                Map<String,Object> cdata = ConfigUtil.parseConfig(gdfile, false);
-                String oappbase = StringUtil.trim((String)cdata.get(APPBASE));
-                createGetdown = (appbase != null && !appbase.trim().equals(oappbase));
+                Map<String, Object> cdata = ConfigUtil.parseConfig(gdfile, false);
+                String oappbase = StringUtil.trim((String) cdata.get(APPBASE));
+                createGetdown = appbase != null && !appbase.trim().equals(oappbase);
                 if (createGetdown) {
                     log.warning("Recreating getdown.txt due to appbase mismatch",
                                 "nappbase", appbase, "oappbase", oappbase);
@@ -390,8 +374,7 @@ public class GetdownAppletConfig
     /**
      * Creates the specified file and writes the supplied contents to it.
      */
-    protected boolean writeToFile (File tofile, String contents)
-    {
+    protected boolean writeToFile(File tofile, String contents) {
         try {
             PrintStream out = new PrintStream(new FileOutputStream(tofile));
             out.println(contents);

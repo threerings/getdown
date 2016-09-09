@@ -18,11 +18,9 @@ import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
 
 /**
- * Useful routines for launching Java applications from within other Java
- * applications.
+ * Useful routines for launching Java applications from within other Java applications.
  */
-public class LaunchUtil
-{
+public class LaunchUtil {
     /** The directory into which a local VM installation should be unpacked. */
     public static final String LOCAL_JAVA_DIR = "java_vm";
 
@@ -48,10 +46,8 @@ public class LaunchUtil
      * Getdown will not cause the application to be upgraded, so the application will have to
      * resort to telling the user that it is in a bad way.
      */
-    public static boolean updateVersionAndRelaunch (
-            File appdir, String getdownJarName, String newVersion)
-        throws IOException
-    {
+    public static boolean updateVersionAndRelaunch(File appdir, String getdownJarName,
+            String newVersion) throws IOException {
         // create the file that instructs Getdown to upgrade
         File vfile = new File(appdir, "version.txt");
         PrintStream ps = new PrintStream(new FileOutputStream(vfile));
@@ -81,8 +77,7 @@ public class LaunchUtil
     /**
      * Reconstructs the path to the JVM used to launch this process.
      */
-    public static String getJVMPath (File appdir)
-    {
+    public static String getJVMPath(File appdir) {
         return getJVMPath(appdir, false);
     }
 
@@ -91,8 +86,7 @@ public class LaunchUtil
      *
      * @param windebug if true we will use java.exe instead of javaw.exe on Windows.
      */
-    public static String getJVMPath (File appdir, boolean windebug)
-    {
+    public static String getJVMPath(File appdir, boolean windebug) {
         // first look in our application directory for an installed VM
         String vmpath = checkJVMPath(new File(appdir, LOCAL_JAVA_DIR).getPath(), windebug);
 
@@ -133,8 +127,7 @@ public class LaunchUtil
      * <p> If the upgrade fails for a variety of reasons, warnings are logged but no other actions
      * are taken. There's not much else one can do other than try again next time around.
      */
-    public static void upgradeGetdown (File oldgd, File curgd, File newgd)
-    {
+    public static void upgradeGetdown(File oldgd, File curgd, File newgd) {
         // we assume getdown's jar file size changes with every upgrade, this is not guaranteed,
         // but in reality it will, and it allows us to avoid pointlessly upgrading getdown every
         // time the client is updated which is unnecessarily flirting with danger
@@ -183,17 +176,15 @@ public class LaunchUtil
      * Returns true if, on this operating system, we have to stick around and read the stderr from
      * our children processes to prevent them from filling their output buffers and hanging.
      */
-    public static boolean mustMonitorChildren ()
-    {
+    public static boolean mustMonitorChildren() {
         String osname = System.getProperty("os.name").toLowerCase();
-        return (osname.indexOf("windows 98") != -1 || osname.indexOf("windows me") != -1);
+        return osname.indexOf("windows 98") != -1 || osname.indexOf("windows me") != -1;
     }
 
     /**
      * Checks whether a Java Virtual Machine can be located in the supplied path.
      */
-    protected static String checkJVMPath (String vmhome, boolean windebug)
-    {
+    protected static String checkJVMPath(String vmhome, boolean windebug) {
         String vmbase = vmhome + File.separator + "bin" + File.separator;
         String vmpath = vmbase + "java";
         if (new File(vmpath).exists()) {

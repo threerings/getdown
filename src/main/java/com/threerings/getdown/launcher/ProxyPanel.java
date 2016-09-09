@@ -26,14 +26,10 @@ import com.samskivert.swing.VGroupLayout;
 import com.samskivert.text.MessageUtil;
 
 /**
- * Displays an interface with which the user can configure their proxy
- * settings.
+ * Displays an interface with which the user can configure their proxy settings.
  */
-public class ProxyPanel extends JPanel
-    implements ActionListener
-{
-    public ProxyPanel (Getdown getdown, ResourceBundle msgs)
-    {
+public class ProxyPanel extends JPanel implements ActionListener {
+    public ProxyPanel(Getdown getdown, ResourceBundle msgs) {
         _getdown = getdown;
         _msgs = msgs;
 
@@ -76,18 +72,14 @@ public class ProxyPanel extends JPanel
         }
     }
 
-    // documentation inherited
     @Override
-    public void addNotify  ()
-    {
+    public void addNotify() {
         super.addNotify();
         _host.requestFocusInWindow();
     }
 
-    // documentation inherited
     @Override
-    public Dimension getPreferredSize ()
-    {
+    public Dimension getPreferredSize() {
         // this is annoyingly hardcoded, but we can't just force the width
         // or the JLabel will claim a bogus height thinking it can lay its
         // text out all on one line which will booch the whole UI's
@@ -95,9 +87,8 @@ public class ProxyPanel extends JPanel
         return new Dimension(500, 350);
     }
 
-    // documentation inherited from interface
-    public void actionPerformed (ActionEvent e)
-    {
+    @Override
+    public void actionPerformed(ActionEvent e) {
         String cmd = e.getActionCommand();
         if (cmd.equals("ok")) {
             // communicate this info back to getdown
@@ -110,8 +101,7 @@ public class ProxyPanel extends JPanel
     }
 
     /** Used to look up localized messages. */
-    protected String get (String key)
-    {
+    protected String get(String key) {
         // if this string is tainted, we don't translate it, instead we
         // simply remove the taint character and return it to the caller
         if (MessageUtil.isTainted(key)) {
@@ -125,10 +115,9 @@ public class ProxyPanel extends JPanel
         }
     }
 
-    protected static class SaneTextField extends JTextField
-    {
+    protected static class SaneTextField extends JTextField {
         @Override
-        public Dimension getPreferredSize () {
+        public Dimension getPreferredSize() {
             Dimension d = super.getPreferredSize();
             d.width = Math.max(d.width, 150);
             return d;

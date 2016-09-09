@@ -27,11 +27,8 @@ import com.samskivert.text.MessageUtil;
 /**
  * Displays a confirmation that the user wants to abort installation.
  */
-public class AbortPanel extends JFrame
-    implements ActionListener
-{
-    public AbortPanel (Getdown getdown, ResourceBundle msgs)
-    {
+public class AbortPanel extends JFrame implements ActionListener {
+    public AbortPanel(Getdown getdown, ResourceBundle msgs) {
         _getdown = getdown;
         _msgs = msgs;
 
@@ -56,10 +53,8 @@ public class AbortPanel extends JFrame
         add(row);
     }
 
-    // documentation inherited
     @Override
-    public Dimension getPreferredSize ()
-    {
+    public Dimension getPreferredSize() {
         // this is annoyingly hardcoded, but we can't just force the width
         // or the JLabel will claim a bogus height thinking it can lay its
         // text out all on one line which will booch the whole UI's
@@ -67,9 +62,8 @@ public class AbortPanel extends JFrame
         return new Dimension(300, 200);
     }
 
-    // documentation inherited from interface
-    public void actionPerformed (ActionEvent e)
-    {
+    @Override
+    public void actionPerformed(ActionEvent e) {
         String cmd = e.getActionCommand();
         if (cmd.equals("ok")) {
             System.exit(0);
@@ -79,8 +73,7 @@ public class AbortPanel extends JFrame
     }
 
     /** Used to look up localized messages. */
-    protected String get (String key)
-    {
+    protected String get(String key) {
         // if this string is tainted, we don't translate it, instead we
         // simply remove the taint character and return it to the caller
         if (MessageUtil.isTainted(key)) {
