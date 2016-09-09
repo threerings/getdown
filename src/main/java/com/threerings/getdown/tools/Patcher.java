@@ -21,10 +21,9 @@ import com.threerings.getdown.util.FileUtil;
 import com.threerings.getdown.util.ProgressObserver;
 
 /**
- * Applies a unified patch file to an application directory, providing
- * percentage completion feedback along the way. <em>Note:</em> the
- * patcher is not thread safe. Create a separate patcher instance for each
- * patching action that is desired.
+ * Applies a unified patch file to an application directory, providing percentage completion
+ * feedback along the way. <em>Note:</em> the patcher is not thread safe. Create a separate patcher
+ * instance for each patching action that is desired.
  */
 public class Patcher {
     /** A suffix appended to file names to indicate that a file should be newly created. */
@@ -35,6 +34,12 @@ public class Patcher {
 
     /** A suffix appended to file names to indicate that a file should be deleted. */
     public static final String DELETE = ".delete";
+
+    protected static final int COPY_BUFFER_SIZE = 4096;
+
+    protected ProgressObserver _obs;
+    protected long _complete, _plength;
+    protected byte[] _buffer;
 
     /**
      * Applies the specified patch file to the application living in the
@@ -200,10 +205,4 @@ public class Patcher {
             System.exit(-1);
         }
     }
-
-    protected ProgressObserver _obs;
-    protected long _complete, _plength;
-    protected byte[] _buffer;
-
-    protected static final int COPY_BUFFER_SIZE = 4096;
 }

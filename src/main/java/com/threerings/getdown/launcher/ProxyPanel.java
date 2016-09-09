@@ -29,6 +29,21 @@ import com.samskivert.text.MessageUtil;
  * Displays an interface with which the user can configure their proxy settings.
  */
 public class ProxyPanel extends JPanel implements ActionListener {
+    protected static class SaneTextField extends JTextField {
+        @Override
+        public Dimension getPreferredSize() {
+            Dimension d = super.getPreferredSize();
+            d.width = Math.max(d.width, 150);
+            return d;
+        }
+    }
+
+    protected Getdown _getdown;
+    protected ResourceBundle _msgs;
+
+    protected JTextField _host;
+    protected JTextField _port;
+
     public ProxyPanel(Getdown getdown, ResourceBundle msgs) {
         _getdown = getdown;
         _msgs = msgs;
@@ -114,19 +129,4 @@ public class ProxyPanel extends JPanel implements ActionListener {
             return key;
         }
     }
-
-    protected static class SaneTextField extends JTextField {
-        @Override
-        public Dimension getPreferredSize() {
-            Dimension d = super.getPreferredSize();
-            d.width = Math.max(d.width, 150);
-            return d;
-        }
-    }
-
-    protected Getdown _getdown;
-    protected ResourceBundle _msgs;
-
-    protected JTextField _host;
-    protected JTextField _port;
 }

@@ -28,6 +28,21 @@ import com.threerings.getdown.util.ProgressObserver;
  * Models a single file resource used by an {@link Application}.
  */
 public class Resource {
+    protected static final int DIGEST_BUFFER_SIZE = 5 * 1025;
+
+    protected String _path;
+    protected URL _remote;
+    protected File _local, _marker, _unpacked;
+    protected boolean _unpack, _isJar, _isPacked200Jar;
+
+    /** Used to sort the entries in a jar file. */
+    protected static final Comparator<JarEntry> ENTRY_COMP = new Comparator<JarEntry>() {
+        @Override
+        public int compare(JarEntry e1, JarEntry e2) {
+            return e1.getName().compareTo(e2.getName());
+        }
+    };
+
     /**
      * Creates a resource with the supplied remote URL and local path.
      */
@@ -43,7 +58,7 @@ public class Resource {
         _isPacked200Jar = isPacked200Jar(lpath);
         if (_unpack && _isJar) {
             _unpacked = _local.getParentFile();
-        } else if(_unpack && _isPacked200Jar) {
+        } else if (_unpack && _isPacked200Jar) {
             String dotJar = ".jar", lname = _local.getName();
             String uname = lname.substring(0, lname.lastIndexOf(dotJar) + dotJar.length());
             _unpacked = new File(_local.getParent(), uname);
@@ -280,19 +295,4 @@ public class Resource {
     protected static boolean isPacked200Jar(String path) {
         return path.endsWith(".jar.pack") || path.endsWith(".jar.pack.gz");
     }
-
-    protected String _path;
-    protected URL _remote;
-    protected File _local, _marker, _unpacked;
-    protected boolean _unpack, _isJar, _isPacked200Jar;
-
-    /** Used to sort the entries in a jar file. */
-    protected static final Comparator<JarEntry> ENTRY_COMP = new Comparator<JarEntry>() {
-        @Override
-        public int compare(JarEntry e1, JarEntry e2) {
-            return e1.getName().compareTo(e2.getName());
-        }
-    };
-
-    protected static final int DIGEST_BUFFER_SIZE = 5 * 1025;
 }

@@ -36,6 +36,29 @@ import com.threerings.getdown.data.Application.UpdateInterface;
  * Displays download and patching status.
  */
 public class StatusPanel extends JComponent implements ImageObserver {
+    protected static final Font FONT = new Font("SansSerif", Font.BOLD, 12);
+
+    protected Image _barimg;
+    protected RotatingBackgrounds _bg;
+    protected Dimension _psize;
+
+    protected ResourceBundle _msgs;
+
+    protected int _progress = -1;
+    protected String _status;
+    protected int _statusDots = 1;
+    protected boolean _displayError;
+    protected Label _label, _newlab;
+    protected Label _plabel, _newplab;
+    protected Label _rlabel, _newrlab;
+
+    protected UpdateInterface _ifc;
+    protected Timer _timer;
+
+    protected long[] _remain = new long[4];
+    protected int _ridx;
+    protected Throttle _rthrottle = new Throttle(1, 1000L);
+
     public StatusPanel(ResourceBundle msgs) {
         _msgs = msgs;
 
@@ -352,27 +375,4 @@ public class StatusPanel extends JComponent implements ImageObserver {
             return key;
         }
     }
-
-    protected Image _barimg;
-    protected RotatingBackgrounds _bg;
-    protected Dimension _psize;
-
-    protected ResourceBundle _msgs;
-
-    protected int _progress = -1;
-    protected String _status;
-    protected int _statusDots = 1;
-    protected boolean _displayError;
-    protected Label _label, _newlab;
-    protected Label _plabel, _newplab;
-    protected Label _rlabel, _newrlab;
-
-    protected UpdateInterface _ifc;
-    protected Timer _timer;
-
-    protected long[] _remain = new long[4];
-    protected int _ridx;
-    protected Throttle _rthrottle = new Throttle(1, 1000L);
-
-    protected static final Font FONT = new Font("SansSerif", Font.BOLD, 12);
 }

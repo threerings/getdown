@@ -10,6 +10,23 @@ import static com.threerings.getdown.Log.log;
 import java.awt.Image;
 
 public class RotatingBackgrounds {
+    /** Time at which the currently displayed image was first displayed in millis. */
+    protected long currentDisplayStart;
+
+    /** The index of the currently displayed image or -1 if we haven't displayed any. */
+    protected int current = -1;
+
+    protected Image[] images;
+
+    /** The image to display if getdown has failed due to an error. */
+    protected Image errorImage;
+
+    /** Percentage at which each image should be displayed. */
+    protected int[] percentages;
+
+    /** Time to show each image in seconds. */
+    protected int[] minDisplayTime;
+
     /**
      * Creates a placeholder if there are no images. Just returns null from getImage every time.
      */
@@ -99,21 +116,4 @@ public class RotatingBackgrounds {
         minDisplayTime = new int[] {};
         images = new Image[] {};
     }
-
-    /** Time at which the currently displayed image was first displayed in millis. */
-    protected long currentDisplayStart;
-
-    /** The index of the currently displayed image or -1 if we haven't displayed any. */
-    protected int current = -1;
-
-    protected Image[] images;
-
-    /** The image to display if getdown has failed due to an error. */
-    protected Image errorImage;
-
-    /** Percentage at which each image should be displayed. */
-    protected int[] percentages;
-
-    /** Time to show each image in seconds. */
-    protected int[] minDisplayTime;
 }

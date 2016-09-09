@@ -88,31 +88,71 @@ public class Application {
     /** A special classname that means 'use -jar code.jar' instead of a classname. */
     public static final String MANIFEST_CLASS = "manifest";
 
+    protected static final String[] SA_PROTO = ArrayUtil.EMPTY_STRING;
+
+    protected static final String ENV_VAR_PREFIX = "%ENV.";
+    protected static final Pattern ENV_VAR_PATTERN = Pattern.compile("%ENV\\.(.*?)%");
+
+    protected File _appdir;
+    protected String _appid;
+    protected File _config;
+    protected Digest _digest;
+
+    protected long _version = -1;
+    protected long _targetVersion = -1;
+    protected String _appbase;
+    protected URL _vappbase;
+    protected URL _latest;
+    protected String _class;
+    protected String _name;
+    protected String _dockIconPath;
+    protected boolean _windebug;
+    protected boolean _allowOffline;
+
+    protected String _trackingURL;
+    protected Set<Integer> _trackingPcts;
+    protected String _trackingCookieName;
+    protected String _trackingCookieProperty;
+    protected String _trackingURLSuffix;
+    protected String _trackingGAHash;
+    protected long _trackingStart;
+    protected int _trackingId;
+
+    protected String _javaVersionProp = "java.version";
+    protected String _javaVersionRegex = "(\\d+)\\.(\\d+)\\.(\\d+)(_\\d+)?.*";
+    protected long _javaMinVersion, _javaMaxVersion;
+    protected boolean _javaExactVersionRequired;
+    protected String _javaLocation;
+
+    protected List<Resource> _codes = new ArrayList<Resource>();
+    protected List<Resource> _resources = new ArrayList<Resource>();
+
+    protected Map<String, AuxGroup> _auxgroups = new HashMap<String, AuxGroup>();
+    protected Map<String, Boolean> _auxactive = new HashMap<String, Boolean>();
+
+    protected List<String> _jvmargs = new ArrayList<String>();
+    protected List<String> _appargs = new ArrayList<String>();
+
+    protected String[] _extraJvmArgs;
+    protected String[] _extraAppArgs;
+
+    protected String[] _optimumJvmArgs;
+
+    protected List<String> _txtJvmArgs = new ArrayList<String>();
+
+    protected List<Certificate> _signers;
+
+    /** If a warning has been issued about not being able to set modtimes. */
+    protected boolean _warnedAboutSetLastModified;
+
+    /** Locks gettingdown.lock in the app dir. Held the entire time updating is going on.*/
+    protected FileLock _lock;
+
+    /** Channel to the file underlying _lock.  Kept around solely so the lock doesn't close. */
+    protected FileChannel _lockChannel;
+
     /** Used to communicate information about the UI displayed when updating the application. */
     public static class UpdateInterface {
-        /**
-         * The major steps involved in updating, along with some arbitrary percentages
-         * assigned to them, to mark global progress.
-         */
-        public enum Step {
-            UPDATE_JAVA(10),
-            VERIFY_METADATA(15, 65, 95),
-            DOWNLOAD(40),
-            PATCH(60),
-            VERIFY_RESOURCES(70, 97),
-            REDOWNLOAD_RESOURCES(90),
-            UNPACK(98),
-            LAUNCH(99);
-
-            /** What is the final percent value for this step? */
-            public final List<Integer> defaultPercents;
-
-            /** Enum constructor. */
-            Step(int... percents) {
-                this.defaultPercents = intsToList(percents);
-            }
-        }
-
         /** The human readable name of this application. */
         public String name;
 
@@ -178,6 +218,36 @@ public class Application {
         public Map<Step, List<Integer>> stepPercentages =
             new EnumMap<Step, List<Integer>>(Step.class);
 
+        /** Initializer */
+        {
+            for (Step step : Step.values()) {
+                stepPercentages.put(step, step.defaultPercents);
+            }
+        }
+
+        /**
+         * The major steps involved in updating, along with some arbitrary percentages
+         * assigned to them, to mark global progress.
+         */
+        public enum Step {
+            UPDATE_JAVA(10),
+            VERIFY_METADATA(15, 65, 95),
+            DOWNLOAD(40),
+            PATCH(60),
+            VERIFY_RESOURCES(70, 97),
+            REDOWNLOAD_RESOURCES(90),
+            UNPACK(98),
+            LAUNCH(99);
+
+            /** What is the final percent value for this step? */
+            public final List<Integer> defaultPercents;
+
+            /** Enum constructor. */
+            Step(int... percents) {
+                this.defaultPercents = intsToList(percents);
+            }
+        }
+
         /** Generates a string representation of this instance. */
         @Override
         public String toString() {
@@ -188,13 +258,6 @@ public class Application {
                 + ", notes=" + patchNotesUrl + ", stepPercentages=" + stepPercentages
                 + ", parect=" + playAgain + ", paimage=" + playAgainImage
                 + ", hideProgressText" + hideProgressText + "]";
-        }
-
-        /** Initializer */
-        {
-            for (Step step : Step.values()) {
-                stepPercentages.put(step, step.defaultPercents);
-            }
         }
     }
 
@@ -1715,67 +1778,4 @@ public class Application {
             throw (IOException) new IOException(err).initCause(e);
         }
     }
-
-    protected File _appdir;
-    protected String _appid;
-    protected File _config;
-    protected Digest _digest;
-
-    protected long _version = -1;
-    protected long _targetVersion = -1;
-    protected String _appbase;
-    protected URL _vappbase;
-    protected URL _latest;
-    protected String _class;
-    protected String _name;
-    protected String _dockIconPath;
-    protected boolean _windebug;
-    protected boolean _allowOffline;
-
-    protected String _trackingURL;
-    protected Set<Integer> _trackingPcts;
-    protected String _trackingCookieName;
-    protected String _trackingCookieProperty;
-    protected String _trackingURLSuffix;
-    protected String _trackingGAHash;
-    protected long _trackingStart;
-    protected int _trackingId;
-
-    protected String _javaVersionProp = "java.version";
-    protected String _javaVersionRegex = "(\\d+)\\.(\\d+)\\.(\\d+)(_\\d+)?.*";
-    protected long _javaMinVersion, _javaMaxVersion;
-    protected boolean _javaExactVersionRequired;
-    protected String _javaLocation;
-
-    protected List<Resource> _codes = new ArrayList<Resource>();
-    protected List<Resource> _resources = new ArrayList<Resource>();
-
-    protected Map<String, AuxGroup> _auxgroups = new HashMap<String, AuxGroup>();
-    protected Map<String, Boolean> _auxactive = new HashMap<String, Boolean>();
-
-    protected List<String> _jvmargs = new ArrayList<String>();
-    protected List<String> _appargs = new ArrayList<String>();
-
-    protected String[] _extraJvmArgs;
-    protected String[] _extraAppArgs;
-
-    protected String[] _optimumJvmArgs;
-
-    protected List<String> _txtJvmArgs = new ArrayList<String>();
-
-    protected List<Certificate> _signers;
-
-    /** If a warning has been issued about not being able to set modtimes. */
-    protected boolean _warnedAboutSetLastModified;
-
-    /** Locks gettingdown.lock in the app dir. Held the entire time updating is going on.*/
-    protected FileLock _lock;
-
-    /** Channel to the file underlying _lock.  Kept around solely so the lock doesn't close. */
-    protected FileChannel _lockChannel;
-
-    protected static final String[] SA_PROTO = ArrayUtil.EMPTY_STRING;
-
-    protected static final String ENV_VAR_PREFIX = "%ENV.";
-    protected static final Pattern ENV_VAR_PATTERN = Pattern.compile("%ENV\\.(.*?)%");
 }

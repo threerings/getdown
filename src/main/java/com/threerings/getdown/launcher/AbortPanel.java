@@ -28,6 +28,9 @@ import com.samskivert.text.MessageUtil;
  * Displays a confirmation that the user wants to abort installation.
  */
 public class AbortPanel extends JFrame implements ActionListener {
+    protected Getdown _getdown;
+    protected ResourceBundle _msgs;
+
     public AbortPanel(Getdown getdown, ResourceBundle msgs) {
         _getdown = getdown;
         _msgs = msgs;
@@ -86,7 +89,4 @@ public class AbortPanel extends JFrame implements ActionListener {
             return key;
         }
     }
-
-    protected Getdown _getdown;
-    protected ResourceBundle _msgs;
 }

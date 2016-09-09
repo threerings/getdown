@@ -39,6 +39,24 @@ import netscape.javascript.JSObject;
  * An applet that can be used to launch a Getdown application (when signed and given privileges).
  */
 public class GetdownApplet extends JApplet implements ImageLoader {
+    /** The Getdown configuration as pulled from the applet params */
+    protected GetdownAppletConfig _config;
+
+    /** Handles all the actual getting down. */
+    protected Getdown _getdown;
+
+    /** An error encountered during initialization. */
+    protected String _errmsg;
+
+    /** The message callback registered by JavaScript on the containing page, if any. */
+    protected JSObject _messageCallback;
+
+    /** The server socket on which we listen for connections, if any. */
+    protected ServerSocket _serverSocket;
+
+    /** The output stream to the launched app, if a connection has been established. */
+    protected DataOutputStream _connectOut;
+
     /**
      * Sets the JavaScript callback to invoke when a message is received from the launched app.
      * The callback should be a function that accepts a single string parameter (the received
@@ -308,22 +326,4 @@ public class GetdownApplet extends JApplet implements ImageLoader {
             throw new RuntimeException(e);
         }
     }
-
-    /** The Getdown configuration as pulled from the applet params */
-    protected GetdownAppletConfig _config;
-
-    /** Handles all the actual getting down. */
-    protected Getdown _getdown;
-
-    /** An error encountered during initialization. */
-    protected String _errmsg;
-
-    /** The message callback registered by JavaScript on the containing page, if any. */
-    protected JSObject _messageCallback;
-
-    /** The server socket on which we listen for connections, if any. */
-    protected ServerSocket _serverSocket;
-
-    /** The output stream to the launched app, if a connection has been established. */
-    protected DataOutputStream _connectOut;
 }

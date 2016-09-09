@@ -10,6 +10,10 @@ package com.threerings.getdown.util;
  * progressing progress.
  */
 public class ProgressAggregator {
+    protected ProgressObserver _target;
+    protected long[] _sizes;
+    protected int[] _progress;
+
     public ProgressAggregator(ProgressObserver target, long[] sizes) {
         _target = target;
         _sizes = sizes;
@@ -45,8 +49,4 @@ public class ProgressAggregator {
         }
         return totalSize;
     }
-
-    protected ProgressObserver _target;
-    protected long[] _sizes;
-    protected int[] _progress;
 }

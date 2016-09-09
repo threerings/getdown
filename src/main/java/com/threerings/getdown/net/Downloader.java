@@ -22,6 +22,38 @@ import com.threerings.getdown.data.Resource;
  */
 public abstract class Downloader extends Thread {
     /**
+     * The delay in milliseconds between notifying progress observers of file download progress.
+     */
+    protected static final long UPDATE_DELAY = 500L;
+
+    /** The list of resources to be downloaded. */
+    protected List<Resource> _resources;
+
+    /** The reported sizes of our resources. */
+    protected Map<Resource, Long> _sizes = new HashMap<Resource, Long>();
+
+    /** The bytes downloaded for each resource. */
+    protected Map<Resource, Long> _downloaded = new HashMap<Resource, Long>();
+
+    /** The observer with whom we are communicating. */
+    protected Observer _obs;
+
+    /** Used while downloading. */
+    protected byte[] _buffer = new byte[4096];
+
+    /** The time at which the file transfer began. */
+    protected long _start;
+
+    /** The current transfer rate in bytes per second. */
+    protected long _bytesPerSecond;
+
+    /** The time at which the last progress update was posted to the progress observer. */
+    protected long _lastUpdate;
+
+    /** Whether the download has completed and the progress observer notified. */
+    protected boolean _complete;
+
+    /**
      * An interface used to communicate status back to an external entity.  <em>Note:</em> these
      * methods are all called on the download thread, so implementors must take care to only
      * execute thread-safe code or simply pass a message to the AWT thread, for example.
@@ -217,35 +249,4 @@ public abstract class Downloader extends Thread {
      * protocol-specific code
      */
     protected abstract void doDownload(Resource rsrc) throws IOException;
-
-    /** The list of resources to be downloaded. */
-    protected List<Resource> _resources;
-
-    /** The reported sizes of our resources. */
-    protected Map<Resource, Long> _sizes = new HashMap<Resource, Long>();
-
-    /** The bytes downloaded for each resource. */
-    protected Map<Resource, Long> _downloaded = new HashMap<Resource, Long>();
-
-    /** The observer with whom we are communicating. */
-    protected Observer _obs;
-
-    /** Used while downloading. */
-    protected byte[] _buffer = new byte[4096];
-
-    /** The time at which the file transfer began. */
-    protected long _start;
-
-    /** The current transfer rate in bytes per second. */
-    protected long _bytesPerSecond;
-
-    /** The time at which the last progress update was posted to the progress observer. */
-    protected long _lastUpdate;
-
-    /** Whether the download has completed and the progress observer notified. */
-    protected boolean _complete;
-
-    /** The delay in milliseconds between notifying progress observers of file download
-     * progress. */
-    protected static final long UPDATE_DELAY = 500L;
 }

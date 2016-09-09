@@ -57,7 +57,6 @@ public class GetdownAppletConfig {
     public static final String APPARG_PREFIX = "appargs";
 
     public String appbase;
-
     public String appname;
 
     /** The list of background images and their display time */
@@ -78,7 +77,6 @@ public class GetdownAppletConfig {
     public URL redirectUrl;
 
     public String redirectTarget;
-
     public String installerFileContents;
 
     /** Indicates whether the downloaded app should be launched in the parent applet (true) or as a
@@ -94,6 +92,18 @@ public class GetdownAppletConfig {
     public Rectangle statusBounds;
 
     public Color statusColor;
+
+    /** A reference to the Applet in which Getdown is running */
+    protected JApplet _applet;
+
+    /** An optional prefix to prepend when looking for Getdown Applet params */
+    protected String _prefix;
+
+    /** The background images displayed on the status panel as Getdown is getting down. */
+    protected RotatingBackgrounds bgimages;
+
+    /** System properties to set in the applet JVM. */
+    protected Properties _properties = new Properties();
 
     public GetdownAppletConfig(JApplet applet) {
         this(applet, null);
@@ -385,16 +395,4 @@ public class GetdownAppletConfig {
             return false;
         }
     }
-
-    /** A reference to the Applet in which Getdown is running */
-    protected JApplet _applet;
-
-    /** An optional prefix to prepend when looking for Getdown Applet params */
-    protected String _prefix;
-
-    /** The background images displayed on the status panel as Getdown is getting down. */
-    protected RotatingBackgrounds bgimages;
-
-    /** System properties to set in the applet JVM. */
-    protected Properties _properties = new Properties();
 }

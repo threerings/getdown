@@ -13,7 +13,7 @@ import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
 
 /**
- * An ant task used to create a <code>digest.txt</code> for a Getdown application deployment.
+ * An ant task used to create a {@code digest.txt} for a Getdown application deployment.
  */
 public class DigesterTask extends Task {
     /**

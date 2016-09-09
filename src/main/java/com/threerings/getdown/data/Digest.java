@@ -24,10 +24,13 @@ import com.threerings.getdown.util.ConfigUtil;
 import com.threerings.getdown.util.ProgressObserver;
 
 /**
- * Manages the <code>digest.txt</code> file and the computing and processing of MD5 digests for an
+ * Manages the {@code digest.txt} file and the computing and processing of MD5 digests for an
  * application.
  */
 public class Digest {
+    protected HashMap<String, String> _digests = new HashMap<String, String>();
+    protected String _metaDigest = "";
+
     /** The name of our MD5 digest file. */
     public static final String DIGEST_FILE = "digest.txt";
 
@@ -135,7 +138,4 @@ public class Digest {
     protected static void note(StringBuilder data, String path, String digest) {
         data.append(path).append(" = ").append(digest).append("\n");
     }
-
-    protected HashMap<String, String> _digests = new HashMap<String, String>();
-    protected String _metaDigest = "";
 }

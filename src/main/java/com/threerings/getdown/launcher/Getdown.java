@@ -74,6 +74,41 @@ import ca.beq.util.win32.registry.RootKey;
  * Manages the main control for the Getdown application updater and deployment system.
  */
 public abstract class Getdown extends Thread implements Application.StatusDisplay, ImageLoader {
+    protected static final int MAX_LOOPS = 5;
+    protected static final long MIN_EXIST_TIME = 5000L;
+    protected static final long FALLBACK_CHECK_TIME = 1000L;
+    protected static final long PLAY_AGAIN_TIME = 3000L;
+    protected static final String PROXY_REGISTRY =
+        "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings";
+
+    protected Application _app;
+    protected Application.UpdateInterface _ifc = new Application.UpdateInterface();
+
+    protected ResourceBundle _msgs;
+    protected Container _container;
+    protected JLayeredPane _layers;
+    protected StatusPanel _status;
+    protected JButton _patchNotes;
+    protected JButton _playAgain;
+    protected AbortPanel _abort;
+    protected RotatingBackgrounds _background;
+
+    protected boolean _dead;
+    protected boolean _silent;
+    protected boolean _launchInSilent;
+    protected long _startup;
+
+    protected boolean _enableTracking = true;
+    protected int _reportedProgress = 0;
+
+    /** Number of minutes to wait after startup before beginning any real heavy lifting. */
+    protected int _delay;
+
+    protected int _stepMaxPercent;
+    protected int _stepMinPercent;
+    protected int _lastGlobalPercent;
+    protected int _uiDisplayPercent;
+
     public static void main(String[] args) {
         // legacy support
         GetdownApp.main(args);
@@ -1175,39 +1210,4 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
             setStatusAsync(null, stepToGlobalPercent(percent), -1L, false);
         }
     };
-
-    protected Application _app;
-    protected Application.UpdateInterface _ifc = new Application.UpdateInterface();
-
-    protected ResourceBundle _msgs;
-    protected Container _container;
-    protected JLayeredPane _layers;
-    protected StatusPanel _status;
-    protected JButton _patchNotes;
-    protected JButton _playAgain;
-    protected AbortPanel _abort;
-    protected RotatingBackgrounds _background;
-
-    protected boolean _dead;
-    protected boolean _silent;
-    protected boolean _launchInSilent;
-    protected long _startup;
-
-    protected boolean _enableTracking = true;
-    protected int _reportedProgress = 0;
-
-    /** Number of minutes to wait after startup before beginning any real heavy lifting. */
-    protected int _delay;
-
-    protected int _stepMaxPercent;
-    protected int _stepMinPercent;
-    protected int _lastGlobalPercent;
-    protected int _uiDisplayPercent;
-
-    protected static final int MAX_LOOPS = 5;
-    protected static final long MIN_EXIST_TIME = 5000L;
-    protected static final long FALLBACK_CHECK_TIME = 1000L;
-    protected static final long PLAY_AGAIN_TIME = 3000L;
-    protected static final String PROXY_REGISTRY =
-        "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings";
 }

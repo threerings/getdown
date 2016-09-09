@@ -91,6 +91,8 @@ public class GetdownApp {
 
         try {
             Getdown app = new Getdown(appDir, appId, null, null, appArgs) {
+                protected JFrame _frame;
+
                 @Override
                 protected Container createContainer() {
                     // create our user interface, and display it
@@ -194,8 +196,6 @@ public class GetdownApp {
                     }
                     super.fail(message);
                 }
-
-                protected JFrame _frame;
             };
             app.start();
 
