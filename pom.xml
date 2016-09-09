@@ -211,6 +211,7 @@
               <Codebase>*</Codebase>
               <Application-Library-Allowable-Codebase>*</Application-Library-Allowable-Codebase>
               <Caller-Allowable-Codebase>*</Caller-Allowable-Codebase>
+              <Trusted-Library>true</Trusted-Library>
             </manifestEntries>
           </archive>
         </configuration>
