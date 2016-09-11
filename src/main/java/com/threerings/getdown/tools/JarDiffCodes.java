@@ -8,8 +8,7 @@ package com.threerings.getdown.tools;
 /**
  * Constants shared by {@link JarDiff} and {@link JarDiffPatcher}.
  */
-public interface JarDiffCodes
-{
+public interface JarDiffCodes {
     /** The name of the jardiff control file. */
     String INDEX_NAME = "META-INF/INDEX.JD";
 

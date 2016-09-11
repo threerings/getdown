@@ -5,6 +5,8 @@
 
 package com.threerings.getdown.launcher;
 
+import static com.threerings.getdown.Log.log;
+
 import java.awt.Container;
 import java.awt.Image;
 import java.io.DataInputStream;
@@ -19,36 +21,48 @@ import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JApplet;
 import javax.swing.JPanel;
 
-import netscape.javascript.JSObject;
-
 import com.threerings.getdown.data.Application;
 import com.threerings.getdown.data.Properties;
 
-import static com.threerings.getdown.Log.log;
+import netscape.javascript.JSObject;
 
 /**
  * An applet that can be used to launch a Getdown application (when signed and given privileges).
  */
-public class GetdownApplet extends JApplet
-    implements ImageLoader
-{
+public class GetdownApplet extends JApplet implements ImageLoader {
+    /** The Getdown configuration as pulled from the applet params */
+    protected GetdownAppletConfig _config;
+
+    /** Handles all the actual getting down. */
+    protected Getdown _getdown;
+
+    /** An error encountered during initialization. */
+    protected String _errmsg;
+
+    /** The message callback registered by JavaScript on the containing page, if any. */
+    protected JSObject _messageCallback;
+
+    /** The server socket on which we listen for connections, if any. */
+    protected ServerSocket _serverSocket;
+
+    /** The output stream to the launched app, if a connection has been established. */
+    protected DataOutputStream _connectOut;
+
     /**
      * Sets the JavaScript callback to invoke when a message is received from the launched app.
      * The callback should be a function that accepts a single string parameter (the received
      * message).
      */
-    public synchronized void setMessageCallback (JSObject callback)
-    {
+    public synchronized void setMessageCallback(JSObject callback) {
         _messageCallback = callback;
     }
 
@@ -58,8 +72,7 @@ public class GetdownApplet extends JApplet
      * @return true if we succeeded in sending the message, false if the launched app has not (yet)
      * established a connection to Getdown, or the send failed.
      */
-    public synchronized boolean sendMessage (String message)
-    {
+    public synchronized boolean sendMessage(String message) {
         if (_connectOut != null) {
             try {
                 _connectOut.writeUTF(message);
@@ -71,13 +84,11 @@ public class GetdownApplet extends JApplet
         return false;
     }
 
-    @Override // documentation inherited
-    public void init ()
-    {
+    @Override
+    public void init() {
         _config = new GetdownAppletConfig(this);
 
         try {
-
             try {
                 // Check our permissions, download getdown.txt, etc.
                 _config.init();
@@ -95,39 +106,39 @@ public class GetdownApplet extends JApplet
                 log.warning("No resource certificate found, falling back to class signers");
                 for (Object signer : GetdownApplet.class.getSigners()) {
                     if (signer instanceof Certificate) {
-                        signers.add((Certificate)signer);
+                        signers.add((Certificate) signer);
                     }
                 }
             }
-            _getdown = new Getdown(_config.appdir, null, signers,
-                                   _config.jvmargs, _config.appargs) {
+            _getdown = new Getdown(_config.appdir, null, signers, _config.jvmargs,
+                    _config.appargs) {
                 @Override
-                protected Container createContainer () {
+                protected Container createContainer() {
                     getContentPane().removeAll();
                     return getContentPane();
                 }
                 @Override
-                protected RotatingBackgrounds getBackground () {
+                protected RotatingBackgrounds getBackground() {
                     return _config.getBackgroundImages(GetdownApplet.this);
                 }
                 @Override
-                protected void showContainer () {
-                    ((JPanel)getContentPane()).revalidate();
+                protected void showContainer() {
+                    ((JPanel) getContentPane()).revalidate();
                 }
                 @Override
-                protected void disposeContainer () {
+                protected void disposeContainer() {
                     // nothing to do as we're in an applet
                 }
                 @Override
-                protected boolean invokeDirect () {
+                protected boolean invokeDirect() {
                     return _config.invokeDirect;
                 }
                 @Override
-                protected JApplet getApplet () {
+                protected JApplet getApplet() {
                     return GetdownApplet.this;
                 }
                 @Override
-                protected void showDocument (String url) {
+                protected void showDocument(String url) {
                     try {
                         getAppletContext().showDocument(new URL(url), "_blank");
                     } catch (MalformedURLException e) {
@@ -135,7 +146,7 @@ public class GetdownApplet extends JApplet
                     }
                 }
                 @Override
-                protected void launch () {
+                protected void launch() {
                     // if so configured, create a server socket to listen
                     // for a connection from the app
                     if (_config.allowConnect) {
@@ -148,7 +159,7 @@ public class GetdownApplet extends JApplet
                     super.launch();
                 }
                 @Override
-                protected void exit (int exitCode) {
+                protected void exit(int exitCode) {
                     _status.stopThrob();
                     _app.releaseLock();
                     _config.redirect();
@@ -173,9 +184,7 @@ public class GetdownApplet extends JApplet
      * Attempts to start the server that will accept a connection from the launched app, allowing
      * it to exchange messages with the JavaScript context.
      */
-    protected void startConnectServer ()
-        throws IOException
-    {
+    protected void startConnectServer() throws IOException {
         // bind and set a property with the local port that will be passed through to the app
         _serverSocket = new ServerSocket(0, 0, InetAddress.getByName(null));
         String port = String.valueOf(_serverSocket.getLocalPort());
@@ -183,7 +192,7 @@ public class GetdownApplet extends JApplet
         System.setProperty(Application.PROP_PASSTHROUGH_PREFIX + Properties.CONNECT_PORT, port);
         Thread thread = new Thread("ConnectServer") {
             @Override
-            public void run () {
+            public void run() {
                 while (true) {
                     try {
                         acceptConnection();
@@ -195,7 +204,7 @@ public class GetdownApplet extends JApplet
                     }
                 }
             }
-            protected void acceptConnection () throws IOException {
+            protected void acceptConnection() throws IOException {
                 Socket socket = _serverSocket.accept();
                 log.info("App connected.", "port", socket.getPort());
                 DataInputStream connectIn = new DataInputStream(socket.getInputStream());
@@ -232,8 +241,8 @@ public class GetdownApplet extends JApplet
     }
 
     // implemented from ImageLoader
-    public Image loadImage (String path)
-    {
+    @Override
+    public Image loadImage(String path) {
         try {
             return getImage(new URL(getDocumentBase(), path));
         } catch (MalformedURLException e) {
@@ -242,9 +251,8 @@ public class GetdownApplet extends JApplet
         }
     }
 
-    @Override // documentation inherited
-    public void start ()
-    {
+    @Override
+    public void start() {
         if (_errmsg != null) {
             _getdown.fail(_errmsg);
         } else {
@@ -256,9 +264,8 @@ public class GetdownApplet extends JApplet
         }
     }
 
-    @Override // documentation inherited
-    public void stop ()
-    {
+    @Override
+    public void stop() {
         // Interrupt the getdown thread to tell it to kill its current downloading or verifying
         // before launching
         _getdown.interrupt();
@@ -266,9 +273,8 @@ public class GetdownApplet extends JApplet
         _getdown._app.releaseLock();
     }
 
-    @Override // documentation inherited
-    public synchronized void destroy ()
-    {
+    @Override
+    public synchronized void destroy() {
         if (_serverSocket != null) {
             try {
                 _serverSocket.close();
@@ -290,8 +296,7 @@ public class GetdownApplet extends JApplet
     /**
      * Creates the specified file and writes the supplied contents to it.
      */
-    protected boolean writeToFile (File tofile, String contents)
-    {
+    protected boolean writeToFile(File tofile, String contents) {
         try {
             PrintStream out = new PrintStream(new FileOutputStream(tofile));
             out.println(contents);
@@ -303,8 +308,7 @@ public class GetdownApplet extends JApplet
         }
     }
 
-    protected static Certificate loadCertificate (String path)
-    {
+    protected static Certificate loadCertificate(String path) {
         try {
             URL keyUrl = GetdownApplet.class.getClassLoader().getResource(path);
             if (keyUrl == null) {
@@ -322,22 +326,4 @@ public class GetdownApplet extends JApplet
             throw new RuntimeException(e);
         }
     }
-
-    /** The Getdown configuration as pulled from the applet params */
-    protected GetdownAppletConfig _config;
-
-    /** Handles all the actual getting down. */
-    protected Getdown _getdown;
-
-    /** An error encountered during initialization. */
-    protected String _errmsg;
-
-    /** The message callback registered by JavaScript on the containing page, if any. */
-    protected JSObject _messageCallback;
-
-    /** The server socket on which we listen for connections, if any. */
-    protected ServerSocket _serverSocket;
-
-    /** The output stream to the launched app, if a connection has been established. */
-    protected DataOutputStream _connectOut;
 }

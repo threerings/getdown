@@ -5,20 +5,20 @@
 
 package com.threerings.getdown.util;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;
 
-import org.junit.*;
-import static org.junit.Assert.*;
+import org.junit.Test;
 
 /**
  * Tests {@link FileUtil}.
  */
-public class FileUtilTest
-{
-    @Test public void testReadLines () throws IOException
-    {
+public class FileUtilTest {
+    @Test
+    public void testReadLines() throws IOException {
         String data = "This is a test\nof a file with\na few lines\n";
         List<String> lines = FileUtil.readLines(new StringReader(data));
         String[] linesBySplit = data.split("\n");

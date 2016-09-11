@@ -5,6 +5,8 @@
 
 package com.threerings.getdown.launcher;
 
+import static com.threerings.getdown.Log.log;
+
 import java.awt.Container;
 import java.awt.Image;
 import java.awt.event.WindowAdapter;
@@ -25,17 +27,13 @@ import com.samskivert.swing.util.SwingUtil;
 import com.samskivert.util.ArrayUtil;
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
-
 import com.threerings.getdown.data.SysProps;
-import static com.threerings.getdown.Log.log;
 
 /**
  * The main application entry point for Getdown.
  */
-public class GetdownApp
-{
-    public static void main (String[] argv)
-    {
+public class GetdownApp {
+    public static void main(String[] argv) {
         int aidx = 0;
         List<String> args = Arrays.asList(argv);
 
@@ -56,7 +54,7 @@ public class GetdownApp
         }
 
         // pass along anything after that as app args
-        String[] appArgs = (aidx >= args.size()) ? null :
+        String[] appArgs = aidx >= args.size() ? null :
             args.subList(aidx, args.size()).toArray(ArrayUtil.EMPTY_STRING);
 
         // ensure a valid directory was supplied
@@ -93,15 +91,17 @@ public class GetdownApp
 
         try {
             Getdown app = new Getdown(appDir, appId, null, null, appArgs) {
+                protected JFrame _frame;
+
                 @Override
-                protected Container createContainer () {
+                protected Container createContainer() {
                     // create our user interface, and display it
                     String title = StringUtil.isBlank(_ifc.name) ? "" : _ifc.name;
                     if (_frame == null) {
                         _frame = new JFrame(title);
                         _frame.addWindowListener(new WindowAdapter() {
                             @Override
-                            public void windowClosing (WindowEvent evt) {
+                            public void windowClosing(WindowEvent evt) {
                                 handleWindowClose();
                             }
                         });
@@ -134,7 +134,7 @@ public class GetdownApp
                 }
 
                 @Override
-                protected void showContainer () {
+                protected void showContainer() {
                     if (_frame != null) {
                         _frame.pack();
                         SwingUtil.centerWindow(_frame);
@@ -143,7 +143,7 @@ public class GetdownApp
                 }
 
                 @Override
-                protected void disposeContainer () {
+                protected void disposeContainer() {
                     if (_frame != null) {
                         _frame.dispose();
                         _frame = null;
@@ -151,7 +151,7 @@ public class GetdownApp
                 }
 
                 @Override
-                protected void showDocument (String url) {
+                protected void showDocument(String url) {
                     String[] cmdarray;
                     if (RunAnywhere.isWindows()) {
                         String osName = System.getProperty("os.name");
@@ -175,7 +175,7 @@ public class GetdownApp
                 }
 
                 @Override
-                protected void exit (int exitCode) {
+                protected void exit(int exitCode) {
                     // if we're running the app in the same JVM, don't call System.exit, but do
                     // make double sure that the download window is closed.
                     if (invokeDirect()) {
@@ -186,7 +186,7 @@ public class GetdownApp
                 }
 
                 @Override
-                protected void fail (String message) {
+                protected void fail(String message) {
                     // if the frame was set to be undecorated, make window decoration available
                     // to allow the user to close the window
                     if (_frame != null && _frame.isUndecorated()) {
@@ -196,8 +196,6 @@ public class GetdownApp
                     }
                     super.fail(message);
                 }
-
-                protected JFrame _frame;
             };
             app.start();
 

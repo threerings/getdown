@@ -11,7 +11,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.jar.JarEntry;
@@ -19,10 +19,7 @@ import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
 
-import java.security.MessageDigest;
-
 import com.samskivert.io.StreamUtil;
-
 import com.threerings.getdown.data.Application;
 import com.threerings.getdown.data.Digest;
 import com.threerings.getdown.data.Resource;
@@ -33,29 +30,26 @@ import com.threerings.getdown.data.Resource;
  * revisions are bundled into a single patch file which is placed into the
  * target version directory.
  */
-public class Differ
-{
+public class Differ {
     /**
      * Creates a single patch file that contains the differences between
      * the two specified application directories. The patch file will be
-     * created in the <code>nvdir</code> directory with name
+     * created in the {@code nvdir} directory with name
      * <code>patchV.dat</code> where V is the old application version.
      */
-    public void createDiff (File nvdir, File ovdir, boolean verbose)
-        throws IOException
-    {
+    public void createDiff(File nvdir, File ovdir, boolean verbose) throws IOException {
         // sanity check
         String nvers = nvdir.getName();
         String overs = ovdir.getName();
         try {
             if (Long.parseLong(nvers) <= Long.parseLong(overs)) {
-                String err = "New version (" + nvers + ") must be greater " +
-                    "than old version (" + overs + ").";
+                String err = "New version (" + nvers + ") must be greater "
+                    + "than old version (" + overs + ").";
                 throw new IOException(err);
             }
         } catch (NumberFormatException nfe) {
-            throw new IOException("Non-numeric versions? [nvers=" + nvers +
-                                  ", overs=" + overs + "].");
+            throw new IOException("Non-numeric versions? [nvers=" + nvers
+                    + ", overs=" + overs + "].");
         }
 
         Application oapp = new Application(ovdir, null);
@@ -90,10 +84,8 @@ public class Differ
         }
     }
 
-    protected void createPatch (File patch, ArrayList<Resource> orsrcs,
-                                ArrayList<Resource> nrsrcs, boolean verbose)
-        throws IOException
-    {
+    protected void createPatch(File patch, ArrayList<Resource> orsrcs, ArrayList<Resource> nrsrcs,
+            boolean verbose) throws IOException {
         MessageDigest md = Digest.getMessageDigest();
         JarOutputStream jout = null;
         try {
@@ -104,7 +96,7 @@ public class Differ
             // in the old application, or it is new
             for (Resource rsrc : nrsrcs) {
                 int oidx = orsrcs.indexOf(rsrc);
-                Resource orsrc = (oidx == -1) ? null : orsrcs.remove(oidx);
+                Resource orsrc = oidx == -1 ? null : orsrcs.remove(oidx);
                 if (orsrc != null) {
                     // first see if they are the same
                     String odig = orsrc.computeDigest(md, null);
@@ -169,15 +161,13 @@ public class Differ
         }
     }
 
-    protected File rebuildJar (File target)
-        throws IOException
-    {
+    protected File rebuildJar(File target) throws IOException {
         JarFile jar = new JarFile(target);
         File temp = File.createTempFile("differ", "jar");
         JarOutputStream jout = new JarOutputStream(
             new BufferedOutputStream(new FileOutputStream(temp)));
         byte[] buffer = new byte[4096];
-        for (Enumeration<JarEntry> iter = jar.entries(); iter.hasMoreElements(); ) {
+        for (Enumeration<JarEntry> iter = jar.entries(); iter.hasMoreElements();) {
             JarEntry entry = iter.nextElement();
             entry.setCompressedSize(-1);
             jout.putNextEntry(entry);
@@ -194,14 +184,11 @@ public class Differ
         return temp;
     }
 
-    protected void jarDiff (File ofile, File nfile, JarOutputStream jout)
-        throws IOException
-    {
+    protected void jarDiff(File ofile, File nfile, JarOutputStream jout) throws IOException {
         JarDiff.createPatch(ofile.getPath(), nfile.getPath(), jout, false);
     }
 
-    public static void main (String[] args)
-    {
+    public static void main(String[] args) {
         if (args.length < 2) {
             System.err.println(
                 "Usage: Differ [-verbose] new_vers_dir old_vers_dir");
@@ -223,9 +210,7 @@ public class Differ
         }
     }
 
-    protected static void pipe (File file, JarOutputStream jout)
-        throws IOException
-    {
+    protected static void pipe(File file, JarOutputStream jout) throws IOException {
         FileInputStream fin = null;
         try {
             StreamUtil.copy(fin = new FileInputStream(file), jout);

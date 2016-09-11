@@ -9,12 +9,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.Signature;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,14 +26,11 @@ import com.threerings.getdown.data.Resource;
 /**
  * Handles the generation of the digest.txt file.
  */
-public class Digester
-{
+public class Digester {
     /**
      * A command line entry point for the digester.
      */
-    public static void main (String[] args)
-        throws IOException, GeneralSecurityException
-    {
+    public static void main(String[] args) throws IOException, GeneralSecurityException {
         if (args.length != 1 && args.length != 4) {
             System.err.println("Usage: Digester app_dir [keystore_path password alias]");
             System.exit(255);
@@ -50,9 +45,7 @@ public class Digester
     /**
      * Creates a digest file in the specified application directory.
      */
-    public static void createDigest (File appdir)
-        throws IOException
-    {
+    public static void createDigest(File appdir) throws IOException {
         File target = new File(appdir, Digest.DIGEST_FILE);
         System.out.println("Generating digest file '" + target + "'...");
 
@@ -76,9 +69,8 @@ public class Digester
     /**
      * Creates a digest file in the specified application directory.
      */
-    public static void signDigest (File appdir, File storePath, String storePass, String storeAlias)
-        throws IOException, GeneralSecurityException
-    {
+    public static void signDigest(File appdir, File storePath, String storePass, String storeAlias)
+            throws IOException, GeneralSecurityException {
         File inputFile = new File(appdir, Digest.DIGEST_FILE);
         File signatureFile = new File(appdir, Digest.DIGEST_FILE + Application.SIGNATURE_SUFFIX);
 
@@ -89,7 +81,7 @@ public class Digester
             KeyStore store = KeyStore.getInstance("JKS");
             storeInput = new FileInputStream(storePath);
             store.load(storeInput, storePass.toCharArray());
-            PrivateKey key = (PrivateKey)store.getKey(storeAlias, storePass.toCharArray());
+            PrivateKey key = (PrivateKey) store.getKey(storeAlias, storePass.toCharArray());
 
             // sign the digest file
             Signature sig = Signature.getInstance("SHA1withRSA");

@@ -5,6 +5,8 @@
 
 package com.threerings.getdown.launcher;
 
+import static com.threerings.getdown.Log.log;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -28,36 +30,53 @@ import com.samskivert.swing.util.SwingUtil;
 import com.samskivert.text.MessageUtil;
 import com.samskivert.util.StringUtil;
 import com.samskivert.util.Throttle;
-
 import com.threerings.getdown.data.Application.UpdateInterface;
-
-import static com.threerings.getdown.Log.log;
 
 /**
  * Displays download and patching status.
  */
-public class StatusPanel extends JComponent
-    implements ImageObserver
-{
-    public StatusPanel (ResourceBundle msgs)
-    {
+public class StatusPanel extends JComponent implements ImageObserver {
+    protected static final Font FONT = new Font("SansSerif", Font.BOLD, 12);
+
+    protected Image _barimg;
+    protected RotatingBackgrounds _bg;
+    protected Dimension _psize;
+
+    protected ResourceBundle _msgs;
+
+    protected int _progress = -1;
+    protected String _status;
+    protected int _statusDots = 1;
+    protected boolean _displayError;
+    protected Label _label, _newlab;
+    protected Label _plabel, _newplab;
+    protected Label _rlabel, _newrlab;
+
+    protected UpdateInterface _ifc;
+    protected Timer _timer;
+
+    protected long[] _remain = new long[4];
+    protected int _ridx;
+    protected Throttle _rthrottle = new Throttle(1, 1000L);
+
+    public StatusPanel(ResourceBundle msgs) {
         _msgs = msgs;
 
         // Add a bit of "throbbing" to the display by updating the number of dots displayed after
         // our status. This lets users know things are still working.
-        _timer = new Timer(1000,
-            new ActionListener() {
-                public void actionPerformed (ActionEvent event) {
-                    if (_status != null && !_displayError) {
-                        _statusDots = (_statusDots % 3) + 1; // 1, 2, 3, 1, 2, 3, etc.
-                        updateStatusLabel();
-                    }
+        _timer = new Timer(1000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                if (_status != null && !_displayError) {
+                    // 1, 2, 3, 1, 2, 3, etc.
+                    _statusDots = _statusDots % 3 + 1;
+                    updateStatusLabel();
                 }
-            });
+            }
+        });
     }
 
-    public void init (UpdateInterface ifc, RotatingBackgrounds bg, Image barimg)
-    {
+    public void init(UpdateInterface ifc, RotatingBackgrounds bg, Image barimg) {
         _ifc = ifc;
         _bg = bg;
         Image img = _bg.getImage(_progress);
@@ -76,8 +95,7 @@ public class StatusPanel extends JComponent
     }
 
     @Override
-    public boolean imageUpdate (Image img, int infoflags, int x, int y, int width, int height)
-    {
+    public boolean imageUpdate(Image img, int infoflags, int x, int y, int width, int height) {
         boolean updated = false;
         if ((infoflags | WIDTH) != 0) {
             _psize.width = width;
@@ -98,8 +116,7 @@ public class StatusPanel extends JComponent
     /**
      * Adjusts the progress display to the specified percentage.
      */
-    public void setProgress (int percent, long remaining)
-    {
+    public void setProgress(int percent, long remaining) {
         boolean needsRepaint = false;
 
         // maybe update the progress label
@@ -116,7 +133,7 @@ public class StatusPanel extends JComponent
         if (remaining > 1) {
             // skip this estimate if it's been less than a second since our last one came in
             if (!_rthrottle.throttleOp()) {
-                _remain[_ridx++%_remain.length] = remaining;
+                _remain[_ridx++ % _remain.length] = remaining;
             }
 
             // smooth the remaining time by taking the trailing average of the last four values
@@ -129,8 +146,8 @@ public class StatusPanel extends JComponent
 
             if (!_ifc.hideProgressText) {
                 // now compute our display value
-                int minutes = (int)(remaining / 60), seconds = (int)(remaining % 60);
-                String remstr = minutes + ":" + ((seconds < 10) ? "0" : "") + seconds;
+                int minutes = (int) (remaining / 60), seconds = (int) (remaining % 60);
+                String remstr = minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
                 String msg = MessageFormat.format(get("m.remain"), remstr);
                 _newrlab = createLabel(msg, _ifc.statusText);
             }
@@ -151,8 +168,7 @@ public class StatusPanel extends JComponent
     /**
      * Displays the specified status string.
      */
-    public void setStatus (String status, boolean displayError)
-    {
+    public void setStatus(String status, boolean displayError) {
         _status = xlate(status);
         _displayError = displayError;
         updateStatusLabel();
@@ -161,33 +177,28 @@ public class StatusPanel extends JComponent
     /**
      * Stop the throbbing.
      */
-    public void stopThrob ()
-    {
+    public void stopThrob() {
         _timer.stop();
         _statusDots = 3;
         updateStatusLabel();
     }
 
     @Override
-    public void addNotify ()
-    {
+    public void addNotify() {
         super.addNotify();
         _timer.start();
     }
 
     @Override
-    public void removeNotify ()
-    {
+    public void removeNotify() {
         _timer.stop();
         super.removeNotify();
     }
 
-    // documentation inherited
     @Override
-    public void paintComponent (Graphics g)
-    {
+    public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        Graphics2D gfx = (Graphics2D)g;
+        Graphics2D gfx = (Graphics2D) g;
 
         // always draw a background in case our image isn't ready yet
         gfx.setColor(_ifc.background);
@@ -255,18 +266,15 @@ public class StatusPanel extends JComponent
         SwingUtil.restoreAntiAliasing(gfx, oalias);
     }
 
-    // documentation inherited
     @Override
-    public Dimension getPreferredSize ()
-    {
+    public Dimension getPreferredSize() {
         return _psize;
     }
 
     /**
      * Update the status label.
      */
-    protected void updateStatusLabel ()
-    {
+    protected void updateStatusLabel() {
         String status = _status;
         if (!_displayError) {
             for (int ii = 0; ii < _statusDots; ii++) {
@@ -290,22 +298,20 @@ public class StatusPanel extends JComponent
     /**
      * Get the y coordinate of a label in the status area.
      */
-    protected int getStatusY (Label label)
-    {
+    protected int getStatusY(Label label) {
         // if the status region is higher than the progress region, we
         // want to align the label with the bottom of its region
         // rather than the top
         if (_ifc.status.y > _ifc.progress.y) {
             return _ifc.status.y;
         }
-        return _ifc.status.y + (_ifc.status.height - label.getSize().height);
+        return _ifc.status.y + _ifc.status.height - label.getSize().height;
     }
 
     /**
      * Create a label, taking care of adding the shadow if needed.
      */
-    protected Label createLabel (String text, Color color)
-    {
+    protected Label createLabel(String text, Color color) {
         Label label = new Label(text, color, FONT);
         if (_ifc.textShadow != null) {
             label.setAlternateColor(_ifc.textShadow);
@@ -315,8 +321,7 @@ public class StatusPanel extends JComponent
     }
 
     /** Used by {@link #setStatus}. */
-    protected String xlate (String compoundKey)
-    {
+    protected String xlate(String compoundKey) {
         // to be more efficient about creating unnecessary objects, we
         // do some checking before splitting
         int tidx = compoundKey.indexOf('|');
@@ -325,7 +330,7 @@ public class StatusPanel extends JComponent
 
         } else {
             String key = compoundKey.substring(0, tidx);
-            String argstr = compoundKey.substring(tidx+1);
+            String argstr = compoundKey.substring(tidx + 1);
             String[] args = StringUtil.split(argstr, "|");
             // unescape and translate the arguments
             for (int i = 0; i < args.length; i++) {
@@ -342,17 +347,14 @@ public class StatusPanel extends JComponent
     }
 
     /** Used by {@link #setStatus}. */
-    protected String get (String key, Object[] args)
-    {
+    protected String get(String key, Object[] args) {
         String msg = get(key);
-        return (msg != null) ?
-            MessageFormat.format(MessageUtil.escape(msg), args)
-            : (key + StringUtil.toString(args));
+        return msg != null ? MessageFormat.format(MessageUtil.escape(msg), args)
+                : key + StringUtil.toString(args);
     }
 
     /** Used by {@link #setStatus}, and {@link #setProgress}. */
-    protected String get (String key)
-    {
+    protected String get(String key) {
         // if we have no _msgs that means we're probably recovering from a
         // failure to load the translation messages in the first place, so
         // just give them their key back because it's probably an english
@@ -373,27 +375,4 @@ public class StatusPanel extends JComponent
             return key;
         }
     }
-
-    protected Image _barimg;
-    protected RotatingBackgrounds _bg;
-    protected Dimension _psize;
-
-    protected ResourceBundle _msgs;
-
-    protected int _progress = -1;
-    protected String _status;
-    protected int _statusDots = 1;
-    protected boolean _displayError;
-    protected Label _label, _newlab;
-    protected Label _plabel, _newplab;
-    protected Label _rlabel, _newrlab;
-
-    protected UpdateInterface _ifc;
-    protected Timer _timer;
-
-    protected long[] _remain = new long[4];
-    protected int _ridx;
-    protected Throttle _rthrottle = new Throttle(1, 1000L);
-
-    protected static final Font FONT = new Font("SansSerif", Font.BOLD, 12);
 }

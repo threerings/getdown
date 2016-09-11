@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
-
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -20,7 +19,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
@@ -31,8 +29,7 @@ import com.threerings.getdown.util.ProgressObserver;
 /**
  * Applies a jardiff patch to a jar file.
  */
-public class JarDiffPatcher implements JarDiffCodes
-{
+public class JarDiffPatcher implements JarDiffCodes {
     /**
      * Patches the specified jar file using the supplied patch file and writing
      * the new jar file to the supplied target.
@@ -44,9 +41,8 @@ public class JarDiffPatcher implements JarDiffCodes
      *
      * @throws IOException if any problem occurs during patching.
      */
-    public void patchJar (String jarPath, String diffPath, File target, ProgressObserver observer)
-        throws IOException
-    {
+    public void patchJar(String jarPath, String diffPath, File target, ProgressObserver observer)
+            throws IOException {
         File oldFile = new File(jarPath), diffFile = new File(diffPath);
         JarOutputStream jos = null;
         JarFile oldJar = null, jarDiff = null;
@@ -167,17 +163,14 @@ public class JarDiffPatcher implements JarDiffCodes
         }
     }
 
-    protected void updateObserver (ProgressObserver observer, double currentSize, double size)
-    {
+    protected void updateObserver(ProgressObserver observer, double currentSize, double size) {
         if (observer != null) {
-            observer.progress((int)(100*currentSize/size));
+            observer.progress((int) (100 * currentSize / size));
         }
     }
 
-    protected void determineNameMapping (
-        JarFile jarDiff, Set<String> ignoreSet, Map<String, String> renameMap)
-        throws IOException
-    {
+    protected void determineNameMapping(JarFile jarDiff, Set<String> ignoreSet,
+            Map<String, String> renameMap) throws IOException {
         InputStream is = jarDiff.getInputStream(jarDiff.getEntry(INDEX_NAME));
         if (is == null) {
             throw new IOException("error.noindex");
@@ -219,15 +212,13 @@ public class JarDiffPatcher implements JarDiffCodes
         }
     }
 
-    protected List<String> getSubpaths (String path)
-    {
+    protected List<String> getSubpaths(String path) {
         int index = 0;
         int length = path.length();
         ArrayList<String> sub = new ArrayList<String>();
 
         while (index < length) {
-            while (index < length && Character.isWhitespace
-                   (path.charAt(index))) {
+            while (index < length && Character.isWhitespace(path.charAt(index))) {
                 index++;
             }
             if (index < length) {
@@ -237,7 +228,7 @@ public class JarDiffPatcher implements JarDiffCodes
 
                 while (index < length) {
                     char aChar = path.charAt(index);
-                    if (aChar == '\\' && (index + 1) < length &&
+                    if (aChar == '\\' && index + 1 < length &&
                         path.charAt(index + 1) == ' ') {
 
                         if (subString == null) {
@@ -264,17 +255,13 @@ public class JarDiffPatcher implements JarDiffCodes
         return sub;
     }
 
-    protected void writeEntry (
-        JarOutputStream jos, JarEntry entry, JarFile file)
-        throws IOException
-    {
+    protected void writeEntry(JarOutputStream jos, JarEntry entry, JarFile file)
+            throws IOException {
         writeEntry(jos, entry, file.getInputStream(entry));
     }
 
-    protected void writeEntry (
-        JarOutputStream jos, JarEntry entry, InputStream data)
-        throws IOException
-    {
+    protected void writeEntry(JarOutputStream jos, JarEntry entry, InputStream data)
+            throws IOException {
         jos.putNextEntry(new JarEntry(entry.getName()));
 
         // Read the entry
@@ -286,7 +273,7 @@ public class JarDiffPatcher implements JarDiffCodes
         data.close();
     }
 
-    private static void closeFile (JarFile jar) {
+    private static void closeFile(JarFile jar) {
         if (jar != null) {
             try {
                 jar.close();

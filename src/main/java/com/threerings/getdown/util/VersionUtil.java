@@ -5,6 +5,8 @@
 
 package com.threerings.getdown.util;
 
+import static com.threerings.getdown.Log.log;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -18,20 +20,16 @@ import java.util.regex.Pattern;
 
 import com.samskivert.io.StreamUtil;
 import com.samskivert.util.StringUtil;
-
 import com.threerings.getdown.data.SysProps;
-import static com.threerings.getdown.Log.log;
 
 /**
  * Version related utilities.
  */
-public class VersionUtil
-{
+public class VersionUtil {
     /**
      * Reads a version number from a file.
      */
-    public static long readVersion (File vfile)
-    {
+    public static long readVersion(File vfile) {
         long fileVersion = -1;
         BufferedReader bin = null;
         try {
@@ -52,8 +50,7 @@ public class VersionUtil
     /**
      * Writes a version number to a file.
      */
-    public static void writeVersion (File vfile, long version) throws IOException
-    {
+    public static void writeVersion(File vfile, long version) throws IOException {
         PrintStream out = new PrintStream(new FileOutputStream(vfile));
         try {
             out.println(version);
@@ -68,15 +65,16 @@ public class VersionUtil
      * Parses {@code versStr} using {@code versRegex} into a (long) integer version number.
      * @see SysProps#parseJavaVersion
      */
-    public static long parseJavaVersion (String versRegex, String versStr)
-    {
+    public static long parseJavaVersion(String versRegex, String versStr) {
         Matcher m = Pattern.compile(versRegex).matcher(versStr);
-        if (!m.matches()) return 0L;
+        if (!m.matches()) {
+            return 0L;
+        }
 
         long vers = 0L;
         for (int ii = 1; ii <= m.groupCount(); ii++) {
             String valstr = m.group(ii);
-            int value = (valstr == null) ? 0 : parseInt(valstr);
+            int value = valstr == null ? 0 : parseInt(valstr);
             vers *= 100;
             vers += value;
         }
@@ -86,8 +84,7 @@ public class VersionUtil
     /**
      * Reads and parses the version from the {@code release} file bundled with a JVM.
      */
-    public static long readReleaseVersion (File relfile, String versRegex)
-    {
+    public static long readReleaseVersion(File relfile, String versRegex) {
         BufferedReader in = null;
         try {
             in = new BufferedReader(new FileReader(relfile));
@@ -112,13 +109,13 @@ public class VersionUtil
         }
     }
 
-    private static int parseInt (String str) {
+    private static int parseInt(String str) {
         int value = 0;
         for (int ii = 0, ll = str.length(); ii < ll; ii++) {
             char c = str.charAt(ii);
             if (c >= '0' && c <= '9') {
                 value *= 10;
-                value += (c - '0');
+                value += c - '0';
             }
         }
         return value;

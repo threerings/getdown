@@ -5,7 +5,15 @@
 
 package com.threerings.getdown.util;
 
-import java.io.*;
+import static com.threerings.getdown.Log.log;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.jar.JarOutputStream;
@@ -14,21 +22,17 @@ import java.util.zip.GZIPInputStream;
 
 import com.samskivert.io.StreamUtil;
 
-import static com.threerings.getdown.Log.log;
-
 /**
  * File related utilities.
  */
-public class FileUtil extends com.samskivert.util.FileUtil
-{
+public class FileUtil extends com.samskivert.util.FileUtil {
     /**
      * Gets the specified source file to the specified destination file by hook or crook. Windows
      * has all sorts of problems which we work around in this method.
      *
      * @return true if we managed to get the job done, false otherwise.
      */
-    public static boolean renameTo (File source, File dest)
-    {
+    public static boolean renameTo(File source, File dest) {
         // if we're on a civilized operating system we may be able to simple rename it
         if (source.renameTo(dest)) {
             return true;
@@ -58,8 +62,8 @@ public class FileUtil extends com.samskivert.util.FileUtil
             fout = new FileOutputStream(dest);
             StreamUtil.copy(fin, fout);
             if (!source.delete()) {
-                log.warning("Failed to delete " + source +
-                            " after brute force copy to " + dest + ".");
+                log.warning("Failed to delete " + source
+                        + " after brute force copy to " + dest + ".");
             }
             return true;
 
@@ -77,9 +81,7 @@ public class FileUtil extends com.samskivert.util.FileUtil
      * Reads the contents of the supplied input stream into a list of lines. Closes the reader on
      * successful or failed completion.
      */
-    public static List<String> readLines (Reader in)
-        throws IOException
-    {
+    public static List<String> readLines(Reader in) throws IOException {
         List<String> lines = new ArrayList<String>();
         try {
             BufferedReader bin = new BufferedReader(in);
@@ -94,8 +96,7 @@ public class FileUtil extends com.samskivert.util.FileUtil
      * Unpacks a pack200 packed jar file from {@code packedJar} into {@code target}. If {@code
      * packedJar} has a {@code .gz} extension, it will be gunzipped first.
      */
-    public static boolean unpackPacked200Jar (File packedJar, File target)
-    {
+    public static boolean unpackPacked200Jar(File packedJar, File target) {
         InputStream packedJarIn = null;
         FileOutputStream extractedJarFileOut = null;
         JarOutputStream jarOutputStream = null;
