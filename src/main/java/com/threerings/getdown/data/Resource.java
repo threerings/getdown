@@ -13,7 +13,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.jar.JarInputStream;
 
 import com.samskivert.io.StreamUtil;
 import com.samskivert.util.StringUtil;
