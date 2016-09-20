@@ -49,7 +49,7 @@ public class ResourceCacheTest
     {
         File cachedFile = cacheFile();
 
-        TimeUnit.MILLISECONDS.sleep(50);
+        TimeUnit.MILLISECONDS.sleep(500);
 
         // caching it another time
         File sameCachedFile = cacheFile();
@@ -62,7 +62,7 @@ public class ResourceCacheTest
     {
         cacheFile();
 
-        TimeUnit.MILLISECONDS.sleep(50);
+        TimeUnit.MILLISECONDS.sleep(500);
 
         // caching it another time
         File sameCachedFile = cacheFile();
