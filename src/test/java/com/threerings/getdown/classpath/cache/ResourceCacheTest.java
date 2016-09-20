@@ -49,28 +49,34 @@ public class ResourceCacheTest
     {
         File cachedFile = cacheFile();
 
-        TimeUnit.MILLISECONDS.sleep(500);
+        cachedFile.setLastModified(YESTERDAY);
+
+        long expectedLastModified = cachedFile.lastModified();
 
         // caching it another time
         File sameCachedFile = cacheFile();
 
-        assertEquals(cachedFile.lastModified(), sameCachedFile.lastModified());
+        assertEquals(expectedLastModified, sameCachedFile.lastModified());
     }
 
     @Test
     public void shouldRememberWhenFileWasRequested () throws Exception
     {
-        cacheFile();
+        File cachedFile = cacheFile();
 
-        TimeUnit.MILLISECONDS.sleep(500);
+        File lastAccessedFile = new File(
+                cachedFile.getParentFile(),
+                cachedFile.getName() + ResourceCache.LAST_ACCESSED_FILE_SUFFIX);
+
+        lastAccessedFile.setLastModified(YESTERDAY);
+
+        long lastAccessed = lastAccessedFile.lastModified();
 
         // caching it another time
-        File sameCachedFile = cacheFile();
-        File lastAccessed = new File(
-                sameCachedFile.getParentFile(),
-                sameCachedFile.getName() + ResourceCache.LAST_ACCESSED_FILE_SUFFIX);
+        cacheFile();
 
-        assertTrue(lastAccessed.lastModified() > sameCachedFile.lastModified());
+
+        assertTrue(lastAccessedFile.lastModified() > lastAccessed);
     }
 
     @Rule
@@ -78,4 +84,6 @@ public class ResourceCacheTest
 
     private File _fileToCache;
     private ResourceCache _cache;
+
+    private static final long YESTERDAY = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(1);
 }
