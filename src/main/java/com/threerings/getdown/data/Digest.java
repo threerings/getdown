@@ -5,26 +5,23 @@
 
 package com.threerings.getdown.data;
 
+import static com.threerings.getdown.Log.log;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-
 import java.util.HashMap;
 import java.util.List;
 
 import com.samskivert.io.StreamUtil;
 import com.samskivert.text.MessageUtil;
 import com.samskivert.util.StringUtil;
-
 import com.threerings.getdown.util.ConfigUtil;
 import com.threerings.getdown.util.ProgressObserver;
-
-import static com.threerings.getdown.Log.log;
 
 /**
  * Manages the <code>digest.txt</code> file and the computing and processing of MD5 digests for an
@@ -146,6 +143,14 @@ public class Digest
     protected static void note (StringBuilder data, String path, String digest)
     {
         data.append(path).append(" = ").append(digest).append("\n");
+    }
+
+    /**
+     * Returns the digest of the given {@code resource}.
+     */
+    public String getDigest (Resource resource)
+    {
+        return _digests.get(resource.getPath());
     }
 
     protected HashMap<String, String> _digests = new HashMap<String, String>();
