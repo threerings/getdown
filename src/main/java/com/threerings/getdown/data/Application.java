@@ -5,21 +5,9 @@
 
 package com.threerings.getdown.data;
 
-import static com.threerings.getdown.Log.log;
-
 import java.awt.Color;
 import java.awt.Rectangle;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -28,29 +16,13 @@ import java.net.URLConnection;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
-import java.security.AllPermission;
-import java.security.CodeSource;
-import java.security.GeneralSecurityException;
-import java.security.PermissionCollection;
-import java.security.Permissions;
-import java.security.Signature;
+import java.security.*;
 import java.security.cert.Certificate;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.swing.JApplet;
-
-import org.apache.commons.codec.binary.Base64;
 
 import com.samskivert.io.StreamUtil;
 import com.samskivert.text.MessageUtil;
@@ -58,16 +30,15 @@ import com.samskivert.util.ArrayUtil;
 import com.samskivert.util.RandomUtil;
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
+
+import org.apache.commons.codec.binary.Base64;
+
+import com.threerings.getdown.classpath.ClassPaths;
 import com.threerings.getdown.classpath.ClassPath;
-import com.threerings.getdown.classpath.ClassPathBuilderFactory;
 import com.threerings.getdown.launcher.RotatingBackgrounds;
-import com.threerings.getdown.util.ConfigUtil;
-import com.threerings.getdown.util.ConnectionUtil;
-import com.threerings.getdown.util.FileUtil;
-import com.threerings.getdown.util.LaunchUtil;
-import com.threerings.getdown.util.ProgressAggregator;
-import com.threerings.getdown.util.ProgressObserver;
-import com.threerings.getdown.util.VersionUtil;
+import com.threerings.getdown.util.*;
+
+import static com.threerings.getdown.Log.log;
 
 /**
  * Parses and provide access to the information contained in the <code>getdown.txt</code>
@@ -257,10 +228,36 @@ public class Application
     {
         _appdir = appdir;
         _appid = appid;
-        _signers = signers == null ? Collections.<Certificate>emptyList() : signers;
+        _signers = (signers == null) ? Collections.<Certificate>emptyList() : signers;
         _config = getLocalPath(CONFIG_FILE);
-        _extraJvmArgs = jvmargs == null ? ArrayUtil.EMPTY_STRING : jvmargs;
-        _extraAppArgs = appargs == null ? ArrayUtil.EMPTY_STRING : appargs;
+        _extraJvmArgs = (jvmargs == null) ? ArrayUtil.EMPTY_STRING : jvmargs;
+        _extraAppArgs = (appargs == null) ? ArrayUtil.EMPTY_STRING : appargs;
+    }
+
+    /**
+     * Returns the configured application directory.
+     */
+    public File getAppdir()
+    {
+        return _appdir;
+    }
+
+    /**
+     * Returns whether the application should cache code resources prior to launching the
+     * application.
+     */
+    public boolean useCodeCache ()
+    {
+        return _useCodeCache;
+    }
+
+    /**
+     * Returns the number of days a cached code resource is allowed to stay unused before it
+     * becomes eligible for deletion.
+     */
+    public int getCodeCacheRetentionDays ()
+    {
+        return _codeCacheRetentionDays;
     }
 
     /**
@@ -289,6 +286,14 @@ public class Application
     public List<Resource> getResources ()
     {
         return _resources;
+    }
+
+    /**
+     * Returns the digest of the given {@code resource}.
+     */
+    public String getDigest (Resource resource)
+    {
+        return _digest.getDigest(resource);
     }
 
     /**
@@ -383,7 +388,7 @@ public class Application
             return null;
         }
 
-        String infix = auxgroup == null ? "" : "-" + auxgroup;
+        String infix = (auxgroup == null) ? "" : ("-" + auxgroup);
         String pfile = "patch" + infix + _version + ".dat";
         try {
             URL remote = new URL(createVAppBase(_targetVersion), encodePath(pfile));
@@ -545,7 +550,7 @@ public class Application
 
         // if we are a versioned deployment, create a versioned appbase
         try {
-            _vappbase = _version < 0 ? new URL(_appbase) : createVAppBase(_version);
+            _vappbase = (_version < 0) ? new URL(_appbase) : createVAppBase(_version);
         } catch (MalformedURLException mue) {
             String err = MessageUtil.tcompose("m.invalid_appbase", _appbase);
             throw (IOException) new IOException(err).initCause(mue);
@@ -562,7 +567,7 @@ public class Application
             }
         }
 
-        String appPrefix = StringUtil.isBlank(_appid) ? "" : _appid + ".";
+        String appPrefix = StringUtil.isBlank(_appid) ? "" : (_appid + ".");
 
         // determine our application class name
         _class = (String)cdata.get(appPrefix + "class");
@@ -689,8 +694,8 @@ public class Application
 
         // whether to cache code resources and launch from cache
         _useCodeCache = Boolean.parseBoolean((String) cdata.get("use_code_cache"));
-        _codeCacheRetentionDays = cdata.containsKey("code_cache_retention_days")
-                ? Integer.parseInt((String) cdata.get("use_code_cache")) : 7;
+        _codeCacheRetentionDays = cdata.containsKey("code_cache_retention_days") ?
+            Integer.parseInt((String) cdata.get("use_code_cache")) : 7;
 
         // parse and return our application config
         UpdateInterface ui = new UpdateInterface();
@@ -709,9 +714,9 @@ public class Application
         }
         // and now ui.background can refer to the background color, but fall back to black
         // or white, depending on the brightness of the progressText
-        Color defaultBackground = .5f < Color.RGBtoHSB(
+        Color defaultBackground = (.5f < Color.RGBtoHSB(
                 ui.progressText.getRed(), ui.progressText.getGreen(), ui.progressText.getBlue(),
-                null)[2]
+                null)[2])
             ? Color.BLACK
             : Color.WHITE;
         ui.background = parseColor(cdata, "ui.background", defaultBackground);
@@ -726,7 +731,7 @@ public class Application
 
         // On an installation error, where do we point the user.
         String installError = parseUrl(cdata, "ui.install_error", null);
-        ui.installError = installError == null ?
+        ui.installError = (installError == null) ?
             "m.default_install_error" : MessageUtil.taint(installError);
 
         // the patch notes bits
@@ -838,8 +843,8 @@ public class Application
                 }
             }
 
-            boolean minVersionOK = _javaMinVersion == 0 || version >= _javaMinVersion;
-            boolean maxVersionOK = _javaMaxVersion == 0 || version <= _javaMaxVersion;
+            boolean minVersionOK = (_javaMinVersion == 0) || (version >= _javaMinVersion);
+            boolean maxVersionOK = (_javaMaxVersion == 0) || (version <= _javaMaxVersion);
             return minVersionOK && maxVersionOK;
 
         } catch (RuntimeException re) {
@@ -937,7 +942,7 @@ public class Application
         boolean dashJarMode = MANIFEST_CLASS.equals(_class);
 
         // add the -classpath arguments if we're not in -jar mode
-        ClassPath classPath = ClassPathBuilderFactory.create(this).buildClassPath();
+        ClassPath classPath = ClassPaths.buildClassPath(this);
 
         if (!dashJarMode) {
             args.add("-classpath");
@@ -1037,18 +1042,14 @@ public class Application
 
     /**
      * Runs this application directly in the current VM.
-     * @throws IOException
      */
     public void invokeDirect (JApplet applet) throws IOException
     {
-        ClassPath classPath = ClassPathBuilderFactory.create(this).buildClassPath();
-
+        ClassPath classPath = ClassPaths.buildClassPath(this);
         URL[] jarUrls = classPath.asUrls();
 
         // create custom class loader
-        URLClassLoader loader = new URLClassLoader(
-            jarUrls,
-            ClassLoader.getSystemClassLoader()) {
+        URLClassLoader loader = new URLClassLoader(jarUrls, ClassLoader.getSystemClassLoader()) {
             @Override protected PermissionCollection getPermissions (CodeSource code) {
                 Permissions perms = new Permissions();
                 perms.add(new AllPermission());
@@ -1058,9 +1059,7 @@ public class Application
         Thread.currentThread().setContextClassLoader(loader);
 
         log.info("Configured URL class loader:");
-        for (URL url : jarUrls) {
-            log.info("  " + url);
-        }
+        for (URL url : jarUrls) log.info("  " + url);
 
         // configure any system properties that we can
         for (String jvmarg : _jvmargs) {
@@ -1169,7 +1168,7 @@ public class Application
         if (_version == -1) {
             // make a note of the old meta-digest, if this changes we need to revalidate all of our
             // resources as one or more of them have also changed
-            String olddig = _digest == null ? "" : _digest.getMetaDigest();
+            String olddig = (_digest == null) ? "" : _digest.getMetaDigest();
             try {
                 status.updateStatus("m.checking");
                 downloadDigestFile();
@@ -1323,7 +1322,7 @@ public class Application
             failures.add(rsrc);
         }
 
-        return failures.size() == 0 ? null : failures;
+        return (failures.size() == 0) ? null : failures;
     }
 
     /**
@@ -1379,24 +1378,6 @@ public class Application
     public long getVersion ()
     {
         return _version;
-    }
-
-    /**
-     * Returns whether the application should cache code resources prior to launching the
-     * application.
-     */
-    public boolean isUseCodeCache ()
-    {
-        return _useCodeCache;
-    }
-
-    /**
-     * Returns the number of days a cached code resource is allowed to stay unused before it
-     * becomes eligible for deletion.
-     */
-    public int getCodeCacheRetentionDays ()
-    {
-        return _codeCacheRetentionDays;
     }
 
     /**
@@ -1644,7 +1625,7 @@ public class Application
     {
         String value = (String)cdata.get(name);
         Rectangle rect = parseRect(name, value);
-        return rect == null ? def : rect;
+        return (rect == null) ? def : rect;
     }
 
     /** Helper function to add all values in {@code values} (if non-null) to {@code target}. */
@@ -1689,7 +1670,7 @@ public class Application
     {
         String value = (String)cdata.get(name);
         Color color = parseColor(value);
-        return color == null ? def : color;
+        return (color == null) ? def : color;
     }
 
     /**
@@ -1712,7 +1693,7 @@ public class Application
     protected String[] parseList (Map<String, Object> cdata, String name)
     {
         String value = (String)cdata.get(name);
-        return value == null ? ArrayUtil.EMPTY_STRING : StringUtil.parseStringArray(value);
+        return (value == null) ? ArrayUtil.EMPTY_STRING : StringUtil.parseStringArray(value);
     }
 
     /**
@@ -1786,19 +1767,6 @@ public class Application
             String err = MessageUtil.tcompose(errkey, value);
             throw (IOException) new IOException(err).initCause(e);
         }
-    }
-
-    /**
-     * Returns the digest of the given {@code resource}.
-     */
-    public String getDigest (Resource resource)
-    {
-        return _digest.getDigest(resource);
-    }
-
-    public File getAppdir()
-    {
-        return _appdir;
     }
 
     protected File _appdir;

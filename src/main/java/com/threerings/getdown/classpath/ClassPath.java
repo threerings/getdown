@@ -1,6 +1,7 @@
 package com.threerings.getdown.classpath;
 
 import java.io.File;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Collections;
@@ -14,13 +15,13 @@ import java.util.Set;
  */
 public class ClassPath
 {
-    public ClassPath (LinkedHashSet<ClassPathElement> classPathEntries)
+    public ClassPath (LinkedHashSet<File> classPathEntries)
     {
-        this._classPathEntries = Collections.unmodifiableSet(classPathEntries);
+        _classPathEntries = Collections.unmodifiableSet(classPathEntries);
     }
 
     /**
-     * Returns the class path as an java command line argument string, e.g
+     * Returns the class path as an java command line argument string, e.g.
      *
      * <pre>
      *   /path/to/a.jar:/path/to/b.jar
@@ -30,16 +31,10 @@ public class ClassPath
     {
         StringBuilder builder = new StringBuilder();
         String delimiter = "";
-
-        for (ClassPathElement entry: _classPathEntries)
-        {
-            builder
-                .append(delimiter)
-                .append(entry.getAbsolutePath());
-
+        for (File entry: _classPathEntries) {
+            builder.append(delimiter).append(entry.getAbsolutePath());
             delimiter = File.pathSeparator;
         }
-
         return builder.toString();
     }
 
@@ -50,20 +45,27 @@ public class ClassPath
     public URL[] asUrls ()
     {
         URL[] urls = new URL[_classPathEntries.size()];
-
         int i = 0;
-
-        for (ClassPathElement entry : _classPathEntries) {
-            urls[i++] = entry.getURL();
+        for (File entry : _classPathEntries) {
+            urls[i++] = getURL(entry);
         }
-
         return urls;
     }
 
-    public Set<ClassPathElement> getClassPathEntries ()
+    public Set<File> getClassPathEntries ()
     {
         return _classPathEntries;
     }
 
-    private final Set<ClassPathElement> _classPathEntries;
+
+    private static URL getURL (File file)
+    {
+        try {
+            return file.toURI().toURL();
+        } catch (MalformedURLException e) {
+            throw new IllegalStateException("URL of file is illegal: " + file.getAbsolutePath(), e);
+        }
+    }
+
+    private final Set<File> _classPathEntries;
 }
