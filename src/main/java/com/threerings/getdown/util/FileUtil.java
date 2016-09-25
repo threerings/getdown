@@ -5,7 +5,15 @@
 
 package com.threerings.getdown.util;
 
-import java.io.*;
+import static com.threerings.getdown.Log.log;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.jar.JarOutputStream;
@@ -13,8 +21,6 @@ import java.util.jar.Pack200;
 import java.util.zip.GZIPInputStream;
 
 import com.samskivert.io.StreamUtil;
-
-import static com.threerings.getdown.Log.log;
 
 /**
  * File related utilities.
@@ -109,7 +115,6 @@ public class FileUtil extends com.samskivert.util.FileUtil
             Pack200.Unpacker unpacker = Pack200.newUnpacker();
             unpacker.unpack(packedJarIn, jarOutputStream);
             return true;
-
         } catch (IOException e) {
             log.warning("Failed to unpack packed 200 jar file", "jar", packedJar, "error", e);
             return false;
@@ -118,6 +123,24 @@ public class FileUtil extends com.samskivert.util.FileUtil
             StreamUtil.close(jarOutputStream);
             StreamUtil.close(extractedJarFileOut);
             StreamUtil.close(packedJarIn);
+        }
+    }
+
+    /**
+     * Copies the given {@code source} file to the given {@code target}.
+     */
+    public static void copy(File source, File target) throws IOException {
+        FileInputStream in = null;
+        FileOutputStream out = null;
+
+        try {
+            in = new FileInputStream(source);
+            out = new FileOutputStream(target);
+
+            StreamUtil.copy(in, out);
+        } finally {
+            StreamUtil.close(in);
+            StreamUtil.close(out);
         }
     }
 }
