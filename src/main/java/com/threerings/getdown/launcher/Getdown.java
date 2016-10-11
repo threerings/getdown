@@ -795,6 +795,10 @@ public abstract class Getdown extends Thread
     	}
     }
     
+    public static boolean isUpdateAvailable() {
+    	return readyToInstall && !toBeInstalledResouces.isEmpty();
+    }
+    
     /**
      * Called to launch the application if everything is determined to be ready to go.
      */
