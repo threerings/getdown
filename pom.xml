@@ -25,8 +25,8 @@
 
   <licenses>
     <license>
-      <name>GNU Lesser General Public License (LGPL), Version 2.1</name>
-      <url>http://www.fsf.org/licensing/licenses/lgpl.txt</url>
+      <name>The (New) BSD License</name>
+      <url>http://www.opensource.org/licenses/bsd-license.php</url>
       <distribution>repo</distribution>
     </license>
   </licenses>
@@ -90,6 +90,12 @@
       <version>4.8.1</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>1.10.19</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -109,8 +115,8 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.3</version>
         <configuration>
-          <source>1.5</source>
-          <target>1.5</target>
+          <source>1.6</source>
+          <target>1.6</target>
           <fork>true</fork>
           <showDeprecation>true</showDeprecation>
           <showWarnings>true</showWarnings>
@@ -211,6 +217,7 @@
               <Codebase>*</Codebase>
               <Application-Library-Allowable-Codebase>*</Application-Library-Allowable-Codebase>
               <Caller-Allowable-Codebase>*</Caller-Allowable-Codebase>
+              <Trusted-Library>true</Trusted-Library>
             </manifestEntries>
           </archive>
         </configuration>

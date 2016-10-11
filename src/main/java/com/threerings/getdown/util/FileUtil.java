@@ -6,7 +6,10 @@
 package com.threerings.getdown.util;
 
 import java.io.*;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Deque;
 import java.util.List;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Pack200;
@@ -119,6 +122,49 @@ public class FileUtil extends com.samskivert.util.FileUtil
             StreamUtil.close(jarOutputStream);
             StreamUtil.close(extractedJarFileOut);
             StreamUtil.close(packedJarIn);
+        }
+    }
+
+    /**
+     * Copies the given {@code source} file to the given {@code target}.
+     */
+    public static void copy (File source, File target) throws IOException {
+        FileInputStream in = null;
+        FileOutputStream out = null;
+        try {
+            in = new FileInputStream(source);
+            out = new FileOutputStream(target);
+            StreamUtil.copy(in, out);
+        } finally {
+            StreamUtil.close(in);
+            StreamUtil.close(out);
+        }
+    }
+
+    /**
+     * Used by {@link #walkTree}.
+     */
+    public interface Visitor
+    {
+        void visit (File file);
+    }
+
+    /**
+     * Walks all files in {@code root}, calling {@code visitor} on each file in the tree.
+     */
+    public static void walkTree (File root, Visitor visitor)
+    {
+        Deque<File> stack = new ArrayDeque<File>(Arrays.asList(root.listFiles()));
+        while (!stack.isEmpty()) {
+            File currentFile = stack.pop();
+            if (currentFile.exists()) {
+                visitor.visit(currentFile);
+                if (currentFile.isDirectory()) {
+                    for (File file: currentFile.listFiles()) {
+                        stack.push(file);
+                    }
+                }
+            }
         }
     }
 }

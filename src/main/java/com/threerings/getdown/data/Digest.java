@@ -10,10 +10,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-
 import java.util.HashMap;
 import java.util.List;
 
@@ -93,6 +91,14 @@ public class Digest
             log.info("Resource failed digest check", "rsrc", resource, "error", t);
         }
         return false;
+    }
+
+    /**
+     * Returns the digest of the given {@code resource}.
+     */
+    public String getDigest (Resource resource)
+    {
+        return _digests.get(resource.getPath());
     }
 
     /**

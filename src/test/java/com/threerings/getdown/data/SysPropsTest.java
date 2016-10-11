@@ -5,16 +5,25 @@
 
 package com.threerings.getdown.data;
 
-import org.junit.*;
+import org.junit.Test;
 
-public class SysPropsTest {
+import static org.junit.Assert.assertTrue;
 
-  @Test public void testParseJavaVersion () {
-    long vers = SysProps.parseJavaVersion("java.version", "(\\d+)\\.(\\d+)\\.(\\d+)(_\\d+)?");
-    assert(vers > 1060000);
+public class SysPropsTest
+{
+    @Test
+    public void shouldParseJavaVersion ()
+    {
+        long version = SysProps.parseJavaVersion(
+            "java.version", "(\\d+)\\.(\\d+)\\.(\\d+)(_\\d+)?");
+        assertTrue(version > 1060000);
+    }
 
-    long runVers = SysProps.parseJavaVersion("java.runtime.version",
-                                             "(\\d+)\\.(\\d+)\\.(\\d+)(_\\d+)?(-b\\d+)?");
-    assert(runVers > 106000000);
-  }
+    @Test
+    public void shouldParseJavaRuntimeVersion ()
+    {
+        long version = SysProps.parseJavaVersion(
+            "java.runtime.version", "(\\d+)\\.(\\d+)\\.(\\d+)(_\\d+)?(-b\\d+)?");
+        assertTrue(version > 106000000);
+    }
 }

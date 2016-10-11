@@ -33,6 +33,8 @@ import com.samskivert.util.StringUtil;
 
 import org.apache.commons.codec.binary.Base64;
 
+import com.threerings.getdown.classpath.ClassPaths;
+import com.threerings.getdown.classpath.ClassPath;
 import com.threerings.getdown.launcher.RotatingBackgrounds;
 import com.threerings.getdown.util.*;
 
@@ -233,6 +235,32 @@ public class Application
     }
 
     /**
+     * Returns the configured application directory.
+     */
+    public File getAppdir()
+    {
+        return _appdir;
+    }
+
+    /**
+     * Returns whether the application should cache code resources prior to launching the
+     * application.
+     */
+    public boolean useCodeCache ()
+    {
+        return _useCodeCache;
+    }
+
+    /**
+     * Returns the number of days a cached code resource is allowed to stay unused before it
+     * becomes eligible for deletion.
+     */
+    public int getCodeCacheRetentionDays ()
+    {
+        return _codeCacheRetentionDays;
+    }
+
+    /**
      * Returns a resource that refers to the application configuration file itself.
      */
     public Resource getConfigResource ()
@@ -258,6 +286,14 @@ public class Application
     public List<Resource> getResources ()
     {
         return _resources;
+    }
+
+    /**
+     * Returns the digest of the given {@code resource}.
+     */
+    public String getDigest (Resource resource)
+    {
+        return _digest.getDigest(resource);
     }
 
     /**
@@ -656,6 +692,11 @@ public class Application
         // obtain a thread dump of the running JVM
         _windebug = getLocalPath("debug.txt").exists();
 
+        // whether to cache code resources and launch from cache
+        _useCodeCache = Boolean.parseBoolean((String) cdata.get("use_code_cache"));
+        _codeCacheRetentionDays = cdata.containsKey("code_cache_retention_days") ?
+            Integer.parseInt((String) cdata.get("use_code_cache")) : 7;
+
         // parse and return our application config
         UpdateInterface ui = new UpdateInterface();
         _name = ui.name = (String)cdata.get("ui.name");
@@ -901,16 +942,11 @@ public class Application
         boolean dashJarMode = MANIFEST_CLASS.equals(_class);
 
         // add the -classpath arguments if we're not in -jar mode
-        StringBuilder cpbuf = new StringBuilder();
-        for (Resource rsrc : getActiveCodeResources()) {
-            if (cpbuf.length() > 0) {
-                cpbuf.append(File.pathSeparator);
-            }
-            cpbuf.append(rsrc.getFinalTarget().getAbsolutePath());
-        }
+        ClassPath classPath = ClassPaths.buildClassPath(this);
+
         if (!dashJarMode) {
             args.add("-classpath");
-            args.add(cpbuf.toString());
+            args.add(classPath.asArgumentString());
         }
 
         // we love our Mac users, so we do nice things to preserve our application identity
@@ -960,7 +996,7 @@ public class Application
         // if we're in -jar mode add those arguments, otherwise add the app class name
         if (dashJarMode) {
             args.add("-jar");
-            args.add(cpbuf.toString());
+            args.add(classPath.asArgumentString());
         } else {
             args.add(_class);
         }
@@ -1007,20 +1043,13 @@ public class Application
     /**
      * Runs this application directly in the current VM.
      */
-    public void invokeDirect (JApplet applet)
+    public void invokeDirect (JApplet applet) throws IOException
     {
-        // create a custom class loader
-        ArrayList<URL> jars = new ArrayList<URL>();
-        for (Resource rsrc : getActiveCodeResources()) {
-            try {
-                jars.add(new URL("file", "", rsrc.getFinalTarget().getAbsolutePath()));
-            } catch (Exception e) {
-                e.printStackTrace(System.err);
-            }
-        }
-        URLClassLoader loader = new URLClassLoader(
-            jars.toArray(new URL[jars.size()]),
-            ClassLoader.getSystemClassLoader()) {
+        ClassPath classPath = ClassPaths.buildClassPath(this);
+        URL[] jarUrls = classPath.asUrls();
+
+        // create custom class loader
+        URLClassLoader loader = new URLClassLoader(jarUrls, ClassLoader.getSystemClassLoader()) {
             @Override protected PermissionCollection getPermissions (CodeSource code) {
                 Permissions perms = new Permissions();
                 perms.add(new AllPermission());
@@ -1030,7 +1059,7 @@ public class Application
         Thread.currentThread().setContextClassLoader(loader);
 
         log.info("Configured URL class loader:");
-        for (URL url : jars) log.info("  " + url);
+        for (URL url : jarUrls) log.info("  " + url);
 
         // configure any system properties that we can
         for (String jvmarg : _jvmargs) {
@@ -1126,12 +1155,6 @@ public class Application
         log.info("Verifying application: " + _vappbase);
         log.info("Version: " + _version);
         log.info("Class: " + _class);
-//         log.info("Code: " +
-//                  StringUtil.toString(getCodeResources().iterator()));
-//         log.info("Resources: " +
-//                  StringUtil.toString(getActiveResources().iterator()));
-//         log.info("JVM Args: " + StringUtil.toString(_jvmargs.iterator()));
-//         log.info("App Args: " + StringUtil.toString(_appargs.iterator()));
 
         // this will read in the contents of the digest file and validate itself
         try {
@@ -1779,6 +1802,9 @@ public class Application
 
     protected List<Resource> _codes = new ArrayList<Resource>();
     protected List<Resource> _resources = new ArrayList<Resource>();
+
+    protected boolean _useCodeCache;
+    protected int _codeCacheRetentionDays;
 
     protected Map<String,AuxGroup> _auxgroups = new HashMap<String,AuxGroup>();
     protected Map<String,Boolean> _auxactive = new HashMap<String,Boolean>();

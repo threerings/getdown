@@ -142,8 +142,8 @@ public class ConfigUtil
                 // if we're checking qualifiers and the os doesn't match this qualifier, skip it
                 String quals = pair[1].substring(1, qidx);
                 if (osname != null && !checkQualifiers(quals, osname, osarch)) {
-                    log.info("Skipping", "quals", quals, "osname", osname, "osarch", osarch,
-                             "key", pair[0], "value", pair[1]);
+                    log.debug("Skipping", "quals", quals, "osname", osname, "osarch", osarch,
+                              "key", pair[0], "value", pair[1]);
                     continue;
                 }
                 // otherwise filter out the qualifier text
