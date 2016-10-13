@@ -11,11 +11,16 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import javax.swing.JFrame;
@@ -25,7 +30,7 @@ import com.samskivert.swing.util.SwingUtil;
 import com.samskivert.util.ArrayUtil;
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
-
+import com.threerings.getdown.data.Digest;
 import com.threerings.getdown.data.SysProps;
 import static com.threerings.getdown.Log.log;
 
@@ -66,6 +71,24 @@ public class GetdownApp
             System.exit(-1);
         }
 
+		// load X.509 certificate
+		File crtFile = new File(appDir, Digest.DIGEST_FILE + ".crt");
+		List<Certificate> crts = new ArrayList<Certificate>();
+		if (!crtFile.exists()) {
+			log.warning("no certificate");
+		} else {
+			try {
+				FileInputStream fis = new FileInputStream(crtFile);
+				X509Certificate certificate = (X509Certificate) CertificateFactory.getInstance("X.509")
+						.generateCertificate(fis);
+				fis.close();
+				crts.add(certificate);
+			} catch (Exception e) {
+				log.warning("certificate error: " + e.getMessage());
+				System.exit(-1);
+			}
+		}
+
         // pipe our output into a file in the application directory
         if (!SysProps.noLogRedir()) {
             File logFile = new File(appDir, "launcher.log");
@@ -92,7 +115,7 @@ public class GetdownApp
         log.info("---------------------------------------------");
 
         try {
-            Getdown app = new Getdown(appDir, appId, null, null, appArgs) {
+            Getdown app = new Getdown(appDir, appId, crts, null, appArgs) {
                 @Override
                 protected Container createContainer () {
                     // create our user interface, and display it
