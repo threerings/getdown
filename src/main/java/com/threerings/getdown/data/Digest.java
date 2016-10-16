@@ -142,9 +142,9 @@ public class Digest
     public static MessageDigest getMessageDigest ()
     {
         try {
-            return MessageDigest.getInstance("MD5");
+            return MessageDigest.getInstance("SHA-256");
         } catch (NoSuchAlgorithmException nsae) {
-            throw new RuntimeException("JVM does not support MD5. Gurp!");
+            throw new RuntimeException("JVM does not support SHA-256. Gurp!");
         }
     }
 
