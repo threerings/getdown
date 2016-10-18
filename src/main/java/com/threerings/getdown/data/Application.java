@@ -1507,7 +1507,7 @@ public class Application
                     FileInputStream dataInput = null;
                     try {
                         dataInput = new FileInputStream(target);
-                        Signature sig = Signature.getInstance("SHA1withRSA");
+                        Signature sig = Signature.getInstance("SHA256withRSA");
                         sig.initVerify(cert);
                         while ((length = dataInput.read(buffer)) != -1) {
                             sig.update(buffer, 0, length);
