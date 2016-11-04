@@ -35,6 +35,7 @@ public class Resource
         _path = path;
         _remote = remote;
         _local = local;
+        _local_new = new File(local.toString() + "_new");
         String lpath = _local.getPath();
         _marker = new File(lpath + "v");
 
@@ -64,6 +65,11 @@ public class Resource
     public File getLocal ()
     {
         return _local;
+    }
+
+    public File getLocalNew ()
+    {
+    	return _local_new;
     }
 
     /**
@@ -106,7 +112,16 @@ public class Resource
     public String computeDigest (MessageDigest md, ProgressObserver obs)
         throws IOException
     {
-        return computeDigest(_local, md, obs);
+    	File file;
+    	if (_local.toString().toLowerCase().endsWith(Application.CONFIG_FILE))
+    		file = _local;
+    	else {
+    		if (_local_new.exists())
+    			file = _local_new;
+    		else
+    			file = _local;
+    	}
+        return computeDigest(file, md, obs);
     }
 
     /**
@@ -284,7 +299,7 @@ public class Resource
 
     protected static boolean isJar (String path)
     {
-        return path.endsWith(".jar");
+        return path.endsWith(".jar") || path.endsWith(".jar_new");
     }
 
     protected static boolean isPacked200Jar (String path)
@@ -294,7 +309,7 @@ public class Resource
 
     protected String _path;
     protected URL _remote;
-    protected File _local, _marker, _unpacked;
+    protected File _local, _local_new, _marker, _unpacked;
     protected boolean _unpack, _isJar, _isPacked200Jar;
 
     /** Used to sort the entries in a jar file. */

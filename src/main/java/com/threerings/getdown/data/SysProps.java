@@ -49,6 +49,10 @@ public class SysProps
         return System.getProperty("silent") != null;
     }
 
+    public static boolean install () {
+    	return System.getProperty("no_install") == null;
+    }
+
     /** If true, Getdown installs the app without ever bringing up a UI and then launches it.
       * Usage: {@code -Dsilent=launch}. */
     public static boolean launchInSilent () {
