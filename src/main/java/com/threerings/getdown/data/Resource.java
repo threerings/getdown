@@ -232,13 +232,6 @@ public class Resource
 
                 int eidx = 0;
                 for (JarEntry entry : entries) {
-                    // skip metadata; we just want the goods
-                    if (entry.getName().startsWith("META-INF")) {
-                        updateProgress(obs, eidx, entries.size());
-                        continue;
-                    }
-
-                    // add this file's data to the MD5 hash
                     InputStream in = null;
                     try {
                         in = jar.getInputStream(entry);
