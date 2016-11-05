@@ -94,7 +94,8 @@ public class Differ
                                 ArrayList<Resource> nrsrcs, boolean verbose)
         throws IOException
     {
-        MessageDigest md = Digest.getMessageDigest();
+        int version = Digest.VERSION;
+        MessageDigest md = Digest.getMessageDigest(version);
         JarOutputStream jout = null;
         try {
             jout = new JarOutputStream(
@@ -107,7 +108,6 @@ public class Differ
                 Resource orsrc = (oidx == -1) ? null : orsrcs.remove(oidx);
                 if (orsrc != null) {
                     // first see if they are the same
-                    int version = Digest.VERSION;
                     String odig = orsrc.computeDigest(version, md, null);
                     String ndig = rsrc.computeDigest(version, md, null);
                     if (odig.equals(ndig)) {

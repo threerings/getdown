@@ -25,13 +25,16 @@ import com.threerings.getdown.util.ProgressObserver;
 import static com.threerings.getdown.Log.log;
 
 /**
- * Manages the <code>digest.txt</code> file and the computing and processing of MD5 digests for an
+ * Manages the <code>digest.txt</code> file and the computing and processing of digests for an
  * application.
  */
 public class Digest
 {
     /** The current version of the digest protocol. */
     public static final int VERSION = 2;
+
+    /** The current algorithm used to sign digest files. */
+    public static final String SIG_ALGO = "SHA256withRSA";
 
     /**
      * Returns the name of the digest file for the specified protocol version.
@@ -48,13 +51,13 @@ public class Digest
     public static void createDigest (int version, List<Resource> resources, File output)
         throws IOException
     {
-        MessageDigest md = getMessageDigest();
+        MessageDigest md = getMessageDigest(version);
         StringBuilder data = new StringBuilder();
         PrintWriter pout = null;
         try {
             pout = new PrintWriter(new OutputStreamWriter(new FileOutputStream(output), "UTF-8"));
 
-            // compute and append the MD5 digest of each resource in the list
+            // compute and append the digest of each resource in the list
             for (Resource rsrc : resources) {
                 String path = rsrc.getPath();
                 try {
@@ -81,25 +84,33 @@ public class Digest
     /**
      * Obtains an appropriate message digest instance for use by the Getdown system.
      */
-    public static MessageDigest getMessageDigest ()
+    public static MessageDigest getMessageDigest (int version)
     {
+        String algo = version > 1 ? "SHA-256" : "MD5";
         try {
-            return MessageDigest.getInstance("MD5");
+            return MessageDigest.getInstance(algo);
         } catch (NoSuchAlgorithmException nsae) {
-            throw new RuntimeException("JVM does not support MD5. Gurp!");
+            throw new RuntimeException("JVM does not support " + algo + ". Gurp!");
         }
     }
 
     /**
-     * Creates a digest instance which will parse and validate the <code>digest.txt</code> in the
-     * supplied application directory.
+     * Creates a digest instance which will parse and validate the digest in the supplied
+     * application directory, using the current digest version.
+     */
+    public Digest (File appdir) throws IOException {
+        this(appdir, VERSION);
+    }
+
+    /**
+     * Creates a digest instance which will parse and validate the digest in the supplied
+     * application directory.
      * @param version the version of the digest protocol to use.
      */
-    public Digest (File appdir)
-        throws IOException
+    public Digest (File appdir, int version) throws IOException
     {
         // parse and validate our digest file contents
-        String filename = digestFile(VERSION);
+        String filename = digestFile(version);
         StringBuilder data = new StringBuilder();
         File dfile = new File(appdir, filename);
         for (String[] pair : ConfigUtil.parsePairs(dfile, false)) {
@@ -112,11 +123,11 @@ public class Digest
         }
 
         // we've reached the end, validate our contents
-        MessageDigest md = getMessageDigest();
+        MessageDigest md = getMessageDigest(version);
         byte[] contents = data.toString().getBytes("UTF-8");
-        String md5 = StringUtil.hexlate(md.digest(contents));
-        if (!md5.equals(_metaDigest)) {
-            String err = MessageUtil.tcompose("m.invalid_digest_file", _metaDigest, md5);
+        String hash = StringUtil.hexlate(md.digest(contents));
+        if (!hash.equals(_metaDigest)) {
+            String err = MessageUtil.tcompose("m.invalid_digest_file", _metaDigest, hash);
             throw new IOException(err);
         }
     }
@@ -130,7 +141,7 @@ public class Digest
     }
 
     /**
-     * Computes the MD5 hash of the specified resource and compares it with the value parsed from
+     * Computes the hash of the specified resource and compares it with the value parsed from
      * the digest file. Logs a message if the resource fails validation.
      *
      * @return true if the resource is valid, false if it failed the digest check or if an I/O
@@ -139,13 +150,13 @@ public class Digest
     public boolean validateResource (Resource resource, ProgressObserver obs)
     {
         try {
-            String cmd5 = resource.computeDigest(VERSION, getMessageDigest(), obs);
-            String emd5 = _digests.get(resource.getPath());
-            if (cmd5.equals(emd5)) {
+            String chash = resource.computeDigest(VERSION, getMessageDigest(VERSION), obs);
+            String ehash = _digests.get(resource.getPath());
+            if (chash.equals(ehash)) {
                 return true;
             }
             log.info("Resource failed digest check",
-                "rsrc", resource, "computed", cmd5, "expected", emd5);
+                     "rsrc", resource, "computed", chash, "expected", ehash);
         } catch (Throwable t) {
             log.info("Resource failed digest check", "rsrc", resource, "error", t);
         }
