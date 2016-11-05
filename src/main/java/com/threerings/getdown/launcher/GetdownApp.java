@@ -36,6 +36,20 @@ public class GetdownApp
 {
     public static void main (String[] argv)
     {
+        try {
+            start(argv);
+        } catch (Exception e) {
+            log.warning("main() failed.", e);
+        }
+    }
+
+    /**
+     * Runs Getdown as an application, using the arguments supplie as {@code argv}.
+     * @return the {@code Getdown} instance that is running. {@link Getdown#start} will have been
+     * called on it.
+     * @throws Exception if anything goes wrong starting Getdown.
+     */
+    public static Getdown start (String[] argv) throws Exception {
         int aidx = 0;
         List<String> args = Arrays.asList(argv);
 
@@ -91,118 +105,114 @@ public class GetdownApp
         log.info("-- Cur dir: " + System.getProperty("user.dir"));
         log.info("---------------------------------------------");
 
-        try {
-            Getdown app = new Getdown(appDir, appId, null, null, appArgs) {
-                @Override
-                protected Container createContainer () {
-                    // create our user interface, and display it
-                    String title = StringUtil.isBlank(_ifc.name) ? "" : _ifc.name;
-                    if (_frame == null) {
-                        _frame = new JFrame(title);
-                        _frame.addWindowListener(new WindowAdapter() {
-                            @Override
-                            public void windowClosing (WindowEvent evt) {
-                                handleWindowClose();
-                            }
-                        });
-                        _frame.setUndecorated(_ifc.hideDecorations);
-                        _frame.setResizable(false);
-                    } else {
-                        _frame.setTitle(title);
-                        _frame.getContentPane().removeAll();
-                    }
-
-                    if (_ifc.iconImages != null) {
-                        ArrayList<Image> icons = new ArrayList<Image>();
-                        for (String path : _ifc.iconImages) {
-                            Image img = loadImage(path);
-                            if (img == null) {
-                                log.warning("Error loading icon image", "path", path);
-                            } else {
-                                icons.add(img);
-                            }
+        Getdown app = new Getdown(appDir, appId, null, null, appArgs) {
+            @Override
+            protected Container createContainer () {
+                // create our user interface, and display it
+                String title = StringUtil.isBlank(_ifc.name) ? "" : _ifc.name;
+                if (_frame == null) {
+                    _frame = new JFrame(title);
+                    _frame.addWindowListener(new WindowAdapter() {
+                        @Override
+                        public void windowClosing (WindowEvent evt) {
+                            handleWindowClose();
                         }
-                        if (icons.isEmpty()) {
-                            log.warning("Failed to load any icons", "iconImages", _ifc.iconImages);
+                    });
+                    _frame.setUndecorated(_ifc.hideDecorations);
+                    _frame.setResizable(false);
+                } else {
+                    _frame.setTitle(title);
+                    _frame.getContentPane().removeAll();
+                }
+
+                if (_ifc.iconImages != null) {
+                    ArrayList<Image> icons = new ArrayList<Image>();
+                    for (String path : _ifc.iconImages) {
+                        Image img = loadImage(path);
+                        if (img == null) {
+                            log.warning("Error loading icon image", "path", path);
                         } else {
-                            SwingUtil.setFrameIcons(_frame, icons);
+                            icons.add(img);
                         }
                     }
-
-                    _frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-                    return _frame.getContentPane();
-                }
-
-                @Override
-                protected void showContainer () {
-                    if (_frame != null) {
-                        _frame.pack();
-                        SwingUtil.centerWindow(_frame);
-                        _frame.setVisible(true);
-                    }
-                }
-
-                @Override
-                protected void disposeContainer () {
-                    if (_frame != null) {
-                        _frame.dispose();
-                        _frame = null;
-                    }
-                }
-
-                @Override
-                protected void showDocument (String url) {
-                    String[] cmdarray;
-                    if (RunAnywhere.isWindows()) {
-                        String osName = System.getProperty("os.name");
-                        if (osName.indexOf("9") != -1 || osName.indexOf("Me") != -1) {
-                            cmdarray = new String[] {
-                                "command.com", "/c", "start", "\"" + url + "\"" };
-                        } else {
-                            cmdarray = new String[] {
-                                "cmd.exe", "/c", "start", "\"\"", "\"" + url + "\"" };
-                        }
-                    } else if (RunAnywhere.isMacOS()) {
-                        cmdarray = new String[] { "open", url };
-                    } else { // Linux, Solaris, etc.
-                        cmdarray = new String[] { "firefox", url };
-                    }
-                    try {
-                        Runtime.getRuntime().exec(cmdarray);
-                    } catch (Exception e) {
-                        log.warning("Failed to open browser.", "cmdarray", cmdarray, e);
-                    }
-                }
-
-                @Override
-                protected void exit (int exitCode) {
-                    // if we're running the app in the same JVM, don't call System.exit, but do
-                    // make double sure that the download window is closed.
-                    if (invokeDirect()) {
-                        disposeContainer();
+                    if (icons.isEmpty()) {
+                        log.warning("Failed to load any icons", "iconImages", _ifc.iconImages);
                     } else {
-                        System.exit(exitCode);
+                        SwingUtil.setFrameIcons(_frame, icons);
                     }
                 }
 
-                @Override
-                protected void fail (String message) {
-                    // if the frame was set to be undecorated, make window decoration available
-                    // to allow the user to close the window
-                    if (_frame != null && _frame.isUndecorated()) {
-                        _frame.dispose();
-                        _frame.setUndecorated(false);
-                        showContainer();
-                    }
-                    super.fail(message);
+                _frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+                return _frame.getContentPane();
+            }
+
+            @Override
+            protected void showContainer () {
+                if (_frame != null) {
+                    _frame.pack();
+                    SwingUtil.centerWindow(_frame);
+                    _frame.setVisible(true);
                 }
+            }
 
-                protected JFrame _frame;
-            };
-            app.start();
+            @Override
+            protected void disposeContainer () {
+                if (_frame != null) {
+                    _frame.dispose();
+                    _frame = null;
+                }
+            }
 
-        } catch (Exception e) {
-            log.warning("main() failed.", e);
-        }
+            @Override
+            protected void showDocument (String url) {
+                String[] cmdarray;
+                if (RunAnywhere.isWindows()) {
+                    String osName = System.getProperty("os.name");
+                    if (osName.indexOf("9") != -1 || osName.indexOf("Me") != -1) {
+                        cmdarray = new String[] {
+                            "command.com", "/c", "start", "\"" + url + "\"" };
+                    } else {
+                        cmdarray = new String[] {
+                            "cmd.exe", "/c", "start", "\"\"", "\"" + url + "\"" };
+                    }
+                } else if (RunAnywhere.isMacOS()) {
+                    cmdarray = new String[] { "open", url };
+                } else { // Linux, Solaris, etc.
+                    cmdarray = new String[] { "firefox", url };
+                }
+                try {
+                    Runtime.getRuntime().exec(cmdarray);
+                } catch (Exception e) {
+                    log.warning("Failed to open browser.", "cmdarray", cmdarray, e);
+                }
+            }
+
+            @Override
+            protected void exit (int exitCode) {
+                // if we're running the app in the same JVM, don't call System.exit, but do
+                // make double sure that the download window is closed.
+                if (invokeDirect()) {
+                    disposeContainer();
+                } else {
+                    System.exit(exitCode);
+                }
+            }
+
+            @Override
+            protected void fail (String message) {
+                // if the frame was set to be undecorated, make window decoration available
+                // to allow the user to close the window
+                if (_frame != null && _frame.isUndecorated()) {
+                    _frame.dispose();
+                    _frame.setUndecorated(false);
+                    showContainer();
+                }
+                super.fail(message);
+            }
+
+            protected JFrame _frame;
+        };
+        app.start();
+        return app;
     }
 }

@@ -101,11 +101,11 @@ public abstract class Getdown extends Thread
             // If the silent property exists, install without bringing up any gui. If it equals
             // launch, start the application after installing. Otherwise, just install and exit.
             _silent = SysProps.silent();
-            _install = SysProps.install();
             if (_silent) {
                 _launchInSilent = SysProps.launchInSilent();
             }
             _delay = SysProps.startDelay();
+            _noInstall = SysProps.noInstall();
         } catch (SecurityException se) {
             // don't freak out, just assume non-silent and no delay; we're probably already
             // recovering from a security failure
@@ -126,6 +126,39 @@ public abstract class Getdown extends Thread
         }
         _app = new Application(appDir, appId, signers, jvmargs, appargs);
         _startup = System.currentTimeMillis();
+    }
+
+    /**
+     * Returns true if there are pending new resources, waiting to be installed.
+     */
+    public boolean isUpdateAvailable ()
+    {
+        return _readyToInstall && !_toBeInstalledResouces.isEmpty();
+    }
+
+    /**
+     * Installs the currently pending new resources.
+     */
+    public void install () throws IOException, InterruptedException
+    {
+        if (_readyToInstall) {
+            log.info("Installing downloaded resources:");
+            for (Resource resource : _toBeInstalledResouces) {
+                File source = resource.getLocalNew(), dest = resource.getLocal();
+                log.info("- " + source);
+                if (!FileUtil.renameTo(source, dest)) {
+                    throw new IOException("Failed to rename " + source + " to " + dest);
+                }
+                if (Thread.interrupted()) {
+                    throw new InterruptedException("m.applet_stopped");
+                }
+            }
+            _toBeInstalledResouces.clear();
+            _readyToInstall = false;
+            log.info("Install completed.");
+        } else {
+            log.info("Nothing to install.");
+        }
     }
 
     /**
@@ -411,9 +444,9 @@ public abstract class Getdown extends Thread
 
             // we'll keep track of all the resources we unpack
             Set<Resource> unpacked = new HashSet<Resource>();
-            
-            toBeInstalledResouces = new ArrayList<Resource>();
-            readyToInstall = false;
+
+            _toBeInstalledResouces = new ArrayList<Resource>();
+            _readyToInstall = false;
 
             //setStep(Step.START);
             for (int ii = 0; ii < MAX_LOOPS; ii++) {
@@ -447,7 +480,6 @@ public abstract class Getdown extends Thread
                 setStep(Step.VERIFY_RESOURCES);
                 setStatusAsync("m.validating", -1, -1L, false);
                 List<Resource> failures = _app.verifyResources(_progobs, alreadyValid, unpacked);
-                addToBeInstalledResources(failures);
                 if (failures == null) {
                     log.info("Resources verified.");
 
@@ -477,9 +509,11 @@ public abstract class Getdown extends Thread
                         }
                     }
 
-                    readyToInstall = true;
-                    if (_install)
-                    	install();
+                    // assuming we're not doing anything funny, install the update
+                    _readyToInstall = true;
+                    if (!_noInstall) {
+                        install();
+                    }
 
                     // Only launch if we aren't in silent mode. Some mystery program starting out
                     // of the blue would be disconcerting.
@@ -496,6 +530,13 @@ public abstract class Getdown extends Thread
                     return;
                 }
 
+                // we have failures, those will be redownloaded so we note them as to-be-installed
+                for (Resource r : failures) {
+                    if (!_toBeInstalledResouces.contains(r)) {
+                        _toBeInstalledResouces.add(r);
+                    }
+                }
+
                 try {
                     // if any of our resources have already been marked valid this is not a first
                     // time install and we don't want to enable tracking
@@ -509,6 +550,7 @@ public abstract class Getdown extends Thread
                     download(failures);
 
                     reportTrackingEvent("app_complete", -1);
+
                 } finally {
                     _enableTracking = false;
                 }
@@ -541,16 +583,7 @@ public abstract class Getdown extends Thread
         }
     }
 
-    private void addToBeInstalledResources(List<Resource> resources) {
-    	if (resources == null)
-    		return;
-    	else
-    		for (Resource r : resources)
-    			if (!toBeInstalledResouces.contains(r))
-    				toBeInstalledResouces.add(r);
-	}
-
-	// documentation inherited from interface
+    // documentation inherited from interface
     public void updateStatus (String message)
     {
         setStatusAsync(message, -1, -1L, true);
@@ -773,32 +806,7 @@ public abstract class Getdown extends Thread
             throw new MultipleGetdownRunning();
         }
     }
-    
-    public static void install ()
-    		throws IOException, InterruptedException
-    {
-    	if (readyToInstall) {
-    		log.info("Installing downloaded resources:");
-	    	for (Resource resource : toBeInstalledResouces) {
-	    		log.info(resource);
-				if (!FileUtil.renameTo(resource.getLocalNew(), resource.getLocal()))
-					throw new IOException("Failed to rename(" + resource.getLocalNew() + ", " + resource.getLocal() + ")");
-				if (Thread.interrupted()) {
-					throw new InterruptedException("m.applet_stopped");
-				}
-	    	}
-	    	toBeInstalledResouces.clear();
-	    	readyToInstall = false;
-	    	log.info("Install completed.");
-    	} else {
-    		log.info("Nothing to install.");
-    	}
-    }
-    
-    public static boolean isUpdateAvailable() {
-    	return readyToInstall && !toBeInstalledResouces.isEmpty();
-    }
-    
+
     /**
      * Called to launch the application if everything is determined to be ready to go.
      */
@@ -1263,9 +1271,12 @@ public abstract class Getdown extends Thread
 
     protected boolean _dead;
     protected boolean _silent;
-    protected boolean _install;
+    protected boolean _noInstall;
     protected boolean _launchInSilent;
     protected long _startup;
+
+    protected List<Resource> _toBeInstalledResouces;
+    protected boolean _readyToInstall;
 
     protected boolean _enableTracking = true;
     protected int _reportedProgress = 0;
@@ -1284,6 +1295,4 @@ public abstract class Getdown extends Thread
     protected static final long PLAY_AGAIN_TIME = 3000L;
     protected static final String PROXY_REGISTRY =
         "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings";
-    protected static List<Resource> toBeInstalledResouces;
-    protected static boolean readyToInstall;
 }

@@ -49,8 +49,11 @@ public class SysProps
         return System.getProperty("silent") != null;
     }
 
-    public static boolean install () {
-    	return System.getProperty("no_install") == null;
+    /** If true, Getdown does not automatically install updates after downloading them. It waits
+      * for the application to call {@link Getdown#install}.
+      * Usage: {@code -Dno_install}. */
+    public static boolean noInstall () {
+     return System.getProperty("no_install") != null;
     }
 
     /** If true, Getdown installs the app without ever bringing up a UI and then launches it.

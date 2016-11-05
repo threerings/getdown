@@ -35,7 +35,7 @@ public class Resource
         _path = path;
         _remote = remote;
         _local = local;
-        _local_new = new File(local.toString() + "_new");
+        _localNew = new File(local.toString() + "_new");
         String lpath = _local.getPath();
         _marker = new File(lpath + "v");
 
@@ -67,9 +67,12 @@ public class Resource
         return _local;
     }
 
+    /**
+     * Returns the location of the to-be-installed new version of this resource.
+     */
     public File getLocalNew ()
     {
-    	return _local_new;
+        return _localNew;
     }
 
     /**
@@ -109,18 +112,14 @@ public class Resource
      * Computes the MD5 hash of this resource's underlying file.
      * <em>Note:</em> This is both CPU and I/O intensive.
      */
-    public String computeDigest (MessageDigest md, ProgressObserver obs)
-        throws IOException
+    public String computeDigest (MessageDigest md, ProgressObserver obs) throws IOException
     {
-    	File file;
-    	if (_local.toString().toLowerCase().endsWith(Application.CONFIG_FILE))
-    		file = _local;
-    	else {
-    		if (_local_new.exists())
-    			file = _local_new;
-    		else
-    			file = _local;
-    	}
+        File file;
+        if (_local.toString().toLowerCase().endsWith(Application.CONFIG_FILE)) {
+            file = _local;
+        } else {
+            file = _localNew.exists() ? _localNew : _local;
+        }
         return computeDigest(file, md, obs);
     }
 
@@ -309,7 +308,7 @@ public class Resource
 
     protected String _path;
     protected URL _remote;
-    protected File _local, _local_new, _marker, _unpacked;
+    protected File _local, _localNew, _marker, _unpacked;
     protected boolean _unpack, _isJar, _isPacked200Jar;
 
     /** Used to sort the entries in a jar file. */
