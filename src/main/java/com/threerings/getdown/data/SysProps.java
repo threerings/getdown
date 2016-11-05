@@ -6,6 +6,7 @@
 package com.threerings.getdown.data;
 
 import com.threerings.getdown.util.VersionUtil;
+import com.threerings.getdown.launcher.Getdown;
 
 /**
  * This class encapsulates all system properties that are read and processed by Getdown. Don't
