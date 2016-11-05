@@ -13,6 +13,8 @@ import java.security.GeneralSecurityException;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
 
+import com.threerings.getdown.data.Digest;
+
 /**
  * An ant task used to create a <code>digest.txt</code> for a Getdown
  * application deployment.
@@ -70,10 +72,7 @@ public class DigesterTask extends Task
         }
 
         try {
-            Digester.createDigest(_appdir);
-            if (_storepath != null) {
-                Digester.signDigest(_appdir, _storepath, _storepass, _storealias);
-            }
+            Digester.createDigests(_appdir, _storepath, _storepass, _storealias);
         } catch (IOException ioe) {
             throw new BuildException("Error creating digest: " + ioe.getMessage(), ioe);
         } catch (GeneralSecurityException gse) {

@@ -107,8 +107,9 @@ public class Differ
                 Resource orsrc = (oidx == -1) ? null : orsrcs.remove(oidx);
                 if (orsrc != null) {
                     // first see if they are the same
-                    String odig = orsrc.computeDigest(md, null);
-                    String ndig = rsrc.computeDigest(md, null);
+                    int version = Digest.VERSION;
+                    String odig = orsrc.computeDigest(version, md, null);
+                    String ndig = rsrc.computeDigest(version, md, null);
                     if (odig.equals(ndig)) {
                         if (verbose) {
                             System.out.println("Unchanged: " + rsrc.getPath());

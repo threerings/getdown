@@ -30,21 +30,80 @@ import static com.threerings.getdown.Log.log;
  */
 public class Digest
 {
-    /** The name of our MD5 digest file. */
-    public static final String DIGEST_FILE = "digest.txt";
+    /** The current version of the digest protocol. */
+    public static final int VERSION = 2;
+
+    /**
+     * Returns the name of the digest file for the specified protocol version.
+     */
+    public static String digestFile (int version) {
+        String infix = version > 1 ? String.valueOf(version) : "";
+        return FILE_NAME + infix + FILE_SUFFIX;
+    }
+
+    /**
+     * Creates a digest file at the specified location using the supplied list of resources.
+     * @param version the version of the digest protocol to use.
+     */
+    public static void createDigest (int version, List<Resource> resources, File output)
+        throws IOException
+    {
+        MessageDigest md = getMessageDigest();
+        StringBuilder data = new StringBuilder();
+        PrintWriter pout = null;
+        try {
+            pout = new PrintWriter(new OutputStreamWriter(new FileOutputStream(output), "UTF-8"));
+
+            // compute and append the MD5 digest of each resource in the list
+            for (Resource rsrc : resources) {
+                String path = rsrc.getPath();
+                try {
+                    String digest = rsrc.computeDigest(version, md, null);
+                    note(data, path, digest);
+                    pout.println(path + " = " + digest);
+                } catch (Throwable t) {
+                    throw (IOException) new IOException(
+                        "Error computing digest for: " + rsrc).initCause(t);
+                }
+            }
+
+            // finally compute and append the digest for the file contents
+            md.reset();
+            byte[] contents = data.toString().getBytes("UTF-8");
+            String filename = digestFile(version);
+            pout.println(filename + " = " + StringUtil.hexlate(md.digest(contents)));
+
+        } finally {
+            StreamUtil.close(pout);
+        }
+    }
+
+    /**
+     * Obtains an appropriate message digest instance for use by the Getdown system.
+     */
+    public static MessageDigest getMessageDigest ()
+    {
+        try {
+            return MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException nsae) {
+            throw new RuntimeException("JVM does not support MD5. Gurp!");
+        }
+    }
 
     /**
      * Creates a digest instance which will parse and validate the <code>digest.txt</code> in the
      * supplied application directory.
+     * @param version the version of the digest protocol to use.
      */
     public Digest (File appdir)
         throws IOException
     {
         // parse and validate our digest file contents
+        String filename = digestFile(VERSION);
         StringBuilder data = new StringBuilder();
-        File dfile = new File(appdir, DIGEST_FILE);
+        File dfile = new File(appdir, filename);
         for (String[] pair : ConfigUtil.parsePairs(dfile, false)) {
-            if (pair[0].equals(DIGEST_FILE)) {
+            if (pair[0].equals(filename)) {
                 _metaDigest = pair[1];
                 break;
             }
@@ -80,7 +139,7 @@ public class Digest
     public boolean validateResource (Resource resource, ProgressObserver obs)
     {
         try {
-            String cmd5 = resource.computeDigest(getMessageDigest(), obs);
+            String cmd5 = resource.computeDigest(VERSION, getMessageDigest(), obs);
             String emd5 = _digests.get(resource.getPath());
             if (cmd5.equals(emd5)) {
                 return true;
@@ -101,53 +160,6 @@ public class Digest
         return _digests.get(resource.getPath());
     }
 
-    /**
-     * Creates a digest file at the specified location using the supplied list of resources.
-     */
-    public static void createDigest (List<Resource> resources, File output)
-        throws IOException
-    {
-        MessageDigest md = getMessageDigest();
-        StringBuilder data = new StringBuilder();
-        PrintWriter pout = null;
-        try {
-            pout = new PrintWriter(new OutputStreamWriter(new FileOutputStream(output), "UTF-8"));
-
-            // compute and append the MD5 digest of each resource in the list
-            for (Resource rsrc : resources) {
-                String path = rsrc.getPath();
-                try {
-                    String digest = rsrc.computeDigest(md, null);
-                    note(data, path, digest);
-                    pout.println(path + " = " + digest);
-                } catch (Throwable t) {
-                    throw (IOException) new IOException(
-                        "Error computing digest for: " + rsrc).initCause(t);
-                }
-            }
-
-            // finally compute and append the digest for the file contents
-            md.reset();
-            byte[] contents = data.toString().getBytes("UTF-8");
-            pout.println(DIGEST_FILE + " = " + StringUtil.hexlate(md.digest(contents)));
-
-        } finally {
-            StreamUtil.close(pout);
-        }
-    }
-
-    /**
-     * Obtains an appropriate message digest instance for use by the Getdown system.
-     */
-    public static MessageDigest getMessageDigest ()
-    {
-        try {
-            return MessageDigest.getInstance("MD5");
-        } catch (NoSuchAlgorithmException nsae) {
-            throw new RuntimeException("JVM does not support MD5. Gurp!");
-        }
-    }
-
     /** Used by {@link #createDigest} and {@link Digest}. */
     protected static void note (StringBuilder data, String path, String digest)
     {
@@ -156,4 +168,7 @@ public class Digest
 
     protected HashMap<String, String> _digests = new HashMap<String, String>();
     protected String _metaDigest = "";
+
+    protected static final String FILE_NAME = "digest";
+    protected static final String FILE_SUFFIX = ".txt";
 }
