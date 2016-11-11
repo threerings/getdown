@@ -647,21 +647,10 @@ public abstract class Getdown extends Thread
         }
         vmjar.markAsValid();
 
-        // Sun, why dost thou spite me? Java doesn't know anything about file permissions (and by
-        // extension then, neither does Jar), so on Joonix we have to hackily make java_vm/bin/java
-        // executable by execing chmod; a pox on their children!
-        if (!RunAnywhere.isWindows()) {
-            String vmbin = LaunchUtil.LOCAL_JAVA_DIR + File.separator + "bin" +
-                File.separator + "java";
-            String cmd = "chmod a+rx " + _app.getLocalPath(vmbin);
-            try {
-                log.info("Please smack a Java engineer. Running: " + cmd);
-                Runtime.getRuntime().exec(cmd);
-            } catch (Exception e) {
-                log.warning("Failed to mark VM binary as executable", "cmd", cmd, "error", e);
-                // we should do something like tell the user or something but fucking fuck
-            }
-        }
+        // these only run on non-Windows platforms, so we use Unix file separators
+        String localJavaDir = LaunchUtil.LOCAL_JAVA_DIR + "/";
+        makeExecutable(localJavaDir + "bin/java");
+        makeExecutable(localJavaDir + "lib/amd64/jspawnhelper");
 
         // lastly regenerate the .jsa dump file that helps Java to start up faster
         String vmpath = LaunchUtil.getJVMPath(_app.getLocalPath(""));
@@ -669,10 +658,27 @@ public abstract class Getdown extends Thread
             log.info("Regenerating classes.jsa for " + vmpath + "...");
             Runtime.getRuntime().exec(vmpath + " -Xshare:dump");
         } catch (Exception e) {
-            log.warning("Failed to regenerate .jsa dum file", "error", e);
+            log.warning("Failed to regenerate .jsa dump file", "error", e);
         }
 
         reportTrackingEvent("jvm_complete", -1);
+    }
+
+    protected void makeExecutable (String path) {
+        // Java doesn't know anything about file permissions (and by extension then,
+        // neither does Jar), so on Unix we have to hackily do so via chmod
+        if (!RunAnywhere.isWindows()) {
+            File target = _app.getLocalPath(path);
+            String cmd = "chmod a+rx " + target;
+            try {
+                if (target.exists()) {
+                    log.info("Running: " + cmd);
+                    Runtime.getRuntime().exec(cmd);
+                }
+            } catch (Exception e) {
+                log.warning("Failed to mark VM binary as executable", "cmd", cmd, "error", e);
+            }
+        }
     }
 
     /**
