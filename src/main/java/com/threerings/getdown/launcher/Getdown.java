@@ -68,6 +68,7 @@ import com.threerings.getdown.net.HTTPDownloader;
 import com.threerings.getdown.tools.Patcher;
 import com.threerings.getdown.util.ConfigUtil;
 import com.threerings.getdown.util.ConnectionUtil;
+import com.threerings.getdown.util.FileUtil;
 import com.threerings.getdown.util.LaunchUtil;
 import com.threerings.getdown.util.ProgressAggregator;
 import com.threerings.getdown.util.ProgressObserver;
@@ -104,6 +105,7 @@ public abstract class Getdown extends Thread
                 _launchInSilent = SysProps.launchInSilent();
             }
             _delay = SysProps.startDelay();
+            _noInstall = SysProps.noInstall();
         } catch (SecurityException se) {
             // don't freak out, just assume non-silent and no delay; we're probably already
             // recovering from a security failure
@@ -124,6 +126,39 @@ public abstract class Getdown extends Thread
         }
         _app = new Application(appDir, appId, signers, jvmargs, appargs);
         _startup = System.currentTimeMillis();
+    }
+
+    /**
+     * Returns true if there are pending new resources, waiting to be installed.
+     */
+    public boolean isUpdateAvailable ()
+    {
+        return _readyToInstall && !_toBeInstalledResouces.isEmpty();
+    }
+
+    /**
+     * Installs the currently pending new resources.
+     */
+    public void install () throws IOException, InterruptedException
+    {
+        if (_readyToInstall) {
+            log.info("Installing downloaded resources:");
+            for (Resource resource : _toBeInstalledResouces) {
+                File source = resource.getLocalNew(), dest = resource.getLocal();
+                log.info("- " + source);
+                if (!FileUtil.renameTo(source, dest)) {
+                    throw new IOException("Failed to rename " + source + " to " + dest);
+                }
+                if (Thread.interrupted()) {
+                    throw new InterruptedException("m.applet_stopped");
+                }
+            }
+            _toBeInstalledResouces.clear();
+            _readyToInstall = false;
+            log.info("Install completed.");
+        } else {
+            log.info("Nothing to install.");
+        }
     }
 
     /**
@@ -410,6 +445,9 @@ public abstract class Getdown extends Thread
             // we'll keep track of all the resources we unpack
             Set<Resource> unpacked = new HashSet<Resource>();
 
+            _toBeInstalledResouces = new ArrayList<Resource>();
+            _readyToInstall = false;
+
             //setStep(Step.START);
             for (int ii = 0; ii < MAX_LOOPS; ii++) {
                 // if we aren't running in a JVM that meets our version requirements, either
@@ -471,6 +509,12 @@ public abstract class Getdown extends Thread
                         }
                     }
 
+                    // assuming we're not doing anything funny, install the update
+                    _readyToInstall = true;
+                    if (!_noInstall) {
+                        install();
+                    }
+
                     // Only launch if we aren't in silent mode. Some mystery program starting out
                     // of the blue would be disconcerting.
                     if (!_silent || _launchInSilent) {
@@ -486,6 +530,13 @@ public abstract class Getdown extends Thread
                     return;
                 }
 
+                // we have failures, those will be redownloaded so we note them as to-be-installed
+                for (Resource r : failures) {
+                    if (!_toBeInstalledResouces.contains(r)) {
+                        _toBeInstalledResouces.add(r);
+                    }
+                }
+
                 try {
                     // if any of our resources have already been marked valid this is not a first
                     // time install and we don't want to enable tracking
@@ -499,6 +550,7 @@ public abstract class Getdown extends Thread
                     download(failures);
 
                     reportTrackingEvent("app_complete", -1);
+
                 } finally {
                     _enableTracking = false;
                 }
@@ -595,21 +647,10 @@ public abstract class Getdown extends Thread
         }
         vmjar.markAsValid();
 
-        // Sun, why dost thou spite me? Java doesn't know anything about file permissions (and by
-        // extension then, neither does Jar), so on Joonix we have to hackily make java_vm/bin/java
-        // executable by execing chmod; a pox on their children!
-        if (!RunAnywhere.isWindows()) {
-            String vmbin = LaunchUtil.LOCAL_JAVA_DIR + File.separator + "bin" +
-                File.separator + "java";
-            String cmd = "chmod a+rx " + _app.getLocalPath(vmbin);
-            try {
-                log.info("Please smack a Java engineer. Running: " + cmd);
-                Runtime.getRuntime().exec(cmd);
-            } catch (Exception e) {
-                log.warning("Failed to mark VM binary as executable", "cmd", cmd, "error", e);
-                // we should do something like tell the user or something but fucking fuck
-            }
-        }
+        // these only run on non-Windows platforms, so we use Unix file separators
+        String localJavaDir = LaunchUtil.LOCAL_JAVA_DIR + "/";
+        makeExecutable(localJavaDir + "bin/java");
+        makeExecutable(localJavaDir + "lib/amd64/jspawnhelper");
 
         // lastly regenerate the .jsa dump file that helps Java to start up faster
         String vmpath = LaunchUtil.getJVMPath(_app.getLocalPath(""));
@@ -617,10 +658,27 @@ public abstract class Getdown extends Thread
             log.info("Regenerating classes.jsa for " + vmpath + "...");
             Runtime.getRuntime().exec(vmpath + " -Xshare:dump");
         } catch (Exception e) {
-            log.warning("Failed to regenerate .jsa dum file", "error", e);
+            log.warning("Failed to regenerate .jsa dump file", "error", e);
         }
 
         reportTrackingEvent("jvm_complete", -1);
+    }
+
+    protected void makeExecutable (String path) {
+        // Java doesn't know anything about file permissions (and by extension then,
+        // neither does Jar), so on Unix we have to hackily do so via chmod
+        if (!RunAnywhere.isWindows()) {
+            File target = _app.getLocalPath(path);
+            String cmd = "chmod a+rx " + target;
+            try {
+                if (target.exists()) {
+                    log.info("Running: " + cmd);
+                    Runtime.getRuntime().exec(cmd);
+                }
+            } catch (Exception e) {
+                log.warning("Failed to mark VM binary as executable", "cmd", cmd, "error", e);
+            }
+        }
     }
 
     /**
@@ -1219,8 +1277,12 @@ public abstract class Getdown extends Thread
 
     protected boolean _dead;
     protected boolean _silent;
+    protected boolean _noInstall;
     protected boolean _launchInSilent;
     protected long _startup;
+
+    protected List<Resource> _toBeInstalledResouces;
+    protected boolean _readyToInstall;
 
     protected boolean _enableTracking = true;
     protected int _reportedProgress = 0;

@@ -36,24 +36,40 @@ public class Digester
     public static void main (String[] args)
         throws IOException, GeneralSecurityException
     {
-        if (args.length != 1 && args.length != 4) {
+        switch (args.length) {
+        case 1:
+            createDigests(new File(args[0]), null, null, null);
+            break;
+        case 4:
+            createDigests(new File(args[0]), new File(args[1]), args[2], args[3]);
+            break;
+        default:
             System.err.println("Usage: Digester app_dir [keystore_path password alias]");
             System.exit(255);
         }
+    }
 
-        createDigest(new File(args[0]));
-        if (args.length == 4) {
-            signDigest(new File(args[0]), new File(args[1]), args[2], args[3]);
+    /**
+     * Creates digest file(s) and optionally signs them if {@code keystore} is not null.
+     */
+    public static void createDigests (File appdir, File keystore, String password, String alias)
+        throws IOException, GeneralSecurityException
+    {
+        for (int version = 1; version <= Digest.VERSION; version++) {
+            createDigest(version, appdir);
+            if (keystore != null) {
+                signDigest(version, appdir, keystore, password, alias);
+            }
         }
     }
 
     /**
      * Creates a digest file in the specified application directory.
      */
-    public static void createDigest (File appdir)
+    public static void createDigest (int version, File appdir)
         throws IOException
     {
-        File target = new File(appdir, Digest.DIGEST_FILE);
+        File target = new File(appdir, Digest.digestFile(version));
         System.out.println("Generating digest file '" + target + "'...");
 
         // create our application and instruct it to parse its business
@@ -70,17 +86,19 @@ public class Digester
         }
 
         // now generate the digest file
-        Digest.createDigest(rsrcs, target);
+        Digest.createDigest(version, rsrcs, target);
     }
 
     /**
      * Creates a digest file in the specified application directory.
      */
-    public static void signDigest (File appdir, File storePath, String storePass, String storeAlias)
+    public static void signDigest (int version, File appdir,
+                                   File storePath, String storePass, String storeAlias)
         throws IOException, GeneralSecurityException
     {
-        File inputFile = new File(appdir, Digest.DIGEST_FILE);
-        File signatureFile = new File(appdir, Digest.DIGEST_FILE + Application.SIGNATURE_SUFFIX);
+        String filename = Digest.digestFile(version);
+        File inputFile = new File(appdir, filename);
+        File signatureFile = new File(appdir, filename + Application.SIGNATURE_SUFFIX);
 
         FileInputStream storeInput = null, dataInput = null;
         FileOutputStream signatureOutput = null;
@@ -92,7 +110,8 @@ public class Digester
             PrivateKey key = (PrivateKey)store.getKey(storeAlias, storePass.toCharArray());
 
             // sign the digest file
-            Signature sig = Signature.getInstance("SHA1withRSA");
+            String algo = version > 1 ? Digest.SIG_ALGO : "SHA1withRSA";
+            Signature sig = Signature.getInstance(algo);
             dataInput = new FileInputStream(inputFile);
             byte[] buffer = new byte[8192];
             int length;

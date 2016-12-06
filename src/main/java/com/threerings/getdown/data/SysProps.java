@@ -6,6 +6,7 @@
 package com.threerings.getdown.data;
 
 import com.threerings.getdown.util.VersionUtil;
+import com.threerings.getdown.launcher.Getdown;
 
 /**
  * This class encapsulates all system properties that are read and processed by Getdown. Don't
@@ -47,6 +48,13 @@ public class SysProps
       * Usage: {@code -Dsilent}. */
     public static boolean silent () {
         return System.getProperty("silent") != null;
+    }
+
+    /** If true, Getdown does not automatically install updates after downloading them. It waits
+      * for the application to call {@link Getdown#install}.
+      * Usage: {@code -Dno_install}. */
+    public static boolean noInstall () {
+     return System.getProperty("no_install") != null;
     }
 
     /** If true, Getdown installs the app without ever bringing up a UI and then launches it.

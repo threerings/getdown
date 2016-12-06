@@ -904,7 +904,7 @@ public class Application
             // now re-download our control files; we download the digest first so that if it fails,
             // our config file will still reference the old version and re-running the updater will
             // start the whole process over again
-            downloadDigestFile();
+            downloadDigestFiles();
             downloadConfigFile();
 
         } catch (IOException ex) {
@@ -1171,7 +1171,7 @@ public class Application
             String olddig = (_digest == null) ? "" : _digest.getMetaDigest();
             try {
                 status.updateStatus("m.checking");
-                downloadDigestFile();
+                downloadDigestFiles();
                 _digest = new Digest(_appdir);
                 if (!olddig.equals(_digest.getMetaDigest())) {
                     log.info("Unversioned digest changed. Revalidating...");
@@ -1189,7 +1189,7 @@ public class Application
         // exceptions to propagate up to the caller as there is nothing else we can do
         if (_digest == null) {
             status.updateStatus("m.updating_metadata");
-            downloadDigestFile();
+            downloadDigestFiles();
             _digest = new Digest(_appdir);
         }
 
@@ -1200,7 +1200,7 @@ public class Application
             // attempt to redownload both of our metadata files; again we pass errors up to our
             // caller because there's nothing we can do to automatically recover
             downloadConfigFile();
-            downloadDigestFile();
+            downloadDigestFiles();
             _digest = new Digest(_appdir);
             // revalidate everything if we end up downloading new metadata
             clearValidationMarkers();
@@ -1459,13 +1459,15 @@ public class Application
     }
 
     /**
-     * Downloads a copy of Digest.DIGEST_FILE and validates its signature.
+     * Downloads the digest files and validates their signature.
      * @throws IOException
      */
-    protected void downloadDigestFile ()
+    protected void downloadDigestFiles ()
         throws IOException
     {
-        downloadControlFile(Digest.DIGEST_FILE, true);
+        for (int version = 1; version <= Digest.VERSION; version++) {
+            downloadControlFile(Digest.digestFile(version), true);
+        }
     }
 
     /**
@@ -1507,7 +1509,7 @@ public class Application
                     FileInputStream dataInput = null;
                     try {
                         dataInput = new FileInputStream(target);
-                        Signature sig = Signature.getInstance("SHA1withRSA");
+                        Signature sig = Signature.getInstance(Digest.SIG_ALGO);
                         sig.initVerify(cert);
                         while ((length = dataInput.read(buffer)) != -1) {
                             sig.update(buffer, 0, length);

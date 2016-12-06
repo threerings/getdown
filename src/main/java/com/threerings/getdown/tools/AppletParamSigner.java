@@ -13,6 +13,8 @@ import java.security.Signature;
 
 import org.apache.commons.codec.binary.Base64;
 
+import com.threerings.getdown.data.Digest;
+
 /**
  * Produces a signed hash of the appbase, appname, and image path to ensure that signed copies of
  * Getdown are not hijacked to run malicious code.
@@ -41,7 +43,7 @@ public class AppletParamSigner
             store.load(new BufferedInputStream(new FileInputStream(keystore)),
                        storepass.toCharArray());
             PrivateKey key = (PrivateKey)store.getKey(alias, keypass.toCharArray());
-            Signature sig = Signature.getInstance("SHA1withRSA");
+            Signature sig = Signature.getInstance(Digest.SIG_ALGO);
             sig.initSign(key);
             sig.update(params.getBytes());
             String signed = new String(Base64.encodeBase64(sig.sign()));
