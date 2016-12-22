@@ -20,7 +20,7 @@ public class ProgressAggregator
     public ProgressObserver startElement (final int index) {
         return new ProgressObserver() {
             public void progress (int percent) {
-                _sizes[index] = percent;
+                _progress[index] = percent;
                 updateAggProgress();
             }
         };
