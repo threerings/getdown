@@ -765,7 +765,7 @@ public class Application
         File pairFile = getLocalPath(pairLocation);
         if (pairFile.exists()) {
             try {
-                List<String[]> args = ConfigUtil.parsePairs(pairFile, false);
+                List<String[]> args = ConfigUtil.parsePairs(pairFile, false, false);
                 for (String[] pair : args) {
                     if (pair[1].length() == 0) {
                         collector.add(pair[0]);
@@ -1231,7 +1231,7 @@ public class Application
                 try {
                     in = ConnectionUtil.open(_latest).getInputStream();
                     BufferedReader bin = new BufferedReader(new InputStreamReader(in));
-                    for (String[] pair : ConfigUtil.parsePairs(bin, false)) {
+                    for (String[] pair : ConfigUtil.parsePairs(bin, false, false)) {
                         if (pair[0].equals("version")) {
                             _targetVersion = Math.max(Long.parseLong(pair[1]), _targetVersion);
                             if (fileVersion != -1 && _targetVersion > fileVersion) {

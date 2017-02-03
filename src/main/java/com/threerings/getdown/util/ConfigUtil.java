@@ -32,28 +32,32 @@ public class ConfigUtil
      *
      * @param checkPlatform if true, platform qualifiers will be used to filter out pairs that do
      * not match the current platform; if false, all pairs will be returned.
+     * @param biasToKey if true the splitting on {@code =} will be key-biased meaning we split on
+     * the last {@code =} in the string (extra equals go in the key). If false, we bias toward the
+     * value: split on the first equals, put extra equals in the value.
      *
      * @return a list of <code>String[]</code> instances containing the key/value pairs in the
      * order they were parsed from the file.
      */
-    public static List<String[]> parsePairs (File config, boolean checkPlatform)
+    public static List<String[]> parsePairs (File config, boolean checkPlatform, boolean biasToKey)
         throws IOException
     {
         // annoyingly FileReader does not allow encoding to be specified (uses platform default)
-        return parsePairs(
-            new InputStreamReader(new FileInputStream(config), "UTF-8"), checkPlatform);
+        InputStreamReader input = new InputStreamReader(new FileInputStream(config), "UTF-8");
+        return parsePairs(input, checkPlatform, biasToKey);
     }
 
     /**
      * See {@link #parsePairs(File,boolean)}.
      */
-    public static List<String[]> parsePairs (Reader config, boolean checkPlatform)
-        throws IOException
+    public static List<String[]> parsePairs (Reader config, boolean checkPlatform,
+                                             boolean biasToKey) throws IOException
     {
         return parsePairs(
             config,
             checkPlatform ? StringUtil.deNull(System.getProperty("os.name")).toLowerCase() : null,
-            checkPlatform ? StringUtil.deNull(System.getProperty("os.arch")).toLowerCase() : null);
+            checkPlatform ? StringUtil.deNull(System.getProperty("os.arch")).toLowerCase() : null,
+            biasToKey);
     }
 
     /**
@@ -71,7 +75,7 @@ public class ConfigUtil
         // I thought that we could use HashMap<String, String[]> and put new String[] {pair[1]} for
         // the null case, but it mysteriously dies on launch, so leaving it as HashMap<String,
         // Object> for now
-        for (String[] pair : parsePairs(config, checkPlatform)) {
+        for (String[] pair : parsePairs(config, checkPlatform, false)) {
             Object value = data.get(pair[0]);
             if (value == null) {
                 data.put(pair[0], pair[1]);
@@ -104,7 +108,8 @@ public class ConfigUtil
     }
 
     /** A helper function for {@link #parsePairs(Reader,boolean}. */
-    protected static List<String[]> parsePairs (Reader config, String osname, String osarch)
+    protected static List<String[]> parsePairs (Reader config, String osname, String osarch,
+                                                boolean biasToKey)
         throws IOException
     {
         List<String[]> pairs = new ArrayList<String[]>();
@@ -123,7 +128,8 @@ public class ConfigUtil
 
             // parse our key/value pair
             String[] pair = new String[2];
-            int eidx = line.indexOf("=");
+            // if we're biasing toward key, put all the extra = in the key rather than the value
+            int eidx = biasToKey ? line.lastIndexOf("=") : line.indexOf("=");
             if (eidx != -1) {
                 pair[0] = line.substring(0, eidx).trim();
                 pair[1] = line.substring(eidx+1).trim();
