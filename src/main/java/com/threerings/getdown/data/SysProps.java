@@ -27,7 +27,7 @@ public class SysProps
     }
 
     /** Configures the appbase (in lieu of providing a skeleton getdown.txt, and as a last resort
-      * fallback). Usage: {@code -Dappbase=someurl}. */
+      * fallback). Usage: {@code -Dappbase=URL}. */
     public static String appBase () {
         return System.getProperty("appbase");
     }
@@ -41,6 +41,11 @@ public class SysProps
     /** Overrides the domain on {@code appbase}. Usage: {@code -Dappbase_domain=foo}. */
     public static String appbaseDomain () {
         return System.getProperty("appbase_domain");
+    }
+
+    /** Overrides enter {@code appbase}. Usage: {@code -Dappbase_override=URL}. */
+    public static String appbaseOverride () {
+        return System.getProperty("appbase_override");
     }
 
     /** If true, Getdown installs the app without ever bringing up a UI, except in the event of an

@@ -537,13 +537,14 @@ public class Application
         if (_appbase == null) {
             throw new RuntimeException("m.missing_appbase");
         }
+
+        // check if we're overriding the domain in the appbase
+        _appbase = overrideAppbase(_appbase);
+
         // make sure there's a trailing slash
         if (!_appbase.endsWith("/")) {
             _appbase = _appbase + "/";
         }
-
-        // check if we're overriding the domain in the appbase
-        _appbase = replaceDomain(_appbase);
 
         // extract our version information
         String vstr = (String)cdata.get("version");
@@ -560,7 +561,11 @@ public class Application
         // check for a latest config URL
         String latest = (String)cdata.get("latest");
         if (latest != null) {
-            latest = replaceDomain(latest);
+            if (latest.startsWith(_appbase)) {
+                latest = _appbase + latest.substring(_appbase.length());
+            } else {
+                latest = replaceDomain(latest);
+            }
             try {
                 _latest = new URL(latest);
             } catch (MalformedURLException mue) {
@@ -1734,6 +1739,18 @@ public class Application
         cookie.append("utmcsr%3D(direct)%7Cutmccn%3D(direct)%7Cutmcmd%3D(none)%3B");
         cookie.append("&utmn=").append(RandomUtil.getInRange(1000000000, 2000000000));
         return cookie.toString();
+    }
+
+    /**
+     * Applies {@code appbase_override} or {@code appbase_domain} if they are set.
+     */
+    protected String overrideAppbase (String appbase) {
+        String appbaseOverride = SysProps.appbaseOverride();
+        if (appbaseOverride != null) {
+            return appbaseOverride;
+        } else {
+            return replaceDomain(appbase);
+        }
     }
 
     /**
