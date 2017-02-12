@@ -13,6 +13,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
@@ -1753,8 +1754,14 @@ public class Application
      */
     protected static String encodePath (String path)
     {
-        // URLEncoder is too fancy for paths, we want to keep /
-        return path.replace(" ", "%20");
+        try {
+            // we want to keep slashes because we're encoding an entire path; also we need to turn
+            // + into %20 because web servers don't like + in paths or file names, blah
+            return URLEncoder.encode(path, "UTF-8").replace("%2F", "/").replace("+", "%20");
+        } catch (UnsupportedEncodingException ue) {
+            log.warning("Failed to URL encode " + path + ": " + ue);
+            return path;
+        }
     }
 
     /**
