@@ -92,7 +92,7 @@ public class LaunchUtil
     public static String getJVMPath (File appdir, boolean windebug)
     {
         // first look in our application directory for an installed VM
-        String vmpath = checkJVMPath(new File(appdir, LOCAL_JAVA_DIR).getPath(), windebug);
+        String vmpath = checkJVMPath(new File(appdir, LOCAL_JAVA_DIR).getAbsolutePath(), windebug);
 
         // then fall back to the VM in which we're already running
         if (vmpath == null) {
