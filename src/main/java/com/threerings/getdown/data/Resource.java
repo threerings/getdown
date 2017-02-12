@@ -247,6 +247,17 @@ public class Resource
     }
 
     /**
+     * Installs the {@code getLocalNew} version of this resource to {@code getLocal}.
+     */
+    public void install () throws IOException {
+        File source = getLocalNew(), dest = getLocal();
+        log.info("- " + source);
+        if (!FileUtil.renameTo(source, dest)) {
+            throw new IOException("Failed to rename " + source + " to " + dest);
+        }
+    }
+
+    /**
      * Unpacks this resource file into the directory that contains it. Returns
      * false if an error occurs while unpacking it.
      */

@@ -144,11 +144,7 @@ public abstract class Getdown extends Thread
         if (_readyToInstall) {
             log.info("Installing downloaded resources:");
             for (Resource resource : _toBeInstalledResouces) {
-                File source = resource.getLocalNew(), dest = resource.getLocal();
-                log.info("- " + source);
-                if (!FileUtil.renameTo(source, dest)) {
-                    throw new IOException("Failed to rename " + source + " to " + dest);
-                }
+                resource.install();
                 if (Thread.interrupted()) {
                     throw new InterruptedException("m.applet_stopped");
                 }
@@ -642,6 +638,7 @@ public abstract class Getdown extends Thread
         reportTrackingEvent("jvm_unpack", -1);
 
         updateStatus("m.unpacking_java");
+        vmjar.install();
         if (!vmjar.unpack()) {
             throw new IOException("m.java_unpack_failed");
         }
