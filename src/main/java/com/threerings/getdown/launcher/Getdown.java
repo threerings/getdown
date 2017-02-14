@@ -647,6 +647,7 @@ public abstract class Getdown extends Thread
         // these only run on non-Windows platforms, so we use Unix file separators
         String localJavaDir = LaunchUtil.LOCAL_JAVA_DIR + "/";
         makeExecutable(localJavaDir + "bin/java");
+        makeExecutable(localJavaDir + "lib/jspawnhelper");
         makeExecutable(localJavaDir + "lib/amd64/jspawnhelper");
 
         // lastly regenerate the .jsa dump file that helps Java to start up faster
