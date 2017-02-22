@@ -24,7 +24,7 @@ public class ClassPaths
      */
     public static ClassPath buildClassPath (Application app) throws IOException
     {
-        return app.useCodeCache() ? buildDefaultClassPath(app) : buildCachedClassPath(app);
+        return app.useCodeCache() ? buildCachedClassPath(app) : buildDefaultClassPath(app);
     }
 
     /**
