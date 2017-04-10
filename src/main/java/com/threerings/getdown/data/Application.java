@@ -700,8 +700,9 @@ public class Application
 
         // whether to cache code resources and launch from cache
         _useCodeCache = Boolean.parseBoolean((String) cdata.get("use_code_cache"));
-        _codeCacheRetentionDays = cdata.containsKey("code_cache_retention_days") ?
-            Integer.parseInt((String) cdata.get("use_code_cache")) : 7;
+        String ccRetentionDays = (String) cdata.get("code_cache_retention_days");
+        _codeCacheRetentionDays = ccRetentionDays == null ? 7 :
+            Integer.parseInt(ccRetentionDays);
 
         // parse and return our application config
         UpdateInterface ui = new UpdateInterface();
