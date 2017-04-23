@@ -19,10 +19,6 @@
     <url>https://github.com/threerings/getdown/issues</url>
   </issueManagement>
 
-  <prerequisites>
-    <maven>3.3.0</maven>
-  </prerequisites>
-
   <licenses>
     <license>
       <name>The (New) BSD License</name>
