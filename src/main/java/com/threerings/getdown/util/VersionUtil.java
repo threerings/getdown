@@ -27,6 +27,10 @@ import static com.threerings.getdown.Log.log;
  */
 public class VersionUtil
 {
+    private VersionUtil() {
+        
+    }
+    
     /**
      * Reads a version number from a file.
      */

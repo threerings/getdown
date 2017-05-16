@@ -26,6 +26,10 @@ import static com.threerings.getdown.Log.log;
  */
 public class ConfigUtil
 {
+    private ConfigUtil() {
+        
+    }
+    
     /**
      * Parses a configuration file containing key/value pairs. The file must be in the UTF-8
      * encoding.

@@ -21,6 +21,10 @@ import com.threerings.getdown.data.Digest;
  */
 public class AppletParamSigner
 {
+    private AppletParamSigner() {
+        
+    }
+    
     public static void main (String[] args)
     {
         try {
