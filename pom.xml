@@ -65,6 +65,8 @@
       <groupId>jregistrykey</groupId>
       <artifactId>jregistrykey</artifactId>
       <version>1.0</version>
+      <scope>system</scope>
+      <systemPath>${project.basedir}/lib/jregistrykey/jregistrykey/1.0/jregistrykey-1.0.jar</systemPath>
       <optional>true</optional>
     </dependency>
     <dependency>
