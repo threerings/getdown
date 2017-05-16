@@ -45,23 +45,27 @@ public class ProxyPanel extends JPanel
 
         JPanel row = new JPanel(new BorderLayout(5, 5));
         row.add(new JLabel(get("m.proxy_host")), BorderLayout.WEST);
-        row.add(_host = new SaneTextField());
+        _host = new SaneTextField();
+        row.add(_host);
         add(row);
 
         row = new JPanel(new BorderLayout(5, 5));
         row.add(new JLabel(get("m.proxy_port")), BorderLayout.WEST);
-        row.add(_port = new SaneTextField());
+        _port = new SaneTextField();
+        row.add(_port);
         add(row);
 
         add(new Spacer(5, 5));
         add(new JLabel(get("m.proxy_extra")));
 
         row = GroupLayout.makeButtonBox(GroupLayout.CENTER);
-        JButton button;
-        row.add(button = new JButton(get("m.proxy_ok")));
+        JButton button = new JButton(get("m.proxy_ok"));
+        row.add(button);
         button.setActionCommand("ok");
         button.addActionListener(this);
-        row.add(button = new JButton(get("m.proxy_cancel")));
+        
+        button = new JButton(get("m.proxy_cancel"));
+        row.add(button);
         button.setActionCommand("cancel");
         button.addActionListener(this);
         add(row);

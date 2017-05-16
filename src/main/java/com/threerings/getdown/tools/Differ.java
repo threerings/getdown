@@ -229,7 +229,8 @@ public class Differ
     {
         FileInputStream fin = null;
         try {
-            StreamUtil.copy(fin = new FileInputStream(file), jout);
+            fin = new FileInputStream(file);
+            StreamUtil.copy(fin, jout);
         } finally {
             StreamUtil.close(fin);
         }

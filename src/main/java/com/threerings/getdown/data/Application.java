@@ -511,12 +511,15 @@ public class Application
             // otherwise, try reading data from our backup config file; thanks to funny windows
             // bullshit, we have to do this backup file fiddling in case we got screwed while
             // updating getdown.txt during normal operation
-            else if ((config = getLocalPath(CONFIG_FILE + "_old")).exists()) {
-                cdata = ConfigUtil.parseConfig(config, checkPlatform);
-            }
-            // otherwise, issue a warning that we found no getdown file
             else {
-                log.info("Found no getdown.txt file", "appdir", _appdir);
+                config = getLocalPath(CONFIG_FILE + "_old");
+                if (config.exists()) {
+                    cdata = ConfigUtil.parseConfig(config, checkPlatform);
+                }
+                // otherwise, issue a warning that we found no getdown file
+                else {
+                    log.info("Found no getdown.txt file", "appdir", _appdir);
+                }
             }
         } catch (Exception e) {
             log.warning("Failure reading config file", "file", config, e);
