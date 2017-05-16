@@ -5,8 +5,7 @@
 
 package com.threerings.getdown.data;
 
-import java.awt.Color;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.io.*;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -20,6 +19,7 @@ import java.nio.channels.OverlappingFileLockException;
 import java.security.*;
 import java.security.cert.Certificate;
 import java.util.*;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -677,6 +677,11 @@ public class Application
 
         // Add the launch specific JVM arguments
         addAll(_extraJvmArgs, _jvmargs);
+
+        // If we are headless, the target application should be headless
+        if(GraphicsEnvironment.isHeadless()) {
+            _jvmargs.add("-Djava.awt.headless=true");
+        }
 
         // get the set of optimum JVM arguments
         _optimumJvmArgs = ConfigUtil.getMultiValue(cdata, "optimum_jvmarg");
