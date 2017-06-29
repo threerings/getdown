@@ -1274,13 +1274,15 @@ public class Application
      * @param alreadyValid if non-null a 1 element array that will have the number of "already
      * validated" resources filled in.
      * @param unpacked a set to populate with unpacked resources.
+     * @param toInstall a list into which to add resources that need to be installed.
+     * @param toDownload a list into which to add resources that need to be downloaded.
      */
-    public List<Resource> verifyResources (ProgressObserver obs, int[] alreadyValid,
-                                           Set<Resource> unpacked, List<Resource> toBeInstalled)
+    public void verifyResources (
+        ProgressObserver obs, int[] alreadyValid, Set<Resource> unpacked,
+        List<Resource> toInstall, List<Resource> toDownload)
         throws InterruptedException
     {
         List<Resource> rsrcs = getAllActiveResources();
-        List<Resource> failures = new ArrayList<Resource>();
 
         // obtain the sizes of the resources to validate
         long[] sizes = new long[rsrcs.size()];
@@ -1308,9 +1310,10 @@ public class Application
             try {
                 if (_digest.validateResource(rsrc, robs)) {
                     // if the resource is valid but has no _local file, add it to to-install list
-                    if (!toBeInstalled.contains(rsrc) && !rsrc.getLocal().exists() &&
+                    if (!toInstall.contains(rsrc) && !rsrc.getLocal().exists() &&
                         rsrc.getLocalNew().exists()) {
-                        toBeInstalled.add(rsrc);
+                        toInstall.add(rsrc);
+                        continue;
                     }
                     // unpack this resource if appropriate
                     if (noUnpack || !rsrc.shouldUnpack()) {
@@ -1333,10 +1336,8 @@ public class Application
             } finally {
                 robs.progress(100);
             }
-            failures.add(rsrc);
+            toDownload.add(rsrc);
         }
-
-        return (failures.size() == 0) ? null : failures;
     }
 
     /**

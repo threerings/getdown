@@ -133,7 +133,7 @@ public abstract class Getdown extends Thread
      */
     public boolean isUpdateAvailable ()
     {
-        return _readyToInstall && !_toBeInstalledResouces.isEmpty();
+        return _readyToInstall && !_toInstallResources.isEmpty();
     }
 
     /**
@@ -143,13 +143,13 @@ public abstract class Getdown extends Thread
     {
         if (_readyToInstall) {
             log.info("Installing downloaded resources:");
-            for (Resource resource : _toBeInstalledResouces) {
+            for (Resource resource : _toInstallResources) {
                 resource.install();
                 if (Thread.interrupted()) {
                     throw new InterruptedException("m.applet_stopped");
                 }
             }
-            _toBeInstalledResouces.clear();
+            _toInstallResources.clear();
             _readyToInstall = false;
             log.info("Install completed.");
         } else {
@@ -442,7 +442,7 @@ public abstract class Getdown extends Thread
             // we'll keep track of all the resources we unpack
             Set<Resource> unpacked = new HashSet<Resource>();
 
-            _toBeInstalledResouces = new ArrayList<Resource>();
+            _toInstallResources = new ArrayList<Resource>();
             _readyToInstall = false;
 
             //setStep(Step.START);
@@ -476,9 +476,10 @@ public abstract class Getdown extends Thread
                 // now verify our resources...
                 setStep(Step.VERIFY_RESOURCES);
                 setStatusAsync("m.validating", -1, -1L, false);
-                List<Resource> failures = _app.verifyResources(
-                    _progobs, alreadyValid, unpacked, _toBeInstalledResouces);
-                if (failures == null) {
+                List<Resource> toDownload = new ArrayList<Resource>();
+                _app.verifyResources(_progobs, alreadyValid, unpacked,
+                                     _toInstallResources, toDownload);
+                if (toDownload.size() == 0) {
                     log.info("Resources verified.");
 
                     // if we were downloaded in full from another service (say, Steam), we may
@@ -528,10 +529,10 @@ public abstract class Getdown extends Thread
                     return;
                 }
 
-                // we have failures, those will be redownloaded so we note them as to-be-installed
-                for (Resource r : failures) {
-                    if (!_toBeInstalledResouces.contains(r)) {
-                        _toBeInstalledResouces.add(r);
+                // we have resources to download, also note them as to-be-installed
+                for (Resource r : toDownload) {
+                    if (!_toInstallResources.contains(r)) {
+                        _toInstallResources.add(r);
                     }
                 }
 
@@ -542,10 +543,10 @@ public abstract class Getdown extends Thread
                     reportTrackingEvent("app_start", -1);
 
                     // redownload any that are corrupt or invalid...
-                    log.info(failures.size() + " of " + _app.getAllActiveResources().size() +
+                    log.info(toDownload.size() + " of " + _app.getAllActiveResources().size() +
                              " rsrcs require update (" + alreadyValid[0] + " assumed valid).");
                     setStep(Step.REDOWNLOAD_RESOURCES);
-                    download(failures);
+                    download(toDownload);
 
                     reportTrackingEvent("app_complete", -1);
 
@@ -1281,7 +1282,7 @@ public abstract class Getdown extends Thread
     protected boolean _launchInSilent;
     protected long _startup;
 
-    protected List<Resource> _toBeInstalledResouces;
+    protected List<Resource> _toInstallResources;
     protected boolean _readyToInstall;
 
     protected boolean _enableTracking = true;
