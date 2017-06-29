@@ -476,7 +476,8 @@ public abstract class Getdown extends Thread
                 // now verify our resources...
                 setStep(Step.VERIFY_RESOURCES);
                 setStatusAsync("m.validating", -1, -1L, false);
-                List<Resource> failures = _app.verifyResources(_progobs, alreadyValid, unpacked, _toBeInstalledResouces);
+                List<Resource> failures = _app.verifyResources(
+                    _progobs, alreadyValid, unpacked, _toBeInstalledResouces);
                 if (failures == null) {
                     log.info("Resources verified.");
 

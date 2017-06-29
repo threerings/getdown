@@ -1276,7 +1276,8 @@ public class Application
      * @param unpacked a set to populate with unpacked resources.
      */
     public List<Resource> verifyResources (ProgressObserver obs, int[] alreadyValid,
-                                           Set<Resource> unpacked, List<Resource> toBeInstalled) throws InterruptedException
+                                           Set<Resource> unpacked, List<Resource> toBeInstalled)
+        throws InterruptedException
     {
         List<Resource> rsrcs = getAllActiveResources();
         List<Resource> failures = new ArrayList<Resource>();
@@ -1306,8 +1307,9 @@ public class Application
 
             try {
                 if (_digest.validateResource(rsrc, robs)) {
-                    //if the resource is valid but has no _local file, we add it to the resource to install
-                    if (!rsrc.getLocal().exists() && rsrc.getLocalNew().exists() && !toBeInstalled.contains(rsrc)) {
+                    // if the resource is valid but has no _local file, add it to to-install list
+                    if (!toBeInstalled.contains(rsrc) && !rsrc.getLocal().exists() &&
+                        rsrc.getLocalNew().exists()) {
                         toBeInstalled.add(rsrc);
                     }
                     // unpack this resource if appropriate
