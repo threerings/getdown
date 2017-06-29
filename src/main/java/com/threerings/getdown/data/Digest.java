@@ -113,9 +113,11 @@ public class Digest
         String filename = digestFile(version);
         StringBuilder data = new StringBuilder();
         File dfile = new File(appdir, filename);
+        ConfigUtil.ParseOpts opts = ConfigUtil.createOpts(false);
         // bias = toward key: the key is the filename and could conceivably contain = signs, value
         // is the hex encoded hash which will not contain =
-        for (String[] pair : ConfigUtil.parsePairs(dfile, false, true)) {
+        opts.biasToKey = true;
+        for (String[] pair : ConfigUtil.parsePairs(dfile, opts)) {
             if (pair[0].equals(filename)) {
                 _metaDigest = pair[1];
                 break;

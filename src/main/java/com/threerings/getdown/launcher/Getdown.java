@@ -313,7 +313,8 @@ public abstract class Getdown extends Thread
         File pfile = _app.getLocalPath("proxy.txt");
         if (pfile.exists()) {
             try {
-                Map<String, Object> pconf = ConfigUtil.parseConfig(pfile, false);
+                Map<String, Object> pconf =
+                    ConfigUtil.parseConfig(pfile, ConfigUtil.createOpts(false));
                 setProxyProperties((String)pconf.get("host"), (String)pconf.get("port"));
                 return true;
             } catch (IOException ioe) {

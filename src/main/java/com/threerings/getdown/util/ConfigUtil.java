@@ -26,6 +26,30 @@ import static com.threerings.getdown.Log.log;
  */
 public class ConfigUtil
 {
+    /** Options that control the {@link #parsePairs} function. */
+    public static class ParseOpts {
+        // these should be tweaked as desired by the caller
+        public boolean biasToKey = false;
+        public boolean strictComments = false;
+
+        // these are filled in by parseConfig
+        public String osname = null;
+        public String osarch = null;
+    }
+
+    /**
+     * Creates a parse configuration, filling in the platform filters (or not) depending on the
+     * value of {@code checkPlatform}.
+     */
+    public static ParseOpts createOpts (boolean checkPlatform) {
+        ParseOpts opts = new ParseOpts();
+        if (checkPlatform) {
+            opts.osname = StringUtil.deNull(System.getProperty("os.name")).toLowerCase();
+            opts.osarch = StringUtil.deNull(System.getProperty("os.arch")).toLowerCase();
+        }
+        return opts;
+    }
+
     /**
      * Parses a configuration file containing key/value pairs. The file must be in the UTF-8
      * encoding.
@@ -39,25 +63,68 @@ public class ConfigUtil
      * @return a list of <code>String[]</code> instances containing the key/value pairs in the
      * order they were parsed from the file.
      */
-    public static List<String[]> parsePairs (File config, boolean checkPlatform, boolean biasToKey)
+    public static List<String[]> parsePairs (File source, ParseOpts opts)
         throws IOException
     {
         // annoyingly FileReader does not allow encoding to be specified (uses platform default)
-        InputStreamReader input = new InputStreamReader(new FileInputStream(config), "UTF-8");
-        return parsePairs(input, checkPlatform, biasToKey);
+        InputStreamReader input = new InputStreamReader(new FileInputStream(source), "UTF-8");
+        return parsePairs(input, opts);
     }
 
     /**
-     * See {@link #parsePairs(File,boolean,boolean)}.
+     * See {@link #parsePairs(File,ParseOpts)}.
      */
-    public static List<String[]> parsePairs (Reader config, boolean checkPlatform,
-                                             boolean biasToKey) throws IOException
+    public static List<String[]> parsePairs (Reader source, ParseOpts opts) throws IOException
     {
-        return parsePairs(
-            config,
-            checkPlatform ? StringUtil.deNull(System.getProperty("os.name")).toLowerCase() : null,
-            checkPlatform ? StringUtil.deNull(System.getProperty("os.arch")).toLowerCase() : null,
-            biasToKey);
+        List<String[]> pairs = new ArrayList<String[]>();
+        for (String line : FileUtil.readLines(source)) {
+            // nix comments
+            int cidx = line.indexOf("#");
+            if (opts.strictComments ? cidx == 0 : cidx != -1) {
+                line = line.substring(0, cidx);
+            }
+
+            // trim whitespace and skip blank lines
+            line = line.trim();
+            if (StringUtil.isBlank(line)) {
+                continue;
+            }
+
+            // parse our key/value pair
+            String[] pair = new String[2];
+            // if we're biasing toward key, put all the extra = in the key rather than the value
+            int eidx = opts.biasToKey ? line.lastIndexOf("=") : line.indexOf("=");
+            if (eidx != -1) {
+                pair[0] = line.substring(0, eidx).trim();
+                pair[1] = line.substring(eidx+1).trim();
+            } else {
+                pair[0] = line;
+                pair[1] = "";
+            }
+
+            // if the pair has an os qualifier, we need to process it
+            if (pair[1].startsWith("[")) {
+                int qidx = pair[1].indexOf("]");
+                if (qidx == -1) {
+                    log.warning("Bogus platform specifier", "key", pair[0], "value", pair[1]);
+                    continue; // omit the pair entirely
+                }
+                // if we're checking qualifiers and the os doesn't match this qualifier, skip it
+                String quals = pair[1].substring(1, qidx);
+                if (opts.osname != null && !checkQualifiers(quals, opts.osname, opts.osarch)) {
+                    log.debug("Skipping", "quals", quals,
+                              "osname", opts.osname, "osarch", opts.osarch,
+                              "key", pair[0], "value", pair[1]);
+                    continue;
+                }
+                // otherwise filter out the qualifier text
+                pair[1] = pair[1].substring(qidx+1).trim();
+            }
+
+            pairs.add(pair);
+        }
+
+        return pairs;
     }
 
     /**
@@ -67,7 +134,7 @@ public class ConfigUtil
      * @return a map from keys to values, where a value will be an array of strings if more than
      * one key/value pair in the config file was associated with the same key.
      */
-    public static Map<String, Object> parseConfig (File config, boolean checkPlatform)
+    public static Map<String, Object> parseConfig (File source, ParseOpts opts)
         throws IOException
     {
         Map<String, Object> data = new HashMap<String, Object>();
@@ -75,7 +142,7 @@ public class ConfigUtil
         // I thought that we could use HashMap<String, String[]> and put new String[] {pair[1]} for
         // the null case, but it mysteriously dies on launch, so leaving it as HashMap<String,
         // Object> for now
-        for (String[] pair : parsePairs(config, checkPlatform, false)) {
+        for (String[] pair : parsePairs(source, opts)) {
             Object value = data.get(pair[0]);
             if (value == null) {
                 data.put(pair[0], pair[1]);
@@ -88,6 +155,14 @@ public class ConfigUtil
                 nvalues[values.length] = pair[1];
                 data.put(pair[0], nvalues);
             }
+        }
+
+        // special magic for the getdown.txt config: if the parsed data contains 'strict_comments =
+        // true' then we reparse the file with strict comments (i.e. # is only assumed to start a
+        // comment in column 0)
+        if (!opts.strictComments && Boolean.parseBoolean((String)data.get("strict_comments"))) {
+            opts.strictComments = true;
+            return parseConfig(source, opts);
         }
 
         return data;
@@ -107,64 +182,9 @@ public class ConfigUtil
         }
     }
 
-    /** A helper function for {@link #parsePairs(Reader,boolean}. */
-    protected static List<String[]> parsePairs (Reader config, String osname, String osarch,
-                                                boolean biasToKey)
-        throws IOException
-    {
-        List<String[]> pairs = new ArrayList<String[]>();
-        for (String line : FileUtil.readLines(config)) {
-            // nix comments
-            int cidx = line.indexOf("#");
-            if (cidx != -1) {
-                line = line.substring(0, cidx);
-            }
-
-            // trim whitespace and skip blank lines
-            line = line.trim();
-            if (StringUtil.isBlank(line)) {
-                continue;
-            }
-
-            // parse our key/value pair
-            String[] pair = new String[2];
-            // if we're biasing toward key, put all the extra = in the key rather than the value
-            int eidx = biasToKey ? line.lastIndexOf("=") : line.indexOf("=");
-            if (eidx != -1) {
-                pair[0] = line.substring(0, eidx).trim();
-                pair[1] = line.substring(eidx+1).trim();
-            } else {
-                pair[0] = line;
-                pair[1] = "";
-            }
-
-            // if the pair has an os qualifier, we need to process it
-            if (pair[1].startsWith("[")) {
-                int qidx = pair[1].indexOf("]");
-                if (qidx == -1) {
-                    log.warning("Bogus platform specifier", "key", pair[0], "value", pair[1]);
-                    continue; // omit the pair entirely
-                }
-                // if we're checking qualifiers and the os doesn't match this qualifier, skip it
-                String quals = pair[1].substring(1, qidx);
-                if (osname != null && !checkQualifiers(quals, osname, osarch)) {
-                    log.debug("Skipping", "quals", quals, "osname", osname, "osarch", osarch,
-                              "key", pair[0], "value", pair[1]);
-                    continue;
-                }
-                // otherwise filter out the qualifier text
-                pair[1] = pair[1].substring(qidx+1).trim();
-            }
-
-            pairs.add(pair);
-        }
-
-        return pairs;
-    }
-
     /**
-     * A helper function for {@link #parsePairs(Reader,String,String)}. Qualifiers have the
-     * following form:
+     * A helper function for {@link #parsePairs(Reader,ParseOpts)}. Qualifiers have the following
+     * form:
      * <pre>
      * id = os[-arch]
      * ids = id | id,ids

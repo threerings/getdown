@@ -38,7 +38,8 @@ public class ConfigUtilTest
 
     @Test public void testSimplePairs () throws IOException
     {
-        List<String[]> pairs = ConfigUtil.parsePairs(toReader(SIMPLE_PAIRS), true, false);
+        List<String[]> pairs = ConfigUtil.parsePairs(
+            toReader(SIMPLE_PAIRS), ConfigUtil.createOpts(true));
         for (int ii = 0; ii < SIMPLE_PAIRS.length; ii++) {
             assertEquals(SIMPLE_PAIRS[ii].key, pairs.get(ii)[0]);
             assertEquals(SIMPLE_PAIRS[ii].value, pairs.get(ii)[1]);
@@ -57,7 +58,10 @@ public class ConfigUtilTest
         Pair notWin = new Pair("fifteen", "[!windows] sixteen");
         Pair[] pairs = { linux, mac, linuxAndMac, linux64, linux64s, mac64, win64, notWin };
 
-        List<String[]> parsed = ConfigUtil.parsePairs(toReader(pairs), "linux", "i386", false);
+        ConfigUtil.ParseOpts opts = ConfigUtil.createOpts(false);
+        opts.osname = "linux";
+        opts.osarch = "i386";
+        List<String[]> parsed = ConfigUtil.parsePairs(toReader(pairs), opts);
         assertTrue(exists(parsed, linux.key));
         assertTrue(!exists(parsed, mac.key));
         assertTrue(exists(parsed, linuxAndMac.key));
@@ -67,7 +71,8 @@ public class ConfigUtilTest
         assertTrue(!exists(parsed, win64.key));
         assertTrue(exists(parsed, notWin.key));
 
-        parsed = ConfigUtil.parsePairs(toReader(pairs), "linux", "x86_64", false);
+        opts.osarch = "x86_64";
+        parsed = ConfigUtil.parsePairs(toReader(pairs), opts);
         assertTrue(exists(parsed, linux.key));
         assertTrue(!exists(parsed, mac.key));
         assertTrue(exists(parsed, linuxAndMac.key));
@@ -77,7 +82,8 @@ public class ConfigUtilTest
         assertTrue(!exists(parsed, win64.key));
         assertTrue(exists(parsed, notWin.key));
 
-        parsed = ConfigUtil.parsePairs(toReader(pairs), "linux", "amd64", false);
+        opts.osarch = "amd64";
+        parsed = ConfigUtil.parsePairs(toReader(pairs), opts);
         assertTrue(exists(parsed, linux.key));
         assertTrue(!exists(parsed, mac.key));
         assertTrue(exists(parsed, linuxAndMac.key));
@@ -87,7 +93,9 @@ public class ConfigUtilTest
         assertTrue(!exists(parsed, win64.key));
         assertTrue(exists(parsed, notWin.key));
 
-        parsed = ConfigUtil.parsePairs(toReader(pairs), "mac os x", "x86_64", false);
+        opts.osname = "mac os x";
+        opts.osarch = "x86_64";
+        parsed = ConfigUtil.parsePairs(toReader(pairs), opts);
         assertTrue(!exists(parsed, linux.key));
         assertTrue(exists(parsed, mac.key));
         assertTrue(exists(parsed, linuxAndMac.key));
@@ -97,7 +105,9 @@ public class ConfigUtilTest
         assertTrue(!exists(parsed, win64.key));
         assertTrue(exists(parsed, notWin.key));
 
-        parsed = ConfigUtil.parsePairs(toReader(pairs), "windows", "i386", false);
+        opts.osname = "windows";
+        opts.osarch = "i386";
+        parsed = ConfigUtil.parsePairs(toReader(pairs), opts);
         assertTrue(!exists(parsed, linux.key));
         assertTrue(!exists(parsed, mac.key));
         assertTrue(!exists(parsed, linuxAndMac.key));
@@ -107,7 +117,8 @@ public class ConfigUtilTest
         assertTrue(!exists(parsed, win64.key));
         assertTrue(!exists(parsed, notWin.key));
 
-        parsed = ConfigUtil.parsePairs(toReader(pairs), "windows", "x86_64", false);
+        opts.osarch = "x86_64";
+        parsed = ConfigUtil.parsePairs(toReader(pairs), opts);
         assertTrue(!exists(parsed, linux.key));
         assertTrue(!exists(parsed, mac.key));
         assertTrue(!exists(parsed, linuxAndMac.key));
@@ -117,7 +128,8 @@ public class ConfigUtilTest
         assertTrue(exists(parsed, win64.key));
         assertTrue(!exists(parsed, notWin.key));
 
-        parsed = ConfigUtil.parsePairs(toReader(pairs), "windows", "amd64", false);
+        opts.osarch = "amd64";
+        parsed = ConfigUtil.parsePairs(toReader(pairs), opts);
         assertTrue(!exists(parsed, linux.key));
         assertTrue(!exists(parsed, mac.key));
         assertTrue(!exists(parsed, linuxAndMac.key));

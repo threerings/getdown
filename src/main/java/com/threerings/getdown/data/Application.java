@@ -503,16 +503,17 @@ public class Application
     {
         Map<String,Object> cdata = null;
         File config = _config;
+        ConfigUtil.ParseOpts opts = ConfigUtil.createOpts(checkPlatform);
         try {
             // if we have a configuration file, read the data from it
             if (config.exists()) {
-                cdata = ConfigUtil.parseConfig(_config, checkPlatform);
+                cdata = ConfigUtil.parseConfig(_config, opts);
             }
             // otherwise, try reading data from our backup config file; thanks to funny windows
             // bullshit, we have to do this backup file fiddling in case we got screwed while
             // updating getdown.txt during normal operation
             else if ((config = getLocalPath(CONFIG_FILE + "_old")).exists()) {
-                cdata = ConfigUtil.parseConfig(config, checkPlatform);
+                cdata = ConfigUtil.parseConfig(config, opts);
             }
             // otherwise, issue a warning that we found no getdown file
             else {
@@ -772,7 +773,7 @@ public class Application
         File pairFile = getLocalPath(pairLocation);
         if (pairFile.exists()) {
             try {
-                List<String[]> args = ConfigUtil.parsePairs(pairFile, false, false);
+                List<String[]> args = ConfigUtil.parsePairs(pairFile, ConfigUtil.createOpts(false));
                 for (String[] pair : args) {
                     if (pair[1].length() == 0) {
                         collector.add(pair[0]);
@@ -1238,7 +1239,7 @@ public class Application
                 try {
                     in = ConnectionUtil.open(_latest).getInputStream();
                     BufferedReader bin = new BufferedReader(new InputStreamReader(in));
-                    for (String[] pair : ConfigUtil.parsePairs(bin, false, false)) {
+                    for (String[] pair : ConfigUtil.parsePairs(bin, ConfigUtil.createOpts(false))) {
                         if (pair[0].equals("version")) {
                             _targetVersion = Math.max(Long.parseLong(pair[1]), _targetVersion);
                             if (fileVersion != -1 && _targetVersion > fileVersion) {

@@ -366,7 +366,8 @@ public class GetdownAppletConfig
         boolean createGetdown = !gdfile.exists();
         if (!createGetdown) {
             try {
-                Map<String,Object> cdata = ConfigUtil.parseConfig(gdfile, false);
+                Map<String,Object> cdata =
+                    ConfigUtil.parseConfig(gdfile, ConfigUtil.createOpts(false));
                 String oappbase = StringUtil.trim((String)cdata.get(APPBASE));
                 createGetdown = (appbase != null && !appbase.trim().equals(oappbase));
                 if (createGetdown) {
