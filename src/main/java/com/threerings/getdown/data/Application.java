@@ -582,6 +582,9 @@ public class Application
             throw new IOException("m.missing_class");
         }
 
+        // determine whether we want strict comments
+        _strictComments = Boolean.parseBoolean((String)cdata.get("strict_comments"));
+
         // check to see if we're using a custom java.version property and regex
         vstr = (String)cdata.get("java_version_prop");
         if (vstr != null) _javaVersionProp = vstr;
@@ -1166,7 +1169,7 @@ public class Application
 
         // this will read in the contents of the digest file and validate itself
         try {
-            _digest = new Digest(_appdir);
+            _digest = new Digest(_appdir, _strictComments);
         } catch (IOException ioe) {
             log.info("Failed to load digest: " + ioe.getMessage() + ". Attempting recovery...");
         }
@@ -1180,7 +1183,7 @@ public class Application
             try {
                 status.updateStatus("m.checking");
                 downloadDigestFiles();
-                _digest = new Digest(_appdir);
+                _digest = new Digest(_appdir, _strictComments);
                 if (!olddig.equals(_digest.getMetaDigest())) {
                     log.info("Unversioned digest changed. Revalidating...");
                     status.updateStatus("m.validating");
@@ -1198,7 +1201,7 @@ public class Application
         if (_digest == null) {
             status.updateStatus("m.updating_metadata");
             downloadDigestFiles();
-            _digest = new Digest(_appdir);
+            _digest = new Digest(_appdir, _strictComments);
         }
 
         // now verify the contents of our main config file
@@ -1209,7 +1212,7 @@ public class Application
             // caller because there's nothing we can do to automatically recover
             downloadConfigFile();
             downloadDigestFiles();
-            _digest = new Digest(_appdir);
+            _digest = new Digest(_appdir, _strictComments);
             // revalidate everything if we end up downloading new metadata
             clearValidationMarkers();
             // if the new copy validates, reinitialize ourselves; otherwise report baffling hoseage
@@ -1817,6 +1820,7 @@ public class Application
     protected String _class;
     protected String _name;
     protected String _dockIconPath;
+    protected boolean _strictComments;
     protected boolean _windebug;
     protected boolean _allowOffline;
 

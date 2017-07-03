@@ -98,8 +98,8 @@ public class Digest
      * Creates a digest instance which will parse and validate the digest in the supplied
      * application directory, using the current digest version.
      */
-    public Digest (File appdir) throws IOException {
-        this(appdir, VERSION);
+    public Digest (File appdir, boolean strictComments) throws IOException {
+        this(appdir, VERSION, strictComments);
     }
 
     /**
@@ -107,13 +107,14 @@ public class Digest
      * application directory.
      * @param version the version of the digest protocol to use.
      */
-    public Digest (File appdir, int version) throws IOException
+    public Digest (File appdir, int version, boolean strictComments) throws IOException
     {
         // parse and validate our digest file contents
         String filename = digestFile(version);
         StringBuilder data = new StringBuilder();
         File dfile = new File(appdir, filename);
         ConfigUtil.ParseOpts opts = ConfigUtil.createOpts(false);
+        opts.strictComments = strictComments;
         // bias = toward key: the key is the filename and could conceivably contain = signs, value
         // is the hex encoded hash which will not contain =
         opts.biasToKey = true;
