@@ -1312,9 +1312,8 @@ public class Application
 
             try {
                 if (_digest.validateResource(rsrc, robs)) {
-                    // if the resource is valid but has no _local file, add it to to-install list
-                    if (!toInstall.contains(rsrc) && !rsrc.getLocal().exists() &&
-                        rsrc.getLocalNew().exists()) {
+                    // if the resource has a _new file, add it to to-install list
+                    if (!toInstall.contains(rsrc) && rsrc.getLocalNew().exists()) {
                         toInstall.add(rsrc);
                         continue;
                     }
