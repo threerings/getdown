@@ -95,6 +95,14 @@ public class SysProps
         return Integer.getInteger("connect_timeout", 0);
     }
 
+    /** Specifies the read timeout (in seconds) to use when downloading all files from the server.
+      * The default is 30 seconds, meaning that if a download stalls for more than 30 seconds, the
+      * update process wil fail. Setting the timeout to zero (or a negative value) will disable it.
+      * Usage: {@code -Dread_timeout=N}. */
+    public static int readTimeout () {
+        return Integer.getInteger("read_timeout", 30);
+    }
+
     /** Parses a Java version system property using the supplied regular expression. The numbers
       * extracted from the regexp will be placed in each consecutive hundreds position in the
       * returned value.

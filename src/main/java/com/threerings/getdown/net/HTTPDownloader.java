@@ -15,6 +15,7 @@ import java.util.List;
 import com.samskivert.io.StreamUtil;
 
 import com.threerings.getdown.data.Resource;
+import com.threerings.getdown.data.SysProps;
 import com.threerings.getdown.util.ConnectionUtil;
 
 import static com.threerings.getdown.Log.log;
@@ -60,6 +61,10 @@ public class HTTPDownloader extends Downloader
     {
         // download the resource from the specified URL
         URLConnection conn = ConnectionUtil.open(rsrc.getRemote());
+        int rtimeout = SysProps.readTimeout();
+        if (rtimeout > 0) {
+            conn.setReadTimeout(rtimeout * 1000);
+        }
         conn.connect();
 
         // make sure we got a satisfactory response code
