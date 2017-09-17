@@ -49,13 +49,13 @@ public class Digest
     {
         // first compute the digests for all the resources in parallel
         Executor exec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-        final Map<Resource, String> digests = new ConcurrentHashMap<Resource, String>();
-        final BlockingQueue<Object> completed = new LinkedBlockingQueue<Object>();
+        final Map<Resource, String> digests = new ConcurrentHashMap<>();
+        final BlockingQueue<Object> completed = new LinkedBlockingQueue<>();
         final int fversion = version;
 
         long start = System.currentTimeMillis();
 
-        Set<Resource> pending = new HashSet<Resource>(resources);
+        Set<Resource> pending = new HashSet<>(resources);
         for (final Resource rsrc : resources) {
             exec.execute(new Runnable() {
                 public void run () {
@@ -212,7 +212,7 @@ public class Digest
         data.append(path).append(" = ").append(digest).append("\n");
     }
 
-    protected HashMap<String, String> _digests = new HashMap<String, String>();
+    protected HashMap<String, String> _digests = new HashMap<>();
     protected String _metaDigest = "";
 
     protected static final String FILE_NAME = "digest";

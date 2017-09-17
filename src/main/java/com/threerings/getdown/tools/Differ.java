@@ -60,13 +60,13 @@ public class Differ
 
         Application oapp = new Application(ovdir, null);
         oapp.init(false);
-        ArrayList<Resource> orsrcs = new ArrayList<Resource>();
+        ArrayList<Resource> orsrcs = new ArrayList<>();
         orsrcs.addAll(oapp.getCodeResources());
         orsrcs.addAll(oapp.getResources());
 
         Application napp = new Application(nvdir, null);
         napp.init(false);
-        ArrayList<Resource> nrsrcs = new ArrayList<Resource>();
+        ArrayList<Resource> nrsrcs = new ArrayList<>();
         nrsrcs.addAll(napp.getCodeResources());
         nrsrcs.addAll(napp.getResources());
 
@@ -76,13 +76,13 @@ public class Differ
 
         // next create patches for any auxiliary resource groups
         for (Application.AuxGroup ag : napp.getAuxGroups()) {
-            orsrcs = new ArrayList<Resource>();
+            orsrcs = new ArrayList<>();
             Application.AuxGroup oag = oapp.getAuxGroup(ag.name);
             if (oag != null) {
                 orsrcs.addAll(oag.codes);
                 orsrcs.addAll(oag.rsrcs);
             }
-            nrsrcs = new ArrayList<Resource>();
+            nrsrcs = new ArrayList<>();
             nrsrcs.addAll(ag.codes);
             nrsrcs.addAll(ag.rsrcs);
             patch = new File(nvdir, "patch-" + ag.name + overs + ".dat");

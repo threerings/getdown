@@ -304,7 +304,7 @@ public class Application
      */
     public List<Resource> getAllActiveResources ()
     {
-        List<Resource> allResources = new ArrayList<Resource>();
+        List<Resource> allResources = new ArrayList<>();
         allResources.addAll(getActiveCodeResources());
         allResources.addAll(getActiveResources());
         return allResources;
@@ -350,7 +350,7 @@ public class Application
      */
     public List<Resource> getActiveCodeResources ()
     {
-        ArrayList<Resource> codes = new ArrayList<Resource>();
+        ArrayList<Resource> codes = new ArrayList<>();
         codes.addAll(getCodeResources());
         for (AuxGroup aux : getAuxGroups()) {
             if (isAuxGroupActive(aux.name)) {
@@ -365,7 +365,7 @@ public class Application
      */
     public List<Resource> getActiveResources ()
     {
-        ArrayList<Resource> rsrcs = new ArrayList<Resource>();
+        ArrayList<Resource> rsrcs = new ArrayList<>();
         rsrcs.addAll(getResources());
         for (AuxGroup aux : getAuxGroups()) {
             if (isAuxGroupActive(aux.name)) {
@@ -529,7 +529,7 @@ public class Application
         if (cdata == null) {
             String appbase = SysProps.appBase();
             log.info("Attempting to obtain 'appbase' from system property", "appbase", appbase);
-            cdata = new HashMap<String,Object>();
+            cdata = new HashMap<>();
             cdata.put("appbase", appbase);
         }
 
@@ -622,12 +622,12 @@ public class Application
         // check for tracking progress percent configuration
         String trackPcts = (String)cdata.get("tracking_percents");
         if (!StringUtil.isBlank(trackPcts)) {
-            _trackingPcts = new HashSet<Integer>();
+            _trackingPcts = new HashSet<>();
             for (int pct : StringUtil.parseIntArray(trackPcts)) {
                 _trackingPcts.add(pct);
             }
         } else if (!StringUtil.isBlank(_trackingURL)) {
-            _trackingPcts = new HashSet<Integer>();
+            _trackingPcts = new HashSet<>();
             _trackingPcts.add(50);
         }
 
@@ -663,10 +663,10 @@ public class Application
 
         // parse our auxiliary resource groups
         for (String auxgroup : parseList(cdata, "auxgroups")) {
-            ArrayList<Resource> codes = new ArrayList<Resource>();
+            ArrayList<Resource> codes = new ArrayList<>();
             parseResources(cdata, auxgroup + ".code", false, codes);
             parseResources(cdata, auxgroup + ".ucode", true, codes);
-            ArrayList<Resource> rsrcs = new ArrayList<Resource>();
+            ArrayList<Resource> rsrcs = new ArrayList<>();
             parseResources(cdata, auxgroup + ".resource", false, rsrcs);
             parseResources(cdata, auxgroup + ".uresource", true, rsrcs);
             _auxgroups.put(auxgroup, new AuxGroup(auxgroup, codes, rsrcs));
@@ -945,7 +945,7 @@ public class Application
     public Process createProcess (boolean optimum)
         throws IOException
     {
-        ArrayList<String> args = new ArrayList<String>();
+        ArrayList<String> args = new ArrayList<>();
 
         // reconstruct the path to the JVM
         args.add(LaunchUtil.getJVMPath(_appdir, _windebug || optimum));
@@ -1033,14 +1033,14 @@ public class Application
      */
     protected String[] createEnvironment ()
     {
-        List<String> envvar = new ArrayList<String>();
+        List<String> envvar = new ArrayList<>();
         fillAssignmentListFromPairs("env.txt", envvar);
         if (envvar.isEmpty()) {
             log.info("Didn't find any custom environment variables, not setting any.");
             return null;
         }
 
-        List<String> envAssignments = new ArrayList<String>();
+        List<String> envAssignments = new ArrayList<>();
         for (String assignment : envvar) {
             envAssignments.add(processArg(assignment));
         }
@@ -1087,7 +1087,7 @@ public class Application
         }
 
         // pass along any pass-through arguments
-        Map<String, String> passProps = new HashMap<String, String>();
+        Map<String, String> passProps = new HashMap<>();
         for (Map.Entry<Object, Object> entry : System.getProperties().entrySet()) {
             String key = (String)entry.getKey();
             if (key.startsWith(PROP_PASSTHROUGH_PREFIX)) {
@@ -1317,9 +1317,9 @@ public class Application
 
         final boolean noUnpack = SysProps.noUnpack();
         final int[] fAlreadyValid = alreadyValid;
-        final Set<Resource> toInstallAsync = new ConcurrentSkipListSet<Resource>(toInstall);
-        final Set<Resource> toDownloadAsync = new ConcurrentSkipListSet<Resource>();
-        final Set<Resource> unpackedAsync = new ConcurrentSkipListSet<Resource>();
+        final Set<Resource> toInstallAsync = new ConcurrentSkipListSet<>(toInstall);
+        final Set<Resource> toDownloadAsync = new ConcurrentSkipListSet<>();
+        final Set<Resource> unpackedAsync = new ConcurrentSkipListSet<>();
 
         for (int ii = 0; ii < sizes.length; ii++) {
             final Resource rsrc = rsrcs.get(ii);
@@ -1717,7 +1717,7 @@ public class Application
      */
     public static List<Integer> intsToList (int[] values)
     {
-        List<Integer> list = new ArrayList<Integer>(values.length);
+        List<Integer> list = new ArrayList<>(values.length);
         for (int val : values) {
             list.add(val);
         }
@@ -1894,24 +1894,24 @@ public class Application
     protected boolean _javaExactVersionRequired;
     protected String _javaLocation;
 
-    protected List<Resource> _codes = new ArrayList<Resource>();
-    protected List<Resource> _resources = new ArrayList<Resource>();
+    protected List<Resource> _codes = new ArrayList<>();
+    protected List<Resource> _resources = new ArrayList<>();
 
     protected boolean _useCodeCache;
     protected int _codeCacheRetentionDays;
 
-    protected Map<String,AuxGroup> _auxgroups = new HashMap<String,AuxGroup>();
-    protected Map<String,Boolean> _auxactive = new HashMap<String,Boolean>();
+    protected Map<String,AuxGroup> _auxgroups = new HashMap<>();
+    protected Map<String,Boolean> _auxactive = new HashMap<>();
 
-    protected List<String> _jvmargs = new ArrayList<String>();
-    protected List<String> _appargs = new ArrayList<String>();
+    protected List<String> _jvmargs = new ArrayList<>();
+    protected List<String> _appargs = new ArrayList<>();
 
     protected String[] _extraJvmArgs;
     protected String[] _extraAppArgs;
 
     protected String[] _optimumJvmArgs;
 
-    protected List<String> _txtJvmArgs = new ArrayList<String>();
+    protected List<String> _txtJvmArgs = new ArrayList<>();
 
     protected List<Certificate> _signers;
 

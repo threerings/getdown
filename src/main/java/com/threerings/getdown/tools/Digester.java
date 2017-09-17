@@ -76,7 +76,7 @@ public class Digester
         Application app = new Application(appdir, null);
         app.init(false);
 
-        List<Resource> rsrcs = new ArrayList<Resource>();
+        List<Resource> rsrcs = new ArrayList<>();
         rsrcs.add(app.getConfigResource());
         rsrcs.addAll(app.getCodeResources());
         rsrcs.addAll(app.getResources());

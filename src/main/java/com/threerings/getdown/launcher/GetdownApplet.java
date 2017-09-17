@@ -85,7 +85,7 @@ public class GetdownApplet extends JApplet
                 _errmsg = e.getMessage();
             }
 
-            List<Certificate> signers = new ArrayList<Certificate>();
+            List<Certificate> signers = new ArrayList<>();
             Certificate cert = loadCertificate("resource.crt");
             if (cert != null) {
                 signers.add(cert);

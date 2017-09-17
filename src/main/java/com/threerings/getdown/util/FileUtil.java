@@ -86,7 +86,7 @@ public class FileUtil extends com.samskivert.util.FileUtil
     public static List<String> readLines (Reader in)
         throws IOException
     {
-        List<String> lines = new ArrayList<String>();
+        List<String> lines = new ArrayList<>();
         try {
             BufferedReader bin = new BufferedReader(in);
             for (String line = null; (line = bin.readLine()) != null; lines.add(line)) {}
@@ -156,7 +156,7 @@ public class FileUtil extends com.samskivert.util.FileUtil
      */
     public static void walkTree (File root, Visitor visitor)
     {
-        Deque<File> stack = new ArrayDeque<File>(Arrays.asList(root.listFiles()));
+        Deque<File> stack = new ArrayDeque<>(Arrays.asList(root.listFiles()));
         while (!stack.isEmpty()) {
             File currentFile = stack.pop();
             if (currentFile.exists()) {

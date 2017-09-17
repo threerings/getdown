@@ -88,7 +88,7 @@ public class GetdownApp
 
         // load X.509 certificate if it exists
         File crtFile = new File(appDir, Digest.digestFile(Digest.VERSION) + ".crt");
-        List<Certificate> crts = new ArrayList<Certificate>();
+        List<Certificate> crts = new ArrayList<>();
         if (crtFile.exists()) {
             try {
                 FileInputStream fis = new FileInputStream(crtFile);
@@ -148,7 +148,7 @@ public class GetdownApp
                 }
 
                 if (_ifc.iconImages != null) {
-                    ArrayList<Image> icons = new ArrayList<Image>();
+                    ArrayList<Image> icons = new ArrayList<>();
                     for (String path : _ifc.iconImages) {
                         Image img = loadImage(path);
                         if (img == null) {

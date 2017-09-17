@@ -430,9 +430,9 @@ public abstract class Getdown extends Thread
             int[] alreadyValid = new int[1];
 
             // we'll keep track of all the resources we unpack
-            Set<Resource> unpacked = new HashSet<Resource>();
+            Set<Resource> unpacked = new HashSet<>();
 
-            _toInstallResources = new HashSet<Resource>();
+            _toInstallResources = new HashSet<>();
             _readyToInstall = false;
 
             //setStep(Step.START);
@@ -466,7 +466,7 @@ public abstract class Getdown extends Thread
                 // now verify our resources...
                 setStep(Step.VERIFY_RESOURCES);
                 setStatusAsync("m.validating", -1, -1L, false);
-                Set<Resource> toDownload = new HashSet<Resource>();
+                Set<Resource> toDownload = new HashSet<>();
                 _app.verifyResources(_progobs, alreadyValid, unpacked,
                                      _toInstallResources, toDownload);
                 if (toDownload.size() == 0) {
@@ -622,7 +622,7 @@ public abstract class Getdown extends Thread
         reportTrackingEvent("jvm_start", -1);
 
         updateStatus("m.downloading_java");
-        List<Resource> list = new ArrayList<Resource>();
+        List<Resource> list = new ArrayList<>();
         list.add(vmjar);
         download(list);
 
@@ -682,7 +682,7 @@ public abstract class Getdown extends Thread
         // attempt to download the patch files
         Resource patch = _app.getPatchResource(null);
         if (patch != null) {
-            List<Resource> list = new ArrayList<Resource>();
+            List<Resource> list = new ArrayList<>();
             list.add(patch);
 
             // add the auxiliary group patch files for activated groups

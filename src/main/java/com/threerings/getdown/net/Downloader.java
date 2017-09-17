@@ -234,10 +234,10 @@ public abstract class Downloader extends Thread
     protected Collection<Resource> _resources;
 
     /** The reported sizes of our resources. */
-    protected Map<Resource, Long> _sizes = new HashMap<Resource, Long>();
+    protected Map<Resource, Long> _sizes = new HashMap<>();
 
     /** The bytes downloaded for each resource. */
-    protected Map<Resource, Long> _downloaded = new HashMap<Resource, Long>();
+    protected Map<Resource, Long> _downloaded = new HashMap<>();
 
     /** The observer with whom we are communicating. */
     protected Observer _obs;

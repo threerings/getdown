@@ -299,7 +299,7 @@ public class GetdownAppletConfig
      */
     protected List<String> parseArgList (String prefix)
     {
-        List<String> arglist = new ArrayList<String>();
+        List<String> arglist = new ArrayList<>();
         String value;
         for (int ii = 0; (value = getParameter(prefix + ii)) != null; ii++) {
             arglist.add(value);

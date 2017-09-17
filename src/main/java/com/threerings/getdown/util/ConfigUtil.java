@@ -72,7 +72,7 @@ public class ConfigUtil
      */
     public static List<String[]> parsePairs (Reader source, ParseOpts opts) throws IOException
     {
-        List<String[]> pairs = new ArrayList<String[]>();
+        List<String[]> pairs = new ArrayList<>();
         for (String line : FileUtil.readLines(source)) {
             // nix comments
             int cidx = line.indexOf("#");
@@ -133,7 +133,7 @@ public class ConfigUtil
     public static Map<String, Object> parseConfig (File source, ParseOpts opts)
         throws IOException
     {
-        Map<String, Object> data = new HashMap<String, Object>();
+        Map<String, Object> data = new HashMap<>();
 
         // I thought that we could use HashMap<String, String[]> and put new String[] {pair[1]} for
         // the null case, but it mysteriously dies on launch, so leaving it as HashMap<String,
