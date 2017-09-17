@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URLConnection;
-import java.util.List;
+import java.util.Collection;
 
 import com.samskivert.io.StreamUtil;
 
@@ -25,7 +25,7 @@ import static com.threerings.getdown.Log.log;
  */
 public class HTTPDownloader extends Downloader
 {
-    public HTTPDownloader (List<Resource> resources, Observer obs)
+    public HTTPDownloader (Collection<Resource> resources, Observer obs)
     {
         super(resources, obs);
     }

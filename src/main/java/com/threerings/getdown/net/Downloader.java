@@ -8,8 +8,8 @@ package com.threerings.getdown.net;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import com.threerings.getdown.data.Resource;
@@ -64,7 +64,7 @@ public abstract class Downloader extends Thread
      * the specified observer. The {@link #download} method must be called on the downloader to
      * initiate the download process.
      */
-    public Downloader (List<Resource> resources, Observer obs)
+    public Downloader (Collection<Resource> resources, Observer obs)
     {
         super("Downloader");
         _resources = resources;
@@ -209,7 +209,7 @@ public abstract class Downloader extends Thread
                     throw new DownloadAbortedException();
                 }
             }
-        }   
+        }
     }
 
     /**
@@ -230,8 +230,8 @@ public abstract class Downloader extends Thread
      */
     protected abstract void doDownload (Resource rsrc) throws IOException;
 
-    /** The list of resources to be downloaded. */
-    protected List<Resource> _resources;
+    /** The resources to be downloaded. */
+    protected Collection<Resource> _resources;
 
     /** The reported sizes of our resources. */
     protected Map<Resource, Long> _sizes = new HashMap<Resource, Long>();
