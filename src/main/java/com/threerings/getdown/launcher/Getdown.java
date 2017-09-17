@@ -38,17 +38,7 @@ import java.net.URLConnection;
 
 import java.security.cert.Certificate;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.ResourceBundle;
-import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 import ca.beq.util.win32.registry.RegistryKey;
 import ca.beq.util.win32.registry.RegistryValue;
@@ -142,7 +132,7 @@ public abstract class Getdown extends Thread
     public void install () throws IOException, InterruptedException
     {
         if (_readyToInstall) {
-            log.info("Installing downloaded resources:");
+            log.info("Installing " + _toInstallResources.size() + " downloaded resources:");
             for (Resource resource : _toInstallResources) {
                 resource.install();
                 if (Thread.interrupted()) {
@@ -442,7 +432,7 @@ public abstract class Getdown extends Thread
             // we'll keep track of all the resources we unpack
             Set<Resource> unpacked = new HashSet<Resource>();
 
-            _toInstallResources = new ArrayList<Resource>();
+            _toInstallResources = new HashSet<Resource>();
             _readyToInstall = false;
 
             //setStep(Step.START);
@@ -476,12 +466,10 @@ public abstract class Getdown extends Thread
                 // now verify our resources...
                 setStep(Step.VERIFY_RESOURCES);
                 setStatusAsync("m.validating", -1, -1L, false);
-                List<Resource> toDownload = new ArrayList<Resource>();
+                Set<Resource> toDownload = new HashSet<Resource>();
                 _app.verifyResources(_progobs, alreadyValid, unpacked,
                                      _toInstallResources, toDownload);
                 if (toDownload.size() == 0) {
-                    log.info("Resources verified.");
-
                     // if we were downloaded in full from another service (say, Steam), we may
                     // not have unpacked all of our resources yet
                     if (Boolean.getBoolean("check_unpacked")) {
@@ -758,7 +746,7 @@ public abstract class Getdown extends Thread
     /**
      * Called if the application is determined to require resource downloads.
      */
-    protected void download (List<Resource> resources)
+    protected void download (Collection<Resource> resources)
         throws IOException, InterruptedException
     {
         // create our user interface
@@ -1282,7 +1270,7 @@ public abstract class Getdown extends Thread
     protected boolean _launchInSilent;
     protected long _startup;
 
-    protected List<Resource> _toInstallResources;
+    protected Set<Resource> _toInstallResources;
     protected boolean _readyToInstall;
 
     protected boolean _enableTracking = true;

@@ -20,6 +20,7 @@ import java.nio.channels.OverlappingFileLockException;
 import java.security.*;
 import java.security.cert.Certificate;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -1282,64 +1283,119 @@ public class Application
      */
     public void verifyResources (
         ProgressObserver obs, int[] alreadyValid, Set<Resource> unpacked,
-        List<Resource> toInstall, List<Resource> toDownload)
+        Set<Resource> toInstall, Set<Resource> toDownload)
         throws InterruptedException
     {
-        List<Resource> rsrcs = getAllActiveResources();
+        // resources are verified on backgroudn threads supplied by the thread pool, and progress
+        // is reported by posting runnable actions to the actions queue which is processed by the
+        // main (UI) thread
+        Executor exec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        final BlockingQueue<Runnable> actions = new LinkedBlockingQueue<Runnable>();
+        final int[] completed = new int[1];
+
+        long start = System.currentTimeMillis();
 
         // obtain the sizes of the resources to validate
+        List<Resource> rsrcs = getAllActiveResources();
         long[] sizes = new long[rsrcs.size()];
+        long totalSize = 0;
         for (int ii = 0; ii < sizes.length; ii++) {
-            sizes[ii] = rsrcs.get(ii).getLocal().length();
+            totalSize += sizes[ii] = rsrcs.get(ii).getLocal().length();
         }
+        final ProgressObserver fobs = obs;
+        // as long as we forward aggregated progress updates to the UI thread, having multiple
+        // threads update a progress aggregator is "mostly" thread-safe
+        final ProgressAggregator pagg = new ProgressAggregator(new ProgressObserver() {
+            public void progress (final int percent) {
+                actions.add(new Runnable() {
+                    public void run () {
+                        fobs.progress(percent);
+                    }
+                });
+            }
+        }, sizes);
 
-        ProgressAggregator pagg = new ProgressAggregator(obs, sizes);
-        boolean noUnpack = SysProps.noUnpack();
+        final boolean noUnpack = SysProps.noUnpack();
+        final int[] fAlreadyValid = alreadyValid;
+        final Set<Resource> toInstallAsync = new ConcurrentSkipListSet<Resource>(toInstall);
+        final Set<Resource> toDownloadAsync = new ConcurrentSkipListSet<Resource>();
+        final Set<Resource> unpackedAsync = new ConcurrentSkipListSet<Resource>();
+
         for (int ii = 0; ii < sizes.length; ii++) {
-            Resource rsrc = rsrcs.get(ii);
+            final Resource rsrc = rsrcs.get(ii);
             if (Thread.interrupted()) {
                 throw new InterruptedException("m.applet_stopped");
             }
-
-            ProgressObserver robs = pagg.startElement(ii);
-            if (rsrc.isMarkedValid()) {
-                if (alreadyValid != null) {
-                    alreadyValid[0]++;
+            final int index = ii;
+            exec.execute(new Runnable() {
+                public void run () {
+                    verifyResource(rsrc, pagg.startElement(index), fAlreadyValid, noUnpack,
+                                   unpackedAsync, toInstallAsync, toDownloadAsync);
+                    actions.add(new Runnable() {
+                        public void run () {
+                            completed[0] += 1;
+                        }
+                    });
                 }
-                robs.progress(100);
-                continue;
-            }
-
-            try {
-                if (_digest.validateResource(rsrc, robs)) {
-                    // if the resource has a _new file, add it to to-install list
-                    if (!toInstall.contains(rsrc) && rsrc.getLocalNew().exists()) {
-                        toInstall.add(rsrc);
-                        continue;
-                    }
-                    // unpack this resource if appropriate
-                    if (noUnpack || !rsrc.shouldUnpack()) {
-                        // finally note that this resource is kosher
-                        rsrc.markAsValid();
-                        continue;
-                    }
-                    if (rsrc.unpack()) {
-                        unpacked.add(rsrc);
-                        rsrc.markAsValid();
-                        continue;
-                    }
-                    log.info("Failure unpacking resource", "rsrc", rsrc);
-                }
-
-            } catch (Exception e) {
-                log.info("Failure validating resource. Requesting redownload...",
-                    "rsrc", rsrc, "error", e);
-
-            } finally {
-                robs.progress(100);
-            }
-            toDownload.add(rsrc);
+            });
         }
+
+        while (completed[0] < rsrcs.size()) {
+            // we should be getting progress completion updates WAY more often than one every
+            // minute, so if things freeze up for 60 seconds, abandon ship
+            Runnable action = actions.poll(60, TimeUnit.SECONDS);
+            action.run();
+        }
+
+        toInstall.addAll(toInstallAsync);
+        toDownload.addAll(toDownloadAsync);
+        unpacked.addAll(unpackedAsync);
+
+        long complete = System.currentTimeMillis();
+        log.info("Verified resources", "count", rsrcs.size(), "size", (totalSize/1024) + "k",
+                 "duration", (complete-start) + "ms");
+    }
+
+    private void verifyResource (Resource rsrc, ProgressObserver obs, int[] alreadyValid,
+                                 boolean noUnpack, Set<Resource> unpacked,
+                                 Set<Resource> toInstall, Set<Resource> toDownload) {
+        if (rsrc.isMarkedValid()) {
+            if (alreadyValid != null) {
+                alreadyValid[0]++;
+            }
+            obs.progress(100);
+            return;
+        }
+
+        try {
+            if (_digest.validateResource(rsrc, obs)) {
+                // if the resource has a _new file, add it to to-install list
+                if (!toInstall.contains(rsrc) && rsrc.getLocalNew().exists()) {
+                    toInstall.add(rsrc);
+                    return;
+                }
+                // unpack this resource if appropriate
+                if (noUnpack || !rsrc.shouldUnpack()) {
+                    // finally note that this resource is kosher
+                    rsrc.markAsValid();
+                    return;
+                }
+                if (rsrc.unpack()) {
+                    unpacked.add(rsrc);
+                    rsrc.markAsValid();
+                    return;
+                }
+                log.info("Failure unpacking resource", "rsrc", rsrc);
+            }
+
+        } catch (Exception e) {
+            log.info("Failure validating resource. Requesting redownload...",
+                     "rsrc", rsrc, "error", e);
+
+        } finally {
+            obs.progress(100);
+        }
+        toDownload.add(rsrc);
     }
 
     /**
