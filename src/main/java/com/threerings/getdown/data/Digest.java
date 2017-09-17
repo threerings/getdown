@@ -5,15 +5,11 @@
 
 package com.threerings.getdown.data;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
+import java.io.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.*;
 
 import com.samskivert.io.StreamUtil;
 import com.samskivert.text.MessageUtil;
@@ -51,27 +47,58 @@ public class Digest
     public static void createDigest (int version, List<Resource> resources, File output)
         throws IOException
     {
-        MessageDigest md = getMessageDigest(version);
+        // first compute the digests for all the resources in parallel
+        Executor exec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        final Map<Resource, String> digests = new ConcurrentHashMap<Resource, String>();
+        final BlockingQueue<Object> completed = new LinkedBlockingQueue<Object>();
+        final int fversion = version;
+
+        long start = System.currentTimeMillis();
+
+        Set<Resource> pending = new HashSet<Resource>(resources);
+        for (final Resource rsrc : resources) {
+            exec.execute(new Runnable() {
+                public void run () {
+                    try {
+                        MessageDigest md = getMessageDigest(fversion);
+                        digests.put(rsrc, rsrc.computeDigest(fversion, md, null));
+                        completed.add(rsrc);
+                    } catch (Throwable t) {
+                        completed.add(new IOException("Error computing digest for: " + rsrc).
+                                      initCause(t));
+                    }
+                }
+            });
+        }
+
+        try {
+            while (pending.size() > 0) {
+                Object done = completed.poll(600, TimeUnit.SECONDS);
+                if (done instanceof IOException) {
+                    throw (IOException)done;
+                } else if (done instanceof Resource) {
+                    pending.remove((Resource)done);
+                } else {
+                    throw new AssertionError("What is this? " + done);
+                }
+            }
+        } catch (InterruptedException ie) {
+            throw new IOException("Timeout computing digests. Wow.");
+        }
+
         StringBuilder data = new StringBuilder();
         PrintWriter pout = null;
         try {
             pout = new PrintWriter(new OutputStreamWriter(new FileOutputStream(output), "UTF-8"));
-
             // compute and append the digest of each resource in the list
             for (Resource rsrc : resources) {
                 String path = rsrc.getPath();
-                try {
-                    String digest = rsrc.computeDigest(version, md, null);
-                    note(data, path, digest);
-                    pout.println(path + " = " + digest);
-                } catch (Throwable t) {
-                    throw (IOException) new IOException(
-                        "Error computing digest for: " + rsrc).initCause(t);
-                }
+                String digest = digests.get(rsrc);
+                note(data, path, digest);
+                pout.println(path + " = " + digest);
             }
-
             // finally compute and append the digest for the file contents
-            md.reset();
+            MessageDigest md = getMessageDigest(version);
             byte[] contents = data.toString().getBytes("UTF-8");
             String filename = digestFile(version);
             pout.println(filename + " = " + StringUtil.hexlate(md.digest(contents)));
@@ -79,6 +106,9 @@ public class Digest
         } finally {
             StreamUtil.close(pout);
         }
+
+        long elapsed = System.currentTimeMillis() - start;
+        log.debug("Computed digests [rsrcs=" + resources.size() + ", time=" + elapsed + "ms]");
     }
 
     /**
