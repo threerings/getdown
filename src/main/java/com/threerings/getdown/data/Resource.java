@@ -25,7 +25,7 @@ import static com.threerings.getdown.Log.log;
 /**
  * Models a single file resource used by an {@link Application}.
  */
-public class Resource
+public class Resource implements Comparable<Resource>
 {
     /**
      * Computes the MD5 hash of the supplied file.
@@ -290,6 +290,10 @@ public class Resource
         if (_local.exists() && !_local.delete()) {
             log.warning("Failed to erase resource '" + _local + "'.");
         }
+    }
+
+    @Override public int compareTo (Resource other) {
+        return _path.compareTo(other._path);
     }
 
     @Override public boolean equals (Object other)
