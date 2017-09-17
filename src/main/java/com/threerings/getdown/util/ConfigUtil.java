@@ -54,11 +54,7 @@ public class ConfigUtil
      * Parses a configuration file containing key/value pairs. The file must be in the UTF-8
      * encoding.
      *
-     * @param checkPlatform if true, platform qualifiers will be used to filter out pairs that do
-     * not match the current platform; if false, all pairs will be returned.
-     * @param biasToKey if true the splitting on {@code =} will be key-biased meaning we split on
-     * the last {@code =} in the string (extra equals go in the key). If false, we bias toward the
-     * value: split on the first equals, put extra equals in the value.
+     * @param opts options that influence the parsing. See {@link #createOpts}.
      *
      * @return a list of <code>String[]</code> instances containing the key/value pairs in the
      * order they were parsed from the file.
