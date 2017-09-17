@@ -26,9 +26,7 @@ Getdown was originally written by developers at [OOO] for the deployment of thei
 massively multiplayer games. Try out any of the following games to see it in action:
 
   * [Puzzle Pirates](http://www.puzzlepirates.com/) - OOO
-  * [Bang! Howdy](http://banghowdy.com) - OOO
   * [Spiral Knights](http://spiralknights.com) - OOO
-  * [Tribal Trouble 2](http://www.tribaltrouble2.com/) - Oddlabs
 
 Getdown is implemented in Java, but certainly can be used to deploy non-Java-based applications.
 Doing so would be a little crazy since you may have to install a JVM on the user's machine (if they
