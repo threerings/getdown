@@ -34,7 +34,7 @@ public class HTTPDownloader extends Downloader
     protected long checkSize (Resource rsrc)
         throws IOException
     {
-        URLConnection conn = ConnectionUtil.open(rsrc.getRemote());
+        URLConnection conn = ConnectionUtil.open(rsrc.getRemote(), 0, 0);
         try {
             // if we're accessing our data via HTTP, we only need a HEAD request
             if (conn instanceof HttpURLConnection) {
@@ -60,11 +60,7 @@ public class HTTPDownloader extends Downloader
         throws IOException
     {
         // download the resource from the specified URL
-        URLConnection conn = ConnectionUtil.open(rsrc.getRemote());
-        int rtimeout = SysProps.readTimeout();
-        if (rtimeout > 0) {
-            conn.setReadTimeout(rtimeout * 1000);
-        }
+        URLConnection conn = ConnectionUtil.open(rsrc.getRemote(), 0, 0);
         conn.connect();
 
         // make sure we got a satisfactory response code

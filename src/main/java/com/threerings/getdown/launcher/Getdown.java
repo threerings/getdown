@@ -324,8 +324,8 @@ public abstract class Getdown extends Thread
 
         URL rurl = _app.getConfigResource().getRemote();
         try {
-            // try to make a HEAD request for this URL
-            URLConnection conn = ConnectionUtil.open(rurl);
+            // try to make a HEAD request for this URL (use short connect and read timeouts)
+            URLConnection conn = ConnectionUtil.open(rurl, 5, 5);
             if (conn instanceof HttpURLConnection) {
                 HttpURLConnection hcon = (HttpURLConnection)conn;
                 try {
@@ -1215,7 +1215,7 @@ public abstract class Getdown extends Thread
         @Override
         public void run () {
             try {
-                HttpURLConnection ucon = ConnectionUtil.openHttp(_url);
+                HttpURLConnection ucon = ConnectionUtil.openHttp(_url, 0, 0);
 
                 // if we have a tracking cookie configured, configure the request with it
                 if (_app.getTrackingCookieName() != null &&

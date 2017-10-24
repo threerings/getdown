@@ -1241,7 +1241,7 @@ public class Application
                 InputStream in = null;
                 PrintStream out = null;
                 try {
-                    in = ConnectionUtil.open(_latest).getInputStream();
+                    in = ConnectionUtil.open(_latest, 0, 0).getInputStream();
                     BufferedReader bin = new BufferedReader(new InputStreamReader(in));
                     for (String[] pair : ConfigUtil.parsePairs(bin, ConfigUtil.createOpts(false))) {
                         if (pair[0].equals("version")) {
@@ -1648,18 +1648,13 @@ public class Application
         InputStream fin = null;
         FileOutputStream fout = null;
         try {
-            URLConnection uconn = ConnectionUtil.open(targetURL);
+            URLConnection uconn = ConnectionUtil.open(targetURL, 0, 0);
             // we have to tell Java not to use caches here, otherwise it will cache any request for
             // same URL for the lifetime of this JVM (based on the URL string, not the URL object);
             // if the getdown.txt file, for example, changes in the meanwhile, we would never hear
             // about it; turning off caches is not a performance concern, because when Getdown asks
             // to download a file, it expects it to come over the wire, not from a cache
             uconn.setUseCaches(false);
-            // configure a connect timeout if requested
-            int ctimeout = SysProps.connectTimeout();
-            if (ctimeout > 0) {
-                uconn.setConnectTimeout(ctimeout * 1000);
-            }
             fin = uconn.getInputStream();
             fout = new FileOutputStream(target);
             StreamUtil.copy(fin, fout);
