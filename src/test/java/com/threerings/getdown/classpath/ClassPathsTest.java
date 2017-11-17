@@ -13,9 +13,9 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import static org.mockito.Mockito.when;
 
+import com.samskivert.util.FileUtil;
 import com.threerings.getdown.data.Application;
 import com.threerings.getdown.data.Resource;
-import com.threerings.getdown.util.FileUtil;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ClassPathsTest

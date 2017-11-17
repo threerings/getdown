@@ -10,19 +10,23 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Deque;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Pack200;
 import java.util.zip.GZIPInputStream;
 
 import com.samskivert.io.StreamUtil;
+import com.samskivert.util.Logger;
 
 import static com.threerings.getdown.Log.log;
 
 /**
  * File related utilities.
  */
-public class FileUtil extends com.samskivert.util.FileUtil
+public class FileUtil
 {
     /**
      * Gets the specified source file to the specified destination file by hook or crook. Windows
@@ -97,10 +101,62 @@ public class FileUtil extends com.samskivert.util.FileUtil
     }
 
     /**
+     * Unpacks the specified jar file intto the specified target directory.
+     */
+    public static void unpackJar (JarFile jar, File target) throws IOException
+    {
+        try {
+            Enumeration<?> entries = jar.entries();
+            while (entries.hasMoreElements()) {
+                JarEntry entry = (JarEntry)entries.nextElement();
+                File efile = new File(target, entry.getName());
+
+                // if we're unpacking a normal jar file, it will have special path
+                // entries that allow us to create our directories first
+                if (entry.isDirectory()) {
+                    if (!efile.exists() && !efile.mkdir()) {
+                        log.warning("Failed to create jar entry path", "jar", jar, "entry", entry);
+                    }
+                    continue;
+                }
+
+                // but some do not, so we want to ensure that our directories exist
+                // prior to getting down and funky
+                File parent = new File(efile.getParent());
+                if (!parent.exists() && !parent.mkdirs()) {
+                    log.warning("Failed to create jar entry parent", "jar", jar, "parent", parent);
+                    continue;
+                }
+
+                BufferedOutputStream fout = null;
+                InputStream jin = null;
+                try {
+                    fout = new BufferedOutputStream(new FileOutputStream(efile));
+                    jin = jar.getInputStream(entry);
+                    StreamUtil.copy(jin, fout);
+                } catch (Exception e) {
+                    throw new IOException(
+                        Logger.format("Failure unpacking", "jar", jar, "entry", efile), e);
+                } finally {
+                    StreamUtil.close(jin);
+                    StreamUtil.close(fout);
+                }
+            }
+
+        } finally {
+            try {
+                jar.close();
+            } catch (Exception e) {
+                log.warning("Failed to close jar file", "jar", jar, "error", e);
+            }
+        }
+    }
+
+    /**
      * Unpacks a pack200 packed jar file from {@code packedJar} into {@code target}. If {@code
      * packedJar} has a {@code .gz} extension, it will be gunzipped first.
      */
-    public static boolean unpackPacked200Jar (File packedJar, File target)
+    public static void unpackPacked200Jar (File packedJar, File target) throws IOException
     {
         InputStream packedJarIn = null;
         FileOutputStream extractedJarFileOut = null;
@@ -114,11 +170,6 @@ public class FileUtil extends com.samskivert.util.FileUtil
             }
             Pack200.Unpacker unpacker = Pack200.newUnpacker();
             unpacker.unpack(packedJarIn, jarOutputStream);
-            return true;
-
-        } catch (IOException e) {
-            log.warning("Failed to unpack packed 200 jar file", "jar", packedJar, "error", e);
-            return false;
 
         } finally {
             StreamUtil.close(jarOutputStream);
