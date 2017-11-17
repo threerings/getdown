@@ -469,80 +469,81 @@ public abstract class Getdown extends Thread
                 Set<Resource> toDownload = new HashSet<>();
                 _app.verifyResources(_progobs, alreadyValid, unpacked,
                                      _toInstallResources, toDownload);
-                if (toDownload.size() == 0) {
-                    // if we were downloaded in full from another service (say, Steam), we may
-                    // not have unpacked all of our resources yet
-                    if (Boolean.getBoolean("check_unpacked")) {
-                        File ufile = _app.getLocalPath("unpacked.dat");
-                        long version = -1;
-                        long aversion = _app.getVersion();
-                        if (!ufile.exists()) {
-                            ufile.createNewFile();
-                        } else {
-                            version = VersionUtil.readVersion(ufile);
-                        }
 
-                        if (version < aversion) {
-                            log.info("Performing unpack.",
-                                    "version", version, "aversion", aversion);
-                            setStep(Step.UNPACK);
-                            updateStatus("m.validating");
-                            _app.unpackResources(_progobs, unpacked);
-                            try {
-                                VersionUtil.writeVersion(ufile, aversion);
-                            } catch (IOException ioe) {
-                                log.warning("Failed to update unpacked version", ioe);
-                            }
+                if (toDownload.size() > 0) {
+                    // we have resources to download, also note them as to-be-installed
+                    for (Resource r : toDownload) {
+                        if (!_toInstallResources.contains(r)) {
+                            _toInstallResources.add(r);
                         }
                     }
 
-                    // assuming we're not doing anything funny, install the update
-                    _readyToInstall = true;
-                    if (!_noInstall) {
-                        install();
+                    try {
+                        // if any of our resources have already been marked valid this is not a
+                        // first time install and we don't want to enable tracking
+                        _enableTracking = (alreadyValid[0] == 0);
+                        reportTrackingEvent("app_start", -1);
+
+                        // redownload any that are corrupt or invalid...
+                        log.info(toDownload.size() + " of " + _app.getAllActiveResources().size() +
+                                 " rsrcs require update (" + alreadyValid[0] + " assumed valid).");
+                        setStep(Step.REDOWNLOAD_RESOURCES);
+                        download(toDownload);
+
+                        reportTrackingEvent("app_complete", -1);
+
+                    } finally {
+                        _enableTracking = false;
                     }
 
-                    // Only launch if we aren't in silent mode. Some mystery program starting out
-                    // of the blue would be disconcerting.
-                    if (!_silent || _launchInSilent) {
-                        if (Thread.interrupted()) {
-                            // One last interrupted check so we don't launch as the applet aborts
-                            throw new InterruptedException("m.applet_stopped");
+                    // now we'll loop back and try it all again
+                    continue;
+                }
+
+                // if we were downloaded in full from another service (say, Steam), we may
+                // not have unpacked all of our resources yet
+                if (Boolean.getBoolean("check_unpacked")) {
+                    File ufile = _app.getLocalPath("unpacked.dat");
+                    long version = -1;
+                    long aversion = _app.getVersion();
+                    if (!ufile.exists()) {
+                        ufile.createNewFile();
+                    } else {
+                        version = VersionUtil.readVersion(ufile);
+                    }
+
+                    if (version < aversion) {
+                        log.info("Performing unpack", "version", version, "aversion", aversion);
+                        setStep(Step.UNPACK);
+                        updateStatus("m.validating");
+                        _app.unpackResources(_progobs, unpacked);
+                        try {
+                            VersionUtil.writeVersion(ufile, aversion);
+                        } catch (IOException ioe) {
+                            log.warning("Failed to update unpacked version", ioe);
                         }
-                        // And another final check for the lock. It'll already be held unless
-                        // we're in silent mode.
-                        _app.lockForUpdates();
-                        launch();
-                    }
-                    return;
-                }
-
-                // we have resources to download, also note them as to-be-installed
-                for (Resource r : toDownload) {
-                    if (!_toInstallResources.contains(r)) {
-                        _toInstallResources.add(r);
                     }
                 }
 
-                try {
-                    // if any of our resources have already been marked valid this is not a first
-                    // time install and we don't want to enable tracking
-                    _enableTracking = (alreadyValid[0] == 0);
-                    reportTrackingEvent("app_start", -1);
-
-                    // redownload any that are corrupt or invalid...
-                    log.info(toDownload.size() + " of " + _app.getAllActiveResources().size() +
-                             " rsrcs require update (" + alreadyValid[0] + " assumed valid).");
-                    setStep(Step.REDOWNLOAD_RESOURCES);
-                    download(toDownload);
-
-                    reportTrackingEvent("app_complete", -1);
-
-                } finally {
-                    _enableTracking = false;
+                // assuming we're not doing anything funny, install the update
+                _readyToInstall = true;
+                if (!_noInstall) {
+                    install();
                 }
 
-                // now we'll loop back and try it all again
+                // Only launch if we aren't in silent mode. Some mystery program starting out
+                // of the blue would be disconcerting.
+                if (!_silent || _launchInSilent) {
+                    if (Thread.interrupted()) {
+                        // One last interrupted check so we don't launch as the applet aborts
+                        throw new InterruptedException("m.applet_stopped");
+                    }
+                    // And another final check for the lock. It'll already be held unless
+                    // we're in silent mode.
+                    _app.lockForUpdates();
+                    launch();
+                }
+                return;
             }
 
             log.warning("Pants! We couldn't get the job done.");
