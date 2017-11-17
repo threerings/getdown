@@ -95,7 +95,6 @@ public abstract class Getdown extends Thread
                 _launchInSilent = SysProps.launchInSilent();
             }
             _delay = SysProps.startDelay();
-            _noInstall = SysProps.noInstall();
         } catch (SecurityException se) {
             // don't freak out, just assume non-silent and no delay; we're probably already
             // recovering from a security failure
@@ -131,7 +130,9 @@ public abstract class Getdown extends Thread
      */
     public void install () throws IOException, InterruptedException
     {
-        if (_readyToInstall) {
+        if (SysProps.noInstall()) {
+            log.info("Skipping install due to 'no_install' sysprop.");
+        } else if (_readyToInstall) {
             log.info("Installing " + _toInstallResources.size() + " downloaded resources:");
             for (Resource resource : _toInstallResources) {
                 resource.install();
@@ -527,9 +528,7 @@ public abstract class Getdown extends Thread
 
                 // assuming we're not doing anything funny, install the update
                 _readyToInstall = true;
-                if (!_noInstall) {
-                    install();
-                }
+                install();
 
                 // Only launch if we aren't in silent mode. Some mystery program starting out
                 // of the blue would be disconcerting.
@@ -1267,7 +1266,6 @@ public abstract class Getdown extends Thread
 
     protected boolean _dead;
     protected boolean _silent;
-    protected boolean _noInstall;
     protected boolean _launchInSilent;
     protected long _startup;
 
