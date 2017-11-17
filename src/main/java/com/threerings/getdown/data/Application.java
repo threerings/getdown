@@ -1286,7 +1286,7 @@ public class Application
         Set<Resource> toInstall, Set<Resource> toDownload)
         throws InterruptedException
     {
-        // resources are verified on backgroudn threads supplied by the thread pool, and progress
+        // resources are verified on background threads supplied by the thread pool, and progress
         // is reported by posting runnable actions to the actions queue which is processed by the
         // main (UI) thread
         Executor exec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
@@ -1315,7 +1315,6 @@ public class Application
             }
         }, sizes);
 
-        final boolean noUnpack = SysProps.noUnpack();
         final int[] fAlreadyValid = alreadyValid;
         final Set<Resource> toInstallAsync = new ConcurrentSkipListSet<>(toInstall);
         final Set<Resource> toDownloadAsync = new ConcurrentSkipListSet<>();
@@ -1329,7 +1328,7 @@ public class Application
             final int index = ii;
             exec.execute(new Runnable() {
                 public void run () {
-                    verifyResource(rsrc, pagg.startElement(index), fAlreadyValid, noUnpack,
+                    verifyResource(rsrc, pagg.startElement(index), fAlreadyValid,
                                    unpackedAsync, toInstallAsync, toDownloadAsync);
                     actions.add(new Runnable() {
                         public void run () {
@@ -1357,7 +1356,7 @@ public class Application
     }
 
     private void verifyResource (Resource rsrc, ProgressObserver obs, int[] alreadyValid,
-                                 boolean noUnpack, Set<Resource> unpacked,
+                                 Set<Resource> unpacked,
                                  Set<Resource> toInstall, Set<Resource> toDownload) {
         if (rsrc.isMarkedValid()) {
             if (alreadyValid != null) {
@@ -1370,26 +1369,19 @@ public class Application
         try {
             if (_digest.validateResource(rsrc, obs)) {
                 // if the resource has a _new file, add it to to-install list
-                if (!toInstall.contains(rsrc) && rsrc.getLocalNew().exists()) {
+                if (rsrc.getLocalNew().exists()) {
                     toInstall.add(rsrc);
                     return;
                 }
                 // unpack this resource if appropriate
-                if (noUnpack || !rsrc.shouldUnpack()) {
-                    // finally note that this resource is kosher
-                    rsrc.markAsValid();
-                    return;
-                }
-                if (rsrc.unpack()) {
-                    unpacked.add(rsrc);
-                    rsrc.markAsValid();
-                    return;
-                }
-                log.info("Failure unpacking resource", "rsrc", rsrc);
+                rsrc.unpackIfNeeded();
+                unpacked.add(rsrc);
+                rsrc.markAsValid();
+                return;
             }
 
         } catch (Exception e) {
-            log.info("Failure validating resource. Requesting redownload...",
+            log.info("Failure verifying resource. Requesting redownload...",
                      "rsrc", rsrc, "error", e);
 
         } finally {
@@ -1429,8 +1421,10 @@ public class Application
             }
             Resource rsrc = rsrcs.get(ii);
             ProgressObserver pobs = pagg.startElement(ii);
-            if (!rsrc.unpack()) {
-                log.info("Failure unpacking resource", "rsrc", rsrc);
+            try {
+                rsrc.unpack();
+            } catch (IOException ioe) {
+                log.warning("Failure unpacking resource", "rsrc", rsrc, ioe);
             }
             pobs.progress(100);
         }

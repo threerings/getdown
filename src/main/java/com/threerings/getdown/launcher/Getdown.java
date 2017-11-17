@@ -630,10 +630,6 @@ public abstract class Getdown extends Thread
 
         updateStatus("m.unpacking_java");
         vmjar.install();
-        if (!vmjar.unpack()) {
-            throw new IOException("m.java_unpack_failed");
-        }
-        vmjar.markAsValid();
 
         // these only run on non-Windows platforms, so we use Unix file separators
         String localJavaDir = LaunchUtil.LOCAL_JAVA_DIR + "/";

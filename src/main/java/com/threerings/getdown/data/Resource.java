@@ -185,12 +185,11 @@ public class Resource implements Comparable<Resource>
     }
 
     /**
-     * Returns true if this resource should be unpacked as a part of the
-     * validation process.
+     * Returns true if this resource should be unpacked as a part of the validation process.
      */
     public boolean shouldUnpack ()
     {
-        return _unpack;
+        return _unpack && !SysProps.noUnpack();
     }
 
     /**
@@ -255,28 +254,33 @@ public class Resource implements Comparable<Resource>
         if (!FileUtil.renameTo(source, dest)) {
             throw new IOException("Failed to rename " + source + " to " + dest);
         }
+        // unpack the resource, now that it's installed, and mark it as valid
+        unpackIfNeeded();
+        markAsValid();
     }
 
     /**
-     * Unpacks this resource file into the directory that contains it. Returns
-     * false if an error occurs while unpacking it.
+     * Unpacks this resource file into the directory that contains it.
      */
-    public boolean unpack ()
+    public void unpack () throws IOException
     {
         // sanity check
         if (!_isJar && !_isPacked200Jar) {
-            log.warning("Requested to unpack non-jar file '" + _local + "'.");
-            return false;
+            throw new IOException("Requested to unpack non-jar file '" + _local + "'.");
         }
-        try {
-            if (_isJar) {
-                return FileUtil.unpackJar(new JarFile(_local), _unpacked);
-            } else{
-                return FileUtil.unpackPacked200Jar(_local, _unpacked);
-            }
-        } catch (IOException ioe) {
-            log.warning("Failed to create JarFile from '" + _local + "': " + ioe);
-            return false;
+        if (_isJar) {
+            FileUtil.unpackJar(new JarFile(_local), _unpacked);
+        } else{
+            FileUtil.unpackPacked200Jar(_local, _unpacked);
+        }
+    }
+
+    /**
+     * Unpacks this resource if needed.
+     */
+    public void unpackIfNeeded () throws IOException {
+        if (shouldUnpack()) {
+            unpack();
         }
     }
 
