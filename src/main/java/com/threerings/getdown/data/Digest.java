@@ -48,7 +48,8 @@ public class Digest
         throws IOException
     {
         // first compute the digests for all the resources in parallel
-        Executor exec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        ExecutorService exec = Executors.newFixedThreadPool(
+            Runtime.getRuntime().availableProcessors());
         final Map<Resource, String> digests = new ConcurrentHashMap<>();
         final BlockingQueue<Object> completed = new LinkedBlockingQueue<>();
         final int fversion = version;
@@ -70,6 +71,9 @@ public class Digest
                 }
             });
         }
+
+        // queue a shutdown of the thread pool when the tasks are done
+        exec.shutdown();
 
         try {
             while (pending.size() > 0) {
