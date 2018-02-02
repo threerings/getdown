@@ -36,6 +36,10 @@ for your installer. It is probably possible to compile Getdown with
 [GCJ](http://gcc.gnu.org/java/), which would make Getdown a viable choice for non-Java
 applications.
 
+## Release notes
+
+See [CHANGELOG.md] for release notes.
+
 ## Obtaining Getdown
 
 The latest version of Getdown can be obtained thusly:
