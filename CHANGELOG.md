@@ -18,8 +18,8 @@
 
 ## 1.6.4 - Sep 17, 2017
 
-* `digest.txt` (and `digest2.txt`) are now using parallel jobs. Each resource to be verified is a
-  single job and the jobs are doled out to a thread pool with #CPUs threads. This allows large
+* `digest.txt` (and `digest2.txt`) computation now uses parallel jobs. Each resource to be verified
+  is a single job and the jobs are doled out to a thread pool with #CPUs threads. This allows large
   builds to proceed faster as most dev machines have more than one core.
 
 * Resource verification is now performed in parallel (similar to the `digest.txt` computation, each
