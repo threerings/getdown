@@ -38,7 +38,7 @@ applications.
 
 ## Release notes
 
-See [CHANGELOG.md] for release notes.
+See [CHANGELOG.md](CHANGELOG.md) for release notes.
 
 ## Obtaining Getdown
 
