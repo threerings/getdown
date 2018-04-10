@@ -91,7 +91,7 @@ public class Resource implements Comparable<Resource>
                     }
                 }
                 if (tmpJarFile != null) {
-                    tmpJarFile.delete();
+                    FileUtil.deleteHarder(tmpJarFile);
                 }
             }
 
@@ -240,7 +240,7 @@ public class Resource implements Comparable<Resource>
      */
     public void clearMarker ()
     {
-        if (_marker.exists() && !_marker.delete()) {
+        if (_marker.exists() && !FileUtil.deleteHarder(_marker)) {
             log.warning("Failed to erase marker file '" + _marker + "'.");
         }
     }
@@ -291,7 +291,7 @@ public class Resource implements Comparable<Resource>
     public void erase ()
     {
         clearMarker();
-        if (_local.exists() && !_local.delete()) {
+        if (_local.exists() && !FileUtil.deleteHarder(_local)) {
             log.warning("Failed to erase resource '" + _local + "'.");
         }
     }

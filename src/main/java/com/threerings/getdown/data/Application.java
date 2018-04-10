@@ -927,7 +927,7 @@ public class Application
             // will have to rediscover that it needs updating and reattempt to update itself
             if (_allowOffline) {
                 log.warning("Failed to update digest files.  Attempting offline operaton.", ex);
-                if (!getLocalPath(VERSION_FILE).delete()) {
+                if (!FileUtil.deleteHarder(getLocalPath(VERSION_FILE))) {
                     log.warning("Deleting version.txt failed.  This probably isn't going to work.");
                 }
             } else {
@@ -1567,7 +1567,7 @@ public class Application
                     signature = StreamUtil.toByteArray(new FileInputStream(signatureFile));
                 } finally {
                     StreamUtil.close(reader);
-                    signatureFile.delete(); // delete the file regardless
+                    FileUtil.deleteHarder(signatureFile); // delete the file regardless
                 }
 
                 byte[] buffer = new byte[8192];
@@ -1605,7 +1605,7 @@ public class Application
                 // if we couldn't find a key that validates our digest, we are the hosed!
                 if (validated == 0) {
                     // delete the temporary digest file as we know it is invalid
-                    target.delete();
+                    FileUtil.deleteHarder(target);
                     throw new IOException("m.corrupt_digest_signature_error");
                 }
             }

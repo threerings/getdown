@@ -144,13 +144,13 @@ public class LaunchUtil
 
         // clear out any old getdown
         if (oldgd.exists()) {
-            oldgd.delete();
+            FileUtil.deleteHarder(oldgd);
         }
 
         // now try updating using renames
         if (!curgd.exists() || curgd.renameTo(oldgd)) {
             if (newgd.renameTo(curgd)) {
-                oldgd.delete(); // yay!
+                FileUtil.deleteHarder(oldgd); // yay!
                 try {
                     // copy the moved file back to getdown-dop-new.jar so that we don't end up
                     // downloading another copy next time

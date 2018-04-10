@@ -45,12 +45,12 @@ public class FileUtil
         // place and then delete the old file
         if (dest.exists()) {
             File temp = new File(dest.getPath() + "_old");
-            if (temp.exists() && !temp.delete()) {
+            if (temp.exists() && !deleteHarder(temp)) {
                 log.warning("Failed to delete old intermediate file " + temp + ".");
                 // the subsequent code will probably fail
             }
             if (dest.renameTo(temp) && source.renameTo(dest)) {
-                if (!temp.delete()) {
+                if (!deleteHarder(temp)) {
                     log.warning("Failed to delete intermediate file " + temp + ".");
                 }
                 return true;
@@ -67,7 +67,7 @@ public class FileUtil
             // close the input stream now so we can delete 'source'
             fin.close();
             fin = null;
-            if (!source.delete()) {
+            if (!deleteHarder(source)) {
                 log.warning("Failed to delete " + source +
                             " after brute force copy to " + dest + ".");
             }
@@ -81,6 +81,18 @@ public class FileUtil
             StreamUtil.close(fin);
             StreamUtil.close(fout);
         }
+    }
+
+    /**
+     * "Tries harder" to delete {@code file} than just calling {@code delete} on it. Presently this
+     * just means "try a second time if the first time fails." On Windows Vista, sometimes deletes
+     * fail but then succeed if you just try again. Given that delete failure is a rare occurance,
+     * we can implement this hacky workaround without any negative consequences for normal
+     * behavior.
+     */
+    public static boolean deleteHarder (File file) {
+        // if at first you don't succeed... try, try again
+        return file.delete() || file.delete();
     }
 
     /**

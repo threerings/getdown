@@ -20,18 +20,18 @@ public class GarbageCollector
                 File lastAccessedFile = getLastAccessedFile(file);
                 if (!cachedFile.exists() || !lastAccessedFile.exists()) {
                     if (cachedFile.exists()) {
-                        cachedFile.delete();
+                        FileUtil.deleteHarder(cachedFile);
                     } else {
-                        lastAccessedFile.delete();
+                        FileUtil.deleteHarder(lastAccessedFile);
                     }
                 } else if (shouldDelete(lastAccessedFile, retentionPeriodMillis)) {
-                    lastAccessedFile.delete();
-                    cachedFile.delete();
+                    FileUtil.deleteHarder(lastAccessedFile);
+                    FileUtil.deleteHarder(cachedFile);
                 }
 
                 File folder = file.getParentFile();
                 if (folder.list().length == 0) {
-                    folder.delete();
+                    FileUtil.deleteHarder(folder);
                 }
             }
         });
