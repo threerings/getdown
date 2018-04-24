@@ -1472,7 +1472,7 @@ public class Application
     protected void downloadConfigFile ()
         throws IOException
     {
-        downloadControlFile(CONFIG_FILE, false);
+        downloadControlFile(CONFIG_FILE, 0);
     }
 
     /**
@@ -1533,7 +1533,7 @@ public class Application
         throws IOException
     {
         for (int version = 1; version <= Digest.VERSION; version++) {
-            downloadControlFile(Digest.digestFile(version), true);
+            downloadControlFile(Digest.digestFile(version), version);
         }
     }
 
@@ -1548,13 +1548,17 @@ public class Application
      * validation implementation, at-will (ie, via an Applet).
      *
      * <p> TODO: Switch to PKCS #7 or CMS.
+     *
+     * @param sigVersion if {@code 0} no validation will be performed, if {@code > 0} then this
+     * should indicate the version of the digest file being validated which indicates which
+     * algorithm to use to verify the signature. See {@link Digest#VESRION}.
      */
-    protected void downloadControlFile (String path, boolean validateSignature)
+    protected void downloadControlFile (String path, int sigVersion)
         throws IOException
     {
         File target = downloadFile(path);
 
-        if (validateSignature) {
+        if (sigVersion > 0) {
             if (_signers.isEmpty()) {
                 log.info("No signers, not verifying file", "path", path);
 
@@ -1576,7 +1580,7 @@ public class Application
                     FileInputStream dataInput = null;
                     try {
                         dataInput = new FileInputStream(target);
-                        Signature sig = Signature.getInstance(Digest.SIG_ALGO);
+                        Signature sig = Signature.getInstance(Digest.sigAlgorithm(sigVersion));
                         sig.initVerify(cert);
                         while ((length = dataInput.read(buffer)) != -1) {
                             sig.update(buffer, 0, length);

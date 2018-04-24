@@ -43,7 +43,7 @@ public class AppletParamSigner
             store.load(new BufferedInputStream(new FileInputStream(keystore)),
                        storepass.toCharArray());
             PrivateKey key = (PrivateKey)store.getKey(alias, keypass.toCharArray());
-            Signature sig = Signature.getInstance(Digest.SIG_ALGO);
+            Signature sig = Signature.getInstance(Digest.sigAlgorithm(Digest.VERSION));
             sig.initSign(key);
             sig.update(params.getBytes());
             String signed = new String(Base64.encodeBase64(sig.sign()));

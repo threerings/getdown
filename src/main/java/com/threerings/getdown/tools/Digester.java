@@ -110,7 +110,7 @@ public class Digester
             PrivateKey key = (PrivateKey)store.getKey(storeAlias, storePass.toCharArray());
 
             // sign the digest file
-            String algo = version > 1 ? Digest.SIG_ALGO : "SHA1withRSA";
+            String algo = Digest.sigAlgorithm(version);
             Signature sig = Signature.getInstance(algo);
             dataInput = new FileInputStream(inputFile);
             byte[] buffer = new byte[8192];

@@ -29,15 +29,23 @@ public class Digest
     /** The current version of the digest protocol. */
     public static final int VERSION = 2;
 
-    /** The current algorithm used to sign digest files. */
-    public static final String SIG_ALGO = "SHA256withRSA";
-
     /**
      * Returns the name of the digest file for the specified protocol version.
      */
     public static String digestFile (int version) {
         String infix = version > 1 ? String.valueOf(version) : "";
         return FILE_NAME + infix + FILE_SUFFIX;
+    }
+
+    /**
+     * Returns the crypto algorithm used to sign digest files of the specified version.
+     */
+    public static String sigAlgorithm (int version) {
+        switch (version) {
+        case 1: return "SHA1withRSA";
+        case 2: return "SHA256withRSA";
+        default: throw new IllegalArgumentException("Invalid digest version " + version);
+        }
     }
 
     /**
