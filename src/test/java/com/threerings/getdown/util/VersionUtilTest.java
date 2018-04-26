@@ -7,7 +7,7 @@ package com.threerings.getdown.util;
 
 import org.junit.Test;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 public class VersionUtilTest {
 
@@ -15,8 +15,32 @@ public class VersionUtilTest {
     public void shouldParseJavaVersion ()
     {
         long version = VersionUtil.parseJavaVersion(
-            "(\\d+)\\.(\\d+)\\.(\\d+)(_\\d+)?", "1.8.0_152");
-        assertTrue(version > 1060000);
+            "(\\d+)(?:\\.(\\d+)(?:\\.(\\d+)(_\\d+)?)?)?", "1.8.0_152");
+        assertEquals(1_080_152, version);
+    }
+
+    @Test
+    public void shouldParseJavaVersion8 ()
+    {
+        long version = VersionUtil.parseJavaVersion(
+            "(\\d+)(?:\\.(\\d+)(?:\\.(\\d+)(_\\d+)?)?)?", "1.8");
+        assertEquals(1_080_000, version);
+    }
+
+    @Test
+    public void shouldParseJavaVersion9 ()
+    {
+        long version = VersionUtil.parseJavaVersion(
+            "(\\d+)(?:\\.(\\d+)(?:\\.(\\d+)(_\\d+)?)?)?", "9");
+        assertEquals(9_000_000, version);
+    }
+
+    @Test
+    public void shouldParseJavaVersion10 ()
+    {
+        long version = VersionUtil.parseJavaVersion(
+            "(\\d+)(?:\\.(\\d+)(?:\\.(\\d+)(_\\d+)?)?)?", "10");
+        assertEquals(10_000_000, version);
     }
 
     @Test
@@ -24,6 +48,6 @@ public class VersionUtilTest {
     {
         long version = VersionUtil.parseJavaVersion(
             "(\\d+)\\.(\\d+)\\.(\\d+)(_\\d+)?(-b\\d+)?", "1.8.0_131-b11");
-        assertTrue(version > 106000000);
+        assertEquals(108_013_111, version);
     }
 }
