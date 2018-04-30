@@ -177,7 +177,7 @@ public class FileUtil
             extractedJarFileOut = new FileOutputStream(target);
             jarOutputStream = new JarOutputStream(extractedJarFileOut);
             packedJarIn = new FileInputStream(packedJar);
-            if (packedJar.getName().endsWith(".gz")) {
+            if (packedJar.getName().endsWith(".gz") || packedJar.getName().endsWith(".gz_new")) {
                 packedJarIn = new GZIPInputStream(packedJarIn);
             }
             Pack200.Unpacker unpacker = Pack200.newUnpacker();

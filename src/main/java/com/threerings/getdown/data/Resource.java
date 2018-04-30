@@ -334,7 +334,8 @@ public class Resource implements Comparable<Resource>
 
     protected static boolean isPacked200Jar (String path)
     {
-        return path.endsWith(".jar.pack") || path.endsWith(".jar.pack.gz");
+        return path.endsWith(".jar.pack") || path.endsWith(".jar.pack_new") ||
+            path.endsWith(".jar.pack.gz")|| path.endsWith(".jar.pack.gz_new");
     }
 
     protected String _path;
