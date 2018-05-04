@@ -5,7 +5,9 @@
 
 package com.threerings.getdown.launcher;
 
+import java.awt.Color;
 import java.awt.Container;
+import java.awt.IllegalComponentStateException;
 import java.awt.Image;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -141,6 +143,13 @@ public class GetdownApp
                         }
                     });
                     _frame.setUndecorated(_ifc.hideDecorations);
+                    try {
+                        _frame.setBackground(_ifc.background);
+                    } catch (UnsupportedOperationException e) {
+                        log.warning("Failed to set background", e);
+                    } catch (IllegalComponentStateException e) {
+                        log.warning("Failed to set background", e);
+                    }
                     _frame.setResizable(false);
                 } else {
                     _frame.setTitle(title);
@@ -226,6 +235,12 @@ public class GetdownApp
                 // to allow the user to close the window
                 if (_frame != null && _frame.isUndecorated()) {
                     _frame.dispose();
+                    Color background = _frame.getBackground();
+                    if (background != null && background.getAlpha() < 255) {
+                        // decorated windows do not allow alpha backgrounds
+                        _frame.setBackground(
+                            new Color(background.getRed(), background.getGreen(), background.getBlue()));
+                    }
                     _frame.setUndecorated(false);
                     showContainer();
                 }

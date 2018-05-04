@@ -1749,7 +1749,9 @@ public class Application
     {
         if (!StringUtil.isBlank(hexValue)) {
             try {
-                return new Color(Integer.parseInt(hexValue, 16));
+                int rgba = Integer.parseInt(hexValue, 16);
+                boolean hasAlpha = hexValue.length() > 6;
+                return new Color(rgba, hasAlpha);
             } catch (NumberFormatException e) {
                 log.warning("Ignoring invalid color", "hexValue", hexValue, "exception", e);
             }

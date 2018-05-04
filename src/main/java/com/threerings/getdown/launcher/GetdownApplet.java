@@ -104,6 +104,7 @@ public class GetdownApplet extends JApplet
                 @Override
                 protected Container createContainer () {
                     getContentPane().removeAll();
+                    getContentPane().setBackground(_ifc.background);
                     return getContentPane();
                 }
                 @Override
