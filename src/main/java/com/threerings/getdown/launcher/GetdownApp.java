@@ -5,7 +5,10 @@
 
 package com.threerings.getdown.launcher;
 
+import java.awt.EventQueue;
+import java.awt.Color;
 import java.awt.Container;
+import java.awt.IllegalComponentStateException;
 import java.awt.Image;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -20,7 +23,6 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import javax.swing.JFrame;
@@ -141,6 +143,13 @@ public class GetdownApp
                         }
                     });
                     _frame.setUndecorated(_ifc.hideDecorations);
+                    try {
+                        _frame.setBackground(_ifc.background);
+                    } catch (UnsupportedOperationException e) {
+                        log.warning("Failed to set background", e);
+                    } catch (IllegalComponentStateException e) {
+                        log.warning("Failed to set background", e);
+                    }
                     _frame.setResizable(false);
                 } else {
                     _frame.setTitle(title);
@@ -222,14 +231,25 @@ public class GetdownApp
 
             @Override
             protected void fail (String message) {
-                // if the frame was set to be undecorated, make window decoration available
-                // to allow the user to close the window
-                if (_frame != null && _frame.isUndecorated()) {
-                    _frame.dispose();
-                    _frame.setUndecorated(false);
-                    showContainer();
-                }
                 super.fail(message);
+                EventQueue.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        // if the frame was set to be undecorated, make window decoration available
+                        // to allow the user to close the window
+                        if (_frame != null && _frame.isUndecorated()) {
+                            _frame.dispose();
+                            Color background = _frame.getBackground();
+                            if (background != null && background.getAlpha() < 255) {
+                                // decorated windows do not allow alpha backgrounds
+                                _frame.setBackground(
+                                    new Color(background.getRed(), background.getGreen(), background.getBlue()));
+                            }
+                            _frame.setUndecorated(false);
+                            showContainer();
+                        }
+                    }
+                });
             }
 
             protected JFrame _frame;
