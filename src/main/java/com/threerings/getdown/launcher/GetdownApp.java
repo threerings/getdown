@@ -232,6 +232,8 @@ public class GetdownApp
             @Override
             protected void fail (String message) {
                 super.fail(message);
+                // super.fail causes the UI to be created (if needed) on the next UI tick, so we
+                // want to wait until that happens before we attempt to redecorate the window
                 EventQueue.invokeLater(new Runnable() {
                     @Override
                     public void run() {
@@ -239,11 +241,11 @@ public class GetdownApp
                         // to allow the user to close the window
                         if (_frame != null && _frame.isUndecorated()) {
                             _frame.dispose();
-                            Color background = _frame.getBackground();
-                            if (background != null && background.getAlpha() < 255) {
+                            Color bg = _frame.getBackground();
+                            if (bg != null && bg.getAlpha() < 255) {
                                 // decorated windows do not allow alpha backgrounds
                                 _frame.setBackground(
-                                    new Color(background.getRed(), background.getGreen(), background.getBlue()));
+                                    new Color(bg.getRed(), bg.getGreen(), bg.getBlue()));
                             }
                             _frame.setUndecorated(false);
                             showContainer();
