@@ -23,6 +23,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
 
 import javax.swing.JApplet;
 
@@ -1653,7 +1654,12 @@ public class Application
             // about it; turning off caches is not a performance concern, because when Getdown asks
             // to download a file, it expects it to come over the wire, not from a cache
             uconn.setUseCaches(false);
+            uconn.setRequestProperty("Accept-Encoding", "gzip");
             fin = uconn.getInputStream();
+            String encoding = uconn.getContentEncoding();
+            if ("gzip".equalsIgnoreCase(encoding)) {
+                fin = new GZIPInputStream(fin);
+            }
             fout = new FileOutputStream(target);
             StreamUtil.copy(fin, fout);
         } finally {
