@@ -542,7 +542,7 @@ public class Application
         }
 
         // check if we're overriding the domain in the appbase
-        _appbase = overrideAppbase(_appbase);
+        _appbase = SysProps.overrideAppbase(_appbase);
 
         // make sure there's a trailing slash
         if (!_appbase.endsWith("/")) {
@@ -567,7 +567,7 @@ public class Application
             if (latest.startsWith(_appbase)) {
                 latest = _appbase + latest.substring(_appbase.length());
             } else {
-                latest = replaceDomain(latest);
+                latest = SysProps.replaceDomain(latest);
             }
             try {
                 _latest = new URL(latest);
@@ -1807,31 +1807,6 @@ public class Application
         cookie.append("utmcsr%3D(direct)%7Cutmccn%3D(direct)%7Cutmcmd%3D(none)%3B");
         cookie.append("&utmn=").append(RandomUtil.getInRange(1000000000, 2000000000));
         return cookie.toString();
-    }
-
-    /**
-     * Applies {@code appbase_override} or {@code appbase_domain} if they are set.
-     */
-    protected String overrideAppbase (String appbase) {
-        String appbaseOverride = SysProps.appbaseOverride();
-        if (appbaseOverride != null) {
-            return appbaseOverride;
-        } else {
-            return replaceDomain(appbase);
-        }
-    }
-
-    /**
-     * If appbase_domain property is set, replace the domain on the provided string.
-     */
-    protected String replaceDomain (String appbase)
-    {
-        String appbaseDomain = SysProps.appbaseDomain();
-        if (appbaseDomain != null) {
-            Matcher m = Pattern.compile("(http://[^/]+)(.*)").matcher(appbase);
-            appbase = m.replaceAll(appbaseDomain + "$2");
-        }
-        return appbase;
     }
 
     /**

@@ -5,6 +5,9 @@
 
 package com.threerings.getdown.data;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import com.threerings.getdown.util.VersionUtil;
 import com.threerings.getdown.launcher.Getdown;
 
@@ -135,5 +138,30 @@ public class SysProps
         if (vers == 0L) throw new IllegalArgumentException(
             "Regexp '" + propRegex + "' does not match '" + verstr + "' (from " + propName + ")");
         return vers;
+    }
+
+    /**
+     * Applies {@code appbase_override} or {@code appbase_domain} if they are set.
+     */
+    public static String overrideAppbase (String appbase) {
+        String appbaseOverride = appbaseOverride();
+        if (appbaseOverride != null) {
+            return appbaseOverride;
+        } else {
+            return replaceDomain(appbase);
+        }
+    }
+
+    /**
+     * If appbase_domain property is set, replace the domain on the provided string.
+     */
+    public static String replaceDomain (String appbase)
+    {
+        String appbaseDomain = appbaseDomain();
+        if (appbaseDomain != null) {
+            Matcher m = Pattern.compile("(https?://[^/]+)(.*)").matcher(appbase);
+            appbase = m.replaceAll(appbaseDomain + "$2");
+        }
+        return appbase;
     }
 }
