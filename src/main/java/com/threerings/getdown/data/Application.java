@@ -453,7 +453,8 @@ public class Application
         try {
             String suffix = _trackingURLSuffix == null ? "" : _trackingURLSuffix;
             String ga = getGATrackingCode();
-            return _trackingURL == null ? null : new URL(encodePath(_trackingURL + event + suffix + ga));
+            return _trackingURL == null ? null :
+                new URL(_trackingURL + encodePath(event + suffix + ga));
         } catch (MalformedURLException mue) {
             log.warning("Invalid tracking URL", "path", _trackingURL, "event", event, "error", mue);
             return null;
