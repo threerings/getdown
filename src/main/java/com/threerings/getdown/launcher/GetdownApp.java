@@ -169,7 +169,7 @@ public class GetdownApp
                     if (icons.isEmpty()) {
                         log.warning("Failed to load any icons", "iconImages", _ifc.iconImages);
                     } else {
-                        SwingUtil.setFrameIcons(_frame, icons);
+                        _frame.setIconImages(icons);
                     }
                 }
 

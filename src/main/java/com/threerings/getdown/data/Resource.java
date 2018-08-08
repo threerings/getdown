@@ -10,6 +10,7 @@ import java.net.URL;
 import java.security.MessageDigest;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -27,6 +28,18 @@ import static com.threerings.getdown.Log.log;
  */
 public class Resource implements Comparable<Resource>
 {
+    /** Defines special attributes for resources. */
+    public static enum Attr {
+        /** Indicates that the resource should be unpacked. */
+        UNPACK,
+        /** Indicates that the resource should be marked executable. */
+        EXEC
+    };
+
+    public static EnumSet<Attr> NORMAL = EnumSet.noneOf(Attr.class);
+    public static EnumSet<Attr> UNPACK = EnumSet.of(Attr.UNPACK);
+    public static EnumSet<Attr> EXEC   = EnumSet.of(Attr.EXEC);
+
     /**
      * Computes the MD5 hash of the supplied file.
      * @param version the version of the digest protocol to use.
@@ -115,7 +128,7 @@ public class Resource implements Comparable<Resource>
     /**
      * Creates a resource with the supplied remote URL and local path.
      */
-    public Resource (String path, URL remote, File local, boolean unpack)
+    public Resource (String path, URL remote, File local, EnumSet<Attr> attrs)
     {
         _path = path;
         _remote = remote;
@@ -124,12 +137,13 @@ public class Resource implements Comparable<Resource>
         String lpath = _local.getPath();
         _marker = new File(lpath + "v");
 
-        _unpack = unpack;
+        _attrs = attrs;
         _isJar = isJar(lpath);
         _isPacked200Jar = isPacked200Jar(lpath);
-        if (_unpack && _isJar) {
+        boolean unpack = attrs.contains(Attr.UNPACK);
+        if (unpack && _isJar) {
             _unpacked = _local.getParentFile();
-        } else if(_unpack && _isPacked200Jar) {
+        } else if(unpack && _isPacked200Jar) {
             String dotJar = ".jar", lname = _local.getName();
             String uname = lname.substring(0, lname.lastIndexOf(dotJar) + dotJar.length());
             _unpacked = new File(_local.getParent(), uname);
@@ -189,7 +203,7 @@ public class Resource implements Comparable<Resource>
      */
     public boolean shouldUnpack ()
     {
-        return _unpack && !SysProps.noUnpack();
+        return _attrs.contains(Attr.UNPACK) && !SysProps.noUnpack();
     }
 
     /**
@@ -254,8 +268,7 @@ public class Resource implements Comparable<Resource>
         if (!FileUtil.renameTo(source, dest)) {
             throw new IOException("Failed to rename " + source + " to " + dest);
         }
-        // unpack the resource, now that it's installed, and mark it as valid
-        unpackIfNeeded();
+        applyAttrs();
         markAsValid();
     }
 
@@ -276,11 +289,15 @@ public class Resource implements Comparable<Resource>
     }
 
     /**
-     * Unpacks this resource if needed.
+     * Applies this resources special attributes: unpacks this resource if needed, marks it as
+     * executable if needed.
      */
-    public void unpackIfNeeded () throws IOException {
+    public void applyAttrs () throws IOException {
         if (shouldUnpack()) {
             unpack();
+        }
+        if (_attrs.contains(Attr.EXEC)) {
+            FileUtil.makeExecutable(_local);
         }
     }
 
@@ -341,7 +358,8 @@ public class Resource implements Comparable<Resource>
     protected String _path;
     protected URL _remote;
     protected File _local, _localNew, _marker, _unpacked;
-    protected boolean _unpack, _isJar, _isPacked200Jar;
+    protected EnumSet<Attr> _attrs;
+    protected boolean _isJar, _isPacked200Jar;
 
     /** Used to sort the entries in a jar file. */
     protected static final Comparator<JarEntry> ENTRY_COMP = new Comparator<JarEntry>() {

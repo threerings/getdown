@@ -633,9 +633,9 @@ public abstract class Getdown extends Thread
 
         // these only run on non-Windows platforms, so we use Unix file separators
         String localJavaDir = LaunchUtil.LOCAL_JAVA_DIR + "/";
-        makeExecutable(localJavaDir + "bin/java");
-        makeExecutable(localJavaDir + "lib/jspawnhelper");
-        makeExecutable(localJavaDir + "lib/amd64/jspawnhelper");
+        FileUtil.makeExecutable(_app.getLocalPath(localJavaDir + "bin/java"));
+        FileUtil.makeExecutable(_app.getLocalPath(localJavaDir + "lib/jspawnhelper"));
+        FileUtil.makeExecutable(_app.getLocalPath(localJavaDir + "lib/amd64/jspawnhelper"));
 
         // lastly regenerate the .jsa dump file that helps Java to start up faster
         String vmpath = LaunchUtil.getJVMPath(_app.getLocalPath(""));
@@ -647,23 +647,6 @@ public abstract class Getdown extends Thread
         }
 
         reportTrackingEvent("jvm_complete", -1);
-    }
-
-    protected void makeExecutable (String path) {
-        // Java doesn't know anything about file permissions (and by extension then,
-        // neither does Jar), so on Unix we have to hackily do so via chmod
-        if (!RunAnywhere.isWindows()) {
-            File target = _app.getLocalPath(path);
-            String cmd = "chmod a+rx " + target;
-            try {
-                if (target.exists()) {
-                    log.info("Running: " + cmd);
-                    Runtime.getRuntime().exec(cmd);
-                }
-            } catch (Exception e) {
-                log.warning("Failed to mark VM binary as executable", "cmd", cmd, "error", e);
-            }
-        }
     }
 
     /**

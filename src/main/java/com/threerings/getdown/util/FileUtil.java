@@ -207,6 +207,21 @@ public class FileUtil
     }
 
     /**
+     * Marks {@code file} as executable, if it exists. Catches and logs any errors that occur.
+     */
+    public static void makeExecutable (File file) {
+        try {
+            if (file.exists()) {
+                if (!file.setExecutable(true, false)) {
+                    log.warning("Failed to mark as executable", "file", file);
+                }
+            }
+        } catch (Exception e) {
+            log.warning("Failed to mark as executable", "file", file, "error", e);
+        }
+    }
+
+    /**
      * Used by {@link #walkTree}.
      */
     public interface Visitor

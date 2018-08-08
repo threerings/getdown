@@ -269,7 +269,7 @@ public class Application
     public Resource getConfigResource ()
     {
         try {
-            return createResource(CONFIG_FILE, false);
+            return createResource(CONFIG_FILE, Resource.NORMAL);
         } catch (Exception e) {
             throw new RuntimeException("Invalid appbase '" + _vappbase + "'.", e);
         }
@@ -395,7 +395,7 @@ public class Application
         String pfile = "patch" + infix + _version + ".dat";
         try {
             URL remote = new URL(createVAppBase(_targetVersion), encodePath(pfile));
-            return new Resource(pfile, remote, getLocalPath(pfile), false);
+            return new Resource(pfile, remote, getLocalPath(pfile), Resource.NORMAL);
         } catch (Exception e) {
             log.warning("Failed to create patch resource path",
                 "pfile", pfile, "appbase", _appbase, "tvers", _targetVersion, "error", e);
@@ -417,7 +417,8 @@ public class Application
         String vmfile = LaunchUtil.LOCAL_JAVA_DIR + ".jar";
         try {
             URL remote = new URL(createVAppBase(_targetVersion), encodePath(_javaLocation));
-            return new Resource(vmfile, remote, getLocalPath(vmfile), true);
+            return new Resource(vmfile, remote, getLocalPath(vmfile),
+                                EnumSet.of(Resource.Attr.UNPACK));
         } catch (Exception e) {
             log.warning("Failed to create VM resource", "vmfile", vmfile, "appbase", _appbase,
                 "tvers", _targetVersion, "javaloc", _javaLocation, "error", e);
@@ -434,7 +435,7 @@ public class Application
         String file = "full";
         try {
             URL remote = new URL(createVAppBase(_targetVersion), encodePath(file));
-            return new Resource(file, remote, getLocalPath(file), false);
+            return new Resource(file, remote, getLocalPath(file), Resource.NORMAL);
         } catch (Exception e) {
             log.warning("Failed to create full resource path",
                 "file", file, "appbase", _appbase, "tvers", _targetVersion, "error", e);
@@ -656,21 +657,22 @@ public class Application
             ConfigUtil.getMultiValue(cdata, "ucode") == null) {
             throw new IOException("m.missing_code");
         }
-        parseResources(cdata, "code", false, _codes);
-        parseResources(cdata, "ucode", true, _codes);
+        parseResources(cdata, "code", Resource.NORMAL, _codes);
+        parseResources(cdata, "ucode", Resource.UNPACK, _codes);
 
         // parse our non-code resources
-        parseResources(cdata, "resource", false, _resources);
-        parseResources(cdata, "uresource", true, _resources);
+        parseResources(cdata, "resource", Resource.NORMAL, _resources);
+        parseResources(cdata, "uresource", Resource.UNPACK, _resources);
+        parseResources(cdata, "xresource", Resource.EXEC, _resources);
 
         // parse our auxiliary resource groups
         for (String auxgroup : parseList(cdata, "auxgroups")) {
             ArrayList<Resource> codes = new ArrayList<>();
-            parseResources(cdata, auxgroup + ".code", false, codes);
-            parseResources(cdata, auxgroup + ".ucode", true, codes);
+            parseResources(cdata, auxgroup + ".code", Resource.NORMAL, codes);
+            parseResources(cdata, auxgroup + ".ucode", Resource.UNPACK, codes);
             ArrayList<Resource> rsrcs = new ArrayList<>();
-            parseResources(cdata, auxgroup + ".resource", false, rsrcs);
-            parseResources(cdata, auxgroup + ".uresource", true, rsrcs);
+            parseResources(cdata, auxgroup + ".resource", Resource.NORMAL, rsrcs);
+            parseResources(cdata, auxgroup + ".uresource", Resource.UNPACK, rsrcs);
             _auxgroups.put(auxgroup, new AuxGroup(auxgroup, codes, rsrcs));
         }
 
@@ -1375,8 +1377,7 @@ public class Application
                     toInstall.add(rsrc);
                     return;
                 }
-                // unpack this resource if appropriate
-                rsrc.unpackIfNeeded();
+                rsrc.applyAttrs();
                 unpacked.add(rsrc);
                 rsrc.markAsValid();
                 return;
@@ -1672,15 +1673,15 @@ public class Application
     }
 
     /** Helper function for creating {@link Resource} instances. */
-    protected Resource createResource (String path, boolean unpack)
+    protected Resource createResource (String path, EnumSet<Resource.Attr> attrs)
         throws MalformedURLException
     {
-        return new Resource(path, getRemoteURL(path), getLocalPath(path), unpack);
+        return new Resource(path, getRemoteURL(path), getLocalPath(path), attrs);
     }
 
     /** Used to parse resources with the specified name. */
-    protected void parseResources (Map<String,Object> cdata, String name, boolean unpack,
-                                   List<Resource> list)
+    protected void parseResources (Map<String,Object> cdata, String name,
+                                   EnumSet<Resource.Attr> attrs, List<Resource> list)
     {
         String[] rsrcs = ConfigUtil.getMultiValue(cdata, name);
         if (rsrcs == null) {
@@ -1688,7 +1689,7 @@ public class Application
         }
         for (String rsrc : rsrcs) {
             try {
-                list.add(createResource(rsrc, unpack));
+                list.add(createResource(rsrc, attrs));
             } catch (Exception e) {
                 log.warning("Invalid resource '" + rsrc + "'. " + e);
             }
