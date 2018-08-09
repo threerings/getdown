@@ -153,6 +153,11 @@ public class Application
         /** Whether progress text should be hidden or not. */
         public boolean hideProgressText;
 
+        /** The minimum number of seconds to display the GUI. This is to prevent the GUI from
+          * flashing up on the screen and immediately disappearing, which can be confusing to the
+          * user. */
+        public int minShowSeconds = 5;
+
         /** The global percentages for each step. A step may have more than one, and
          * the lowest reasonable one is used if a step is revisited. */
         public Map<Step, List<Integer>> stepPercentages =
@@ -168,7 +173,7 @@ public class Application
                 ", shadow=" + textShadow + ", err=" + installError + ", nrect=" + patchNotes +
                 ", notes=" + patchNotesUrl + ", stepPercentages=" + stepPercentages +
                 ", parect=" + playAgain + ", paimage=" + playAgainImage +
-                ", hideProgressText" + hideProgressText + "]";
+                ", hideProgressText" + hideProgressText + ", minShow=" + minShowSeconds + "]";
         }
 
         /** Initializer */
@@ -719,6 +724,7 @@ public class Application
         ui.progress = parseRect(cdata, "ui.progress", ui.progress);
         ui.progressText = parseColor(cdata, "ui.progress_text", ui.progressText);
         ui.hideProgressText =  Boolean.parseBoolean((String)cdata.get("ui.hide_progress_text"));
+        ui.minShowSeconds = parseInt(cdata, "ui.min_show_seconds", ui.minShowSeconds);
         ui.progressBar = parseColor(cdata, "ui.progress_bar", ui.progressBar);
         ui.status = parseRect(cdata, "ui.status", ui.status);
         ui.statusText = parseColor(cdata, "ui.status_text", ui.statusText);
@@ -1679,6 +1685,27 @@ public class Application
         return new Resource(path, getRemoteURL(path), getLocalPath(path), attrs);
     }
 
+    /** Helper function to add all values in {@code values} (if non-null) to {@code target}. */
+    protected static void addAll (String[] values, List<String> target) {
+        if (values != null) {
+            for (String value : values) {
+                target.add(value);
+            }
+        }
+    }
+
+    /**
+     * Make an immutable List from the specified int array.
+     */
+    public static List<Integer> intsToList (int[] values)
+    {
+        List<Integer> list = new ArrayList<>(values.length);
+        for (int val : values) {
+            list.add(val);
+        }
+        return Collections.unmodifiableList(list);
+    }
+
     /** Used to parse resources with the specified name. */
     protected void parseResources (Map<String,Object> cdata, String name,
                                    EnumSet<Resource.Attr> attrs, List<Resource> list)
@@ -1704,27 +1731,6 @@ public class Application
         return (rect == null) ? def : rect;
     }
 
-    /** Helper function to add all values in {@code values} (if non-null) to {@code target}. */
-    protected static void addAll (String[] values, List<String> target) {
-        if (values != null) {
-            for (String value : values) {
-                target.add(value);
-            }
-        }
-    }
-
-    /**
-     * Make an immutable List from the specified int array.
-     */
-    public static List<Integer> intsToList (int[] values)
-    {
-        List<Integer> list = new ArrayList<>(values.length);
-        for (int val : values) {
-            list.add(val);
-        }
-        return Collections.unmodifiableList(list);
-    }
-
     /**
      * Takes a comma-separated String of four integers and returns a rectangle using those ints as
      * the its x, y, width, and height.
@@ -1736,9 +1742,20 @@ public class Application
             if (v != null && v.length == 4) {
                 return new Rectangle(v[0], v[1], v[2], v[3]);
             }
-            log.warning("Ignoring invalid '" + name + "' config '" + value + "'.");
+            log.warning("Ignoring invalid rect '" + name + "' config '" + value + "'.");
         }
         return null;
+    }
+
+    /** Used to parse int specifications from the config file. */
+    protected int parseInt (Map<String, Object> cdata, String name, int def) {
+        String value = (String)cdata.get(name);
+        try {
+            return value == null ? def : Integer.parseInt(value);
+        } catch (Exception e) {
+            log.warning("Ignoring invalid int '" + name + "' config '" + value + "',");
+            return def;
+        }
     }
 
     /** Used to parse color specifications from the config file. */

@@ -850,13 +850,14 @@ public abstract class Getdown extends Thread
                 }
             }
 
-            // if we have a UI open and we haven't been around for at least 5 seconds, don't stick
-            // a fork in ourselves straight away but give our lovely user a chance to see what
-            // we're doing
+            // if we have a UI open and we haven't been around for at least 5 seconds (the default
+            // for min_show_seconds), don't stick a fork in ourselves straight away but give our
+            // lovely user a chance to see what we're doing
             long uptime = System.currentTimeMillis() - _startup;
-            if (_container != null && uptime < MIN_EXIST_TIME) {
+            long minshow = _ifc.minShowSeconds * 1000L;
+            if (_container != null && uptime < minshow) {
                 try {
-                    Thread.sleep(MIN_EXIST_TIME - uptime);
+                    Thread.sleep(minshow - uptime);
                 } catch (Exception e) {
                 }
             }
@@ -1263,7 +1264,6 @@ public abstract class Getdown extends Thread
     protected int _uiDisplayPercent;
 
     protected static final int MAX_LOOPS = 5;
-    protected static final long MIN_EXIST_TIME = 5000L;
     protected static final long FALLBACK_CHECK_TIME = 1000L;
     protected static final long PLAY_AGAIN_TIME = 3000L;
     protected static final String PROXY_REGISTRY =
