@@ -26,8 +26,10 @@ import com.samskivert.util.StringUtil;
 import static com.threerings.getdown.Log.log;
 
 /**
- * Parses a file containing key/value pairs and returns a {@link HashMap} with the values. Keys may
- * be repeated, in which case they will be made to reference an array of values.
+ * Handles parsing and runtime access for Getdown's config files (mainly {@code getdown.txt}).
+ * These files contain zero or more mappings for a particular string key. Config values can be
+ * fetched as single strings, lists of strings, or parsed into primitives or compound data types
+ * like colors and rectangles.
  */
 public class Config
 {
