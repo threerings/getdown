@@ -15,7 +15,7 @@ import com.samskivert.io.StreamUtil;
 import com.samskivert.text.MessageUtil;
 import com.samskivert.util.StringUtil;
 
-import com.threerings.getdown.util.ConfigUtil;
+import com.threerings.getdown.util.Config;
 import com.threerings.getdown.util.ProgressObserver;
 
 import static com.threerings.getdown.Log.log;
@@ -155,12 +155,12 @@ public class Digest
         String filename = digestFile(version);
         StringBuilder data = new StringBuilder();
         File dfile = new File(appdir, filename);
-        ConfigUtil.ParseOpts opts = ConfigUtil.createOpts(false);
+        Config.ParseOpts opts = Config.createOpts(false);
         opts.strictComments = strictComments;
         // bias = toward key: the key is the filename and could conceivably contain = signs, value
         // is the hex encoded hash which will not contain =
         opts.biasToKey = true;
-        for (String[] pair : ConfigUtil.parsePairs(dfile, opts)) {
+        for (String[] pair : Config.parsePairs(dfile, opts)) {
             if (pair[0].equals(filename)) {
                 _metaDigest = pair[1];
                 break;

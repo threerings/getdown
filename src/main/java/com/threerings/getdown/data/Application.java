@@ -510,19 +510,19 @@ public class Application
     public UpdateInterface init (boolean checkPlatform)
         throws IOException
     {
-        Map<String,Object> cdata = null;
-        File config = _config;
-        ConfigUtil.ParseOpts opts = ConfigUtil.createOpts(checkPlatform);
+        Config config = null;
+        File cfgfile = _config;
+        Config.ParseOpts opts = Config.createOpts(checkPlatform);
         try {
             // if we have a configuration file, read the data from it
-            if (config.exists()) {
-                cdata = ConfigUtil.parseConfig(_config, opts);
+            if (cfgfile.exists()) {
+                config = Config.parseConfig(_config, opts);
             }
             // otherwise, try reading data from our backup config file; thanks to funny windows
             // bullshit, we have to do this backup file fiddling in case we got screwed while
             // updating getdown.txt during normal operation
-            else if ((config = getLocalPath(CONFIG_FILE + "_old")).exists()) {
-                cdata = ConfigUtil.parseConfig(config, opts);
+            else if ((cfgfile = getLocalPath(CONFIG_FILE + "_old")).exists()) {
+                config = Config.parseConfig(cfgfile, opts);
             }
             // otherwise, issue a warning that we found no getdown file
             else {
@@ -534,16 +534,17 @@ public class Application
 
         // if we failed to read our config file, check for an appbase specified via a system
         // property; we can use that to bootstrap ourselves back into operation
-        if (cdata == null) {
+        if (config == null) {
             String appbase = SysProps.appBase();
             log.info("Attempting to obtain 'appbase' from system property", "appbase", appbase);
-            cdata = new HashMap<>();
+            Map<String, Object> cdata = new HashMap<>();
             cdata.put("appbase", appbase);
+            config = new Config(cdata);
         }
 
         // first determine our application base, this way if anything goes wrong later in the
         // process, our caller can use the appbase to download a new configuration file
-        _appbase = (String)cdata.get("appbase");
+        _appbase = config.getString("appbase");
         if (_appbase == null) {
             throw new RuntimeException("m.missing_appbase");
         }
@@ -557,8 +558,7 @@ public class Application
         }
 
         // extract our version information
-        String vstr = (String)cdata.get("version");
-        if (vstr != null) _version = parseLong(vstr, "m.invalid_version");
+        _version = config.getLong("version", -1L);
 
         // if we are a versioned deployment, create a versioned appbase
         try {
@@ -569,7 +569,7 @@ public class Application
         }
 
         // check for a latest config URL
-        String latest = (String)cdata.get("latest");
+        String latest = config.getString("latest");
         if (latest != null) {
             if (latest.startsWith(_appbase)) {
                 latest = _appbase + latest.substring(_appbase.length());
@@ -586,49 +586,41 @@ public class Application
         String appPrefix = StringUtil.isBlank(_appid) ? "" : (_appid + ".");
 
         // determine our application class name
-        _class = (String)cdata.get(appPrefix + "class");
+        _class = config.getString(appPrefix + "class");
         if (_class == null) {
             throw new IOException("m.missing_class");
         }
 
         // determine whether we want strict comments
-        _strictComments = Boolean.parseBoolean((String)cdata.get("strict_comments"));
+        _strictComments = config.getBoolean("strict_comments");
 
         // check to see if we're using a custom java.version property and regex
-        vstr = (String)cdata.get("java_version_prop");
-        if (vstr != null) _javaVersionProp = vstr;
-        vstr = (String)cdata.get("java_version_regex");
-        if (vstr != null) _javaVersionRegex = vstr;
+        _javaVersionProp = config.getString("java_version_prop", _javaVersionProp);
+        _javaVersionRegex = config.getString("java_version_regex", _javaVersionRegex);
 
         // check to see if we require a particular JVM version and have a supplied JVM
-        vstr = (String)cdata.get("java_version");
-        if (vstr != null) _javaMinVersion = parseLong(vstr, "m.invalid_java_version");
+        _javaMinVersion = config.getLong("java_version", _javaMinVersion);
         // we support java_min_version as an alias of java_version; it better expresses the check
         // that's going on and better mirrors java_max_version
-        vstr = (String)cdata.get("java_min_version");
-        if (vstr != null) _javaMinVersion = parseLong(vstr, "m.invalid_java_version");
-
+        _javaMinVersion = config.getLong("java_min_version", _javaMinVersion);
         // check to see if we require a particular max JVM version and have a supplied JVM
-        vstr = (String)cdata.get("java_max_version");
-        if (vstr != null) _javaMaxVersion = parseLong(vstr, "m.invalid_java_version");
-
+        _javaMaxVersion = config.getLong("java_max_version", _javaMaxVersion);
         // check to see if we require a particular JVM version and have a supplied JVM
-        vstr = (String)cdata.get("java_exact_version_required");
-        _javaExactVersionRequired = Boolean.parseBoolean(vstr);
+        _javaExactVersionRequired = config.getBoolean("java_exact_version_required");
 
         // this is a little weird, but when we're run from the digester, we see a String[] which
         // contains java locations for all platforms which we can't grok, but the digester doesn't
         // need to know about that; when we're run in a real application there will be only one!
-        Object javaloc = cdata.get("java_location");
+        Object javaloc = config.getRaw("java_location");
         if (javaloc instanceof String) {
             _javaLocation = (String)javaloc;
         }
 
         // determine whether we have any tracking configuration
-        _trackingURL = (String)cdata.get("tracking_url");
+        _trackingURL = config.getString("tracking_url");
 
         // check for tracking progress percent configuration
-        String trackPcts = (String)cdata.get("tracking_percents");
+        String trackPcts = config.getString("tracking_percents");
         if (!StringUtil.isBlank(trackPcts)) {
             _trackingPcts = new HashSet<>();
             for (int pct : StringUtil.parseIntArray(trackPcts)) {
@@ -640,14 +632,14 @@ public class Application
         }
 
         // Check for tracking cookie configuration
-        _trackingCookieName = (String)cdata.get("tracking_cookie_name");
-        _trackingCookieProperty = (String)cdata.get("tracking_cookie_property");
+        _trackingCookieName = config.getString("tracking_cookie_name");
+        _trackingCookieProperty = config.getString("tracking_cookie_property");
 
         // Some app may need an extra suffix added to the tracking URL
-        _trackingURLSuffix = (String)cdata.get("tracking_url_suffix");
+        _trackingURLSuffix = config.getString("tracking_url_suffix");
 
         // Some app may need to generate google analytics code
-        _trackingGAHash = (String)cdata.get("tracking_ga_hash");
+        _trackingGAHash = config.getString("tracking_ga_hash");
 
         // clear our arrays as we may be reinitializing
         _codes.clear();
@@ -658,34 +650,34 @@ public class Application
         _txtJvmArgs.clear();
 
         // parse our code resources
-        if (ConfigUtil.getMultiValue(cdata, "code") == null &&
-            ConfigUtil.getMultiValue(cdata, "ucode") == null) {
+        if (config.getMultiValue("code") == null &&
+            config.getMultiValue("ucode") == null) {
             throw new IOException("m.missing_code");
         }
-        parseResources(cdata, "code", Resource.NORMAL, _codes);
-        parseResources(cdata, "ucode", Resource.UNPACK, _codes);
+        parseResources(config, "code", Resource.NORMAL, _codes);
+        parseResources(config, "ucode", Resource.UNPACK, _codes);
 
         // parse our non-code resources
-        parseResources(cdata, "resource", Resource.NORMAL, _resources);
-        parseResources(cdata, "uresource", Resource.UNPACK, _resources);
-        parseResources(cdata, "xresource", Resource.EXEC, _resources);
+        parseResources(config, "resource", Resource.NORMAL, _resources);
+        parseResources(config, "uresource", Resource.UNPACK, _resources);
+        parseResources(config, "xresource", Resource.EXEC, _resources);
 
         // parse our auxiliary resource groups
-        for (String auxgroup : parseList(cdata, "auxgroups")) {
+        for (String auxgroup : config.getList("auxgroups")) {
             ArrayList<Resource> codes = new ArrayList<>();
-            parseResources(cdata, auxgroup + ".code", Resource.NORMAL, codes);
-            parseResources(cdata, auxgroup + ".ucode", Resource.UNPACK, codes);
+            parseResources(config, auxgroup + ".code", Resource.NORMAL, codes);
+            parseResources(config, auxgroup + ".ucode", Resource.UNPACK, codes);
             ArrayList<Resource> rsrcs = new ArrayList<>();
-            parseResources(cdata, auxgroup + ".resource", Resource.NORMAL, rsrcs);
-            parseResources(cdata, auxgroup + ".uresource", Resource.UNPACK, rsrcs);
+            parseResources(config, auxgroup + ".resource", Resource.NORMAL, rsrcs);
+            parseResources(config, auxgroup + ".uresource", Resource.UNPACK, rsrcs);
             _auxgroups.put(auxgroup, new AuxGroup(auxgroup, codes, rsrcs));
         }
 
         // transfer our JVM arguments (we include both "global" args and app_id-prefixed args)
-        String[] jvmargs = ConfigUtil.getMultiValue(cdata, "jvmarg");
+        String[] jvmargs = config.getMultiValue("jvmarg");
         addAll(jvmargs, _jvmargs);
         if (appPrefix.length() > 0) {
-            jvmargs = ConfigUtil.getMultiValue(cdata, appPrefix + "jvmarg");
+            jvmargs = config.getMultiValue(appPrefix + "jvmarg");
             addAll(jvmargs, _jvmargs);
         }
 
@@ -693,10 +685,10 @@ public class Application
         addAll(_extraJvmArgs, _jvmargs);
 
         // get the set of optimum JVM arguments
-        _optimumJvmArgs = ConfigUtil.getMultiValue(cdata, "optimum_jvmarg");
+        _optimumJvmArgs = config.getMultiValue("optimum_jvmarg");
 
         // transfer our application arguments
-        String[] appargs = ConfigUtil.getMultiValue(cdata, appPrefix + "apparg");
+        String[] appargs = config.getMultiValue(appPrefix + "apparg");
         addAll(appargs, _appargs);
 
         // add the launch specific application arguments
@@ -706,33 +698,31 @@ public class Application
         fillAssignmentListFromPairs("extra.txt", _txtJvmArgs);
 
         // determine whether we want to allow offline operation (defaults to false)
-        _allowOffline = Boolean.parseBoolean((String)cdata.get("allow_offline"));
+        _allowOffline = config.getBoolean("allow_offline");
 
         // look for a debug.txt file which causes us to run in java.exe on Windows so that we can
         // obtain a thread dump of the running JVM
         _windebug = getLocalPath("debug.txt").exists();
 
         // whether to cache code resources and launch from cache
-        _useCodeCache = Boolean.parseBoolean((String) cdata.get("use_code_cache"));
-        String ccRetentionDays = (String) cdata.get("code_cache_retention_days");
-        _codeCacheRetentionDays = ccRetentionDays == null ? 7 :
-            Integer.parseInt(ccRetentionDays);
+        _useCodeCache = config.getBoolean("use_code_cache");
+        _codeCacheRetentionDays = config.getInt("code_cache_retention_days", 7);
 
         // parse and return our application config
         UpdateInterface ui = new UpdateInterface();
-        _name = ui.name = (String)cdata.get("ui.name");
-        ui.progress = parseRect(cdata, "ui.progress", ui.progress);
-        ui.progressText = parseColor(cdata, "ui.progress_text", ui.progressText);
-        ui.hideProgressText =  Boolean.parseBoolean((String)cdata.get("ui.hide_progress_text"));
-        ui.minShowSeconds = parseInt(cdata, "ui.min_show_seconds", ui.minShowSeconds);
-        ui.progressBar = parseColor(cdata, "ui.progress_bar", ui.progressBar);
-        ui.status = parseRect(cdata, "ui.status", ui.status);
-        ui.statusText = parseColor(cdata, "ui.status_text", ui.statusText);
-        ui.textShadow = parseColor(cdata, "ui.text_shadow", ui.textShadow);
-        ui.hideDecorations = Boolean.parseBoolean((String)cdata.get("ui.hide_decorations"));
-        ui.backgroundImage = (String)cdata.get("ui.background_image");
+        _name = ui.name = config.getString("ui.name");
+        ui.progress = config.getRect("ui.progress", ui.progress);
+        ui.progressText = config.getColor("ui.progress_text", ui.progressText);
+        ui.hideProgressText =  config.getBoolean("ui.hide_progress_text");
+        ui.minShowSeconds = config.getInt("ui.min_show_seconds", ui.minShowSeconds);
+        ui.progressBar = config.getColor("ui.progress_bar", ui.progressBar);
+        ui.status = config.getRect("ui.status", ui.status);
+        ui.statusText = config.getColor("ui.status_text", ui.statusText);
+        ui.textShadow = config.getColor("ui.text_shadow", ui.textShadow);
+        ui.hideDecorations = config.getBoolean("ui.hide_decorations");
+        ui.backgroundImage = config.getString("ui.background_image");
         if (ui.backgroundImage == null) { // support legacy format
-            ui.backgroundImage = (String)cdata.get("ui.background");
+            ui.backgroundImage = config.getString("ui.background");
         }
         // and now ui.background can refer to the background color, but fall back to black
         // or white, depending on the brightness of the progressText
@@ -741,32 +731,32 @@ public class Application
                 null)[2])
             ? Color.BLACK
             : Color.WHITE;
-        ui.background = parseColor(cdata, "ui.background", defaultBackground);
-        ui.progressImage = (String)cdata.get("ui.progress_image");
-        ui.rotatingBackgrounds = ConfigUtil.getMultiValue(cdata, "ui.rotating_background");
-        ui.iconImages = ConfigUtil.getMultiValue(cdata, "ui.icon");
-        ui.errorBackground = (String)cdata.get("ui.error_background");
-        _dockIconPath = (String)cdata.get("ui.mac_dock_icon");
+        ui.background = config.getColor("ui.background", defaultBackground);
+        ui.progressImage = config.getString("ui.progress_image");
+        ui.rotatingBackgrounds = config.getMultiValue("ui.rotating_background");
+        ui.iconImages = config.getMultiValue("ui.icon");
+        ui.errorBackground = config.getString("ui.error_background");
+        _dockIconPath = config.getString("ui.mac_dock_icon");
         if (_dockIconPath == null) {
             _dockIconPath = "../desktop.icns"; // use a sensible default
         }
 
         // On an installation error, where do we point the user.
-        String installError = parseUrl(cdata, "ui.install_error", null);
+        String installError = config.getUrl("ui.install_error", null);
         ui.installError = (installError == null) ?
             "m.default_install_error" : MessageUtil.taint(installError);
 
         // the patch notes bits
-        ui.patchNotes = parseRect(cdata, "ui.patch_notes", ui.patchNotes);
-        ui.patchNotesUrl = parseUrl(cdata, "ui.patch_notes_url", null);
+        ui.patchNotes = config.getRect("ui.patch_notes", ui.patchNotes);
+        ui.patchNotesUrl = config.getUrl("ui.patch_notes_url", null);
 
         // the play again bits
-        ui.playAgain = parseRect(cdata, "ui.play_again", ui.playAgain);
-        ui.playAgainImage = (String)cdata.get("ui.play_again_image");
+        ui.playAgain = config.getRect("ui.play_again", ui.playAgain);
+        ui.playAgainImage = config.getString("ui.play_again_image");
 
         // step progress percentages
         for (UpdateInterface.Step step : UpdateInterface.Step.values()) {
-            String spec = (String)cdata.get("ui.percents." + step.name());
+            String spec = config.getString("ui.percents." + step.name());
             if (spec != null) {
                 try {
                     ui.stepPercentages.put(step, intsToList(StringUtil.parseIntArray(spec)));
@@ -787,7 +777,7 @@ public class Application
         File pairFile = getLocalPath(pairLocation);
         if (pairFile.exists()) {
             try {
-                List<String[]> args = ConfigUtil.parsePairs(pairFile, ConfigUtil.createOpts(false));
+                List<String[]> args = Config.parsePairs(pairFile, Config.createOpts(false));
                 for (String[] pair : args) {
                     if (pair[1].length() == 0) {
                         collector.add(pair[0]);
@@ -1253,7 +1243,7 @@ public class Application
                 try {
                     in = ConnectionUtil.open(_latest, 0, 0).getInputStream();
                     BufferedReader bin = new BufferedReader(new InputStreamReader(in));
-                    for (String[] pair : ConfigUtil.parsePairs(bin, ConfigUtil.createOpts(false))) {
+                    for (String[] pair : Config.parsePairs(bin, Config.createOpts(false))) {
                         if (pair[0].equals("version")) {
                             _targetVersion = Math.max(Long.parseLong(pair[1]), _targetVersion);
                             if (fileVersion != -1 && _targetVersion > fileVersion) {
@@ -1707,10 +1697,10 @@ public class Application
     }
 
     /** Used to parse resources with the specified name. */
-    protected void parseResources (Map<String,Object> cdata, String name,
-                                   EnumSet<Resource.Attr> attrs, List<Resource> list)
+    protected void parseResources (Config config, String name, EnumSet<Resource.Attr> attrs,
+                                   List<Resource> list)
     {
-        String[] rsrcs = ConfigUtil.getMultiValue(cdata, name);
+        String[] rsrcs = config.getMultiValue(name);
         if (rsrcs == null) {
             return;
         }
@@ -1721,87 +1711,6 @@ public class Application
                 log.warning("Invalid resource '" + rsrc + "'. " + e);
             }
         }
-    }
-
-    /** Used to parse rectangle specifications from the config file. */
-    protected Rectangle parseRect (Map<String,Object> cdata, String name, Rectangle def)
-    {
-        String value = (String)cdata.get(name);
-        Rectangle rect = parseRect(name, value);
-        return (rect == null) ? def : rect;
-    }
-
-    /**
-     * Takes a comma-separated String of four integers and returns a rectangle using those ints as
-     * the its x, y, width, and height.
-     */
-    public static Rectangle parseRect (String name, String value)
-    {
-        if (!StringUtil.isBlank(value)) {
-            int[] v = StringUtil.parseIntArray(value);
-            if (v != null && v.length == 4) {
-                return new Rectangle(v[0], v[1], v[2], v[3]);
-            }
-            log.warning("Ignoring invalid rect '" + name + "' config '" + value + "'.");
-        }
-        return null;
-    }
-
-    /** Used to parse int specifications from the config file. */
-    protected int parseInt (Map<String, Object> cdata, String name, int def) {
-        String value = (String)cdata.get(name);
-        try {
-            return value == null ? def : Integer.parseInt(value);
-        } catch (Exception e) {
-            log.warning("Ignoring invalid int '" + name + "' config '" + value + "',");
-            return def;
-        }
-    }
-
-    /** Used to parse color specifications from the config file. */
-    protected Color parseColor (Map<String, Object> cdata, String name, Color def)
-    {
-        String value = (String)cdata.get(name);
-        Color color = parseColor(value);
-        return (color == null) ? def : color;
-    }
-
-    /**
-     * Parses the given hex color value (e.g. FFFFF) and returns a Color object with that value. If
-     * the given value is null of not a valid hexadecimal number, this will return null.
-     */
-    public static Color parseColor (String hexValue)
-    {
-        if (!StringUtil.isBlank(hexValue)) {
-            try {
-                int rgba = Integer.parseInt(hexValue, 16);
-                boolean hasAlpha = hexValue.length() > 6;
-                return new Color(rgba, hasAlpha);
-            } catch (NumberFormatException e) {
-                log.warning("Ignoring invalid color", "hexValue", hexValue, "exception", e);
-            }
-        }
-        return null;
-    }
-
-    /** Parses a list of strings from the config file. */
-    protected String[] parseList (Map<String, Object> cdata, String name)
-    {
-        String value = (String)cdata.get(name);
-        return (value == null) ? ArrayUtil.EMPTY_STRING : StringUtil.parseStringArray(value);
-    }
-
-    /**
-     * Parses a URL from the config file, checking first for a localized version.
-     */
-    protected String parseUrl (Map<String, Object> cdata, String name, String def)
-    {
-        String value = (String)cdata.get(name + "." + Locale.getDefault().getLanguage());
-        if (!StringUtil.isBlank(value)) {
-            return value;
-        }
-        value = (String)cdata.get(name);
-        return StringUtil.isBlank(value) ? def : value;
     }
 
     /** Possibly generates and returns a google analytics tracking cookie. */
@@ -1840,20 +1749,6 @@ public class Application
         } catch (UnsupportedEncodingException ue) {
             log.warning("Failed to URL encode " + path + ": " + ue);
             return path;
-        }
-    }
-
-    /**
-     * Parses and returns a long. {@code value} must be non-null.
-     * @throws IOException on malformed value.
-     */
-    protected static long parseLong (String value, String errkey) throws IOException
-    {
-        try {
-            return Long.parseLong(value);
-        } catch (Exception e) {
-            String err = MessageUtil.tcompose(errkey, value);
-            throw (IOException) new IOException(err).initCause(e);
         }
     }
 

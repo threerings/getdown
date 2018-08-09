@@ -5,6 +5,9 @@
 
 package com.threerings.getdown.util;
 
+import java.awt.Color;
+import java.awt.Rectangle;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -14,8 +17,10 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
+import com.samskivert.util.ArrayUtil;
 import com.samskivert.util.StringUtil;
 
 import static com.threerings.getdown.Log.log;
@@ -24,7 +29,7 @@ import static com.threerings.getdown.Log.log;
  * Parses a file containing key/value pairs and returns a {@link HashMap} with the values. Keys may
  * be repeated, in which case they will be made to reference an array of values.
  */
-public class ConfigUtil
+public class Config
 {
     /** Options that control the {@link #parsePairs} function. */
     public static class ParseOpts {
@@ -124,13 +129,47 @@ public class ConfigUtil
     }
 
     /**
+     * Takes a comma-separated String of four integers and returns a rectangle using those ints as
+     * the its x, y, width, and height.
+     */
+    public static Rectangle parseRect (String name, String value)
+    {
+        if (!StringUtil.isBlank(value)) {
+            int[] v = StringUtil.parseIntArray(value);
+            if (v != null && v.length == 4) {
+                return new Rectangle(v[0], v[1], v[2], v[3]);
+            }
+            log.warning("Ignoring invalid rect '" + name + "' config '" + value + "'.");
+        }
+        return null;
+    }
+
+    /**
+     * Parses the given hex color value (e.g. FFFFF) and returns a Color object with that value.
+     * If the given value is null of not a valid hexadecimal number, this will return null.
+     */
+    public static Color parseColor (String hexValue)
+    {
+        if (!StringUtil.isBlank(hexValue)) {
+            try {
+                int rgba = Integer.parseInt(hexValue, 16);
+                boolean hasAlpha = hexValue.length() > 6;
+                return new Color(rgba, hasAlpha);
+            } catch (NumberFormatException e) {
+                log.warning("Ignoring invalid color", "hexValue", hexValue, "exception", e);
+            }
+        }
+        return null;
+    }
+
+    /**
      * Parses a configuration file containing key/value pairs. The file must be in the UTF-8
      * encoding.
      *
      * @return a map from keys to values, where a value will be an array of strings if more than
      * one key/value pair in the config file was associated with the same key.
      */
-    public static Map<String, Object> parseConfig (File source, ParseOpts opts)
+    public static Config parseConfig (File source, ParseOpts opts)
         throws IOException
     {
         Map<String, Object> data = new HashMap<>();
@@ -161,21 +200,128 @@ public class ConfigUtil
             return parseConfig(source, opts);
         }
 
-        return data;
+        return new Config(data);
+    }
+
+    public Config (Map<String,  Object> data) {
+        _data = data;
+    }
+
+    /**
+     * Returns whether {@code name} has a value in this config.
+     */
+    public boolean hasValue (String name) {
+        return _data.containsKey(name);
+    }
+
+    /**
+     * Returns the raw-value for {@code name}. This may be a {@code String}, {@code String[]}, or
+     * {@code null}.
+     */
+    public Object getRaw (String name) {
+        return _data.get(name);
+    }
+
+    /**
+     * Returns the specified config value as a string, or {@code null}.
+     */
+    public String getString (String name) {
+        return (String)_data.get(name);
+    }
+
+    /**
+     * Returns the specified config value as a string, or {@code def}.
+     */
+    public String getString (String name, String def) {
+        String value = (String)_data.get(name);
+        return value == null ? def : value;
+    }
+
+    /**
+     * Returns the specified config value as a boolean.
+     */
+    public boolean getBoolean (String name) {
+        return Boolean.parseBoolean(getString(name));
     }
 
     /**
      * Massages a single string into an array and leaves existing array values as is. Simplifies
      * access to parameters that are expected to be arrays.
      */
-    public static String[] getMultiValue (Map<String, Object> data, String name)
+    public String[] getMultiValue (String name)
     {
-        Object value = data.get(name);
+        Object value = _data.get(name);
         if (value instanceof String) {
             return new String[] { (String)value };
         } else {
             return (String[])value;
         }
+    }
+
+    /** Used to parse rectangle specifications from the config file. */
+    public Rectangle getRect (String name, Rectangle def)
+    {
+        String value = getString(name);
+        Rectangle rect = parseRect(name, value);
+        return (rect == null) ? def : rect;
+    }
+
+    /**
+     * Parses and returns the config value for {@code name} as an int. If no value is provided,
+     * {@code def} is returned. If the value is invalid, a warning is logged and {@code def} is
+     * returned.
+     */
+    public int getInt (String name, int def) {
+        String value = getString(name);
+        try {
+            return value == null ? def : Integer.parseInt(value);
+        } catch (Exception e) {
+            log.warning("Ignoring invalid int '" + name + "' config '" + value + "',");
+            return def;
+        }
+    }
+
+    /**
+     * Parses and returns the config value for {@code name} as a long. If no value is provided,
+     * {@code def} is returned. If the value is invalid, a warning is logged and {@code def} is
+     * returned.
+     */
+    public long getLong (String name, long def) {
+        String value = getString(name);
+        try {
+            return value == null ? def : Long.parseLong(value);
+        } catch (Exception e) {
+            log.warning("Ignoring invalid long '" + name + "' config '" + value + "',");
+            return def;
+        }
+    }
+
+    /** Used to parse color specifications from the config file. */
+    public Color getColor (String name, Color def)
+    {
+        String value = getString(name);
+        Color color = parseColor(value);
+        return (color == null) ? def : color;
+    }
+
+    /** Parses a list of strings from the config file. */
+    public String[] getList (String name)
+    {
+        String value = getString(name);
+        return (value == null) ? ArrayUtil.EMPTY_STRING : StringUtil.parseStringArray(value);
+    }
+
+    /**
+     * Parses a URL from the config file, checking first for a localized version.
+     */
+    public String getUrl (String name, String def)
+    {
+        String value = getString(name + "." + Locale.getDefault().getLanguage());
+        if (!StringUtil.isBlank(value)) {
+            return value;
+        }
+        value = getString(name);
+        return StringUtil.isBlank(value) ? def : value;
     }
 
     /**
@@ -214,4 +360,6 @@ public class ConfigUtil
         String os = bits[0], arch = (bits.length > 1) ? bits[1] : "";
         return (osname.indexOf(os) != -1) && (osarch.indexOf(arch) != -1);
     }
+
+    private final Map<String, Object> _data;
 }

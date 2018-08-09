@@ -56,7 +56,7 @@ import com.threerings.getdown.data.SysProps;
 import com.threerings.getdown.net.Downloader;
 import com.threerings.getdown.net.HTTPDownloader;
 import com.threerings.getdown.tools.Patcher;
-import com.threerings.getdown.util.ConfigUtil;
+import com.threerings.getdown.util.Config;
 import com.threerings.getdown.util.ConnectionUtil;
 import com.threerings.getdown.util.FileUtil;
 import com.threerings.getdown.util.LaunchUtil;
@@ -304,9 +304,8 @@ public abstract class Getdown extends Thread
         File pfile = _app.getLocalPath("proxy.txt");
         if (pfile.exists()) {
             try {
-                Map<String, Object> pconf =
-                    ConfigUtil.parseConfig(pfile, ConfigUtil.createOpts(false));
-                setProxyProperties((String)pconf.get("host"), (String)pconf.get("port"));
+                Config pconf = Config.parseConfig(pfile, Config.createOpts(false));
+                setProxyProperties(pconf.getString("host"), pconf.getString("port"));
                 return true;
             } catch (IOException ioe) {
                 log.warning("Failed to read '" + pfile + "': " + ioe);
