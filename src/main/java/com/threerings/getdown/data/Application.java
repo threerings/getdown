@@ -585,8 +585,11 @@ public class Application
 
         String appPrefix = StringUtil.isBlank(_appid) ? "" : (_appid + ".");
 
-        // determine our application class name
-        _class = config.getString(appPrefix + "class");
+        // determine our application class name (use app-specific class _if_ one is provided)
+        _class = config.getString("class");
+        if (appPrefix.length() > 0) {
+            _class = config.getString(appPrefix + "class", _class);
+        }
         if (_class == null) {
             throw new IOException("m.missing_class");
         }
