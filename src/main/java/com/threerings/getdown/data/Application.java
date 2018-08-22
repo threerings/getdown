@@ -34,12 +34,12 @@ import com.samskivert.util.RandomUtil;
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
 
-import org.apache.commons.codec.binary.Base64;
-
 import com.threerings.getdown.classpath.ClassPaths;
 import com.threerings.getdown.classpath.ClassPath;
 import com.threerings.getdown.launcher.RotatingBackgrounds;
 import com.threerings.getdown.util.*;
+// avoid ambiguity with java.util.Base64 which we can't use as it's 1.8+
+import com.threerings.getdown.util.Base64;
 
 import static com.threerings.getdown.Log.log;
 
@@ -1588,7 +1588,7 @@ public class Application
                             sig.update(buffer, 0, length);
                         }
 
-                        if (!sig.verify(Base64.decodeBase64(signature))) {
+                        if (!sig.verify(Base64.decode(signature, Base64.DEFAULT))) {
                             log.info("Signature does not match", "cert", cert.getPublicKey());
                             continue;
                         } else {

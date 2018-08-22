@@ -11,9 +11,8 @@ import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.Signature;
 
-import org.apache.commons.codec.binary.Base64;
-
 import com.threerings.getdown.data.Digest;
+import com.threerings.getdown.util.Base64;
 
 /**
  * Produces a signed hash of the appbase, appname, and image path to ensure that signed copies of
@@ -46,7 +45,7 @@ public class AppletParamSigner
             Signature sig = Signature.getInstance(Digest.sigAlgorithm(Digest.VERSION));
             sig.initSign(key);
             sig.update(params.getBytes());
-            String signed = new String(Base64.encodeBase64(sig.sign()));
+            String signed = Base64.encodeToString(sig.sign(), Base64.DEFAULT);
             System.out.println("<param name=\"appbase\" value=\"" + appbase + "\" />");
             System.out.println("<param name=\"appname\" value=\"" + appname + "\" />");
             System.out.println("<param name=\"bgimage\" value=\"" + imgpath + "\" />");

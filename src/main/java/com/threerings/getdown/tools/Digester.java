@@ -18,12 +18,11 @@ import java.security.Signature;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.codec.binary.Base64;
-
 import com.samskivert.io.StreamUtil;
 import com.threerings.getdown.data.Application;
 import com.threerings.getdown.data.Digest;
 import com.threerings.getdown.data.Resource;
+import com.threerings.getdown.util.Base64;
 
 /**
  * Handles the generation of the digest.txt file.
@@ -123,7 +122,7 @@ public class Digester
 
             // Write out the signature
             signatureOutput = new FileOutputStream(signatureFile);
-            String signed = new String(Base64.encodeBase64(sig.sign()));
+            String signed = Base64.encodeToString(sig.sign(), Base64.DEFAULT);
             signatureOutput.write(signed.getBytes("utf8"));
 
         } finally {
