@@ -92,11 +92,9 @@ public class GetdownApp
         File crtFile = new File(appDir, Digest.digestFile(Digest.VERSION) + ".crt");
         List<Certificate> crts = new ArrayList<>();
         if (crtFile.exists()) {
-            try {
-                FileInputStream fis = new FileInputStream(crtFile);
+            try (FileInputStream fis = new FileInputStream(crtFile)) {
                 X509Certificate certificate = (X509Certificate)
                     CertificateFactory.getInstance("X.509").generateCertificate(fis);
-                fis.close();
                 crts.add(certificate);
             } catch (Exception e) {
                 log.warning("Certificate error: " + e.getMessage());

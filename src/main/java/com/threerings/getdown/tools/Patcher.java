@@ -56,40 +56,40 @@ public class Patcher
         _obs = obs;
         _plength = patch.length();
 
-        JarFile file = new JarFile(patch);
-        Enumeration<JarEntry> entries = file.entries(); // old skool!
-        while (entries.hasMoreElements()) {
-            JarEntry entry = entries.nextElement();
-            String path = entry.getName();
-            long elength = entry.getCompressedSize();
+        try (JarFile file = new JarFile(patch)) {
+            Enumeration<JarEntry> entries = file.entries(); // old skool!
+            while (entries.hasMoreElements()) {
+                JarEntry entry = entries.nextElement();
+                String path = entry.getName();
+                long elength = entry.getCompressedSize();
 
-            // depending on the suffix, we do The Right Thing (tm)
-            if (path.endsWith(CREATE)) {
-                path = strip(path, CREATE);
-                System.out.println("Creating " + path + "...");
-                createFile(file, entry, new File(appdir, path));
+                // depending on the suffix, we do The Right Thing (tm)
+                if (path.endsWith(CREATE)) {
+                    path = strip(path, CREATE);
+                    System.out.println("Creating " + path + "...");
+                    createFile(file, entry, new File(appdir, path));
 
-            } else if (path.endsWith(PATCH)) {
-                path = strip(path, PATCH);
-                System.out.println("Patching " + path + "...");
-                patchFile(file, entry, appdir, path);
+                } else if (path.endsWith(PATCH)) {
+                    path = strip(path, PATCH);
+                    System.out.println("Patching " + path + "...");
+                    patchFile(file, entry, appdir, path);
 
-            } else if (path.endsWith(DELETE)) {
-                path = strip(path, DELETE);
-                System.out.println("Removing " + path + "...");
-                File target = new File(appdir, path);
-                if (!target.delete()) {
-                    System.err.println("Failure deleting '" + target + "'.");
+                } else if (path.endsWith(DELETE)) {
+                    path = strip(path, DELETE);
+                    System.out.println("Removing " + path + "...");
+                    File target = new File(appdir, path);
+                    if (!target.delete()) {
+                        System.err.println("Failure deleting '" + target + "'.");
+                    }
+
+                } else {
+                    System.err.println("Skipping bogus patch file entry: " + path);
                 }
 
-            } else {
-                System.err.println("Skipping bogus patch file entry: " + path);
+                // note that we've completed this entry
+                _complete += elength;
             }
-
-            // note that we've completed this entry
-            _complete += elength;
         }
-        file.close();
     }
 
     protected String strip (String path, String suffix)
@@ -110,11 +110,9 @@ public class Patcher
             log.warning("Failed to create parent for '" + target + "'.");
         }
 
-        InputStream in = null;
-        FileOutputStream fout = null;
-        try {
-            in = file.getInputStream(entry);
-            fout = new FileOutputStream(target);
+        try (InputStream in = file.getInputStream(entry);
+             FileOutputStream fout = new FileOutputStream(target)) {
+
             int total = 0, read;
             while ((read = in.read(_buffer)) != -1) {
                 total += read;
@@ -124,10 +122,6 @@ public class Patcher
 
         } catch (IOException ioe) {
             System.err.println("Error creating '" + target + "': " + ioe);
-
-        } finally {
-            StreamUtil.close(in);
-            StreamUtil.close(fout);
         }
     }
 
@@ -143,12 +137,11 @@ public class Patcher
         otarget.delete();
 
         // pipe the contents of the patch into a file
-        InputStream in = null;
-        FileOutputStream fout = null;
-        try {
-            StreamUtil.copy(in = file.getInputStream(entry), fout = new FileOutputStream(patch));
+        try (InputStream in = file.getInputStream(entry);
+             FileOutputStream fout = new FileOutputStream(patch)) {
+
+            StreamUtil.copy(in, fout);
             StreamUtil.close(fout);
-            fout = null;
 
             // move the current version of the jar to .old
             if (!FileUtil.renameTo(target, otarget)) {
@@ -176,8 +169,6 @@ public class Patcher
             }
 
         } finally {
-            StreamUtil.close(fout);
-            StreamUtil.close(in);
             // clean up our temporary files
             if (!patch.delete()) {
                 patch.deleteOnExit();

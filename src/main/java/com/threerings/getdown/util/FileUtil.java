@@ -5,7 +5,14 @@
 
 package com.threerings.getdown.util;
 
-import java.io.*;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,15 +65,13 @@ public class FileUtil
         }
 
         // as a last resort, try copying the old data over the new
-        FileInputStream fin = null;
-        FileOutputStream fout = null;
-        try {
-            fin = new FileInputStream(source);
-            fout = new FileOutputStream(dest);
+        try (FileInputStream fin = new FileInputStream(source);
+             FileOutputStream fout = new FileOutputStream(dest)) {
+
             StreamUtil.copy(fin, fout);
+
             // close the input stream now so we can delete 'source'
             fin.close();
-            fin = null;
             if (!deleteHarder(source)) {
                 log.warning("Failed to delete " + source +
                             " after brute force copy to " + dest + ".");
@@ -76,10 +81,6 @@ public class FileUtil
         } catch (IOException ioe) {
             log.warning("Failed to copy " + source + " to " + dest + ": " + ioe);
             return false;
-
-        } finally {
-            StreamUtil.close(fin);
-            StreamUtil.close(fout);
         }
     }
 
@@ -103,63 +104,45 @@ public class FileUtil
         throws IOException
     {
         List<String> lines = new ArrayList<>();
-        try {
-            BufferedReader bin = new BufferedReader(in);
+        try (BufferedReader bin = new BufferedReader(in)) {
             for (String line = null; (line = bin.readLine()) != null; lines.add(line)) {}
-        } finally {
-            StreamUtil.close(in);
         }
         return lines;
     }
 
     /**
-     * Unpacks the specified jar file intto the specified target directory.
+     * Unpacks the specified jar file into the specified target directory.
      */
     public static void unpackJar (JarFile jar, File target) throws IOException
     {
-        try {
-            Enumeration<?> entries = jar.entries();
-            while (entries.hasMoreElements()) {
-                JarEntry entry = (JarEntry)entries.nextElement();
-                File efile = new File(target, entry.getName());
+        Enumeration<?> entries = jar.entries();
+        while (entries.hasMoreElements()) {
+            JarEntry entry = (JarEntry)entries.nextElement();
+            File efile = new File(target, entry.getName());
 
-                // if we're unpacking a normal jar file, it will have special path
-                // entries that allow us to create our directories first
-                if (entry.isDirectory()) {
-                    if (!efile.exists() && !efile.mkdir()) {
-                        log.warning("Failed to create jar entry path", "jar", jar, "entry", entry);
-                    }
-                    continue;
+            // if we're unpacking a normal jar file, it will have special path
+            // entries that allow us to create our directories first
+            if (entry.isDirectory()) {
+                if (!efile.exists() && !efile.mkdir()) {
+                    log.warning("Failed to create jar entry path", "jar", jar, "entry", entry);
                 }
-
-                // but some do not, so we want to ensure that our directories exist
-                // prior to getting down and funky
-                File parent = new File(efile.getParent());
-                if (!parent.exists() && !parent.mkdirs()) {
-                    log.warning("Failed to create jar entry parent", "jar", jar, "parent", parent);
-                    continue;
-                }
-
-                BufferedOutputStream fout = null;
-                InputStream jin = null;
-                try {
-                    fout = new BufferedOutputStream(new FileOutputStream(efile));
-                    jin = jar.getInputStream(entry);
-                    StreamUtil.copy(jin, fout);
-                } catch (Exception e) {
-                    throw new IOException(
-                        Logger.format("Failure unpacking", "jar", jar, "entry", efile), e);
-                } finally {
-                    StreamUtil.close(jin);
-                    StreamUtil.close(fout);
-                }
+                continue;
             }
 
-        } finally {
-            try {
-                jar.close();
+            // but some do not, so we want to ensure that our directories exist
+            // prior to getting down and funky
+            File parent = new File(efile.getParent());
+            if (!parent.exists() && !parent.mkdirs()) {
+                log.warning("Failed to create jar entry parent", "jar", jar, "parent", parent);
+                continue;
+            }
+
+            try (BufferedOutputStream fout = new BufferedOutputStream(new FileOutputStream(efile));
+                 InputStream jin = jar.getInputStream(entry)) {
+                StreamUtil.copy(jin, fout);
             } catch (Exception e) {
-                log.warning("Failed to close jar file", "jar", jar, "error", e);
+                throw new IOException(
+                    Logger.format("Failure unpacking", "jar", jar, "entry", efile), e);
             }
         }
     }
@@ -170,23 +153,14 @@ public class FileUtil
      */
     public static void unpackPacked200Jar (File packedJar, File target) throws IOException
     {
-        InputStream packedJarIn = null;
-        FileOutputStream extractedJarFileOut = null;
-        JarOutputStream jarOutputStream = null;
-        try {
-            extractedJarFileOut = new FileOutputStream(target);
-            jarOutputStream = new JarOutputStream(extractedJarFileOut);
-            packedJarIn = new FileInputStream(packedJar);
-            if (packedJar.getName().endsWith(".gz") || packedJar.getName().endsWith(".gz_new")) {
-                packedJarIn = new GZIPInputStream(packedJarIn);
+        try (InputStream packedJarIn = new FileInputStream(packedJar);
+             FileOutputStream extractedJarFileOut = new FileOutputStream(target);
+             JarOutputStream jarOutputStream = new JarOutputStream(extractedJarFileOut)) {
+            boolean gz = (packedJar.getName().endsWith(".gz") || packedJar.getName().endsWith(".gz_new"));
+            try (InputStream packedJarIn2 = (gz ? new GZIPInputStream(packedJarIn) : packedJarIn)) {
+                Pack200.Unpacker unpacker = Pack200.newUnpacker();
+                unpacker.unpack(packedJarIn2, jarOutputStream);
             }
-            Pack200.Unpacker unpacker = Pack200.newUnpacker();
-            unpacker.unpack(packedJarIn, jarOutputStream);
-
-        } finally {
-            StreamUtil.close(jarOutputStream);
-            StreamUtil.close(extractedJarFileOut);
-            StreamUtil.close(packedJarIn);
         }
     }
 
@@ -194,15 +168,9 @@ public class FileUtil
      * Copies the given {@code source} file to the given {@code target}.
      */
     public static void copy (File source, File target) throws IOException {
-        FileInputStream in = null;
-        FileOutputStream out = null;
-        try {
-            in = new FileInputStream(source);
-            out = new FileOutputStream(target);
+        try (FileInputStream in = new FileInputStream(source);
+             FileOutputStream out = new FileOutputStream(target)) {
             StreamUtil.copy(in, out);
-        } finally {
-            StreamUtil.close(in);
-            StreamUtil.close(out);
         }
     }
 

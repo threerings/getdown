@@ -6,7 +6,6 @@
 package com.threerings.getdown.util;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -52,9 +51,10 @@ public class LaunchUtil
     {
         // create the file that instructs Getdown to upgrade
         File vfile = new File(appdir, "version.txt");
-        PrintStream ps = new PrintStream(new FileOutputStream(vfile));
-        ps.println(newVersion);
-        ps.close();
+        try (FileOutputStream fos = new FileOutputStream(vfile);
+             PrintStream ps = new PrintStream(fos)) {
+            ps.println(newVersion);
+        }
 
         // make sure that we can find our getdown.jar file and can safely launch children
         File pro = new File(appdir, getdownJarName);

@@ -18,7 +18,6 @@ import java.security.Signature;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.samskivert.io.StreamUtil;
 import com.threerings.getdown.data.Application;
 import com.threerings.getdown.data.Digest;
 import com.threerings.getdown.data.Resource;
@@ -99,19 +98,18 @@ public class Digester
         File inputFile = new File(appdir, filename);
         File signatureFile = new File(appdir, filename + Application.SIGNATURE_SUFFIX);
 
-        FileInputStream storeInput = null, dataInput = null;
-        FileOutputStream signatureOutput = null;
-        try {
+        try (FileInputStream storeInput = new FileInputStream(storePath);
+             FileInputStream dataInput = new FileInputStream(inputFile);
+             FileOutputStream signatureOutput = new FileOutputStream(signatureFile)) {
+
             // initialize the keystore
             KeyStore store = KeyStore.getInstance("JKS");
-            storeInput = new FileInputStream(storePath);
             store.load(storeInput, storePass.toCharArray());
             PrivateKey key = (PrivateKey)store.getKey(storeAlias, storePass.toCharArray());
 
             // sign the digest file
             String algo = Digest.sigAlgorithm(version);
             Signature sig = Signature.getInstance(algo);
-            dataInput = new FileInputStream(inputFile);
             byte[] buffer = new byte[8192];
             int length;
 
@@ -121,14 +119,8 @@ public class Digester
             }
 
             // Write out the signature
-            signatureOutput = new FileOutputStream(signatureFile);
             String signed = Base64.encodeToString(sig.sign(), Base64.DEFAULT);
             signatureOutput.write(signed.getBytes("utf8"));
-
-        } finally {
-            StreamUtil.close(signatureOutput);
-            StreamUtil.close(dataInput);
-            StreamUtil.close(storeInput);
         }
     }
 }

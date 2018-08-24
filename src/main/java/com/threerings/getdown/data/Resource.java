@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-import com.samskivert.io.StreamUtil;
 import com.samskivert.util.StringUtil;
 
 import com.threerings.getdown.util.FileUtil;
@@ -83,15 +82,12 @@ public class Resource implements Comparable<Resource>
                         }
                     }
 
-                    InputStream in = null;
-                    try {
-                        in = jar.getInputStream(entry);
+                    try (InputStream in = jar.getInputStream(entry)) {
                         while ((read = in.read(buffer)) != -1) {
                             md.update(buffer, 0, read);
                         }
-                    } finally {
-                        StreamUtil.close(in);
                     }
+
                     updateProgress(obs, eidx, entries.size());
                 }
 
@@ -110,16 +106,12 @@ public class Resource implements Comparable<Resource>
 
         } else {
             long totalSize = target.length(), position = 0L;
-            FileInputStream fin = null;
-            try {
-                fin = new FileInputStream(target);
+            try (FileInputStream fin = new FileInputStream(target)) {
                 while ((read = fin.read(buffer)) != -1) {
                     md.update(buffer, 0, read);
                     position += read;
                     updateProgress(obs, position, totalSize);
                 }
-            } finally {
-                StreamUtil.close(fin);
             }
         }
         return StringUtil.hexlate(md.digest());
@@ -282,8 +274,10 @@ public class Resource implements Comparable<Resource>
             throw new IOException("Requested to unpack non-jar file '" + _local + "'.");
         }
         if (_isJar) {
-            FileUtil.unpackJar(new JarFile(_local), _unpacked);
-        } else{
+            try (JarFile jar = new JarFile(_local)) {
+                FileUtil.unpackJar(jar, _unpacked);
+            }
+        } else {
             FileUtil.unpackPacked200Jar(_local, _unpacked);
         }
     }

@@ -233,6 +233,7 @@ public class GetdownApplet extends JApplet
     }
 
     // implemented from ImageLoader
+    @Override
     public Image loadImage (String path)
     {
         try {
@@ -293,10 +294,9 @@ public class GetdownApplet extends JApplet
      */
     protected boolean writeToFile (File tofile, String contents)
     {
-        try {
-            PrintStream out = new PrintStream(new FileOutputStream(tofile));
+        try (FileOutputStream fos = new FileOutputStream(tofile);
+             PrintStream out = new PrintStream(fos)) {
             out.println(contents);
-            out.close();
             return true;
         } catch (IOException ioe) {
             log.warning("Failed to create '" + tofile + "'.", ioe);
@@ -311,11 +311,8 @@ public class GetdownApplet extends JApplet
             if (keyUrl == null) {
                 return null;
             }
-            InputStream is = keyUrl.openStream();
-            try {
+            try (InputStream is = keyUrl.openStream()) {
                 return CertificateFactory.getInstance("X.509").generateCertificate(is);
-            } finally {
-                is.close();
             }
         } catch (CertificateException e) {
             throw new RuntimeException(e);

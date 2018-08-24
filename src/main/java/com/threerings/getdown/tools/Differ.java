@@ -96,10 +96,9 @@ public class Differ
     {
         int version = Digest.VERSION;
         MessageDigest md = Digest.getMessageDigest(version);
-        JarOutputStream jout = null;
-        try {
-            jout = new JarOutputStream(
-                new BufferedOutputStream(new FileOutputStream(patch)));
+        try (FileOutputStream fos = new FileOutputStream(patch);
+             BufferedOutputStream buffered = new BufferedOutputStream(fos);
+             JarOutputStream jout = new JarOutputStream(buffered)) {
 
             // for each file in the new application, it either already exists
             // in the old application, or it is new
@@ -160,11 +159,9 @@ public class Differ
                 jout.putNextEntry(new ZipEntry(rsrc.getPath() + Patcher.DELETE));
             }
 
-            StreamUtil.close(jout);
             System.out.println("Created patch file: " + patch);
 
         } catch (IOException ioe) {
-            StreamUtil.close(jout);
             patch.delete();
             throw ioe;
         }
@@ -173,25 +170,25 @@ public class Differ
     protected File rebuildJar (File target)
         throws IOException
     {
-        JarFile jar = new JarFile(target);
         File temp = File.createTempFile("differ", "jar");
-        JarOutputStream jout = new JarOutputStream(
-            new BufferedOutputStream(new FileOutputStream(temp)));
-        byte[] buffer = new byte[4096];
-        for (Enumeration<JarEntry> iter = jar.entries(); iter.hasMoreElements(); ) {
-            JarEntry entry = iter.nextElement();
-            entry.setCompressedSize(-1);
-            jout.putNextEntry(entry);
-            InputStream in = jar.getInputStream(entry);
-            int size = in.read(buffer);
-            while (size != -1) {
-                jout.write(buffer, 0, size);
-                size = in.read(buffer);
+        try (JarFile jar = new JarFile(target);
+             FileOutputStream tempFos = new FileOutputStream(temp);
+             BufferedOutputStream tempBos = new BufferedOutputStream(tempFos);
+             JarOutputStream jout = new JarOutputStream(tempBos)) {
+            byte[] buffer = new byte[4096];
+            for (Enumeration< JarEntry > iter = jar.entries(); iter.hasMoreElements();) {
+                JarEntry entry = iter.nextElement();
+                entry.setCompressedSize(-1);
+                jout.putNextEntry(entry);
+                try (InputStream in = jar.getInputStream(entry)) {
+                    int size = in.read(buffer);
+                    while (size != -1) {
+                        jout.write(buffer, 0, size);
+                        size = in.read(buffer);
+                    }
+                }
             }
-            in.close();
         }
-        jout.close();
-        jar.close();
         return temp;
     }
 
@@ -227,11 +224,8 @@ public class Differ
     protected static void pipe (File file, JarOutputStream jout)
         throws IOException
     {
-        FileInputStream fin = null;
-        try {
-            StreamUtil.copy(fin = new FileInputStream(file), jout);
-        } finally {
-            StreamUtil.close(fin);
+        try (FileInputStream fin = new FileInputStream(file)) {
+            StreamUtil.copy(fin, jout);
         }
     }
 }

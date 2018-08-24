@@ -229,13 +229,11 @@ public abstract class Getdown extends Thread
         // if we're provided with valid values, create a proxy.txt file
         if (!StringUtil.isBlank(host)) {
             File pfile = _app.getLocalPath("proxy.txt");
-            try {
-                PrintStream pout = new PrintStream(new FileOutputStream(pfile));
+            try (PrintStream pout = new PrintStream(new FileOutputStream(pfile))) {
                 pout.println("host = " + host);
                 if (!StringUtil.isBlank(port)) {
                     pout.println("port = " + port);
                 }
-                pout.close();
             } catch (IOException ioe) {
                 log.warning("Error creating proxy file '" + pfile + "': " + ioe);
             }
@@ -570,6 +568,7 @@ public abstract class Getdown extends Thread
     }
 
     // documentation inherited from interface
+    @Override
     public void updateStatus (String message)
     {
         setStatusAsync(message, -1, -1L, true);
@@ -580,6 +579,7 @@ public abstract class Getdown extends Thread
      * if we can find a localized version by sticking a {@code _<language>} in front of the "." in
      * the filename.
      */
+    @Override
     public BufferedImage loadImage (String path)
     {
         if (StringUtil.isBlank(path)) {
