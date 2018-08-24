@@ -22,25 +22,26 @@ public class AppletParamSigner
 {
     public static void main (String[] args)
     {
-        try {
-            if (args.length != 7) {
-                System.err.println("AppletParamSigner keystore storepass alias keypass " +
-                                   "appbase appname imgpath");
-                System.exit(255);
-            }
+        if (args.length != 7) {
+            System.err.println("AppletParamSigner keystore storepass alias keypass " +
+                               "appbase appname imgpath");
+            System.exit(255);
+        }
 
-            String keystore = args[0];
-            String storepass = args[1];
-            String alias = args[2];
-            String keypass = args[3];
-            String appbase = args[4];
-            String appname = args[5];
-            String imgpath = args[6];
-            String params = appbase + appname + imgpath;
+        String keystore = args[0];
+        String storepass = args[1];
+        String alias = args[2];
+        String keypass = args[3];
+        String appbase = args[4];
+        String appname = args[5];
+        String imgpath = args[6];
+        String params = appbase + appname + imgpath;
+
+        try (FileInputStream fis = new FileInputStream(keystore);
+             BufferedInputStream bis = new BufferedInputStream(fis)) {
 
             KeyStore store = KeyStore.getInstance("JKS");
-            store.load(new BufferedInputStream(new FileInputStream(keystore)),
-                       storepass.toCharArray());
+            store.load(bis, storepass.toCharArray());
             PrivateKey key = (PrivateKey)store.getKey(alias, keypass.toCharArray());
             Signature sig = Signature.getInstance(Digest.sigAlgorithm(Digest.VERSION));
             sig.initSign(key);

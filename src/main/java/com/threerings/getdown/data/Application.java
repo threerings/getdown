@@ -1241,8 +1241,9 @@ public class Application
             }
 
             if (_latest != null) {
-                try (InputStream in = ConnectionUtil.open(_latest, 0, 0).getInputStream()) {
-                    BufferedReader bin = new BufferedReader(new InputStreamReader(in));
+                try (InputStream in = ConnectionUtil.open(_latest, 0, 0).getInputStream();
+                     InputStreamReader reader = new InputStreamReader(in);
+                     BufferedReader bin = new BufferedReader(reader)) {
                     for (String[] pair : Config.parsePairs(bin, Config.createOpts(false))) {
                         if (pair[0].equals("version")) {
                             _targetVersion = Math.max(Long.parseLong(pair[1]), _targetVersion);
