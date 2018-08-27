@@ -41,9 +41,25 @@
 
 package com.threerings.getdown.tools;
 
-import java.io.*;
-import java.util.*;
-import java.util.jar.*;
+import java.io.Closeable;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.jar.JarOutputStream;
 
 /**
  * JarDiff is able to create a jar file containing the delta between two jar files (old and new).
@@ -69,10 +85,9 @@ public class JarDiff implements JarDiffCodes
     public static void createPatch (String oldPath, String newPath,
                                     OutputStream os, boolean minimal) throws IOException
     {
-        JarFile2 oldJar = new JarFile2(oldPath);
-        JarFile2 newJar = new JarFile2(newPath);
+        try (JarFile2 oldJar = new JarFile2(oldPath);
+             JarFile2 newJar = new JarFile2(newPath)) {
 
-        try {
             HashMap<String,String> moved = new HashMap<>();
             HashSet<String> implicit = new HashSet<>();
             HashSet<String> moveSrc = new HashSet<>();
@@ -194,21 +209,7 @@ public class JarDiff implements JarDiffCodes
 
             jos.finish();
 //            jos.close();
-
-        } catch (IOException ioE){
-            throw ioE;
-        } finally {
-            try {
-                oldJar.getJarFile().close();
-            } catch (IOException e1) {
-                //ignore
-            }
-            try {
-                newJar.getJarFile().close();
-            } catch (IOException e1) {
-                //ignore
-            }
-        } // finally
+        }
     }
 
     /**
@@ -220,36 +221,36 @@ public class JarDiff implements JarDiffCodes
                                      Map<String,String> movedMap)
         throws IOException
     {
-        StringWriter writer = new StringWriter();
+        try (StringWriter writer = new StringWriter()) {
 
-        writer.write(VERSION_HEADER);
-        writer.write("\r\n");
-
-        // Write out entries that have been removed
-        for (String name : oldEntries) {
-            writer.write(REMOVE_COMMAND);
-            writer.write(" ");
-            writeEscapedString(writer, name);
+            writer.write(VERSION_HEADER);
             writer.write("\r\n");
+
+            // Write out entries that have been removed
+            for (String name : oldEntries) {
+                writer.write(REMOVE_COMMAND);
+                writer.write(" ");
+                writeEscapedString(writer, name);
+                writer.write("\r\n");
+            }
+
+            // And those that have moved
+            for (String newName : movedMap.keySet()) {
+                String oldName = movedMap.get(newName);
+                writer.write(MOVE_COMMAND);
+                writer.write(" ");
+                writeEscapedString(writer, oldName);
+                writer.write(" ");
+                writeEscapedString(writer, newName);
+                writer.write("\r\n");
+            }
+
+            JarEntry je = new JarEntry(INDEX_NAME);
+            byte[] bytes = writer.toString().getBytes("UTF-8");
+
+            jos.putNextEntry(je);
+            jos.write(bytes, 0, bytes.length);
         }
-
-        // And those that have moved
-        for (String newName : movedMap.keySet()) {
-            String oldName = movedMap.get(newName);
-            writer.write(MOVE_COMMAND);
-            writer.write(" ");
-            writeEscapedString(writer, oldName);
-            writer.write(" ");
-            writeEscapedString(writer, newName);
-            writer.write("\r\n");
-        }
-
-        JarEntry je = new JarEntry(INDEX_NAME);
-        byte[] bytes = writer.toString().getBytes("UTF-8");
-
-        writer.close();
-        jos.putNextEntry(je);
-        jos.write(bytes, 0, bytes.length);
     }
 
     private static void writeEscapedString (Writer writer, String string)
@@ -282,7 +283,9 @@ public class JarDiff implements JarDiffCodes
     private static void writeEntry (JarOutputStream jos, JarEntry entry, JarFile2 file)
         throws IOException
     {
-        writeEntry(jos, entry, file.getJarFile().getInputStream(entry));
+        try (InputStream data = file.getJarFile().getInputStream(entry)) {
+            writeEntry(jos, entry, data);
+        }
     }
 
     private static void writeEntry (JarOutputStream jos, JarEntry entry, InputStream data)
@@ -290,30 +293,19 @@ public class JarDiff implements JarDiffCodes
     {
         jos.putNextEntry(entry);
 
-        try {
-            // Read the entry
-            int size = data.read(newBytes);
+        // Read the entry
+        int size = data.read(newBytes);
 
-            while (size != -1) {
-                jos.write(newBytes, 0, size);
-                size = data.read(newBytes);
-            }
-        } catch(IOException ioE) {
-            throw ioE;
-        } finally {
-            try {
-                data.close();
-            } catch(IOException e){
-                //Ignore
-            }
-
+        while (size != -1) {
+            jos.write(newBytes, 0, size);
+            size = data.read(newBytes);
         }
     }
 
     /**
      * JarFile2 wraps a JarFile providing some convenience methods.
      */
-    private static class JarFile2 implements Iterable<JarEntry>
+    private static class JarFile2 implements Iterable<JarEntry>, Closeable
     {
         private JarFile _jar;
         private List<JarEntry> _entries;
@@ -330,6 +322,7 @@ public class JarDiff implements JarDiffCodes
         }
 
         // from interface Iterable<JarEntry>
+        @Override
         public Iterator<JarEntry> iterator () {
             return _entries.iterator();
         }
@@ -347,52 +340,38 @@ public class JarDiff implements JarDiffCodes
             int total = 0;
             boolean retVal = false;
 
-            try{
-                while (newSize != -1) {
-                    newSize = newIS.read(newBytes);
-                    oldSize = oldIS.read(oldBytes);
+            while (newSize != -1) {
+                newSize = newIS.read(newBytes);
+                oldSize = oldIS.read(oldBytes);
 
-                    if (newSize != oldSize) {
-                        if (_debug) {
-                            System.out.println("\tread sizes differ: " + newSize +
-                                               " " + oldSize + " total " + total);
-                        }
-                        retVal = true;
-                        break;
+                if (newSize != oldSize) {
+                    if (_debug) {
+                        System.out.println("\tread sizes differ: " + newSize +
+                                           " " + oldSize + " total " + total);
                     }
-                    if (newSize > 0) {
-                        while (--newSize >= 0) {
-                            total++;
-                            if (newBytes[newSize] != oldBytes[newSize]) {
-                                if (_debug) {
-                                    System.out.println("\tbytes differ at " +
-                                                       total);
-                                }
-                                retVal = true;
-                                break;
+                    retVal = true;
+                    break;
+                }
+                if (newSize > 0) {
+                    while (--newSize >= 0) {
+                        total++;
+                        if (newBytes[newSize] != oldBytes[newSize]) {
+                            if (_debug) {
+                                System.out.println("\tbytes differ at " +
+                                                   total);
                             }
-                            if ( retVal ) {
-                                //Jump out
-                                break;
-                            }
-                            newSize = 0;
+                            retVal = true;
+                            break;
                         }
+                        if ( retVal ) {
+                            //Jump out
+                            break;
+                        }
+                        newSize = 0;
                     }
-                }
-            } catch(IOException ioE){
-                throw ioE;
-            } finally {
-                try {
-                    oldIS.close();
-                } catch(IOException e){
-                    //Ignore
-                }
-                try {
-                    newIS.close();
-                } catch(IOException e){
-                    //Ignore
                 }
             }
+
             return retVal;
         }
 
@@ -419,11 +398,10 @@ public class JarDiff implements JarDiffCodes
                 return false;
 
             // Check contents - if no match - return false
-            InputStream oldIS = getJarFile().getInputStream(thisEntry);
-            InputStream newIS = f.getJarFile().getInputStream(e);
-            boolean retValue = differs(oldIS, newIS);
-
-            return !retValue;
+            try (InputStream oldIS = getJarFile().getInputStream(thisEntry);
+                 InputStream newIS = f.getJarFile().getInputStream(e)) {
+                return !differs(oldIS, newIS);
+            }
         }
 
         public String hasSameContent (JarFile2 file, JarEntry entry) throws IOException {
@@ -438,11 +416,12 @@ public class JarDiff implements JarDiffCodes
                 while (li.hasNext()) {
                     JarEntry thisEntry = li.next();
                     // check for content match
-                    InputStream oldIS = getJarFile().getInputStream(thisEntry);
-                    InputStream newIS = file.getJarFile().getInputStream(entry);
-                    if (!differs(oldIS, newIS)) {
-                        thisName = thisEntry.getName();
-                        return thisName;
+                    try (InputStream oldIS = getJarFile().getInputStream(thisEntry);
+                         InputStream newIS = file.getJarFile().getInputStream(entry)) {
+                        if (!differs(oldIS, newIS)) {
+                            thisName = thisEntry.getName();
+                            return thisName;
+                        }
                     }
                 }
             }
@@ -485,6 +464,11 @@ public class JarDiff implements JarDiffCodes
                     }
                 }
             }
+        }
+
+        @Override
+        public void close() throws IOException {
+            _jar.close();
         }
     }
 }

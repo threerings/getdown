@@ -394,10 +394,9 @@ public class GetdownAppletConfig
      */
     protected boolean writeToFile (File tofile, String contents)
     {
-        try {
-            PrintStream out = new PrintStream(new FileOutputStream(tofile));
+        try (FileOutputStream fos = new FileOutputStream(tofile);
+             PrintStream out = new PrintStream(fos)) {
             out.println(contents);
-            out.close();
             return true;
         } catch (IOException ioe) {
             log.warning("Failed to create '" + tofile + "'.", ioe);

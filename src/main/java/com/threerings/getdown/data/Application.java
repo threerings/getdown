@@ -1241,27 +1241,24 @@ public class Application
             }
 
             if (_latest != null) {
-                InputStream in = null;
-                PrintStream out = null;
-                try {
-                    in = ConnectionUtil.open(_latest, 0, 0).getInputStream();
-                    BufferedReader bin = new BufferedReader(new InputStreamReader(in));
+                try (InputStream in = ConnectionUtil.open(_latest, 0, 0).getInputStream();
+                     InputStreamReader reader = new InputStreamReader(in);
+                     BufferedReader bin = new BufferedReader(reader)) {
                     for (String[] pair : Config.parsePairs(bin, Config.createOpts(false))) {
                         if (pair[0].equals("version")) {
                             _targetVersion = Math.max(Long.parseLong(pair[1]), _targetVersion);
                             if (fileVersion != -1 && _targetVersion > fileVersion) {
                                 // replace the file with the newest version
-                                out = new PrintStream(new FileOutputStream(vfile));
-                                out.println(_targetVersion);
+                                try (FileOutputStream fos = new FileOutputStream(vfile);
+                                     PrintStream out = new PrintStream(fos)) {
+                                    out.println(_targetVersion);
+                                }
                             }
                             break;
                         }
                     }
                 } catch (Exception e) {
                     log.warning("Unable to retrieve version from latest config file.", e);
-                } finally {
-                    StreamUtil.close(in);
-                    StreamUtil.close(out);
                 }
             }
         }
@@ -1567,21 +1564,16 @@ public class Application
             } else {
                 File signatureFile = downloadFile(path + SIGNATURE_SUFFIX);
                 byte[] signature = null;
-                FileReader reader = null;
-                try {
-                    reader = new FileReader(signatureFile);
+                try (FileReader reader = new FileReader(signatureFile)) {
                     signature = StreamUtil.toByteArray(new FileInputStream(signatureFile));
                 } finally {
-                    StreamUtil.close(reader);
                     FileUtil.deleteHarder(signatureFile); // delete the file regardless
                 }
 
                 byte[] buffer = new byte[8192];
                 int length, validated = 0;
                 for (Certificate cert : _signers) {
-                    FileInputStream dataInput = null;
-                    try {
-                        dataInput = new FileInputStream(target);
+                    try (FileInputStream dataInput = new FileInputStream(target)) {
                         Signature sig = Signature.getInstance(Digest.sigAlgorithm(sigVersion));
                         sig.initVerify(cert);
                         while ((length = dataInput.read(buffer)) != -1) {
@@ -1602,9 +1594,6 @@ public class Application
                     } catch (GeneralSecurityException gse) {
                         // no problem!
 
-                    } finally {
-                        StreamUtil.close(dataInput);
-                        dataInput = null;
                     }
                 }
 
@@ -1645,27 +1634,22 @@ public class Application
         log.info("Attempting to refetch '" + path + "' from '" + targetURL + "'.");
 
         // stream the URL into our temporary file
-        InputStream fin = null;
-        FileOutputStream fout = null;
-        try {
-            URLConnection uconn = ConnectionUtil.open(targetURL, 0, 0);
-            // we have to tell Java not to use caches here, otherwise it will cache any request for
-            // same URL for the lifetime of this JVM (based on the URL string, not the URL object);
-            // if the getdown.txt file, for example, changes in the meanwhile, we would never hear
-            // about it; turning off caches is not a performance concern, because when Getdown asks
-            // to download a file, it expects it to come over the wire, not from a cache
-            uconn.setUseCaches(false);
-            uconn.setRequestProperty("Accept-Encoding", "gzip");
-            fin = uconn.getInputStream();
+        URLConnection uconn = ConnectionUtil.open(targetURL, 0, 0);
+        // we have to tell Java not to use caches here, otherwise it will cache any request for
+        // same URL for the lifetime of this JVM (based on the URL string, not the URL object);
+        // if the getdown.txt file, for example, changes in the meanwhile, we would never hear
+        // about it; turning off caches is not a performance concern, because when Getdown asks
+        // to download a file, it expects it to come over the wire, not from a cache
+        uconn.setUseCaches(false);
+        uconn.setRequestProperty("Accept-Encoding", "gzip");
+        try (InputStream fin = uconn.getInputStream()) {
             String encoding = uconn.getContentEncoding();
-            if ("gzip".equalsIgnoreCase(encoding)) {
-                fin = new GZIPInputStream(fin);
+            boolean gzip = "gzip".equalsIgnoreCase(encoding);
+            try (InputStream fin2 = (gzip ? new GZIPInputStream(fin) : fin)) {
+                try (FileOutputStream fout = new FileOutputStream(target)) {
+                    StreamUtil.copy(fin2, fout);
+                }
             }
-            fout = new FileOutputStream(target);
-            StreamUtil.copy(fin, fout);
-        } finally {
-            StreamUtil.close(fin);
-            StreamUtil.close(fout);
         }
 
         return target;

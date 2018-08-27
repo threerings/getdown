@@ -13,7 +13,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
-
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -70,8 +70,10 @@ public class Config
         throws IOException
     {
         // annoyingly FileReader does not allow encoding to be specified (uses platform default)
-        InputStreamReader input = new InputStreamReader(new FileInputStream(source), "UTF-8");
-        return parsePairs(input, opts);
+        try (FileInputStream fis = new FileInputStream(source);
+             InputStreamReader input = new InputStreamReader(fis, StandardCharsets.UTF_8)) {
+            return parsePairs(input, opts);
+        }
     }
 
     /**

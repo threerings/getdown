@@ -16,7 +16,6 @@ import java.io.PrintStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.samskivert.io.StreamUtil;
 import com.samskivert.util.StringUtil;
 
 import com.threerings.getdown.data.SysProps;
@@ -33,17 +32,15 @@ public class VersionUtil
     public static long readVersion (File vfile)
     {
         long fileVersion = -1;
-        BufferedReader bin = null;
-        try {
-            bin = new BufferedReader(new InputStreamReader(new FileInputStream(vfile)));
+        try (FileInputStream fis = new FileInputStream(vfile);
+             InputStreamReader reader = new InputStreamReader(fis);
+             BufferedReader bin = new BufferedReader(reader)) {
             String vstr = bin.readLine();
             if (!StringUtil.isBlank(vstr)) {
                 fileVersion = Long.parseLong(vstr);
             }
         } catch (Exception e) {
             log.info("Unable to read version file: " + e.getMessage());
-        } finally {
-            StreamUtil.close(bin);
         }
 
         return fileVersion;
@@ -54,13 +51,11 @@ public class VersionUtil
      */
     public static void writeVersion (File vfile, long version) throws IOException
     {
-        PrintStream out = new PrintStream(new FileOutputStream(vfile));
-        try {
+        try (FileOutputStream fos = new FileOutputStream(vfile);
+             PrintStream out = new PrintStream(fos)) {
             out.println(version);
         } catch (Exception e) {
             log.warning("Unable to write version file: " + e.getMessage());
-        } finally {
-            StreamUtil.close(out);
         }
     }
 
@@ -88,9 +83,9 @@ public class VersionUtil
      */
     public static long readReleaseVersion (File relfile, String versRegex)
     {
-        BufferedReader in = null;
-        try {
-            in = new BufferedReader(new FileReader(relfile));
+        try (FileReader reader = new FileReader(relfile);
+             BufferedReader in = new BufferedReader(reader)) {
+
             String line = null, relvers = null;
             while ((line = in.readLine()) != null) {
                 if (line.startsWith("JAVA_VERSION=")) {
@@ -107,8 +102,6 @@ public class VersionUtil
         } catch (Exception e) {
             log.warning("Failed to read version from 'release' file", "file", relfile, e);
             return 0L;
-        } finally {
-            StreamUtil.close(in);
         }
     }
 

@@ -12,10 +12,7 @@ import java.net.HttpURLConnection;
 import java.net.URLConnection;
 import java.util.Collection;
 
-import com.samskivert.io.StreamUtil;
-
 import com.threerings.getdown.data.Resource;
-import com.threerings.getdown.data.SysProps;
 import com.threerings.getdown.util.ConnectionUtil;
 
 import static com.threerings.getdown.Log.log;
@@ -74,19 +71,16 @@ public class HTTPDownloader extends Downloader
 
         long actualSize = conn.getContentLength();
         log.info("Downloading resource", "url", rsrc.getRemote(), "size", actualSize);
-        InputStream in = null;
-        FileOutputStream out = null;
         long currentSize = 0L;
-        try {
-            in = conn.getInputStream();
-            out = new FileOutputStream(rsrc.getLocalNew());
-            int read;
+        try (InputStream in = conn.getInputStream();
+             FileOutputStream out = new FileOutputStream(rsrc.getLocalNew())) {
 
             // TODO: look to see if we have a download info file
             // containing info on potentially partially downloaded data;
             // if so, use a "Range: bytes=HAVE-" header.
 
             // read in the file data
+            int read;
             while ((read = in.read(_buffer)) != -1) {
                 // write it out to our local copy
                 out.write(_buffer, 0, read);
@@ -100,9 +94,6 @@ public class HTTPDownloader extends Downloader
                 currentSize += read;
                 updateObserver(rsrc, currentSize, actualSize);
             }
-        } finally {
-            StreamUtil.close(in);
-            StreamUtil.close(out);
         }
     }
 }

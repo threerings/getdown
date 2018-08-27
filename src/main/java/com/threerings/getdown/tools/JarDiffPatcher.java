@@ -25,7 +25,6 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 
-import com.samskivert.io.StreamUtil;
 import com.threerings.getdown.util.ProgressObserver;
 
 /**
@@ -48,14 +47,13 @@ public class JarDiffPatcher implements JarDiffCodes
         throws IOException
     {
         File oldFile = new File(jarPath), diffFile = new File(diffPath);
-        JarOutputStream jos = null;
-        JarFile oldJar = null, jarDiff = null;
-        try {
-            jos = new JarOutputStream(new FileOutputStream(target));
-            oldJar = new JarFile(oldFile);
-            jarDiff = new JarFile(diffFile);
-            Set<String> ignoreSet = new HashSet<>();
 
+        try (JarFile oldJar = new JarFile(oldFile);
+             JarFile jarDiff = new JarFile(diffFile);
+             FileOutputStream fos = new FileOutputStream(target);
+             JarOutputStream jos = new JarOutputStream(fos)) {
+
+            Set<String> ignoreSet = new HashSet<>();
             Map<String, String> renameMap = new HashMap<>();
             determineNameMapping(jarDiff, ignoreSet, renameMap);
 
@@ -135,7 +133,9 @@ public class JarDiffPatcher implements JarDiffCodes
                 updateObserver(observer, currentEntry, size);
                 currentEntry++;
 
-                writeEntry(jos, newEntry, oldJar.getInputStream(oldEntry));
+                try (InputStream data = oldJar.getInputStream(oldEntry)) {
+                    writeEntry(jos, newEntry, data);
+                }
 
                 // Remove entry from oldjarNames since no implicit move is needed
                 boolean wasInOld = oldjarNames.remove(oldName);
@@ -159,11 +159,6 @@ public class JarDiffPatcher implements JarDiffCodes
                 }
             }
             updateObserver(observer, currentEntry, size);
-
-        } finally {
-            StreamUtil.close(jos);
-            closeFile(oldJar);
-            closeFile(jarDiff);
         }
     }
 
@@ -268,7 +263,9 @@ public class JarDiffPatcher implements JarDiffCodes
         JarOutputStream jos, JarEntry entry, JarFile file)
         throws IOException
     {
-        writeEntry(jos, entry, file.getInputStream(entry));
+        try (InputStream data = file.getInputStream(entry)) {
+            writeEntry(jos, entry, data);
+        }
     }
 
     protected void writeEntry (
@@ -282,17 +279,6 @@ public class JarDiffPatcher implements JarDiffCodes
         while (size != -1) {
             jos.write(newBytes, 0, size);
             size = data.read(newBytes);
-        }
-        data.close();
-    }
-
-    private static void closeFile (JarFile jar) {
-        if (jar != null) {
-            try {
-                jar.close();
-            } catch (IOException e) {
-                e.printStackTrace(System.err);
-            }
         }
     }
 

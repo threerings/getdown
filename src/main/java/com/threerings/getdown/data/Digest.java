@@ -6,12 +6,12 @@
 package com.threerings.getdown.data;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.*;
 
-import com.samskivert.io.StreamUtil;
 import com.samskivert.text.MessageUtil;
 import com.samskivert.util.StringUtil;
 
@@ -99,9 +99,9 @@ public class Digest
         }
 
         StringBuilder data = new StringBuilder();
-        PrintWriter pout = null;
-        try {
-            pout = new PrintWriter(new OutputStreamWriter(new FileOutputStream(output), "UTF-8"));
+        try (FileOutputStream fos = new FileOutputStream(output);
+             OutputStreamWriter osw = new OutputStreamWriter(fos, StandardCharsets.UTF_8);
+             PrintWriter pout = new PrintWriter(osw)) {
             // compute and append the digest of each resource in the list
             for (Resource rsrc : resources) {
                 String path = rsrc.getPath();
@@ -114,9 +114,6 @@ public class Digest
             byte[] contents = data.toString().getBytes("UTF-8");
             String filename = digestFile(version);
             pout.println(filename + " = " + StringUtil.hexlate(md.digest(contents)));
-
-        } finally {
-            StreamUtil.close(pout);
         }
 
         long elapsed = System.currentTimeMillis() - start;
