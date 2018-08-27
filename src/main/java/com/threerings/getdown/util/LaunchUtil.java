@@ -51,8 +51,7 @@ public class LaunchUtil
     {
         // create the file that instructs Getdown to upgrade
         File vfile = new File(appdir, "version.txt");
-        try (FileOutputStream fos = new FileOutputStream(vfile);
-             PrintStream ps = new PrintStream(fos)) {
+        try (PrintStream ps = new PrintStream(new FileOutputStream(vfile))) {
             ps.println(newVersion);
         }
 

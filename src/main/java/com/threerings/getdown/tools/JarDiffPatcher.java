@@ -50,8 +50,7 @@ public class JarDiffPatcher implements JarDiffCodes
 
         try (JarFile oldJar = new JarFile(oldFile);
              JarFile jarDiff = new JarFile(diffFile);
-             FileOutputStream fos = new FileOutputStream(target);
-             JarOutputStream jos = new JarOutputStream(fos)) {
+             JarOutputStream jos = new JarOutputStream(new FileOutputStream(target))) {
 
             Set<String> ignoreSet = new HashSet<>();
             Map<String, String> renameMap = new HashMap<>();
@@ -259,8 +258,7 @@ public class JarDiffPatcher implements JarDiffCodes
         return sub;
     }
 
-    protected void writeEntry (
-        JarOutputStream jos, JarEntry entry, JarFile file)
+    protected void writeEntry (JarOutputStream jos, JarEntry entry, JarFile file)
         throws IOException
     {
         try (InputStream data = file.getInputStream(entry)) {
@@ -268,8 +266,7 @@ public class JarDiffPatcher implements JarDiffCodes
         }
     }
 
-    protected void writeEntry (
-        JarOutputStream jos, JarEntry entry, InputStream data)
+    protected void writeEntry (JarOutputStream jos, JarEntry entry, InputStream data)
         throws IOException
     {
         jos.putNextEntry(new JarEntry(entry.getName()));

@@ -32,9 +32,8 @@ public class VersionUtil
     public static long readVersion (File vfile)
     {
         long fileVersion = -1;
-        try (FileInputStream fis = new FileInputStream(vfile);
-             InputStreamReader reader = new InputStreamReader(fis);
-             BufferedReader bin = new BufferedReader(reader)) {
+        try (BufferedReader bin =
+             new BufferedReader(new InputStreamReader(new FileInputStream(vfile)))) {
             String vstr = bin.readLine();
             if (!StringUtil.isBlank(vstr)) {
                 fileVersion = Long.parseLong(vstr);
@@ -51,8 +50,7 @@ public class VersionUtil
      */
     public static void writeVersion (File vfile, long version) throws IOException
     {
-        try (FileOutputStream fos = new FileOutputStream(vfile);
-             PrintStream out = new PrintStream(fos)) {
+        try (PrintStream out = new PrintStream(new FileOutputStream(vfile))) {
             out.println(version);
         } catch (Exception e) {
             log.warning("Unable to write version file: " + e.getMessage());
@@ -83,9 +81,7 @@ public class VersionUtil
      */
     public static long readReleaseVersion (File relfile, String versRegex)
     {
-        try (FileReader reader = new FileReader(relfile);
-             BufferedReader in = new BufferedReader(reader)) {
-
+        try (BufferedReader in = new BufferedReader(new FileReader(relfile))) {
             String line = null, relvers = null;
             while ((line = in.readLine()) != null) {
                 if (line.startsWith("JAVA_VERSION=")) {

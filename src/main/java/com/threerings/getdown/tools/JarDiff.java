@@ -41,25 +41,9 @@
 
 package com.threerings.getdown.tools;
 
-import java.io.Closeable;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.StringWriter;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
-import java.util.jar.JarOutputStream;
+import java.io.*;
+import java.util.*;
+import java.util.jar.*;
 
 /**
  * JarDiff is able to create a jar file containing the delta between two jar files (old and new).
@@ -221,36 +205,32 @@ public class JarDiff implements JarDiffCodes
                                      Map<String,String> movedMap)
         throws IOException
     {
-        try (StringWriter writer = new StringWriter()) {
+        StringWriter writer = new StringWriter();
+        writer.write(VERSION_HEADER);
+        writer.write("\r\n");
 
-            writer.write(VERSION_HEADER);
+        // Write out entries that have been removed
+        for (String name : oldEntries) {
+            writer.write(REMOVE_COMMAND);
+            writer.write(" ");
+            writeEscapedString(writer, name);
             writer.write("\r\n");
-
-            // Write out entries that have been removed
-            for (String name : oldEntries) {
-                writer.write(REMOVE_COMMAND);
-                writer.write(" ");
-                writeEscapedString(writer, name);
-                writer.write("\r\n");
-            }
-
-            // And those that have moved
-            for (String newName : movedMap.keySet()) {
-                String oldName = movedMap.get(newName);
-                writer.write(MOVE_COMMAND);
-                writer.write(" ");
-                writeEscapedString(writer, oldName);
-                writer.write(" ");
-                writeEscapedString(writer, newName);
-                writer.write("\r\n");
-            }
-
-            JarEntry je = new JarEntry(INDEX_NAME);
-            byte[] bytes = writer.toString().getBytes("UTF-8");
-
-            jos.putNextEntry(je);
-            jos.write(bytes, 0, bytes.length);
         }
+
+        // And those that have moved
+        for (String newName : movedMap.keySet()) {
+            String oldName = movedMap.get(newName);
+            writer.write(MOVE_COMMAND);
+            writer.write(" ");
+            writeEscapedString(writer, oldName);
+            writer.write(" ");
+            writeEscapedString(writer, newName);
+            writer.write("\r\n");
+        }
+
+        jos.putNextEntry(new JarEntry(INDEX_NAME));
+        byte[] bytes = writer.toString().getBytes("UTF-8");
+        jos.write(bytes, 0, bytes.length);
     }
 
     private static void writeEscapedString (Writer writer, String string)
@@ -284,21 +264,12 @@ public class JarDiff implements JarDiffCodes
         throws IOException
     {
         try (InputStream data = file.getJarFile().getInputStream(entry)) {
-            writeEntry(jos, entry, data);
-        }
-    }
-
-    private static void writeEntry (JarOutputStream jos, JarEntry entry, InputStream data)
-        throws IOException
-    {
-        jos.putNextEntry(entry);
-
-        // Read the entry
-        int size = data.read(newBytes);
-
-        while (size != -1) {
-            jos.write(newBytes, 0, size);
-            size = data.read(newBytes);
+            jos.putNextEntry(entry);
+            int size = data.read(newBytes);
+            while (size != -1) {
+                jos.write(newBytes, 0, size);
+                size = data.read(newBytes);
+            }
         }
     }
 

@@ -5,24 +5,9 @@
 
 package com.threerings.getdown.util;
 
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Deque;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
-import java.util.jar.JarOutputStream;
-import java.util.jar.Pack200;
+import java.io.*;
+import java.util.*;
+import java.util.jar.*;
 import java.util.zip.GZIPInputStream;
 
 import com.samskivert.io.StreamUtil;
@@ -153,13 +138,13 @@ public class FileUtil
      */
     public static void unpackPacked200Jar (File packedJar, File target) throws IOException
     {
-        try (InputStream packedJarIn = new FileInputStream(packedJar);
-             FileOutputStream extractedJarFileOut = new FileOutputStream(target);
-             JarOutputStream jarOutputStream = new JarOutputStream(extractedJarFileOut)) {
-            boolean gz = (packedJar.getName().endsWith(".gz") || packedJar.getName().endsWith(".gz_new"));
-            try (InputStream packedJarIn2 = (gz ? new GZIPInputStream(packedJarIn) : packedJarIn)) {
+        try (InputStream packJarIn = new FileInputStream(packedJar);
+             JarOutputStream jarOut = new JarOutputStream(new FileOutputStream(target))) {
+            boolean gz = (packedJar.getName().endsWith(".gz") ||
+                          packedJar.getName().endsWith(".gz_new"));
+            try (InputStream packJarIn2 = (gz ? new GZIPInputStream(packJarIn) : packJarIn)) {
                 Pack200.Unpacker unpacker = Pack200.newUnpacker();
-                unpacker.unpack(packedJarIn2, jarOutputStream);
+                unpacker.unpack(packJarIn2, jarOut);
             }
         }
     }
