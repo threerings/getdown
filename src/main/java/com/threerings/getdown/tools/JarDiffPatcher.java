@@ -27,6 +27,8 @@ import java.util.jar.JarOutputStream;
 
 import com.threerings.getdown.util.ProgressObserver;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 /**
  * Applies a jardiff patch to a jar file.
  */
@@ -178,7 +180,7 @@ public class JarDiffPatcher implements JarDiffCodes
         }
 
         LineNumberReader indexReader =
-            new LineNumberReader(new InputStreamReader(is, "UTF-8"));
+            new LineNumberReader(new InputStreamReader(is, UTF_8));
         String line = indexReader.readLine();
         if (line == null || !line.equals(VERSION_HEADER)) {
             throw new IOException("jardiff.error.badheader: " + line);

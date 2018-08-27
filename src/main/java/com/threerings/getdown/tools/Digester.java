@@ -23,6 +23,8 @@ import com.threerings.getdown.data.Digest;
 import com.threerings.getdown.data.Resource;
 import com.threerings.getdown.util.Base64;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 /**
  * Handles the generation of the digest.txt file.
  */
@@ -120,7 +122,7 @@ public class Digester
 
             // Write out the signature
             String signed = Base64.encodeToString(sig.sign(), Base64.DEFAULT);
-            signatureOutput.write(signed.getBytes("utf8"));
+            signatureOutput.write(signed.getBytes(UTF_8));
         }
     }
 }

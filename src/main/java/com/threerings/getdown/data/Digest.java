@@ -19,6 +19,7 @@ import com.threerings.getdown.util.Config;
 import com.threerings.getdown.util.ProgressObserver;
 
 import static com.threerings.getdown.Log.log;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Manages the <code>digest.txt</code> file and the computing and processing of digests for an
@@ -111,7 +112,7 @@ public class Digest
             }
             // finally compute and append the digest for the file contents
             MessageDigest md = getMessageDigest(version);
-            byte[] contents = data.toString().getBytes("UTF-8");
+            byte[] contents = data.toString().getBytes(UTF_8);
             String filename = digestFile(version);
             pout.println(filename + " = " + StringUtil.hexlate(md.digest(contents)));
         }
@@ -168,7 +169,7 @@ public class Digest
 
         // we've reached the end, validate our contents
         MessageDigest md = getMessageDigest(version);
-        byte[] contents = data.toString().getBytes("UTF-8");
+        byte[] contents = data.toString().getBytes(UTF_8);
         String hash = StringUtil.hexlate(md.digest(contents));
         if (!hash.equals(_metaDigest)) {
             String err = MessageUtil.tcompose("m.invalid_digest_file", _metaDigest, hash);

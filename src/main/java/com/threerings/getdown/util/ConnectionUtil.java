@@ -10,9 +10,10 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLDecoder;
-
 import com.threerings.getdown.data.SysProps;
 import com.threerings.getdown.util.Base64;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class ConnectionUtil
 {
@@ -49,7 +50,7 @@ public class ConnectionUtil
             // Remove any percent-encoding in the username/password
             userInfo = URLDecoder.decode(userInfo, "UTF-8");
             // Now base64 encode the auth info and make it a single line
-            String encoded = Base64.encodeToString(userInfo.getBytes("UTF-8"), Base64.DEFAULT).
+            String encoded = Base64.encodeToString(userInfo.getBytes(UTF_8), Base64.DEFAULT).
                 replaceAll("\\n","").replaceAll("\\r", "");
             conn.setRequestProperty("Authorization", "Basic " + encoded);
         }
