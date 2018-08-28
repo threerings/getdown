@@ -1564,8 +1564,8 @@ public class Application
             } else {
                 File signatureFile = downloadFile(path + SIGNATURE_SUFFIX);
                 byte[] signature = null;
-                try (FileReader reader = new FileReader(signatureFile)) {
-                    signature = StreamUtil.toByteArray(new FileInputStream(signatureFile));
+                try (FileInputStream signatureStream = new FileInputStream(signatureFile)) {
+                    signature = StreamUtil.toByteArray(signatureStream);
                 } finally {
                     FileUtil.deleteHarder(signatureFile); // delete the file regardless
                 }
