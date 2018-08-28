@@ -9,7 +9,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
@@ -20,6 +19,7 @@ import com.samskivert.util.StringUtil;
 
 import com.threerings.getdown.data.SysProps;
 import static com.threerings.getdown.Log.log;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Version related utilities.
@@ -33,7 +33,7 @@ public class VersionUtil
     {
         long fileVersion = -1;
         try (BufferedReader bin =
-             new BufferedReader(new InputStreamReader(new FileInputStream(vfile)))) {
+             new BufferedReader(new InputStreamReader(new FileInputStream(vfile), UTF_8))) {
             String vstr = bin.readLine();
             if (!StringUtil.isBlank(vstr)) {
                 fileVersion = Long.parseLong(vstr);
@@ -81,7 +81,8 @@ public class VersionUtil
      */
     public static long readReleaseVersion (File relfile, String versRegex)
     {
-        try (BufferedReader in = new BufferedReader(new FileReader(relfile))) {
+        try (BufferedReader in =
+             new BufferedReader(new InputStreamReader(new FileInputStream(relfile), UTF_8))) {
             String line = null, relvers = null;
             while ((line = in.readLine()) != null) {
                 if (line.startsWith("JAVA_VERSION=")) {

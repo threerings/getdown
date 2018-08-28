@@ -42,6 +42,7 @@ import com.threerings.getdown.util.*;
 import com.threerings.getdown.util.Base64;
 
 import static com.threerings.getdown.Log.log;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Parses and provide access to the information contained in the <code>getdown.txt</code>
@@ -1242,7 +1243,7 @@ public class Application
 
             if (_latest != null) {
                 try (InputStream in = ConnectionUtil.open(_latest, 0, 0).getInputStream();
-                     InputStreamReader reader = new InputStreamReader(in);
+                     InputStreamReader reader = new InputStreamReader(in, UTF_8);
                      BufferedReader bin = new BufferedReader(reader)) {
                     for (String[] pair : Config.parsePairs(bin, Config.createOpts(false))) {
                         if (pair[0].equals("version")) {
