@@ -79,11 +79,11 @@ public class StatusPanel extends JComponent
     public boolean imageUpdate (Image img, int infoflags, int x, int y, int width, int height)
     {
         boolean updated = false;
-        if ((infoflags | WIDTH) != 0) {
+        if ((infoflags & WIDTH) != 0) {
             _psize.width = width;
             updated = true;
         }
-        if ((infoflags | HEIGHT) != 0) {
+        if ((infoflags & HEIGHT) != 0) {
             _psize.height = height;
             updated = true;
         }
@@ -92,7 +92,7 @@ public class StatusPanel extends JComponent
             setSize(_psize);
             getParent().setSize(_psize);
         }
-        return (infoflags | ALLBITS) != 0;
+        return (infoflags & ALLBITS) == 0;
     }
 
     /**
