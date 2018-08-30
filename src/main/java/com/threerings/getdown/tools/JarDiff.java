@@ -233,7 +233,7 @@ public class JarDiff implements JarDiffCodes
         jos.write(bytes, 0, bytes.length);
     }
 
-    private static void writeEscapedString (Writer writer, String string)
+    protected static Writer writeEscapedString (Writer writer, String string)
         throws IOException
     {
         int index = 0;
@@ -251,13 +251,15 @@ public class JarDiff implements JarDiffCodes
             index++;
             writer.write('\\');
         }
-        if (last != 0) {
+        if (last != 0 && chars != null) {
             writer.write(chars, last, chars.length - last);
         }
         else {
             // no spaces
             writer.write(string);
         }
+
+        return writer;
     }
 
     private static void writeEntry (JarOutputStream jos, JarEntry entry, JarFile2 file)

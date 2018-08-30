@@ -152,6 +152,10 @@ public class JarDiffPatcher implements JarDiffCodes
                 while (iEntries.hasNext()) {
                     String name = iEntries.next();
                     JarEntry entry = oldJar.getJarEntry(name);
+                    if (entry == null) {
+                        // names originally retrieved from the JAR, so this should never happen
+                        throw new AssertionError("JAR entry not found: " + name);
+                    }
                     updateObserver(observer, currentEntry, size);
                     currentEntry++;
                     writeEntry(jos, entry, oldJar);

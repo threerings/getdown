@@ -197,7 +197,7 @@ public class GetdownApp
                 String[] cmdarray;
                 if (RunAnywhere.isWindows()) {
                     String osName = System.getProperty("os.name");
-                    if (osName.indexOf("9") != -1 || osName.indexOf("Me") != -1) {
+                    if (osName != null && (osName.indexOf("9") != -1 || osName.indexOf("Me") != -1)) {
                         cmdarray = new String[] {
                             "command.com", "/c", "start", "\"" + url + "\"" };
                     } else {

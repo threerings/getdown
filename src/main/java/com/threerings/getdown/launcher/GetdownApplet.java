@@ -93,9 +93,12 @@ public class GetdownApplet extends JApplet
                 // getSigners() returns all certificates used to sign this applet which may allow a
                 // third party to insert a trusted certificate. This should be avoided.
                 log.warning("No resource certificate found, falling back to class signers");
-                for (Object signer : GetdownApplet.class.getSigners()) {
-                    if (signer instanceof Certificate) {
-                        signers.add((Certificate)signer);
+                Object[] candidates = GetdownApplet.class.getSigners();
+                if (candidates != null) {
+                    for (Object signer : candidates) {
+                        if (signer instanceof Certificate) {
+                            signers.add((Certificate)signer);
+                        }
                     }
                 }
             }
@@ -307,7 +310,11 @@ public class GetdownApplet extends JApplet
     protected static Certificate loadCertificate (String path)
     {
         try {
-            URL keyUrl = GetdownApplet.class.getClassLoader().getResource(path);
+            ClassLoader classLoader = GetdownApplet.class.getClassLoader();
+            if (classLoader == null) {
+                return null;
+            }
+            URL keyUrl = classLoader.getResource(path);
             if (keyUrl == null) {
                 return null;
             }
