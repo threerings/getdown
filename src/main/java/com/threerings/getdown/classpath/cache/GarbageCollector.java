@@ -30,8 +30,11 @@ public class GarbageCollector
                 }
 
                 File folder = file.getParentFile();
-                if (folder.list().length == 0) {
-                    FileUtil.deleteHarder(folder);
+                if (folder != null) {
+                    String[] children = folder.list();
+                    if (children != null && children.length == 0) {
+                        FileUtil.deleteHarder(folder);
+                    }
                 }
             }
         });
