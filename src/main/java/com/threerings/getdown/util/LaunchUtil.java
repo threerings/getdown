@@ -182,13 +182,8 @@ public class LaunchUtil
      */
     public static boolean mustMonitorChildren ()
     {
-        String osname = System.getProperty("os.name");
-        if (osname != null) {
-            osname = osname.toLowerCase();
-            return (osname.indexOf("windows 98") != -1 || osname.indexOf("windows me") != -1);
-        } else {
-            return false;
-        }
+        String osname = System.getProperty("os.name", "").toLowerCase();
+        return (osname.indexOf("windows 98") != -1 || osname.indexOf("windows me") != -1);
     }
 
     /**

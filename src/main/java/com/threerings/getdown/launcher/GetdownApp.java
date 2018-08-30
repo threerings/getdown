@@ -196,8 +196,8 @@ public class GetdownApp
             protected void showDocument (String url) {
                 String[] cmdarray;
                 if (RunAnywhere.isWindows()) {
-                    String osName = System.getProperty("os.name");
-                    if (osName != null && (osName.indexOf("9") != -1 || osName.indexOf("Me") != -1)) {
+                    String osName = System.getProperty("os.name", "");
+                    if (osName.indexOf("9") != -1 || osName.indexOf("Me") != -1) {
                         cmdarray = new String[] {
                             "command.com", "/c", "start", "\"" + url + "\"" };
                     } else {
