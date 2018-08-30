@@ -15,14 +15,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import javax.swing.JApplet;
 
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
-import com.threerings.getdown.data.Application;
 import com.threerings.getdown.launcher.ImageLoader;
 import com.threerings.getdown.launcher.RotatingBackgrounds;
 import com.threerings.getdown.util.Config;
@@ -310,7 +308,7 @@ public class GetdownAppletConfig
     /**
      * This checks whether the user has accepted our signed
      */
-    protected void securityCheck () throws Exception
+    protected final void securityCheck () throws Exception
     {
         // getdown requires full read/write permissions to the system; if we don't have this, then
         // we need to not do anything unsafe, and display a message to the user telling them they
