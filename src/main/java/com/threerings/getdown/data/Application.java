@@ -1141,12 +1141,8 @@ public class Application
             StringBuffer sb = new StringBuffer();
             Matcher matcher = ENV_VAR_PATTERN.matcher(arg);
             while (matcher.find()) {
-                String varName = matcher.group(1);
-                String varValue = System.getenv(varName);
-                if (varValue == null) {
-                    varValue = "MISSING:" + varName;
-                }
-                matcher.appendReplacement(sb, varValue);
+                String varName = matcher.group(1), varValue = System.getenv(varName);
+                matcher.appendReplacement(sb, varValue == null ? "MISSING:"+varName : varValue);
             }
             matcher.appendTail(sb);
             arg = sb.toString();
