@@ -45,6 +45,8 @@ import java.io.*;
 import java.util.*;
 import java.util.jar.*;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 /**
  * JarDiff is able to create a jar file containing the delta between two jar files (old and new).
  * The delta jar file can then be applied to the old jar file to reconstruct the new jar file.
@@ -229,7 +231,7 @@ public class JarDiff implements JarDiffCodes
         }
 
         jos.putNextEntry(new JarEntry(INDEX_NAME));
-        byte[] bytes = writer.toString().getBytes("UTF-8");
+        byte[] bytes = writer.toString().getBytes(UTF_8);
         jos.write(bytes, 0, bytes.length);
     }
 

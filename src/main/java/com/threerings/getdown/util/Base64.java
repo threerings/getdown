@@ -16,7 +16,7 @@
 
 package com.threerings.getdown.util;
 
-import java.io.UnsupportedEncodingException;
+import static java.nio.charset.StandardCharsets.US_ASCII;
 
 /**
  * Utilities for encoding and decoding the Base64 representation of
@@ -107,7 +107,7 @@ public class Base64 {
      * if any are present, there must be the correct number of them.
      *
      * @param str    the input String to decode, which is converted to
-     *               bytes using the default charset
+     *               bytes using ASCII
      * @param flags  controls certain features of the decoded output.
      *               Pass {@code DEFAULT} to decode standard Base64.
      *
@@ -115,7 +115,7 @@ public class Base64 {
      * incorrect padding
      */
     public static byte[] decode(String str, int flags) {
-        return decode(str.getBytes(), flags);
+        return decode(str.getBytes(US_ASCII), flags);
     }
 
     /**
@@ -452,12 +452,7 @@ public class Base64 {
      *               adheres to RFC 2045.
      */
     public static String encodeToString(byte[] input, int flags) {
-        try {
-            return new String(encode(input, flags), "US-ASCII");
-        } catch (UnsupportedEncodingException e) {
-            // US-ASCII is guaranteed to be available.
-            throw new AssertionError(e);
-        }
+        return new String(encode(input, flags), US_ASCII);
     }
 
     /**
@@ -473,12 +468,7 @@ public class Base64 {
      *               adheres to RFC 2045.
      */
     public static String encodeToString(byte[] input, int offset, int len, int flags) {
-        try {
-            return new String(encode(input, offset, len, flags), "US-ASCII");
-        } catch (UnsupportedEncodingException e) {
-            // US-ASCII is guaranteed to be available.
-            throw new AssertionError(e);
-        }
+        return new String(encode(input, offset, len, flags), US_ASCII);
     }
 
     /**

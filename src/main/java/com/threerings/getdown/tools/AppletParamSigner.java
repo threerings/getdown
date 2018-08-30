@@ -14,6 +14,8 @@ import java.security.Signature;
 import com.threerings.getdown.data.Digest;
 import com.threerings.getdown.util.Base64;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 /**
  * Produces a signed hash of the appbase, appname, and image path to ensure that signed copies of
  * Getdown are not hijacked to run malicious code.
@@ -45,7 +47,7 @@ public class AppletParamSigner
             PrivateKey key = (PrivateKey)store.getKey(alias, keypass.toCharArray());
             Signature sig = Signature.getInstance(Digest.sigAlgorithm(Digest.VERSION));
             sig.initSign(key);
-            sig.update(params.getBytes());
+            sig.update(params.getBytes(UTF_8));
             String signed = Base64.encodeToString(sig.sign(), Base64.DEFAULT);
             System.out.println("<param name=\"appbase\" value=\"" + appbase + "\" />");
             System.out.println("<param name=\"appname\" value=\"" + appname + "\" />");
