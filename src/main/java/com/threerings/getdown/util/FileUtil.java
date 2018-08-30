@@ -187,14 +187,20 @@ public class FileUtil
      */
     public static void walkTree (File root, Visitor visitor)
     {
-        Deque<File> stack = new ArrayDeque<>(Arrays.asList(root.listFiles()));
-        while (!stack.isEmpty()) {
-            File currentFile = stack.pop();
-            if (currentFile.exists()) {
-                visitor.visit(currentFile);
-                if (currentFile.isDirectory()) {
-                    for (File file: currentFile.listFiles()) {
-                        stack.push(file);
+        File[] children = root.listFiles();
+        if (children != null) {
+            Deque<File> stack = new ArrayDeque<>(Arrays.asList(children));
+            while (!stack.isEmpty()) {
+                File currentFile = stack.pop();
+                if (currentFile.exists()) {
+                    visitor.visit(currentFile);
+                    if (currentFile.isDirectory()) {
+                        File[] currentChildren = currentFile.listFiles();
+                        if (currentChildren != null) {
+                            for (File file : currentChildren) {
+                                stack.push(file);
+                            }
+                        }
                     }
                 }
             }
