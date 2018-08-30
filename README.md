@@ -45,8 +45,8 @@ See [CHANGELOG.md](CHANGELOG.md) for release notes.
 The latest version of Getdown can be obtained thusly:
 
   * Download the pre-built jar file from Maven Central:
-    [getdown-1.7.0.jar](http://repo2.maven.org/maven2/com/threerings/getdown/1.7.0/getdown-1.7.0.jar)
-  * Obtain the jar artifact via Maven with the following identifier: `com.threerings:getdown:1.7.0`.
+    [getdown-1.7.1.jar](http://repo2.maven.org/maven2/com/threerings/getdown/1.7.1/getdown-1.7.1.jar)
+  * Obtain the jar artifact via Maven with the following identifier: `com.threerings:getdown:1.7.1`.
   * [Check out the code](https://github.com/threerings/getdown) and build it yourself.
 
 You can also:
@@ -56,7 +56,7 @@ You can also:
 
 ## JVM Version Requirements
 
-  * Getdown version 1.7.x (not yet released) requires Java 7 VM or newer.
+  * Getdown version 1.7.x requires Java 7 VM or newer.
   * Getdown version 1.6.x requires Java 6 VM or newer.
   * Getdown version 1.5 and earlier requires Java 5 VM or newer.
 
