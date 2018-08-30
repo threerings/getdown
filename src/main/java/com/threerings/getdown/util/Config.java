@@ -51,8 +51,8 @@ public class Config
     public static ParseOpts createOpts (boolean checkPlatform) {
         ParseOpts opts = new ParseOpts();
         if (checkPlatform) {
-            opts.osname = StringUtil.deNull(System.getProperty("os.name")).toLowerCase();
-            opts.osarch = StringUtil.deNull(System.getProperty("os.arch")).toLowerCase();
+            opts.osname = StringUtil.deNull(System.getProperty("os.name")).toLowerCase(Locale.ROOT);
+            opts.osarch = StringUtil.deNull(System.getProperty("os.arch")).toLowerCase(Locale.ROOT);
         }
         return opts;
     }
@@ -360,7 +360,7 @@ public class Config
     /** A helper function for {@link #checkQualifiers}. */
     protected static boolean checkQualifier (String qual, String osname, String osarch)
     {
-        String[] bits = qual.trim().toLowerCase().split("-");
+        String[] bits = qual.trim().toLowerCase(Locale.ROOT).split("-");
         String os = bits[0], arch = (bits.length > 1) ? bits[1] : "";
         return (osname.indexOf(os) != -1) && (osarch.indexOf(arch) != -1);
     }

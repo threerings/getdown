@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -207,7 +208,7 @@ public class Resource implements Comparable<Resource>
         throws IOException
     {
         File file;
-        if (_local.toString().toLowerCase().endsWith(Application.CONFIG_FILE)) {
+        if (_local.toString().toLowerCase(Locale.ROOT).endsWith(Application.CONFIG_FILE)) {
             file = _local;
         } else {
             file = _localNew.exists() ? _localNew : _local;
