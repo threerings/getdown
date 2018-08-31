@@ -78,7 +78,7 @@ public class Patcher
                     path = strip(path, DELETE);
                     System.out.println("Removing " + path + "...");
                     File target = new File(appdir, path);
-                    if (!target.delete()) {
+                    if (!FileUtil.deleteHarder(target)) {
                         System.err.println("Failure deleting '" + target + "'.");
                     }
 
@@ -134,7 +134,7 @@ public class Patcher
         JarDiffPatcher patcher = null;
 
         // make sure no stale old target is lying around to mess us up
-        otarget.delete();
+        FileUtil.deleteHarder(otarget);
 
         // pipe the contents of the patch into a file
         try (InputStream in = file.getInputStream(entry);
@@ -170,12 +170,8 @@ public class Patcher
 
         } finally {
             // clean up our temporary files
-            if (!patch.delete()) {
-                patch.deleteOnExit();
-            }
-            if (!otarget.delete()) {
-                otarget.deleteOnExit();
-            }
+            FileUtil.deleteHarder(patch);
+            FileUtil.deleteHarder(otarget);
         }
     }
 
