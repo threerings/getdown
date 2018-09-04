@@ -35,9 +35,9 @@ public class Resource implements Comparable<Resource>
         EXEC
     };
 
-    public static EnumSet<Attr> NORMAL = EnumSet.noneOf(Attr.class);
-    public static EnumSet<Attr> UNPACK = EnumSet.of(Attr.UNPACK);
-    public static EnumSet<Attr> EXEC   = EnumSet.of(Attr.EXEC);
+    public static final EnumSet<Attr> NORMAL = EnumSet.noneOf(Attr.class);
+    public static final EnumSet<Attr> UNPACK = EnumSet.of(Attr.UNPACK);
+    public static final EnumSet<Attr> EXEC   = EnumSet.of(Attr.EXEC);
 
     /**
      * Computes the MD5 hash of the supplied file.
