@@ -21,11 +21,11 @@ import java.util.zip.ZipEntry;
 
 import java.security.MessageDigest;
 
-import com.samskivert.io.StreamUtil;
 import com.threerings.getdown.data.Application;
 import com.threerings.getdown.data.Digest;
 import com.threerings.getdown.data.Resource;
 import com.threerings.getdown.util.FileUtil;
+import com.threerings.getdown.util.StreamUtil;
 
 /**
  * Generates patch files between two particular revisions of an

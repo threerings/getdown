@@ -8,8 +8,7 @@ package com.threerings.getdown.util;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;
-
-import com.samskivert.util.RandomUtil;
+import java.util.Random;
 
 import org.junit.*;
 import static org.junit.Assert.*;
@@ -165,6 +164,8 @@ public class ConfigTest
 
     protected static String whitespace ()
     {
-        return RandomUtil.getBoolean() ? " " : "";
+        return _rando.nextBoolean() ? " " : "";
     }
+
+    protected static Random _rando = new Random();
 }

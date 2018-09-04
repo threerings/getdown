@@ -2,6 +2,7 @@ package com.threerings.getdown.classpath;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Arrays;
 
 import org.junit.*;
@@ -13,7 +14,6 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import static org.mockito.Mockito.when;
 
-import com.samskivert.util.FileUtil;
 import com.threerings.getdown.data.Application;
 import com.threerings.getdown.data.Resource;
 
@@ -45,14 +45,14 @@ public class ClassPathsTest
         when(_application.getDigest(_secondJar)).thenReturn("second");
         when(_application.getCodeCacheRetentionDays()).thenReturn(1);
 
-        File firstCachedJarFile = FileUtil.newFile(
-            _appdir.getRoot(), ClassPaths.CACHE_DIR, "fi", "first.jar");
+        Path firstCachedJarFile = _appdir.getRoot().toPath().
+            resolve(ClassPaths.CACHE_DIR).resolve("fi").resolve("first.jar");
 
-        File secondCachedJarFile = FileUtil.newFile(
-            _appdir.getRoot(), ClassPaths.CACHE_DIR, "se", "second.jar");
+        Path secondCachedJarFile = _appdir.getRoot().toPath().
+            resolve(ClassPaths.CACHE_DIR).resolve("se").resolve("second.jar");
 
-        String expectedClassPath = firstCachedJarFile.getAbsolutePath() + File.pathSeparator +
-            secondCachedJarFile.getAbsolutePath();
+        String expectedClassPath = firstCachedJarFile.toAbsolutePath() + File.pathSeparator +
+            secondCachedJarFile.toAbsolutePath();
 
         ClassPath classPath = ClassPaths.buildCachedClassPath(_application);
         assertEquals(expectedClassPath, classPath.asArgumentString());

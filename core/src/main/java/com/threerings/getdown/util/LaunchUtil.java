@@ -11,9 +11,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Locale;
 
-import com.samskivert.util.RunAnywhere;
-import com.samskivert.util.StringUtil;
-
 import static com.threerings.getdown.Log.log;
 
 /**
@@ -111,7 +108,7 @@ public class LaunchUtil
         // from /usr/bin/java, and not if launched by directly referring to <java.home>/bin/java,
         // even though the former is a symlink to the latter! To work around this, see if the
         // desired jvm is in fact pointed to by /usr/bin/java and, if so, use that instead.
-        if (RunAnywhere.isMacOS()) {
+        if (isMacOS()) {
             try {
                 File localVM = new File("/usr/bin/java").getCanonicalFile();
                 if (localVM.equals(new File(vmpath).getCanonicalFile())) {
@@ -189,6 +186,21 @@ public class LaunchUtil
     }
 
     /**
+     * Returns true if we're running in a JVM that identifies its operating system as Windows.
+     */
+    public static final boolean isWindows () { return _isWindows; }
+
+    /**
+     * Returns true if we're running in a JVM that identifies its operating system as MacOS.
+     */
+    public static final boolean isMacOS () { return _isMacOS; }
+
+    /**
+     * Returns true if we're running in a JVM that identifies its operating system as Linux.
+     */
+    public static final boolean isLinux () { return _isLinux; }
+
+    /**
      * Checks whether a Java Virtual Machine can be located in the supplied path.
      */
     protected static String checkJVMPath (String vmhome, boolean windebug)
@@ -212,5 +224,25 @@ public class LaunchUtil
         }
 
         return null;
+    }
+
+    /** Flag indicating that we're on Windows; initialized when this class is first loaded. */
+    protected static boolean _isWindows;
+    /** Flag indicating that we're on MacOS; initialized when this class is first loaded. */
+    protected static boolean _isMacOS;
+    /** Flag indicating that we're on Linux; initialized when this class is first loaded. */
+    protected static boolean _isLinux;
+
+    static {
+        try {
+            String osname = System.getProperty("os.name");
+            osname = (osname == null) ? "" : osname;
+            _isWindows = (osname.indexOf("Windows") != -1);
+            _isMacOS = (osname.indexOf("Mac OS") != -1 ||
+                        osname.indexOf("MacOS") != -1);
+            _isLinux = (osname.indexOf("Linux") != -1);
+        } catch (Exception e) {
+            // can't grab system properties; we'll just pretend we're not on any of these OSes
+        }
     }
 }

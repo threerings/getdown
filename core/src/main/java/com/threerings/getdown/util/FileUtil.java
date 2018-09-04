@@ -10,9 +10,7 @@ import java.util.*;
 import java.util.jar.*;
 import java.util.zip.GZIPInputStream;
 
-import com.samskivert.io.StreamUtil;
-import com.samskivert.util.Logger;
-
+import com.threerings.getdown.Log;
 import static com.threerings.getdown.Log.log;
 
 /**
@@ -125,7 +123,7 @@ public class FileUtil
                 StreamUtil.copy(jin, fout);
             } catch (Exception e) {
                 throw new IOException(
-                    Logger.format("Failure unpacking", "jar", jar, "entry", efile), e);
+                    Log.format("Failure unpacking", "jar", jar, "entry", efile), e);
             }
         }
     }

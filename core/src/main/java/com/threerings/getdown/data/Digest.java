@@ -12,11 +12,10 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.*;
 
-import com.samskivert.text.MessageUtil;
-import com.samskivert.util.StringUtil;
-
 import com.threerings.getdown.util.Config;
+import com.threerings.getdown.util.MessageUtil;
 import com.threerings.getdown.util.ProgressObserver;
+import com.threerings.getdown.util.StringUtil;
 
 import static com.threerings.getdown.Log.log;
 import static java.nio.charset.StandardCharsets.UTF_8;

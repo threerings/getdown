@@ -20,8 +20,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import com.samskivert.util.ArrayUtil;
-import com.samskivert.util.StringUtil;
+import com.threerings.getdown.util.StringUtil;
 
 import static com.threerings.getdown.Log.log;
 
@@ -312,7 +311,7 @@ public class Config
     public String[] getList (String name)
     {
         String value = getString(name);
-        return (value == null) ? ArrayUtil.EMPTY_STRING : StringUtil.parseStringArray(value);
+        return (value == null) ? new String[0] : StringUtil.parseStringArray(value);
     }
 
     /**

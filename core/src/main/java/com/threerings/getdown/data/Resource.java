@@ -16,10 +16,9 @@ import java.util.Locale;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-import com.samskivert.util.StringUtil;
-
 import com.threerings.getdown.util.FileUtil;
 import com.threerings.getdown.util.ProgressObserver;
+import com.threerings.getdown.util.StringUtil;
 
 import static com.threerings.getdown.Log.log;
 

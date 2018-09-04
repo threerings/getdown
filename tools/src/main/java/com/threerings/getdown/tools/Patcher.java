@@ -15,10 +15,9 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
-import com.samskivert.io.StreamUtil;
-
 import com.threerings.getdown.util.FileUtil;
 import com.threerings.getdown.util.ProgressObserver;
+import com.threerings.getdown.util.StreamUtil;
 
 import static com.threerings.getdown.Log.log;
 

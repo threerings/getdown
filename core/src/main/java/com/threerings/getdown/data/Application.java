@@ -25,13 +25,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
-import com.samskivert.io.StreamUtil;
-import com.samskivert.text.MessageUtil;
-import com.samskivert.util.ArrayUtil;
-import com.samskivert.util.RandomUtil;
-import com.samskivert.util.RunAnywhere;
-import com.samskivert.util.StringUtil;
-
 import com.threerings.getdown.classpath.ClassPaths;
 import com.threerings.getdown.classpath.ClassPath;
 import com.threerings.getdown.util.*;
@@ -229,8 +222,8 @@ public class Application
         _appid = appid;
         _signers = (signers == null) ? Collections.<Certificate>emptyList() : signers;
         _config = getLocalPath(CONFIG_FILE);
-        _extraJvmArgs = (jvmargs == null) ? ArrayUtil.EMPTY_STRING : jvmargs;
-        _extraAppArgs = (appargs == null) ? ArrayUtil.EMPTY_STRING : appargs;
+        _extraJvmArgs = (jvmargs == null) ? EMPTY_STRING_ARRAY : jvmargs;
+        _extraAppArgs = (appargs == null) ? EMPTY_STRING_ARRAY : appargs;
     }
 
     /**
@@ -952,7 +945,7 @@ public class Application
         }
 
         // we love our Mac users, so we do nice things to preserve our application identity
-        if (RunAnywhere.isMacOS()) {
+        if (LaunchUtil.isMacOS()) {
             args.add("-Xdock:icon=" + getLocalPath(_dockIconPath).getAbsolutePath());
             args.add("-Xdock:name=" + _name);
         }
@@ -1097,7 +1090,7 @@ public class Application
         try {
             log.info("Loading " + _class);
             Class<?> appclass = loader.loadClass(_class);
-            Method main = appclass.getMethod("main", SA_PROTO.getClass());
+            Method main = appclass.getMethod("main", EMPTY_STRING_ARRAY.getClass());
             log.info("Invoking main({" + StringUtil.join(args, ", ") + "})");
             main.invoke(null, new Object[] { args });
         } catch (Exception e) {
@@ -1674,7 +1667,8 @@ public class Application
             _trackingStart = time;
         }
         if (_trackingId == 0) {
-            _trackingId = RandomUtil.getInRange(100000000, 1000000000);
+            int low = 100000000, high = 1000000000;
+            _trackingId = low + _rando.nextInt(high-low);
         }
         StringBuilder cookie = new StringBuilder("&utmcc=__utma%3D").append(_trackingGAHash);
         cookie.append(".").append(_trackingId);
@@ -1683,7 +1677,8 @@ public class Application
         cookie.append("__utmz%3D").append(_trackingGAHash).append(".");
         cookie.append(_trackingStart).append(".1.1.");
         cookie.append("utmcsr%3D(direct)%7Cutmccn%3D(direct)%7Cutmcmd%3D(none)%3B");
-        cookie.append("&utmn=").append(RandomUtil.getInRange(1000000000, 2000000000));
+        int low = 1000000000, high = 2000000000;
+        cookie.append("&utmn=").append(_rando.nextInt(high-low));
         return cookie.toString();
     }
 
@@ -1764,7 +1759,9 @@ public class Application
     /** Channel to the file underlying _lock.  Kept around solely so the lock doesn't close. */
     protected FileChannel _lockChannel;
 
-    protected static final String[] SA_PROTO = ArrayUtil.EMPTY_STRING;
+    protected Random _rando = new Random();
+
+    protected static final String[] EMPTY_STRING_ARRAY = new String[0];
 
     protected static final String ENV_VAR_PREFIX = "%ENV.";
     protected static final Pattern ENV_VAR_PATTERN = Pattern.compile("%ENV\\.(.*?)%");

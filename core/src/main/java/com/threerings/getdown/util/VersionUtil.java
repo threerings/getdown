@@ -15,8 +15,6 @@ import java.io.PrintStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.samskivert.util.StringUtil;
-
 import com.threerings.getdown.data.SysProps;
 import static com.threerings.getdown.Log.log;
 import static java.nio.charset.StandardCharsets.UTF_8;
