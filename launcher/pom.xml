@@ -26,11 +26,6 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.threerings.getdown</groupId>
-      <artifactId>getdown-tools</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
       <groupId>com.samskivert</groupId>
       <artifactId>samskivert</artifactId>
       <version>1.2</version>
@@ -73,10 +68,6 @@
               <inclusion>
                 <groupId>com.threerings.getdown</groupId>
                 <artifactId>getdown-core</artifactId>
-              </inclusion>
-              <inclusion>
-                <groupId>com.threerings.getdown</groupId>
-                <artifactId>getdown-tools</artifactId>
               </inclusion>
               <inclusion>
                 <groupId>com.samskivert</groupId>

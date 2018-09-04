@@ -43,7 +43,6 @@
 
   <modules>
     <module>core</module>
-    <module>tools</module>
     <module>launcher</module>
     <module>ant</module>
   </modules>
