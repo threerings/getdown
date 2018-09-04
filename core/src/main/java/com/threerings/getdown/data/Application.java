@@ -25,8 +25,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
-import javax.swing.JApplet;
-
 import com.samskivert.io.StreamUtil;
 import com.samskivert.text.MessageUtil;
 import com.samskivert.util.ArrayUtil;
@@ -141,12 +139,6 @@ public class Application
         /** The patch notes URL. */
         public String patchNotesUrl;
 
-        /** The dimensions of the play again button. */
-        public Rectangle playAgain;
-
-        /** The path (relative to the appdir) to a single play again image. */
-        public String playAgainImage;
-
         /** Whether window decorations are hidden for the UI. */
         public boolean hideDecorations;
 
@@ -172,7 +164,6 @@ public class Application
                 ", pb=" + progressBar + ", srect=" + status + ", st=" + statusText +
                 ", shadow=" + textShadow + ", err=" + installError + ", nrect=" + patchNotes +
                 ", notes=" + patchNotesUrl + ", stepPercentages=" + stepPercentages +
-                ", parect=" + playAgain + ", paimage=" + playAgainImage +
                 ", hideProgressText" + hideProgressText + ", minShow=" + minShowSeconds + "]";
         }
 
@@ -753,10 +744,6 @@ public class Application
         ui.patchNotes = config.getRect("ui.patch_notes", ui.patchNotes);
         ui.patchNotesUrl = config.getUrl("ui.patch_notes_url", null);
 
-        // the play again bits
-        ui.playAgain = config.getRect("ui.play_again", ui.playAgain);
-        ui.playAgainImage = config.getString("ui.play_again_image");
-
         // step progress percentages
         for (UpdateInterface.Step step : UpdateInterface.Step.values()) {
             String spec = config.getString("ui.percents." + step.name());
@@ -1058,7 +1045,7 @@ public class Application
     /**
      * Runs this application directly in the current VM.
      */
-    public void invokeDirect (JApplet applet) throws IOException
+    public void invokeDirect () throws IOException
     {
         ClassPath classPath = ClassPaths.buildClassPath(this);
         URL[] jarUrls = classPath.asUrls();
@@ -1103,9 +1090,6 @@ public class Application
             System.setProperty(entry.getKey(), entry.getValue());
         }
 
-        // make a note that we're running in "applet" mode
-        System.setProperty("applet", "true");
-
         // prepare our app arguments
         String[] args = new String[_appargs.size()];
         for (int ii = 0; ii < args.length; ii++) args[ii] = processArg(_appargs.get(ii));
@@ -1113,17 +1097,9 @@ public class Application
         try {
             log.info("Loading " + _class);
             Class<?> appclass = loader.loadClass(_class);
-            Method main;
-            try {
-                // first see if the class has a special applet-aware main
-                main = appclass.getMethod("main", JApplet.class, SA_PROTO.getClass());
-                log.info("Invoking main(JApplet, {" + StringUtil.join(args, ", ") + "})");
-                main.invoke(null, new Object[] { applet, args });
-            } catch (NoSuchMethodException nsme) {
-                main = appclass.getMethod("main", SA_PROTO.getClass());
-                log.info("Invoking main({" + StringUtil.join(args, ", ") + "})");
-                main.invoke(null, new Object[] { args });
-            }
+            Method main = appclass.getMethod("main", SA_PROTO.getClass());
+            log.info("Invoking main({" + StringUtil.join(args, ", ") + "})");
+            main.invoke(null, new Object[] { args });
         } catch (Exception e) {
             e.printStackTrace(System.err);
         }
@@ -1321,9 +1297,6 @@ public class Application
 
         for (int ii = 0; ii < sizes.length; ii++) {
             final Resource rsrc = rsrcs.get(ii);
-            if (Thread.interrupted()) {
-                throw new InterruptedException("m.applet_stopped");
-            }
             final int index = ii;
             exec.execute(new Runnable() {
                 public void run () {
@@ -1414,9 +1387,6 @@ public class Application
 
         ProgressAggregator pagg = new ProgressAggregator(obs, sizes);
         for (int ii = 0; ii < sizes.length; ii++) {
-            if (Thread.interrupted()) {
-                throw new InterruptedException("m.applet_stopped");
-            }
             Resource rsrc = rsrcs.get(ii);
             ProgressObserver pobs = pagg.startElement(ii);
             try {
@@ -1538,12 +1508,6 @@ public class Application
     /**
      * Downloads a new copy of the specified control file, optionally validating its signature.
      * If the download is successful, moves it over the old file on the filesystem.
-     *
-     * <p> We implement simple signing of the digest.txt file for use with the Getdown applet, but
-     * this should never be used as-is with a non-applet getdown installation, as the signing
-     * format has no provisions for declaring arbitrary signing key IDs, signature algorithm, et al
-     * -- it is entirely reliant on the ability to upgrade the Getdown applet, and its signature
-     * validation implementation, at-will (ie, via an Applet).
      *
      * <p> TODO: Switch to PKCS #7 or CMS.
      *

@@ -45,7 +45,6 @@
     <module>core</module>
     <module>tools</module>
     <module>launcher</module>
-    <!-- deprecated: <module>applet</module>-->
     <module>ant</module>
   </modules>
 

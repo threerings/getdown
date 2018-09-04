@@ -18,7 +18,6 @@ import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.ImageIcon;
-import javax.swing.JApplet;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLayeredPane;
@@ -70,7 +69,7 @@ import static com.threerings.getdown.Log.log;
  * Manages the main control for the Getdown application updater and deployment system.
  */
 public abstract class Getdown extends Thread
-    implements Application.StatusDisplay, ImageLoader
+    implements Application.StatusDisplay, RotatingBackgrounds.ImageLoader
 {
     public static void main (String[] args)
     {
@@ -128,7 +127,7 @@ public abstract class Getdown extends Thread
     /**
      * Installs the currently pending new resources.
      */
-    public void install () throws IOException, InterruptedException
+    public void install () throws IOException
     {
         if (SysProps.noInstall()) {
             log.info("Skipping install due to 'no_install' sysprop.");
@@ -136,30 +135,12 @@ public abstract class Getdown extends Thread
             log.info("Installing " + _toInstallResources.size() + " downloaded resources:");
             for (Resource resource : _toInstallResources) {
                 resource.install();
-                if (Thread.interrupted()) {
-                    throw new InterruptedException("m.applet_stopped");
-                }
             }
             _toInstallResources.clear();
             _readyToInstall = false;
             log.info("Install completed.");
         } else {
             log.info("Nothing to install.");
-        }
-    }
-
-    /**
-     * This is used by the applet which always needs a user interface and wants to load it as soon
-     * as possible.
-     */
-    public void preInit ()
-    {
-        try {
-            _ifc = _app.init(true);
-            createInterfaceAsync(true);
-        } catch (Exception e) {
-            log.warning("Failed to preinit: " + e);
-            createInterfaceAsync(true);
         }
     }
 
@@ -530,10 +511,6 @@ public abstract class Getdown extends Thread
                 // Only launch if we aren't in silent mode. Some mystery program starting out
                 // of the blue would be disconcerting.
                 if (!_silent || _launchInSilent) {
-                    if (Thread.interrupted()) {
-                        // One last interrupted check so we don't launch as the applet aborts
-                        throw new InterruptedException("m.applet_stopped");
-                    }
                     // And another final check for the lock. It'll already be held unless
                     // we're in silent mode.
                     _app.lockForUpdates();
@@ -611,7 +588,7 @@ public abstract class Getdown extends Thread
      * running with the necessary Java version.
      */
     protected void updateJava ()
-        throws IOException, InterruptedException
+        throws IOException
     {
         Resource vmjar = _app.getJavaVMResource();
         if (vmjar == null) {
@@ -652,7 +629,7 @@ public abstract class Getdown extends Thread
      * Called if the application is determined to be of an old version.
      */
     protected void update ()
-        throws IOException, InterruptedException
+        throws IOException
     {
         // first clear all validation markers
         _app.clearValidationMarkers();
@@ -724,7 +701,7 @@ public abstract class Getdown extends Thread
      * Called if the application is determined to require resource downloads.
      */
     protected void download (Collection<Resource> resources)
-        throws IOException, InterruptedException
+        throws IOException
     {
         // create our user interface
         createInterfaceAsync(false);
@@ -746,12 +723,6 @@ public abstract class Getdown extends Thread
                     }
                     _lastCheck = percent;
                 }
-                if (Thread.currentThread().isInterrupted()) {
-                    // The applet interrupts when it stops, so abort the download and quit. Use
-                    // isInterrupted so the containing code can call interrupted outside of here
-                    // to check if this was the reason for aborting.
-                    return false;
-                }
                 setStatusAsync("m.downloading", stepToGlobalPercent(percent), remaining, true);
                 if (percent > 0) {
                     reportTrackingEvent("progress", percent);
@@ -772,9 +743,6 @@ public abstract class Getdown extends Thread
         // start the download and wait for it to complete
         Downloader dl = new HTTPDownloader(resources, obs);
         if (!dl.download()) {
-            if (Thread.interrupted()) {
-                throw new InterruptedException("m.applet_stopped");
-            }
             throw new MultipleGetdownRunning();
         }
     }
@@ -789,11 +757,10 @@ public abstract class Getdown extends Thread
 
         try {
             if (invokeDirect()) {
-                // if we're in applet mode, this will NOOP; if we're in app mode and are invoking
-                // direct, we want to close the Getdown window, as the app is launching
+                // we want to close the Getdown window, as the app is launching
                 disposeContainer();
                 _app.releaseLock();
-                _app.invokeDirect(getApplet());
+                _app.invokeDirect();
 
             } else {
                 Process proc;
@@ -864,17 +831,6 @@ public abstract class Getdown extends Thread
             setStatusAsync(null, 100, -1L, false);
             exit(0);
 
-            if (_playAgain != null && _playAgain.isEnabled()) {
-                // wait a little time before showing the button
-                Timer timer = new Timer("playAgain", true);
-                timer.schedule(new TimerTask() {
-                    @Override public void run () {
-                        initPlayAgain();
-                        _playAgain.setVisible(true);
-                    }
-                }, PLAY_AGAIN_TIME);
-            }
-
         } catch (Exception e) {
             log.warning("launch() failed.", e);
         }
@@ -909,26 +865,6 @@ public abstract class Getdown extends Thread
                     });
                     _patchNotes.setFont(StatusPanel.FONT);
                     _layers.add(_patchNotes);
-
-                    if (getApplet() != null) {
-                        _playAgain = new JButton();
-                        _playAgain.setEnabled(false);
-                        _playAgain.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-                        _playAgain.setFont(StatusPanel.FONT);
-                        _playAgain.addActionListener(new ActionListener() {
-                            @Override public void actionPerformed (ActionEvent event) {
-                                _playAgain.setVisible(false);
-                                _stepMinPercent = _lastGlobalPercent = 0;
-                                EventQueue.invokeLater(new Runnable() {
-                                    public void run () {
-                                        getdown();
-                                    }
-                                });
-                            }
-                        });
-                        _layers.add(_playAgain);
-                    }
-
                     _status = new StatusPanel(_msgs);
                     _layers.add(_status);
                     initInterface();
@@ -957,35 +893,10 @@ public abstract class Getdown extends Thread
         _patchNotes.setBounds(_ifc.patchNotes);
         _patchNotes.setVisible(false);
 
-        initPlayAgain();
-
         // we were displaying progress while the UI wasn't up. Now that it is, whatever progress
         // is left is scaled into a 0-100 DISPLAYED progress.
         _uiDisplayPercent = _lastGlobalPercent;
         _stepMinPercent = _lastGlobalPercent = 0;
-    }
-
-    protected void initPlayAgain ()
-    {
-        if (_playAgain != null) {
-            Image image = loadImage(_ifc.playAgainImage);
-            boolean hasImage = image != null;
-            if (hasImage) {
-                _playAgain.setIcon(new ImageIcon(image));
-                _playAgain.setText("");
-            } else {
-                _playAgain.setText(_msgs.getString("m.play_again"));
-                _playAgain.setIcon(null);
-            }
-            _playAgain.setBorderPainted(!hasImage);
-            _playAgain.setOpaque(!hasImage);
-            _playAgain.setContentAreaFilled(!hasImage);
-            if (_ifc.playAgain != null) {
-                _playAgain.setBounds(_ifc.playAgain);
-                _playAgain.setEnabled(true);
-            }
-            _playAgain.setVisible(false);
-        }
     }
 
     protected RotatingBackgrounds getBackground ()
@@ -1140,18 +1051,7 @@ public abstract class Getdown extends Thread
      */
     protected boolean invokeDirect ()
     {
-        // by default check a sysprop (which itself defaults to false); in applet mode this is
-        // overridden to check the applet config
         return SysProps.direct();
-    }
-
-    /**
-     * Provides access to the applet that we'll pass on to our application when we're in "invoke
-     * direct" mode.
-     */
-    protected JApplet getApplet ()
-    {
-        return null;
     }
 
     /**
@@ -1160,7 +1060,7 @@ public abstract class Getdown extends Thread
     protected abstract void showDocument (String url);
 
     /**
-     * Requests that Getdown exit. In applet mode this does nothing.
+     * Requests that Getdown exit.
      */
     protected abstract void exit (int exitCode);
 
@@ -1238,7 +1138,6 @@ public abstract class Getdown extends Thread
     protected JLayeredPane _layers;
     protected StatusPanel _status;
     protected JButton _patchNotes;
-    protected JButton _playAgain;
     protected AbortPanel _abort;
     protected RotatingBackgrounds _background;
 
@@ -1263,7 +1162,6 @@ public abstract class Getdown extends Thread
 
     protected static final int MAX_LOOPS = 5;
     protected static final long FALLBACK_CHECK_TIME = 1000L;
-    protected static final long PLAY_AGAIN_TIME = 3000L;
     protected static final String PROXY_REGISTRY =
         "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings";
 }
