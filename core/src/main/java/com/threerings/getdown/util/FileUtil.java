@@ -50,23 +50,17 @@ public class FileUtil
         }
 
         // as a last resort, try copying the old data over the new
-        try (FileInputStream fin = new FileInputStream(source);
-             FileOutputStream fout = new FileOutputStream(dest)) {
-
-            StreamUtil.copy(fin, fout);
-
-            // close the input stream now so we can delete 'source'
-            fin.close();
-            if (!deleteHarder(source)) {
-                log.warning("Failed to delete " + source +
-                            " after brute force copy to " + dest + ".");
-            }
-            return true;
-
+        try {
+            copy(source, dest);
         } catch (IOException ioe) {
             log.warning("Failed to copy " + source + " to " + dest + ": " + ioe);
             return false;
         }
+
+        if (!deleteHarder(source)) {
+            log.warning("Failed to delete " + source + " after brute force copy to " + dest + ".");
+        }
+        return true;
     }
 
     /**
