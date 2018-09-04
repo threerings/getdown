@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.threerings</groupId>
+    <artifactId>getdown</artifactId>
+    <version>1.7.2-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>getdown-ant</artifactId>
+  <packaging>jar</packaging>
+  <name>Getdown Ant Task</name>
+  <description>An Ant task for building Getdown app distributions</description>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.threerings</groupId>
+      <artifactId>getdown-tools</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.ant</groupId>
+      <artifactId>ant</artifactId>
+      <version>1.7.1</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+</project>

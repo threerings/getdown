@@ -9,7 +9,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.threerings.getdown.util.VersionUtil;
-import com.threerings.getdown.launcher.Getdown;
 
 /**
  * This class encapsulates all system properties that are read and processed by Getdown. Don't
@@ -59,7 +58,7 @@ public class SysProps
     }
 
     /** If true, Getdown does not automatically install updates after downloading them. It waits
-      * for the application to call {@link Getdown#install}.
+      * for the application to call `Getdown.install`.
       * Usage: {@code -Dno_install}. */
     public static boolean noInstall () {
      return System.getProperty("no_install") != null;

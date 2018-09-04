@@ -9,7 +9,7 @@
 
   <groupId>com.threerings</groupId>
   <artifactId>getdown</artifactId>
-  <packaging>jar</packaging>
+  <packaging>pom</packaging>
   <version>1.7.2-SNAPSHOT</version>
 
   <name>getdown</name>
@@ -41,187 +41,16 @@
     <url>https://github.com/threerings/getdown</url>
   </scm>
 
-  <repositories>
-    <repository>
-      <id>lib-repo</id>
-      <url>file://${basedir}/lib</url>
-    </repository>
-  </repositories>
-
-  <dependencies>
-    <dependency>
-      <groupId>com.samskivert</groupId>
-      <artifactId>samskivert</artifactId>
-      <version>1.2</version>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>jregistrykey</groupId>
-      <artifactId>jregistrykey</artifactId>
-      <version>1.0</version>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.ant</groupId>
-      <artifactId>ant</artifactId>
-      <version>1.7.1</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>java</groupId>
-      <artifactId>plugin</artifactId>
-      <version>1.5</version>
-      <scope>system</scope>
-      <systemPath>${plugin.jar.path}</systemPath>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.8.1</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <version>1.10.19</version>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
+  <modules>
+    <module>core</module>
+    <module>tools</module>
+    <module>launcher</module>
+    <!-- deprecated: <module>applet</module>-->
+    <module>ant</module>
+  </modules>
 
   <build>
-    <resources>
-      <resource> <!-- reiterate standard dir since we're customizing, yay! -->
-        <directory>src/main/resources</directory>
-      </resource>
-      <resource> <!-- include the LICENSE file in the jar -->
-        <directory>.</directory>
-        <includes><include>LICENSE</include></includes>
-      </resource>
-    </resources>
-
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.7.0</version>
-        <configuration>
-          <source>1.7</source>
-          <target>1.7</target>
-          <fork>true</fork>
-          <showDeprecation>true</showDeprecation>
-          <showWarnings>true</showWarnings>
-          <compilerArgs>
-            <arg>-Xlint</arg>
-            <arg>-Xlint:-serial</arg>
-            <arg>-Xlint:-path</arg>
-          </compilerArgs>
-        </configuration>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-resources-plugin</artifactId>
-        <version>3.0.2</version>
-        <configuration>
-          <encoding>UTF-8</encoding>
-        </configuration>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.0.0-M1</version>
-        <configuration>
-          <quiet>true</quiet>
-          <show>public</show>
-          <additionalparam>-Xdoclint:all -Xdoclint:-missing</additionalparam>
-        </configuration>
-      </plugin>
-
-      <plugin>
-        <groupId>com.github.wvengen</groupId>
-        <artifactId>proguard-maven-plugin</artifactId>
-        <version>2.0.14</version>
-        <executions>
-         <execution>
-           <phase>package</phase>
-            <goals><goal>proguard</goal></goals>
-         </execution>
-        </executions>
-        <dependencies>
-          <dependency>
-            <groupId>net.sf.proguard</groupId>
-            <artifactId>proguard-base</artifactId>
-            <version>6.0.3</version>
-            <scope>runtime</scope>
-          </dependency>
-        </dependencies>
-        <configuration>
-          <proguardVersion>6.0.3</proguardVersion>
-          <outputDirectory>${project.build.directory}</outputDirectory>
-          <outjar>${project.build.finalName}.jar</outjar>
-          <injar>${project.build.finalName}.jar</injar>
-          <assembly>
-            <inclusions>
-              <inclusion>
-                <groupId>com.samskivert</groupId>
-                <artifactId>samskivert</artifactId>
-                <filter>
-                  !**/*.java,
-                  !**/swing/RuntimeAdjust*,
-                  !**/swing/util/ButtonUtil*,
-                  !**/util/CalendarUtil*,
-                  !**/util/Calendars*,
-                  !**/util/Log4JLogger*,
-                  !**/util/PrefsConfig*,
-                  !**/util/SignalUtil*,
-                  com/samskivert/Log.class,
-                  **/samskivert/io/**,
-                  **/samskivert/swing/**,
-                  **/samskivert/text/**,
-                  **/samskivert/util/**
-                </filter>
-              </inclusion>
-              <inclusion>
-                <groupId>jregistrykey</groupId>
-                <artifactId>jregistrykey</artifactId>
-              </inclusion>
-            </inclusions>
-          </assembly>
-          <obfuscate>true</obfuscate>
-          <options>
-            <option>-keep public class com.threerings.getdown.** { *; }</option>
-            <option>-keep public class ca.beq.util.win32.registry.** { *; }</option>
-            <option>-keepattributes Exceptions, InnerClasses, Signature</option>
-          </options>
-          <libs>
-            <lib>${rt.jar.path}</lib>
-          </libs>
-          <addMavenDescriptor>false</addMavenDescriptor>
-        </configuration>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>3.1.0</version>
-        <configuration>
-          <archive>
-            <manifest>
-              <mainClass>com.threerings.getdown.launcher.GetdownApp</mainClass>
-            </manifest>
-            <manifestEntries>
-              <Permissions>all-permissions</Permissions>
-              <Application-Name>Getdown</Application-Name>
-              <Codebase>*</Codebase>
-              <Application-Library-Allowable-Codebase>*</Application-Library-Allowable-Codebase>
-              <Caller-Allowable-Codebase>*</Caller-Allowable-Codebase>
-              <Trusted-Library>true</Trusted-Library>
-            </manifestEntries>
-          </archive>
-        </configuration>
-      </plugin>
-
       <plugin>
         <groupId>org.sonatype.plugins</groupId>
         <artifactId>nexus-staging-maven-plugin</artifactId>
@@ -235,6 +64,49 @@
         </configuration>
       </plugin>
     </plugins>
+
+    <!-- Common plugin configuration for all children -->
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.7.0</version>
+          <configuration>
+            <source>1.7</source>
+            <target>1.7</target>
+            <fork>true</fork>
+            <showDeprecation>true</showDeprecation>
+            <showWarnings>true</showWarnings>
+            <compilerArgs>
+              <arg>-Xlint</arg>
+              <arg>-Xlint:-serial</arg>
+              <arg>-Xlint:-path</arg>
+            </compilerArgs>
+          </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>3.0.2</version>
+          <configuration>
+            <encoding>UTF-8</encoding>
+          </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>3.0.0-M1</version>
+          <configuration>
+            <quiet>true</quiet>
+            <show>public</show>
+            <additionalparam>-Xdoclint:all -Xdoclint:-missing</additionalparam>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
   </build>
 
   <profiles>
@@ -306,85 +178,5 @@
         </plugins>
       </build>
     </profile>
-
-    <!-- finagling to find rt.jar -->
-    <profile>
-      <id>non-mac-jre</id>
-      <activation>
-        <file><exists>${java.home}/../lib/rt.jar</exists></file>
-      </activation>
-      <properties>
-        <rt.jar.path>${java.home}/../lib/rt.jar</rt.jar.path>
-      </properties>
-    </profile>
-    <profile>
-      <id>non-mac-jdk</id>
-      <activation>
-        <file><exists>${java.home}/lib/rt.jar</exists></file>
-      </activation>
-      <properties>
-        <rt.jar.path>${java.home}/lib/rt.jar</rt.jar.path>
-      </properties>
-    </profile>
-    <profile>
-      <id>java-9-jdk</id>
-      <activation>
-        <file><exists>${java.home}/jmods/java.base.jmod</exists></file>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>com.github.wvengen</groupId>
-            <artifactId>proguard-maven-plugin</artifactId>
-            <configuration>
-              <libs>
-                <lib>${java.home}/jmods/java.base.jmod</lib>
-                <lib>${java.home}/jmods/java.desktop.jmod</lib>
-                <lib>${java.home}/jmods/java.logging.jmod</lib>
-                <lib>${java.home}/jmods/jdk.jsobject.jmod</lib>
-              </libs>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-
-    <!-- finagling to deal with plugin.jar not being bundled with OpenJDK -->
-    <profile>
-      <id>standard-jdk</id>
-      <activation>
-        <file><exists>${java.home}/lib/plugin.jar</exists></file>
-      </activation>
-      <properties>
-        <plugin.jar.path>${java.home}/lib/plugin.jar</plugin.jar.path>
-      </properties>
-    </profile>
-    <profile>
-      <id>icedtea-web</id>
-      <activation>
-        <file><exists>/usr/share/icedtea-web/plugin.jar</exists></file>
-      </activation>
-      <properties>
-        <plugin.jar.path>/usr/share/icedtea-web/plugin.jar</plugin.jar.path>
-      </properties>
-    </profile>
-
-    <!-- For deploying to a local place -->
-    <profile>
-      <id>deploy-local</id>
-      <distributionManagement>
-        <repository>
-          <id>deploy-local-dir</id>
-          <name>Local Maven repository</name>
-          <url>file://${deploy.local.dir}</url>
-        </repository>
-        <snapshotRepository>
-          <id>deploy-local-dir</id>
-          <name>Local Maven repository</name>
-          <url>file://${deploy.local.dir}</url>
-        </snapshotRepository>
-      </distributionManagement>
-    </profile>
-
   </profiles>
 </project>

@@ -36,7 +36,6 @@ import com.samskivert.util.StringUtil;
 
 import com.threerings.getdown.classpath.ClassPaths;
 import com.threerings.getdown.classpath.ClassPath;
-import com.threerings.getdown.launcher.RotatingBackgrounds;
 import com.threerings.getdown.util.*;
 // avoid ambiguity with java.util.Base64 which we can't use as it's 1.8+
 import com.threerings.getdown.util.Base64;
@@ -100,10 +99,10 @@ public class Application
         /** A background color, just in case. */
         public Color background = Color.white;
 
-        /** Background image specifiers for {@link RotatingBackgrounds}. */
+        /** Background image specifiers for `RotatingBackgrounds`. */
         public String[] rotatingBackgrounds;
 
-        /** The error background image for {@link RotatingBackgrounds}. */
+        /** The error background image for `RotatingBackgrounds`. */
         public String errorBackground;
 
         /** The paths (relative to the appdir) of images for the window icon. */
