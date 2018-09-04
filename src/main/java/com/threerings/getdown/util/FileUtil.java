@@ -71,14 +71,18 @@ public class FileUtil
 
     /**
      * "Tries harder" to delete {@code file} than just calling {@code delete} on it. Presently this
-     * just means "try a second time if the first time fails." On Windows Vista, sometimes deletes
-     * fail but then succeed if you just try again. Given that delete failure is a rare occurance,
-     * we can implement this hacky workaround without any negative consequences for normal
-     * behavior.
+     * just means "try a second time if the first time fails, and if that fails then try to delete
+     * when the virtual machine terminates." On Windows Vista, sometimes deletes fail but then
+     * succeed if you just try again. Given that delete failure is a rare occurrence, we can
+     * implement this hacky workaround without any negative consequences for normal behavior.
      */
     public static boolean deleteHarder (File file) {
         // if at first you don't succeed... try, try again
-        return file.delete() || file.delete();
+        boolean deleted = (file.delete() || file.delete());
+        if (!deleted) {
+            file.deleteOnExit();
+        }
+        return deleted;
     }
 
     /**

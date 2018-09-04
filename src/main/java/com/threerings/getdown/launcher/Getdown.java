@@ -706,7 +706,6 @@ public abstract class Getdown extends Thread
                 // clean up the patch file
                 if (!FileUtil.deleteHarder(prsrc.getLocal())) {
                     log.warning("Failed to delete '" + prsrc + "'.");
-                    prsrc.getLocal().deleteOnExit();
                 }
             }
         }

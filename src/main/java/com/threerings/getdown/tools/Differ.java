@@ -22,10 +22,10 @@ import java.util.zip.ZipEntry;
 import java.security.MessageDigest;
 
 import com.samskivert.io.StreamUtil;
-
 import com.threerings.getdown.data.Application;
 import com.threerings.getdown.data.Digest;
 import com.threerings.getdown.data.Resource;
+import com.threerings.getdown.util.FileUtil;
 
 /**
  * Generates patch files between two particular revisions of an
@@ -137,8 +137,8 @@ public class Differ
                         File temp = rebuildJar(rsrc.getLocal());
                         jout.putNextEntry(new ZipEntry(rsrc.getPath() + Patcher.PATCH));
                         jarDiff(otemp, temp, jout);
-                        otemp.delete();
-                        temp.delete();
+                        FileUtil.deleteHarder(otemp);
+                        FileUtil.deleteHarder(temp);
                         continue;
                     }
                 }
@@ -162,7 +162,7 @@ public class Differ
             System.out.println("Created patch file: " + patch);
 
         } catch (IOException ioe) {
-            patch.delete();
+            FileUtil.deleteHarder(patch);
             throw ioe;
         }
     }
