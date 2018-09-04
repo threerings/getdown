@@ -9,6 +9,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Locale;
+
 import com.samskivert.util.RunAnywhere;
 import com.samskivert.util.StringUtil;
 
@@ -182,7 +184,7 @@ public class LaunchUtil
      */
     public static boolean mustMonitorChildren ()
     {
-        String osname = System.getProperty("os.name", "").toLowerCase();
+        String osname = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
         return (osname.indexOf("windows 98") != -1 || osname.indexOf("windows me") != -1);
     }
 
