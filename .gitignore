@@ -1,1 +1,13 @@
 /target/
+/ant/.project
+/ant/.classpath
+/ant/.settings/
+/ant/target/
+/core/.project
+/core/.classpath
+/core/.settings/
+/core/target/
+/launcher/.project
+/launcher/.classpath
+/launcher/.settings/
+/launcher/target/
