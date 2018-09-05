@@ -64,7 +64,9 @@ public class StatusPanel extends JComponent
         int width = img == null ? -1 : img.getWidth(this);
         int height = img == null ? -1 : img.getHeight(this);
         if (width == -1 || height == -1) {
-            Rectangle bounds = ifc.progress.union(ifc.status);
+            Rectangle progress = new Rectangle(ifc.progress.x, ifc.progress.y, ifc.progress.width, ifc.progress.height);
+            Rectangle status = new Rectangle(ifc.status.x, ifc.status.y, ifc.status.width, ifc.status.height);
+            Rectangle bounds = progress.union(status);
             // assume the x inset defines the frame padding; add it on the left, right, and bottom
             _psize = new Dimension(bounds.x + bounds.width + bounds.x,
                                    bounds.y + bounds.height + bounds.x);
@@ -107,7 +109,7 @@ public class StatusPanel extends JComponent
             _progress = percent;
             if (!_ifc.hideProgressText) {
                 String msg = MessageFormat.format(get("m.complete"), percent);
-                _newplab = createLabel(msg, _ifc.progressText);
+                _newplab = createLabel(msg, new Color(_ifc.progressText.rgba(), true));
             }
             needsRepaint = true;
         }
@@ -132,7 +134,7 @@ public class StatusPanel extends JComponent
                 int minutes = (int)(remaining / 60), seconds = (int)(remaining % 60);
                 String remstr = minutes + ":" + ((seconds < 10) ? "0" : "") + seconds;
                 String msg = MessageFormat.format(get("m.remain"), remstr);
-                _newrlab = createLabel(msg, _ifc.statusText);
+                _newrlab = createLabel(msg, new Color(_ifc.statusText.rgba(), true));
             }
             needsRepaint = true;
 
@@ -226,7 +228,7 @@ public class StatusPanel extends JComponent
             gfx.drawImage(_barimg, _ifc.progress.x, _ifc.progress.y, null);
             gfx.setClip(null);
         } else {
-            gfx.setColor(_ifc.progressBar);
+            gfx.setColor(new Color(_ifc.progressBar.rgba(), true));
             gfx.fillRect(_ifc.progress.x, _ifc.progress.y,
                          _progress * _ifc.progress.width / 100,
                          _ifc.progress.height);
@@ -270,7 +272,7 @@ public class StatusPanel extends JComponent
                 status += " .";
             }
         }
-        _newlab = createLabel(status, _ifc.statusText);
+        _newlab = createLabel(status, new Color(_ifc.statusText.rgba(), true));
         // set the width of the label to the width specified
         int width = _ifc.status.width;
         if (width == 0) {
@@ -305,7 +307,7 @@ public class StatusPanel extends JComponent
     {
         Label label = new Label(text, color, FONT);
         if (_ifc.textShadow != null) {
-            label.setAlternateColor(_ifc.textShadow);
+            label.setAlternateColor(new Color(_ifc.textShadow.rgba(), true));
             label.setStyle(LabelStyleConstants.SHADOW);
         }
         return label;

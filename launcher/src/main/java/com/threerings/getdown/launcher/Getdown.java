@@ -7,17 +7,15 @@ package com.threerings.getdown.launcher;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
-import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Image;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLayeredPane;
@@ -890,7 +888,9 @@ public abstract class Getdown extends Thread
         _status.setSize(size);
         _layers.setPreferredSize(size);
 
-        _patchNotes.setBounds(_ifc.patchNotes);
+        Rectangle patchNotes = new Rectangle(_ifc.patchNotes.x, _ifc.patchNotes.y,
+            _ifc.patchNotes.width, _ifc.patchNotes.height);
+        _patchNotes.setBounds(patchNotes);
         _patchNotes.setVisible(false);
 
         // we were displaying progress while the UI wasn't up. Now that it is, whatever progress
@@ -1131,7 +1131,7 @@ public abstract class Getdown extends Thread
     };
 
     protected Application _app;
-    protected Application.UpdateInterface _ifc = new Application.UpdateInterface();
+    protected Application.UpdateInterface _ifc = new Application.UpdateInterface(Config.EMPTY);
 
     protected ResourceBundle _msgs;
     protected Container _container;

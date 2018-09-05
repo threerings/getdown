@@ -6,6 +6,7 @@
 package com.threerings.getdown.launcher;
 
 import java.awt.Image;
+import java.util.List;
 
 import static com.threerings.getdown.Log.log;
 
@@ -42,15 +43,15 @@ public class RotatingBackgrounds
      * time when the next should be shown. In that case, it's left up until its been there for its
      * minimum display time and then the next one gets to come up.
      */
-    public RotatingBackgrounds (String[] backgrounds, String errorBackground, ImageLoader loader)
+    public RotatingBackgrounds (List<String> backgrounds, String errorBackground, ImageLoader loader)
     {
-        percentages = new int[backgrounds.length];
-        minDisplayTime = new int[backgrounds.length];
-        images = new Image[backgrounds.length];
-        for (int ii = 0; ii < backgrounds.length; ii++) {
-            String[] pieces = backgrounds[ii].split(";");
+        percentages = new int[backgrounds.size()];
+        minDisplayTime = new int[backgrounds.size()];
+        images = new Image[backgrounds.size()];
+        for (int ii = 0; ii < backgrounds.size(); ii++) {
+            String[] pieces = backgrounds.get(ii).split(";");
             if (pieces.length != 2) {
-                log.warning("Unable to parse background image '" + backgrounds[ii] + "'");
+                log.warning("Unable to parse background image '" + backgrounds.get(ii) + "'");
                 makeEmpty();
                 return;
             }
@@ -59,11 +60,11 @@ public class RotatingBackgrounds
                 minDisplayTime[ii] = Integer.parseInt(pieces[1]);
             } catch (NumberFormatException e) {
                 log.warning("Unable to parse background image display time '" +
-                            backgrounds[ii] + "'");
+                            backgrounds.get(ii) + "'");
                 makeEmpty();
                 return;
             }
-            percentages[ii] = (int)((ii/(float)backgrounds.length) * 100);
+            percentages[ii] = (int)((ii/(float)backgrounds.size()) * 100);
         }
         if (errorBackground == null) {
             errorImage = images[0];

@@ -5,8 +5,6 @@
 
 package com.threerings.getdown.data;
 
-import java.awt.Color;
-import java.awt.Rectangle;
 import java.io.*;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -57,7 +55,7 @@ public class Application
     public static final String MANIFEST_CLASS = "manifest";
 
     /** Used to communicate information about the UI displayed when updating the application. */
-    public static class UpdateInterface
+    public static final class UpdateInterface
     {
         /**
          * The major steps involved in updating, along with some arbitrary percentages
@@ -85,68 +83,67 @@ public class Application
         }
 
         /** The human readable name of this application. */
-        public String name;
+        public final String name;
 
         /** A background color, just in case. */
-        public Color background = Color.white;
+        public final Color background;
 
         /** Background image specifiers for `RotatingBackgrounds`. */
-        public String[] rotatingBackgrounds;
+        public final List<String> rotatingBackgrounds;
 
         /** The error background image for `RotatingBackgrounds`. */
-        public String errorBackground;
+        public final String errorBackground;
 
         /** The paths (relative to the appdir) of images for the window icon. */
-        public String[] iconImages;
+        public final List<String> iconImages;
 
         /** The path (relative to the appdir) to a single background image. */
-        public String backgroundImage;
+        public final String backgroundImage;
 
         /** The path (relative to the appdir) to the progress bar image. */
-        public String progressImage;
+        public final String progressImage;
 
         /** The dimensions of the progress bar. */
-        public Rectangle progress = new Rectangle(5, 5, 300, 15);
+        public final Rectangle progress;
 
         /** The color of the progress text. */
-        public Color progressText = Color.black;
+        public final Color progressText;
 
         /** The color of the progress bar. */
-        public Color progressBar = new Color(0x6699CC);
+        public final Color progressBar;
 
         /** The dimensions of the status display. */
-        public Rectangle status = new Rectangle(5, 25, 500, 100);
+        public final Rectangle status;
 
         /** The color of the status text. */
-        public Color statusText = Color.black;
+        public final Color statusText;
 
         /** The color of the text shadow. */
-        public Color textShadow;
+        public final Color textShadow;
 
         /** Where to point the user for help with install errors. */
-        public String installError;
+        public final String installError;
 
         /** The dimensions of the patch notes button. */
-        public Rectangle patchNotes = new Rectangle(5, 50, 112, 26);
+        public final Rectangle patchNotes;
 
         /** The patch notes URL. */
-        public String patchNotesUrl;
+        public final String patchNotesUrl;
 
         /** Whether window decorations are hidden for the UI. */
-        public boolean hideDecorations;
+        public final boolean hideDecorations;
 
         /** Whether progress text should be hidden or not. */
-        public boolean hideProgressText;
+        public final boolean hideProgressText;
 
         /** The minimum number of seconds to display the GUI. This is to prevent the GUI from
           * flashing up on the screen and immediately disappearing, which can be confusing to the
           * user. */
-        public int minShowSeconds = 5;
+        public final int minShowSeconds;
 
         /** The global percentages for each step. A step may have more than one, and
          * the lowest reasonable one is used if a step is revisited. */
-        public Map<Step, List<Integer>> stepPercentages =
-            new EnumMap<Step, List<Integer>>(Step.class);
+        public final Map<Step, List<Integer>> stepPercentages;
 
         /** Generates a string representation of this instance. */
         @Override
@@ -160,11 +157,56 @@ public class Application
                 ", hideProgressText" + hideProgressText + ", minShow=" + minShowSeconds + "]";
         }
 
-        /** Initializer */
+        public UpdateInterface (Config config)
         {
+            this.name = config.getString("ui.name");
+            this.progress = config.getRect("ui.progress", new Rectangle(5, 5, 300, 15));
+            this.progressText = config.getColor("ui.progress_text", Color.BLACK);
+            this.hideProgressText =  config.getBoolean("ui.hide_progress_text");
+            this.minShowSeconds = config.getInt("ui.min_show_seconds", 5);
+            this.progressBar = config.getColor("ui.progress_bar", new Color(0x66, 0x99, 0xCC));
+            this.status = config.getRect("ui.status", new Rectangle(5, 25, 500, 100));
+            this.statusText = config.getColor("ui.status_text", Color.BLACK);
+            this.textShadow = config.getColor("ui.text_shadow", null);
+            this.hideDecorations = config.getBoolean("ui.hide_decorations");
+            this.backgroundImage = config.getString("ui.background_image",
+                config.getString("ui.background")); // support legacy format
+            // and now ui.background can refer to the background color, but fall back to black
+            // or white, depending on the brightness of the progressText
+            Color defaultBackground = (.5f < this.progressText.brightness())
+                ? Color.BLACK
+                : Color.WHITE;
+            this.background = config.getColor("ui.background", defaultBackground);
+            this.progressImage = config.getString("ui.progress_image");
+            this.rotatingBackgrounds = stringsToList(config.getMultiValue("ui.rotating_background"));
+            this.iconImages = stringsToList(config.getMultiValue("ui.icon"));
+            this.errorBackground = config.getString("ui.error_background");
+
+            // On an installation error, where do we point the user.
+            String installError = config.getUrl("ui.install_error", null);
+            this.installError = (installError == null) ?
+                "m.default_install_error" : MessageUtil.taint(installError);
+
+            // the patch notes bits
+            this.patchNotes = config.getRect("ui.patch_notes", new Rectangle(5, 50, 112, 26));
+            this.patchNotesUrl = config.getUrl("ui.patch_notes_url", null);
+
+            // step progress percentage (defaults and then customized values)
+            EnumMap<Step, List<Integer>> stepPercentages = new EnumMap<Step, List<Integer>>(Step.class);
             for (Step step : Step.values()) {
                 stepPercentages.put(step, step.defaultPercents);
             }
+            for (UpdateInterface.Step step : UpdateInterface.Step.values()) {
+                String spec = config.getString("ui.percents." + step.name());
+                if (spec != null) {
+                    try {
+                        stepPercentages.put(step, intsToList(StringUtil.parseIntArray(spec)));
+                    } catch (Exception e) {
+                        log.warning("Failed to parse percentages for " + step + ": " + spec);
+                    }
+                }
+            }
+            this.stepPercentages = Collections.unmodifiableMap(stepPercentages);
         }
     }
 
@@ -696,57 +738,11 @@ public class Application
         _codeCacheRetentionDays = config.getInt("code_cache_retention_days", 7);
 
         // parse and return our application config
-        UpdateInterface ui = new UpdateInterface();
-        _name = ui.name = config.getString("ui.name");
-        ui.progress = config.getRect("ui.progress", ui.progress);
-        ui.progressText = config.getColor("ui.progress_text", ui.progressText);
-        ui.hideProgressText =  config.getBoolean("ui.hide_progress_text");
-        ui.minShowSeconds = config.getInt("ui.min_show_seconds", ui.minShowSeconds);
-        ui.progressBar = config.getColor("ui.progress_bar", ui.progressBar);
-        ui.status = config.getRect("ui.status", ui.status);
-        ui.statusText = config.getColor("ui.status_text", ui.statusText);
-        ui.textShadow = config.getColor("ui.text_shadow", ui.textShadow);
-        ui.hideDecorations = config.getBoolean("ui.hide_decorations");
-        ui.backgroundImage = config.getString("ui.background_image");
-        if (ui.backgroundImage == null) { // support legacy format
-            ui.backgroundImage = config.getString("ui.background");
-        }
-        // and now ui.background can refer to the background color, but fall back to black
-        // or white, depending on the brightness of the progressText
-        Color defaultBackground = (.5f < Color.RGBtoHSB(
-                ui.progressText.getRed(), ui.progressText.getGreen(), ui.progressText.getBlue(),
-                null)[2])
-            ? Color.BLACK
-            : Color.WHITE;
-        ui.background = config.getColor("ui.background", defaultBackground);
-        ui.progressImage = config.getString("ui.progress_image");
-        ui.rotatingBackgrounds = config.getMultiValue("ui.rotating_background");
-        ui.iconImages = config.getMultiValue("ui.icon");
-        ui.errorBackground = config.getString("ui.error_background");
+        UpdateInterface ui = new UpdateInterface(config);
+        _name = ui.name;
         _dockIconPath = config.getString("ui.mac_dock_icon");
         if (_dockIconPath == null) {
             _dockIconPath = "../desktop.icns"; // use a sensible default
-        }
-
-        // On an installation error, where do we point the user.
-        String installError = config.getUrl("ui.install_error", null);
-        ui.installError = (installError == null) ?
-            "m.default_install_error" : MessageUtil.taint(installError);
-
-        // the patch notes bits
-        ui.patchNotes = config.getRect("ui.patch_notes", ui.patchNotes);
-        ui.patchNotesUrl = config.getUrl("ui.patch_notes_url", null);
-
-        // step progress percentages
-        for (UpdateInterface.Step step : UpdateInterface.Step.values()) {
-            String spec = config.getString("ui.percents." + step.name());
-            if (spec != null) {
-                try {
-                    ui.stepPercentages.put(step, intsToList(StringUtil.parseIntArray(spec)));
-                } catch (Exception e) {
-                    log.warning("Failed to parse percentages for " + step + ": " + spec);
-                }
-            }
         }
 
         return ui;
@@ -1634,6 +1630,18 @@ public class Application
     {
         List<Integer> list = new ArrayList<>(values.length);
         for (int val : values) {
+            list.add(val);
+        }
+        return Collections.unmodifiableList(list);
+    }
+
+    /**
+     * Make an immutable List from the specified String array.
+     */
+    public static List<String> stringsToList (String[] values)
+    {
+        List<String> list = new ArrayList<>(values.length);
+        for (String val : values) {
             list.add(val);
         }
         return Collections.unmodifiableList(list);
