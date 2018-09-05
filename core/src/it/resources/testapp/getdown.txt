@@ -1,0 +1,28 @@
+# where our app is hosted on the internets
+appbase = http://notused.com/testapp
+
+# the jar file that contains our code
+code = testapp.jar
+
+# the main entry point of our app
+class = com.threerings.testapp.TestApp
+
+# we pass the appdir to our app so that it can upgrade getdown
+apparg = %APPDIR%
+
+# test the %env% mechanism
+jvmarg = -Dusername=\%ENV.USER%
+
+strict_comments = true
+resource = funny%test dir/some=file.txt
+resource = crazyhashfile#txt
+uresource = foo.jar
+xresource = script.sh
+
+ui.name = Getdown Test App
+ui.background_image = background.png
+ui.progress = 17, 321, 458, 22
+ui.progress_bar = 336600
+ui.progress_text = FFFFFF
+ui.status = 57, 245, 373, 68
+ui.status_text = 000000
