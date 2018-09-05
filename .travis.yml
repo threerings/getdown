@@ -1,5 +1,6 @@
 language: java
 sudo: false
+script: "mvn -B verify"
 
 cache:
   directories:
