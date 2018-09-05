@@ -16,7 +16,7 @@ import static org.junit.Assert.*;
 
 import com.threerings.getdown.tools.Digester;
 
-public class DigesterTest {
+public class DigesterIT {
 
     @Test
     public void testDigester () throws Exception {
