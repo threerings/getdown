@@ -142,7 +142,7 @@ public class GetdownApp
                     });
                     _frame.setUndecorated(_ifc.hideDecorations);
                     try {
-                        _frame.setBackground(new Color(_ifc.background.rgba(), true));
+                        _frame.setBackground(new Color(_ifc.background, true));
                     } catch (UnsupportedOperationException e) {
                         log.warning("Failed to set background", e);
                     } catch (IllegalComponentStateException e) {

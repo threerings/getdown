@@ -49,9 +49,10 @@ public class RotatingBackgrounds
         minDisplayTime = new int[backgrounds.size()];
         images = new Image[backgrounds.size()];
         for (int ii = 0; ii < backgrounds.size(); ii++) {
-            String[] pieces = backgrounds.get(ii).split(";");
+            String background = backgrounds.get(ii);
+            String[] pieces = background.split(";");
             if (pieces.length != 2) {
-                log.warning("Unable to parse background image '" + backgrounds.get(ii) + "'");
+                log.warning("Unable to parse background image '" + background + "'");
                 makeEmpty();
                 return;
             }
@@ -59,8 +60,7 @@ public class RotatingBackgrounds
             try {
                 minDisplayTime[ii] = Integer.parseInt(pieces[1]);
             } catch (NumberFormatException e) {
-                log.warning("Unable to parse background image display time '" +
-                            backgrounds.get(ii) + "'");
+                log.warning("Unable to parse background image display time '" + background + "'");
                 makeEmpty();
                 return;
             }

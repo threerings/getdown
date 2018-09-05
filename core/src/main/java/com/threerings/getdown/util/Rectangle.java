@@ -23,9 +23,18 @@ public class Rectangle
         this.height = height;
     }
 
+    public Rectangle union (Rectangle other) {
+        int x1 = Math.min(x, other.x);
+        int x2 = Math.max(x + width, other.x + other.width);
+        int y1 = Math.min(y, other.y);
+        int y2 = Math.max(y + height, other.y + other.height);
+        return new Rectangle(x1, y1, x2 - x1, y2 - y1);
+    }
+
     /** {@inheritDoc} */
     public String toString ()
     {
-        return getClass().getName() + "[x=" + x + ", y=" + y + ", width=" + width + ", height=" + height + "]";
+        return getClass().getName() + "[x=" + x + ", y=" + y +
+            ", width=" + width + ", height=" + height + "]";
     }
 }

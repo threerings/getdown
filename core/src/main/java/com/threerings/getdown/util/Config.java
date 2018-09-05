@@ -148,16 +148,16 @@ public class Config
     }
 
     /**
-     * Parses the given hex color value (e.g. FFFFF) and returns a Color object with that value.
-     * If the given value is null of not a valid hexadecimal number, this will return null.
+     * Parses the given hex color value (e.g. FFCC99) and returns an {@code Integer} with that
+     * value. If the given value is null or not a valid hexadecimal number, this will return null.
      */
-    public static Color parseColor (String hexValue)
+    public static Integer parseColor (String hexValue)
     {
         if (!StringUtil.isBlank(hexValue)) {
             try {
-                int rgba = Integer.parseInt(hexValue, 16);
-                boolean hasAlpha = hexValue.length() > 6;
-                return new Color(rgba, hasAlpha);
+                // if no alpha channel is specified, use 255 (full alpha)
+                int alpha = hexValue.length() > 6 ? 0 : 0xFF000000;
+                return Integer.parseInt(hexValue, 16) | alpha;
             } catch (NumberFormatException e) {
                 log.warning("Ignoring invalid color", "hexValue", hexValue, "exception", e);
             }
@@ -300,10 +300,10 @@ public class Config
     }
 
     /** Used to parse color specifications from the config file. */
-    public Color getColor (String name, Color def)
+    public int getColor (String name, int def)
     {
         String value = getString(name);
-        Color color = parseColor(value);
+        Integer color = parseColor(value);
         return (color == null) ? def : color;
     }
 

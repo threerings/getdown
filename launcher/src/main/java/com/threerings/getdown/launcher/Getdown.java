@@ -10,7 +10,6 @@ import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Image;
-import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 
@@ -888,9 +887,8 @@ public abstract class Getdown extends Thread
         _status.setSize(size);
         _layers.setPreferredSize(size);
 
-        Rectangle patchNotes = new Rectangle(_ifc.patchNotes.x, _ifc.patchNotes.y,
-            _ifc.patchNotes.width, _ifc.patchNotes.height);
-        _patchNotes.setBounds(patchNotes);
+        _patchNotes.setBounds(_ifc.patchNotes.x, _ifc.patchNotes.y,
+                              _ifc.patchNotes.width, _ifc.patchNotes.height);
         _patchNotes.setVisible(false);
 
         // we were displaying progress while the UI wasn't up. Now that it is, whatever progress

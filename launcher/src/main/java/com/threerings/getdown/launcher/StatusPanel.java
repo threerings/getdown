@@ -11,7 +11,6 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.ImageObserver;
@@ -30,6 +29,7 @@ import com.samskivert.util.StringUtil;
 import com.samskivert.util.Throttle;
 
 import com.threerings.getdown.data.Application.UpdateInterface;
+import com.threerings.getdown.util.Rectangle;
 
 import static com.threerings.getdown.Log.log;
 
@@ -64,9 +64,7 @@ public class StatusPanel extends JComponent
         int width = img == null ? -1 : img.getWidth(this);
         int height = img == null ? -1 : img.getHeight(this);
         if (width == -1 || height == -1) {
-            Rectangle progress = new Rectangle(ifc.progress.x, ifc.progress.y, ifc.progress.width, ifc.progress.height);
-            Rectangle status = new Rectangle(ifc.status.x, ifc.status.y, ifc.status.width, ifc.status.height);
-            Rectangle bounds = progress.union(status);
+            Rectangle bounds = ifc.progress.union(ifc.status);
             // assume the x inset defines the frame padding; add it on the left, right, and bottom
             _psize = new Dimension(bounds.x + bounds.width + bounds.x,
                                    bounds.y + bounds.height + bounds.x);
@@ -109,7 +107,7 @@ public class StatusPanel extends JComponent
             _progress = percent;
             if (!_ifc.hideProgressText) {
                 String msg = MessageFormat.format(get("m.complete"), percent);
-                _newplab = createLabel(msg, new Color(_ifc.progressText.rgba(), true));
+                _newplab = createLabel(msg, new Color(_ifc.progressText, true));
             }
             needsRepaint = true;
         }
@@ -134,7 +132,7 @@ public class StatusPanel extends JComponent
                 int minutes = (int)(remaining / 60), seconds = (int)(remaining % 60);
                 String remstr = minutes + ":" + ((seconds < 10) ? "0" : "") + seconds;
                 String msg = MessageFormat.format(get("m.remain"), remstr);
-                _newrlab = createLabel(msg, new Color(_ifc.statusText.rgba(), true));
+                _newrlab = createLabel(msg, new Color(_ifc.statusText, true));
             }
             needsRepaint = true;
 
@@ -228,7 +226,7 @@ public class StatusPanel extends JComponent
             gfx.drawImage(_barimg, _ifc.progress.x, _ifc.progress.y, null);
             gfx.setClip(null);
         } else {
-            gfx.setColor(new Color(_ifc.progressBar.rgba(), true));
+            gfx.setColor(new Color(_ifc.progressBar, true));
             gfx.fillRect(_ifc.progress.x, _ifc.progress.y,
                          _progress * _ifc.progress.width / 100,
                          _ifc.progress.height);
@@ -272,7 +270,7 @@ public class StatusPanel extends JComponent
                 status += " .";
             }
         }
-        _newlab = createLabel(status, new Color(_ifc.statusText.rgba(), true));
+        _newlab = createLabel(status, new Color(_ifc.statusText, true));
         // set the width of the label to the width specified
         int width = _ifc.status.width;
         if (width == 0) {
@@ -306,8 +304,8 @@ public class StatusPanel extends JComponent
     protected Label createLabel (String text, Color color)
     {
         Label label = new Label(text, color, FONT);
-        if (_ifc.textShadow != null) {
-            label.setAlternateColor(new Color(_ifc.textShadow.rgba(), true));
+        if (_ifc.textShadow != 0) {
+            label.setAlternateColor(new Color(_ifc.textShadow, true));
             label.setStyle(LabelStyleConstants.SHADOW);
         }
         return label;

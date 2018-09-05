@@ -86,7 +86,7 @@ public class Application
         public final String name;
 
         /** A background color, just in case. */
-        public final Color background;
+        public final int background;
 
         /** Background image specifiers for `RotatingBackgrounds`. */
         public final List<String> rotatingBackgrounds;
@@ -107,19 +107,19 @@ public class Application
         public final Rectangle progress;
 
         /** The color of the progress text. */
-        public final Color progressText;
+        public final int progressText;
 
         /** The color of the progress bar. */
-        public final Color progressBar;
+        public final int progressBar;
 
         /** The dimensions of the status display. */
         public final Rectangle status;
 
         /** The color of the status text. */
-        public final Color statusText;
+        public final int statusText;
 
         /** The color of the text shadow. */
-        public final Color textShadow;
+        public final int textShadow;
 
         /** Where to point the user for help with install errors. */
         public final String installError;
@@ -164,21 +164,19 @@ public class Application
             this.progressText = config.getColor("ui.progress_text", Color.BLACK);
             this.hideProgressText =  config.getBoolean("ui.hide_progress_text");
             this.minShowSeconds = config.getInt("ui.min_show_seconds", 5);
-            this.progressBar = config.getColor("ui.progress_bar", new Color(0x66, 0x99, 0xCC));
+            this.progressBar = config.getColor("ui.progress_bar", 0x6699CC);
             this.status = config.getRect("ui.status", new Rectangle(5, 25, 500, 100));
             this.statusText = config.getColor("ui.status_text", Color.BLACK);
-            this.textShadow = config.getColor("ui.text_shadow", null);
+            this.textShadow = config.getColor("ui.text_shadow", Color.CLEAR);
             this.hideDecorations = config.getBoolean("ui.hide_decorations");
-            this.backgroundImage = config.getString("ui.background_image",
-                config.getString("ui.background")); // support legacy format
-            // and now ui.background can refer to the background color, but fall back to black
-            // or white, depending on the brightness of the progressText
-            Color defaultBackground = (.5f < this.progressText.brightness())
-                ? Color.BLACK
-                : Color.WHITE;
+            this.backgroundImage = config.getString("ui.background_image");
+            // default to black or white bg color, depending on the brightness of the progressText
+            int defaultBackground = (0.5f < Color.brightness(this.progressText)) ?
+                Color.BLACK : Color.WHITE;
             this.background = config.getColor("ui.background", defaultBackground);
             this.progressImage = config.getString("ui.progress_image");
-            this.rotatingBackgrounds = stringsToList(config.getMultiValue("ui.rotating_background"));
+            this.rotatingBackgrounds = stringsToList(
+                config.getMultiValue("ui.rotating_background"));
             this.iconImages = stringsToList(config.getMultiValue("ui.icon"));
             this.errorBackground = config.getString("ui.error_background");
 
@@ -192,7 +190,7 @@ public class Application
             this.patchNotesUrl = config.getUrl("ui.patch_notes_url", null);
 
             // step progress percentage (defaults and then customized values)
-            EnumMap<Step, List<Integer>> stepPercentages = new EnumMap<Step, List<Integer>>(Step.class);
+            EnumMap<Step, List<Integer>> stepPercentages = new EnumMap<>(Step.class);
             for (Step step : Step.values()) {
                 stepPercentages.put(step, step.defaultPercents);
             }
@@ -1640,11 +1638,7 @@ public class Application
      */
     public static List<String> stringsToList (String[] values)
     {
-        List<String> list = new ArrayList<>(values.length);
-        for (String val : values) {
-            list.add(val);
-        }
-        return Collections.unmodifiableList(list);
+        return values == null ? null : Collections.unmodifiableList(Arrays.asList(values));
     }
 
     /** Used to parse resources with the specified name. */
