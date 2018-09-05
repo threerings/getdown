@@ -6,6 +6,7 @@
 package com.threerings.getdown.tests;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.Arrays;
 import java.util.List;
@@ -23,11 +24,11 @@ public class DigesterTest {
         Digester.createDigests(appdir.toFile(), null, null, null);
 
         Path digest = appdir.resolve("digest.txt");
-        List<String> digestLines = Files.readAllLines(digest, Charset.UTF_8);
+        List<String> digestLines = Files.readAllLines(digest, StandardCharsets.UTF_8);
         Files.delete(digest);
 
         Path digest2 = appdir.resolve("digest2.txt");
-        List<String> digest2Lines = Files.readAllLines(digest2, Charset.UTF_8);
+        List<String> digest2Lines = Files.readAllLines(digest2, StandardCharsets.UTF_8);
         Files.delete(digest2);
 
         assertEquals(Arrays.asList(
