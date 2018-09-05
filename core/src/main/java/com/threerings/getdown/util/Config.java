@@ -5,9 +5,6 @@
 
 package com.threerings.getdown.util;
 
-import java.awt.Color;
-import java.awt.Rectangle;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -32,6 +29,9 @@ import static com.threerings.getdown.Log.log;
  */
 public class Config
 {
+    /** Empty configuration. */
+    public static final Config EMPTY = new Config(new HashMap<String, Object>());
+
     /** Options that control the {@link #parsePairs} function. */
     public static class ParseOpts {
         // these should be tweaked as desired by the caller
