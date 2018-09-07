@@ -70,10 +70,12 @@ public class SysProps
         return "launch".equals(System.getProperty("silent"));
     }
 
-    /** Specifies the a delay (in minutes) to wait before starting the update and install process.
+    /** Specifies the delay (in minutes) to wait before starting the update and install process.
+      * Minimum delay is 0 minutes, or no delay (negative values are rounded up to 0 minutes).
+      * Maximum delay is 1 day, or 1440 minutes (larger values are rounded down to 1 day).
       * Usage: {@code -Ddelay=N}. */
     public static int startDelay () {
-        return Integer.getInteger("delay", 0);
+        return Math.min(Math.max(Integer.getInteger("delay", 0), 0), 60 * 24);
     }
 
     /** If true, Getdown will not unpack {@code uresource} jars. Usage: {@code -Dno_unpack}. */
