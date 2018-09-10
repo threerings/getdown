@@ -1,0 +1,22 @@
+//
+// Getdown - application installer, patcher and launcher
+// Copyright (C) 2004-2016 Getdown authors
+// https://github.com/threerings/getdown/blob/master/LICENSE
+
+package com.threerings.getdown.data;
+
+/**
+ * Contains static data provided during the build process.
+ */
+public class Build {
+
+    /** The date and time at which the code was built: in {@code yyyy-MM-dd HH:mm} format. */
+    public static String time () {
+        return "@build_time@";
+    }
+
+    /** The Maven version of the Getdown project. */
+    public static String version () {
+        return "@build_version@";
+    }
+}

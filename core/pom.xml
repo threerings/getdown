@@ -57,6 +57,51 @@
       </plugin>
 
       <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.8</version>
+        <executions>
+          <execution>
+            <id>gen-build</id>
+            <phase>generate-sources</phase>
+            <configuration>
+              <target>
+                <tstamp>
+                  <format property="build_time" pattern="yyyy-MM-dd HH:mm"/>
+                </tstamp>
+                <copy file="${project.build.sourceDirectory}/com/threerings/getdown/data/Build.java.tmpl"
+                      tofile="${project.build.sourceDirectory}/com/threerings/getdown/data/Build.java"
+                      overwrite="true">
+                  <filterset>
+                    <filter token="build_time" value="${build_time}"/>
+                    <filter token="build_version" value="${project.version}"/>
+                  </filterset>
+                </copy>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-clean-plugin</artifactId>
+        <version>3.1.0</version>
+        <configuration>
+          <filesets>
+            <fileset>
+              <directory>${project.build.sourceDirectory}/</directory>
+              <includes>
+                <include>com/threerings/getdown/data/Build.java</include>
+              </includes>
+              <followSymlinks>false</followSymlinks>
+            </fileset>
+          </filesets>
+        </configuration>
+      </plugin>
+
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
         <version>2.22.0</version>

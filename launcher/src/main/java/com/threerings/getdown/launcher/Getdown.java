@@ -47,6 +47,7 @@ import com.samskivert.util.StringUtil;
 
 import com.threerings.getdown.data.Application.UpdateInterface.Step;
 import com.threerings.getdown.data.Application;
+import com.threerings.getdown.data.Build;
 import com.threerings.getdown.data.Resource;
 import com.threerings.getdown.data.SysProps;
 import com.threerings.getdown.net.Downloader;
@@ -149,6 +150,8 @@ public abstract class Getdown extends Thread
         if (_msgs == null) {
             return;
         }
+
+        log.info("Getdown starting", "version", Build.version(), "built", Build.time());
 
         // determine whether or not we can write to our install directory
         File instdir = _app.getLocalPath("");
