@@ -10,6 +10,14 @@ import java.util.StringTokenizer;
 public class StringUtil {
 
     /**
+     * @return true if the specified string could be a valid URL (contains no illegal characters)
+     */
+    public static boolean couldBeValidUrl (String url)
+    {
+        return url.matches("[A-Za-z0-9\\-\\._~:/\\?#\\[\\]@!$&'\\(\\)\\*\\+,;=%]+");
+    }
+
+    /**
      * @return true if the string is null or consists only of whitespace, false otherwise.
      */
     public static boolean isBlank (String value)
