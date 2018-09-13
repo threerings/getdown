@@ -10,7 +10,7 @@ import java.util.List;
 
 import static com.threerings.getdown.Log.log;
 
-public class RotatingBackgrounds
+public final class RotatingBackgrounds
 {
     public interface ImageLoader {
         /** Loads and returns the image with the supplied path. */

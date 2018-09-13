@@ -36,7 +36,7 @@ import static com.threerings.getdown.Log.log;
 /**
  * Displays download and patching status.
  */
-public class StatusPanel extends JComponent
+public final class StatusPanel extends JComponent
     implements ImageObserver
 {
     public StatusPanel (ResourceBundle msgs)

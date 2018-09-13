@@ -36,7 +36,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * Parses and provide access to the information contained in the <code>getdown.txt</code>
  * configuration file.
  */
-public class Application
+public final class Application
 {
     /** The name of our configuration file. */
     public static final String CONFIG_FILE = "getdown.txt";

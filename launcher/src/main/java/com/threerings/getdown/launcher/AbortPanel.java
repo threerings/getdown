@@ -28,14 +28,14 @@ import static com.threerings.getdown.Log.log;
 /**
  * Displays a confirmation that the user wants to abort installation.
  */
-public class AbortPanel extends JFrame
+public final class AbortPanel extends JFrame
     implements ActionListener
 {
     public AbortPanel (Getdown getdown, ResourceBundle msgs)
     {
         _getdown = getdown;
         _msgs = msgs;
- 
+
         setLayout(new VGroupLayout());
         setResizable(false);
         setTitle(get("m.abort_title"));
