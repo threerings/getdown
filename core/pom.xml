@@ -27,6 +27,16 @@
     </dependency>
   </dependencies>
 
+  <!-- By default, no host whitelist is added to the binary, so it can be used
+       to download and run applications from any server. To create a custom
+       Getdown build that can only talk to whitelisted servers, set this
+       property on the command line, e.g. -Dgetdown.host.whitelist=my.server.com
+       Wildcards can be used (*.mycompany.com) and multiple values can be
+       separated by commas (app1.foo.com,app2.bar.com,app3.baz.com). -->
+  <properties>
+    <getdown.host.whitelist></getdown.host.whitelist>
+  </properties>
+
   <build>
     <resources>
       <resource> <!-- include the LICENSE file in the jar -->
@@ -66,14 +76,15 @@
             <configuration>
               <target>
                 <tstamp>
-                  <format property="build_time" pattern="yyyy-MM-dd HH:mm"/>
+                  <format property="getdown.build.time" pattern="yyyy-MM-dd HH:mm"/>
                 </tstamp>
                 <copy file="${project.build.sourceDirectory}/com/threerings/getdown/data/Build.java.tmpl"
                       tofile="${project.build.sourceDirectory}/com/threerings/getdown/data/Build.java"
                       overwrite="true">
                   <filterset>
-                    <filter token="build_time" value="${build_time}"/>
+                    <filter token="build_time" value="${getdown.build.time}"/>
                     <filter token="build_version" value="${project.version}"/>
+                    <filter token="host_whitelist" value="${getdown.host.whitelist}"/>
                   </filterset>
                 </copy>
               </target>
