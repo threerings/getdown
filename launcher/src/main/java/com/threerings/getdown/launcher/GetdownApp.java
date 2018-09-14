@@ -29,11 +29,9 @@ import javax.swing.JFrame;
 import javax.swing.WindowConstants;
 
 import com.samskivert.swing.util.SwingUtil;
-import com.samskivert.util.ArrayUtil;
-import com.samskivert.util.RunAnywhere;
-
 import com.threerings.getdown.data.Digest;
 import com.threerings.getdown.data.SysProps;
+import com.threerings.getdown.util.LaunchUtil;
 import com.threerings.getdown.util.StringUtil;
 import static com.threerings.getdown.Log.log;
 
@@ -79,7 +77,7 @@ public class GetdownApp
 
         // pass along anything after that as app args
         String[] appArgs = (aidx >= args.size()) ? null :
-            args.subList(aidx, args.size()).toArray(ArrayUtil.EMPTY_STRING);
+            args.subList(aidx, args.size()).toArray(new String[0]);
 
         // ensure a valid directory was supplied
         File appDir = new File(adarg);
@@ -200,7 +198,7 @@ public class GetdownApp
                     return;
                 }
                 String[] cmdarray;
-                if (RunAnywhere.isWindows()) {
+                if (LaunchUtil.isWindows()) {
                     String osName = System.getProperty("os.name", "");
                     if (osName.indexOf("9") != -1 || osName.indexOf("Me") != -1) {
                         cmdarray = new String[] {
@@ -209,7 +207,7 @@ public class GetdownApp
                         cmdarray = new String[] {
                             "cmd.exe", "/c", "start", "\"\"", "\"" + url + "\"" };
                     }
-                } else if (RunAnywhere.isMacOS()) {
+                } else if (LaunchUtil.isMacOS()) {
                     cmdarray = new String[] { "open", url };
                 } else { // Linux, Solaris, etc.
                     cmdarray = new String[] { "firefox", url };

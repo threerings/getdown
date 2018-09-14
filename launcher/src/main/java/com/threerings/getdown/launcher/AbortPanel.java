@@ -21,8 +21,8 @@ import javax.swing.JPanel;
 import com.samskivert.swing.GroupLayout;
 import com.samskivert.swing.Spacer;
 import com.samskivert.swing.VGroupLayout;
-import com.samskivert.text.MessageUtil;
 
+import com.threerings.getdown.util.MessageUtil;
 import static com.threerings.getdown.Log.log;
 
 /**

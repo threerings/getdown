@@ -41,9 +41,6 @@ import ca.beq.util.win32.registry.RegistryValue;
 import ca.beq.util.win32.registry.RootKey;
 
 import com.samskivert.swing.util.SwingUtil;
-import com.samskivert.text.MessageUtil;
-import com.samskivert.util.RunAnywhere;
-import com.samskivert.util.StringUtil;
 
 import com.threerings.getdown.data.Application.UpdateInterface.Step;
 import com.threerings.getdown.data.Application;
@@ -57,8 +54,10 @@ import com.threerings.getdown.util.Config;
 import com.threerings.getdown.util.ConnectionUtil;
 import com.threerings.getdown.util.FileUtil;
 import com.threerings.getdown.util.LaunchUtil;
+import com.threerings.getdown.util.MessageUtil;
 import com.threerings.getdown.util.ProgressAggregator;
 import com.threerings.getdown.util.ProgressObserver;
+import com.threerings.getdown.util.StringUtil;
 import com.threerings.getdown.util.VersionUtil;
 
 import static com.threerings.getdown.Log.log;
@@ -239,7 +238,7 @@ public abstract class Getdown extends Thread
         }
 
         // look in the Vinders registry
-        if (RunAnywhere.isWindows()) {
+        if (LaunchUtil.isWindows()) {
             try {
                 String host = null, port = null;
                 boolean enabled = false;

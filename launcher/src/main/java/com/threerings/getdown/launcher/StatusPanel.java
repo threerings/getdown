@@ -15,6 +15,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.ImageObserver;
 import java.text.MessageFormat;
+import java.util.Arrays;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
@@ -24,12 +25,12 @@ import javax.swing.Timer;
 import com.samskivert.swing.Label;
 import com.samskivert.swing.LabelStyleConstants;
 import com.samskivert.swing.util.SwingUtil;
-import com.samskivert.text.MessageUtil;
-import com.samskivert.util.StringUtil;
 import com.samskivert.util.Throttle;
 
 import com.threerings.getdown.data.Application.UpdateInterface;
+import com.threerings.getdown.util.MessageUtil;
 import com.threerings.getdown.util.Rectangle;
+import com.threerings.getdown.util.StringUtil;
 
 import static com.threerings.getdown.Log.log;
 
@@ -323,7 +324,7 @@ public final class StatusPanel extends JComponent
         } else {
             String key = compoundKey.substring(0, tidx);
             String argstr = compoundKey.substring(tidx+1);
-            String[] args = StringUtil.split(argstr, "|");
+            String[] args = argstr.split("\\|");
             // unescape and translate the arguments
             for (int i = 0; i < args.length; i++) {
                 // if the argument is tainted, do no further translation
@@ -339,12 +340,11 @@ public final class StatusPanel extends JComponent
     }
 
     /** Used by {@link #setStatus}. */
-    protected String get (String key, Object[] args)
+    protected String get (String key, String[] args)
     {
         String msg = get(key);
-        return (msg != null) ?
-            MessageFormat.format(MessageUtil.escape(msg), args)
-            : (key + StringUtil.toString(args));
+        if (msg != null) return MessageFormat.format(MessageUtil.escape(msg), (Object[])args);
+        return key + String.valueOf(Arrays.asList(args));
     }
 
     /** Used by {@link #setStatus}, and {@link #setProgress}. */

@@ -8,6 +8,34 @@ package com.threerings.getdown.util;
 public class MessageUtil {
 
     /**
+     * Returns whether or not the provided string is tainted. See {@link #taint}. Null strings
+     * are considered untainted.
+     */
+    public static boolean isTainted (String text)
+    {
+        return text != null && text.startsWith(TAINT_CHAR);
+    }
+
+    /**
+     * Call this to "taint" any string that has been entered by an entity outside the application
+     * so that the translation code knows not to attempt to translate this string when doing
+     * recursive translations.
+     */
+    public static String taint (Object text)
+    {
+        return TAINT_CHAR + text;
+    }
+
+    /**
+     * Removes the tainting character added to a string by {@link #taint}. If the provided string
+     * is not tainted, this silently returns the originally provided string.
+     */
+    public static String untaint (String text)
+    {
+        return isTainted(text) ? text.substring(TAINT_CHAR.length()) : text;
+    }
+
+    /**
      * Composes a message key with an array of arguments. The message can subsequently be
      * decomposed and translated without prior knowledge of how many arguments were provided.
      */
@@ -47,16 +75,6 @@ public class MessageUtil {
     }
 
     /**
-     * Call this to "taint" any string that has been entered by an entity outside the application
-     * so that the translation code knows not to attempt to translate this string when doing
-     * recursive translations.
-     */
-    public static String taint (Object text)
-    {
-        return TAINT_CHAR + text;
-    }
-
-    /**
      * A convenience method for calling {@link #compose(String,Object[])} with an array of
      * arguments that will be automatically tainted (see {@link #taint}).
      */
@@ -80,6 +98,44 @@ public class MessageUtil {
             args[ii] = taint(args[ii]);
         }
         return compose(key, args);
+    }
+
+    /**
+     * Used to escape single quotes so that they are not interpreted by <code>MessageFormat</code>.
+     * As we assume all single quotes are to be escaped, we cannot use the characters
+     * <code>{</code> and <code>}</code> in our translation strings, but this is a small price to
+     * pay to have to differentiate between messages that will and won't eventually be parsed by a
+     * <code>MessageFormat</code> instance.
+     */
+    public static String escape (String message)
+    {
+        return message.replace("'", "''");
+    }
+
+    /**
+     * Unescapes characters that are escaped in a call to compose.
+     */
+    public static String unescape (String value)
+    {
+        int bsidx = value.indexOf('\\');
+        if (bsidx == -1) {
+            return value;
+        }
+
+        StringBuilder buf = new StringBuilder();
+        int vlength = value.length();
+        for (int ii = 0; ii < vlength; ii++) {
+            char ch = value.charAt(ii);
+            if (ch != '\\' || ii == vlength-1) {
+                buf.append(ch);
+            } else {
+                // look at the next character
+                ch = value.charAt(++ii);
+                buf.append((ch == '!') ? '|' : ch);
+            }
+        }
+
+        return buf.toString();
     }
 
     /** Text prefixed by this character will be considered tainted when doing recursive
