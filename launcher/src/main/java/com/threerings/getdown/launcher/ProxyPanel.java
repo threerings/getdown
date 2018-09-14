@@ -30,7 +30,7 @@ import static com.threerings.getdown.Log.log;
  * Displays an interface with which the user can configure their proxy
  * settings.
  */
-public class ProxyPanel extends JPanel
+public final class ProxyPanel extends JPanel
     implements ActionListener
 {
     public ProxyPanel (Getdown getdown, ResourceBundle msgs)
