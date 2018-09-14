@@ -36,7 +36,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * Parses and provide access to the information contained in the <code>getdown.txt</code>
  * configuration file.
  */
-public final class Application
+public class Application
 {
     /** The name of our configuration file. */
     public static final String CONFIG_FILE = "getdown.txt";
@@ -261,7 +261,7 @@ public final class Application
         _appdir = appdir;
         _appid = appid;
         _signers = (signers == null) ? Collections.<Certificate>emptyList() : signers;
-        _config = getLocalPath(CONFIG_FILE);
+        _config = getLocalPath(appdir, CONFIG_FILE);
         _extraJvmArgs = (jvmargs == null) ? EMPTY_STRING_ARRAY : jvmargs;
         _extraAppArgs = (appargs == null) ? EMPTY_STRING_ARRAY : appargs;
     }
@@ -783,7 +783,7 @@ public final class Application
      */
     public File getLocalPath (String path)
     {
-        return new File(_appdir, path);
+        return getLocalPath(_appdir, path);
     }
 
     /**
@@ -1697,6 +1697,11 @@ public final class Application
             log.warning("Failed to URL encode " + path + ": " + ue);
             return path;
         }
+    }
+
+    protected File getLocalPath (File appdir, String path)
+    {
+        return new File(appdir, path);
     }
 
     protected File _appdir;
