@@ -69,12 +69,6 @@ import static com.threerings.getdown.Log.log;
 public abstract class Getdown extends Thread
     implements Application.StatusDisplay, RotatingBackgrounds.ImageLoader
 {
-    public static void main (String[] args)
-    {
-        // legacy support
-        GetdownApp.main(args);
-    }
-
     public Getdown (File appDir, String appId)
     {
         this(appDir, appId, null, null, null);
