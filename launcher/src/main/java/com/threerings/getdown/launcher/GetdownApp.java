@@ -36,6 +36,7 @@ import com.samskivert.util.StringUtil;
 import com.threerings.getdown.data.Digest;
 import com.threerings.getdown.data.SysProps;
 import static com.threerings.getdown.Log.log;
+import static com.threerings.getdown.util.StringUtil.couldBeValidUrl;
 
 /**
  * The main application entry point for Getdown.
@@ -194,6 +195,11 @@ public class GetdownApp
 
             @Override
             protected void showDocument (String url) {
+                if (!couldBeValidUrl(url)) {
+                    // command injection would be possible if we allowed e.g. spaces and double quotes
+                    log.warning("Invalid document URL.", "url", url);
+                    return;
+                }
                 String[] cmdarray;
                 if (RunAnywhere.isWindows()) {
                     String osName = System.getProperty("os.name", "");
