@@ -65,24 +65,24 @@ public class Patcher
                 // depending on the suffix, we do The Right Thing (tm)
                 if (path.endsWith(CREATE)) {
                     path = strip(path, CREATE);
-                    System.out.println("Creating " + path + "...");
+                    log.info("Creating " + path + "...");
                     createFile(file, entry, new File(appdir, path));
 
                 } else if (path.endsWith(PATCH)) {
                     path = strip(path, PATCH);
-                    System.out.println("Patching " + path + "...");
+                    log.info("Patching " + path + "...");
                     patchFile(file, entry, appdir, path);
 
                 } else if (path.endsWith(DELETE)) {
                     path = strip(path, DELETE);
-                    System.out.println("Removing " + path + "...");
+                    log.info("Removing " + path + "...");
                     File target = new File(appdir, path);
                     if (!FileUtil.deleteHarder(target)) {
-                        System.err.println("Failure deleting '" + target + "'.");
+                        log.warning("Failure deleting '" + target + "'.");
                     }
 
                 } else {
-                    System.err.println("Skipping bogus patch file entry: " + path);
+                    log.warning("Skipping bogus patch file entry: " + path);
                 }
 
                 // note that we've completed this entry
@@ -120,7 +120,7 @@ public class Patcher
             }
 
         } catch (IOException ioe) {
-            System.err.println("Error creating '" + target + "': " + ioe);
+            log.warning("Error creating '" + target + "': " + ioe);
         }
     }
 
@@ -144,7 +144,7 @@ public class Patcher
 
             // move the current version of the jar to .old
             if (!FileUtil.renameTo(target, otarget)) {
-                System.err.println("Failed to .oldify '" + target + "'.");
+                log.warning("Failed to .oldify '" + target + "'.");
                 return;
             }
 
@@ -162,9 +162,9 @@ public class Patcher
 
         } catch (IOException ioe) {
             if (patcher == null) {
-                System.err.println("Failed to write patch file '" + patch + "': " + ioe);
+                log.warning("Failed to write patch file '" + patch + "': " + ioe);
             } else {
-                System.err.println("Error patching '" + target + "': " + ioe);
+                log.warning("Error patching '" + target + "': " + ioe);
             }
 
         } finally {

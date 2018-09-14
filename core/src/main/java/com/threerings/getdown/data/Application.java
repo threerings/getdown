@@ -1088,7 +1088,7 @@ public class Application
             log.info("Invoking main({" + StringUtil.join(args, ", ") + "})");
             main.invoke(null, new Object[] { args });
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            log.warning("Failure invoking app main", e);
         }
     }
 
