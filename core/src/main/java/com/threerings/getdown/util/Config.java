@@ -10,14 +10,14 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import com.threerings.getdown.util.StringUtil;
 
 import static com.threerings.getdown.Log.log;
 
@@ -320,11 +320,21 @@ public class Config
     public String getUrl (String name, String def)
     {
         String value = getString(name + "." + Locale.getDefault().getLanguage());
-        if (!StringUtil.isBlank(value)) {
-            return value;
+        if (StringUtil.isBlank(value)) {
+            value = getString(name);
         }
-        value = getString(name);
-        return StringUtil.isBlank(value) ? def : value;
+        if (StringUtil.isBlank(value)) {
+            value = def;
+        }
+        if (!StringUtil.isBlank(value)) {
+            try {
+                HostWhitelist.INSTANCE.verify(new URL(value));
+            } catch (MalformedURLException e) {
+                log.warning("Invalid URL.", "url", value, e);
+                value = null;
+            }
+        }
+        return value;
     }
 
     /**

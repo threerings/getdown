@@ -484,7 +484,7 @@ public class Application
             String suffix = _trackingURLSuffix == null ? "" : _trackingURLSuffix;
             String ga = getGATrackingCode();
             return _trackingURL == null ? null :
-                new URL(_trackingURL + encodePath(event + suffix + ga));
+                HostWhitelist.INSTANCE.verify(new URL(_trackingURL + encodePath(event + suffix + ga)));
         } catch (MalformedURLException mue) {
             log.warning("Invalid tracking URL", "path", _trackingURL, "event", event, "error", mue);
             return null;
@@ -586,7 +586,7 @@ public class Application
 
         // if we are a versioned deployment, create a versioned appbase
         try {
-            _vappbase = (_version < 0) ? new URL(_appbase) : createVAppBase(_version);
+            _vappbase = createVAppBase(_version);
         } catch (MalformedURLException mue) {
             String err = MessageUtil.tcompose("m.invalid_appbase", _appbase);
             throw (IOException) new IOException(err).initCause(mue);
@@ -601,7 +601,7 @@ public class Application
                 latest = SysProps.replaceDomain(latest);
             }
             try {
-                _latest = new URL(latest);
+                _latest = HostWhitelist.INSTANCE.verify(new URL(latest));
             } catch (MalformedURLException mue) {
                 log.warning("Invalid URL for latest attribute.", mue);
             }
@@ -1408,7 +1408,8 @@ public class Application
     protected URL createVAppBase (long version)
         throws MalformedURLException
     {
-        return new URL(_appbase.replace("%VERSION%", "" + version));
+        String url = version < 0 ? _appbase : _appbase.replace("%VERSION%", "" + version);
+        return HostWhitelist.INSTANCE.verify(new URL(url));
     }
 
     /**
