@@ -484,7 +484,7 @@ public class Application
             String suffix = _trackingURLSuffix == null ? "" : _trackingURLSuffix;
             String ga = getGATrackingCode();
             return _trackingURL == null ? null :
-                HostWhitelist.INSTANCE.verify(new URL(_trackingURL + encodePath(event + suffix + ga)));
+                HostWhitelist.verify(new URL(_trackingURL + encodePath(event + suffix + ga)));
         } catch (MalformedURLException mue) {
             log.warning("Invalid tracking URL", "path", _trackingURL, "event", event, "error", mue);
             return null;
@@ -601,7 +601,7 @@ public class Application
                 latest = SysProps.replaceDomain(latest);
             }
             try {
-                _latest = HostWhitelist.INSTANCE.verify(new URL(latest));
+                _latest = HostWhitelist.verify(new URL(latest));
             } catch (MalformedURLException mue) {
                 log.warning("Invalid URL for latest attribute.", mue);
             }
@@ -1409,7 +1409,7 @@ public class Application
         throws MalformedURLException
     {
         String url = version < 0 ? _appbase : _appbase.replace("%VERSION%", "" + version);
-        return HostWhitelist.INSTANCE.verify(new URL(url));
+        return HostWhitelist.verify(new URL(url));
     }
 
     /**

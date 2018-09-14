@@ -7,7 +7,6 @@ package com.threerings.getdown.util;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Collections;
 import java.util.List;
 
 import com.threerings.getdown.data.Build;
@@ -20,49 +19,36 @@ import com.threerings.getdown.data.Build;
  */
 public final class HostWhitelist
 {
-    public static final HostWhitelist INSTANCE = new HostWhitelist();
-
-    private final List<String> _hosts;
-
-    HostWhitelist ()
+    /**
+     * Verifies that the specified URL should be accessible, per the built-in host whitelist.
+     * See {@link Build#hostWhitelist()} and {@link #verify(List,URL)}.
+     */
+    public static URL verify (URL url) throws MalformedURLException
     {
-        this(Build.hostWhitelist());
-    }
-
-    HostWhitelist (List<String> hosts)
-    {
-        _hosts = Collections.unmodifiableList(hosts);
+        return verify(Build.hostWhitelist(), url);
     }
 
     /**
-     * Verifies that the specified URL should be accessible, per this host whitelist.
+     * Verifies that the specified URL should be accessible, per the supplied host whitelist.
      * If the URL should not be accessible, this method throws a {@link MalformedURLException}.
      * If the URL should be accessible, this method simply returns the {@link URL} passed in.
      */
-    public final URL verify (URL url) throws MalformedURLException
+    public static URL verify (List<String> hosts, URL url) throws MalformedURLException
     {
-        if (url == null || _hosts.isEmpty()) {
+        if (url == null || hosts.isEmpty()) {
             // either there is no URL to validate or no whitelist was configured
             return url;
         }
 
         String urlHost = url.getHost();
-
-        for (String host : _hosts) {
+        for (String host : hosts) {
             String regex = host.replace(".", "\\.").replace("*", ".*");
             if (urlHost.matches(regex)) {
                 return url;
             }
         }
 
-        throw new MalformedURLException("The host for the specified URL (" + url
-            + ") is not in the host whitelist: " + _hosts);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public String toString()
-    {
-        return _hosts.toString();
+        throw new MalformedURLException(
+            "The host for the specified URL (" + url + ") is not in the host whitelist: " + hosts);
     }
 }

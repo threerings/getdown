@@ -328,7 +328,7 @@ public class Config
         }
         if (!StringUtil.isBlank(value)) {
             try {
-                HostWhitelist.INSTANCE.verify(new URL(value));
+                HostWhitelist.verify(new URL(value));
             } catch (MalformedURLException e) {
                 log.warning("Invalid URL.", "url", value, e);
                 value = null;

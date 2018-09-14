@@ -10,6 +10,7 @@ import static org.junit.Assert.assertEquals;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Test;
 
@@ -141,12 +142,12 @@ public class HostWhitelistTest
     private static void checkCanVerify (String whitelist, String url, boolean expectedToPass)
         throws MalformedURLException
     {
-        HostWhitelist w = new HostWhitelist(Arrays.asList(StringUtil.parseStringArray(whitelist)));
+        List<String> w = Arrays.asList(StringUtil.parseStringArray(whitelist));
         URL u = new URL(url);
         boolean passed;
 
         try {
-            w.verify(u);
+            HostWhitelist.verify(w, u);
             passed = true;
         } catch (MalformedURLException e) {
             passed = false;
