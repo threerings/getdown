@@ -11,16 +11,37 @@ import static org.junit.Assert.*;
 public class SysPropsTest {
 
     @After public void clearProps () {
+        System.clearProperty("delay");
         System.clearProperty("appbase_domain");
         System.clearProperty("appbase_override");
     }
 
-    public static String[] APPBASES = {
+    private static final String[] APPBASES = {
         "http://foobar.com/myapp",
         "https://foobar.com/myapp",
         "http://foobar.com:8080/myapp",
         "https://foobar.com:8080/myapp"
     };
+
+    @Test public void testStartDelay () {
+
+        assertEquals(0, SysProps.startDelay());
+
+        System.setProperty("delay", "x");
+        assertEquals(0, SysProps.startDelay());
+
+        System.setProperty("delay", "-7");
+        assertEquals(0, SysProps.startDelay());
+
+        System.setProperty("delay", "7");
+        assertEquals(7, SysProps.startDelay());
+
+        System.setProperty("delay", "1440");
+        assertEquals(1440, SysProps.startDelay());
+
+        System.setProperty("delay", "1441");
+        assertEquals(1440, SysProps.startDelay());
+    }
 
     @Test public void testAppbaseDomain () {
         System.setProperty("appbase_domain", "https://barbaz.com");
