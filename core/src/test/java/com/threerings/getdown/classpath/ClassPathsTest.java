@@ -28,7 +28,7 @@ public class ClassPathsTest
         when(_firstJar.getFinalTarget()).thenReturn(_firstJarFile);
         when(_secondJar.getFinalTarget()).thenReturn(_secondJarFile);
         when(_application.getActiveCodeResources()).thenReturn(Arrays.asList(_firstJar, _secondJar));
-        when(_application.getAppdir()).thenReturn(_appdir.getRoot());
+        when(_application.getAppDir()).thenReturn(_appdir.getRoot());
     }
 
     @Test public void shouldBuildDefaultClassPath () throws IOException

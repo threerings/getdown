@@ -48,7 +48,7 @@ public class ClassPaths
      */
     public static ClassPath buildCachedClassPath (Application app) throws IOException
     {
-        File cacheDir = new File(app.getAppdir(), CACHE_DIR);
+        File cacheDir = new File(app.getAppDir(), CACHE_DIR);
         // a negative value of code_cache_retention_days allows to clean up the cache forcefully
         if (app.getCodeCacheRetentionDays() <= 0) {
             runGarbageCollection(app, cacheDir);

@@ -20,6 +20,7 @@ import java.util.List;
 
 import com.threerings.getdown.data.Application;
 import com.threerings.getdown.data.Digest;
+import com.threerings.getdown.data.EnvConfig;
 import com.threerings.getdown.data.Resource;
 import com.threerings.getdown.util.Base64;
 
@@ -73,7 +74,7 @@ public class Digester
         System.out.println("Generating digest file '" + target + "'...");
 
         // create our application and instruct it to parse its business
-        Application app = new Application(appdir, null);
+        Application app = new Application(new EnvConfig(appdir));
         app.init(false);
 
         List<Resource> rsrcs = new ArrayList<>();

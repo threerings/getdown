@@ -42,6 +42,14 @@ public class Log
          */
         public void warning (Object message, Object... args) { doLog(2, message, args); }
 
+        /**
+         * Logs an error message.
+         *
+         * @param message the message to be logged.
+         * @param args a list of key/value pairs and an optional final Throwable.
+         */
+        public void error (Object message, Object... args) { doLog(3, message, args); }
+
         protected void doLog (int levIdx, Object message, Object[] args) {
             if (_impl.isLoggable(LEVELS[levIdx])) {
                 Throwable err = null;

@@ -381,7 +381,7 @@ public class JarDiff implements JarDiffCodes
 
         public String hasSameContent (JarFile2 file, JarEntry entry) throws IOException {
             String thisName = null;
-            Long crcL = new Long(entry.getCrc());
+            Long crcL = Long.valueOf(entry.getCrc());
             // check if this jar contains files with the passed in entry's crc
             if (_crcToEntryMap.containsKey(crcL)) {
                 // get the Linked List with files with the crc
@@ -416,7 +416,7 @@ public class JarDiff implements JarDiffCodes
                 while (entries.hasMoreElements()) {
                     JarEntry entry = entries.nextElement();
                     long crc = entry.getCrc();
-                    Long crcL = new Long(crc);
+                    Long crcL = Long.valueOf(crc);
                     if (_debug) {
                         System.out.println("\t" + entry.getName() + " CRC " + crc);
                     }

@@ -234,44 +234,20 @@ public class Application
     }
 
     /**
-     * Creates an application instance with no signers.
-     *
-     * @see #Application(File, String, List, String[], String[])
-     */
-    public Application (File appdir, String appid)
-    {
-        this(appdir, appid, null, null, null);
-    }
-
-    /**
      * Creates an application instance which records the location of the <code>getdown.txt</code>
      * configuration file from the supplied application directory.
      *
-     * @param appid usually null but a string identifier if a secondary application is desired to
-     * be launched. That application will use {@code appid.class} and {@code appid.apparg} to
-     * configure itself but all other parameters will be the same as the primary application.
-     * @param signers a list of possible signers of this application. Used to verify the digest.
-     * @param jvmargs additional arguments to pass on to launched jvms.
-     * @param appargs additional arguments to pass on to launched application; these will be added
-     * after the args in the getdown.txt file.
      */
-    public Application (File appdir, String appid, List<Certificate> signers,
-                        String[] jvmargs, String[] appargs)
-    {
-        _appdir = appdir;
-        _appid = appid;
-        _signers = (signers == null) ? Collections.<Certificate>emptyList() : signers;
-        _config = getLocalPath(appdir, CONFIG_FILE);
-        _extraJvmArgs = (jvmargs == null) ? EMPTY_STRING_ARRAY : jvmargs;
-        _extraAppArgs = (appargs == null) ? EMPTY_STRING_ARRAY : appargs;
+    public Application (EnvConfig envc) {
+        _envc = envc;
+        _config = getLocalPath(envc.appDir, CONFIG_FILE);
     }
 
     /**
      * Returns the configured application directory.
      */
-    public File getAppdir()
-    {
-        return _appdir;
+    public File getAppDir () {
+        return _envc.appDir;
     }
 
     /**
@@ -550,7 +526,7 @@ public class Application
             }
             // otherwise, issue a warning that we found no getdown file
             else {
-                log.info("Found no getdown.txt file", "appdir", _appdir);
+                log.info("Found no getdown.txt file", "appdir", getAppDir());
             }
         } catch (Exception e) {
             log.warning("Failure reading config file", "file", config, e);
@@ -559,8 +535,8 @@ public class Application
         // if we failed to read our config file, check for an appbase specified via a system
         // property; we can use that to bootstrap ourselves back into operation
         if (config == null) {
-            String appbase = SysProps.appBase();
-            log.info("Attempting to obtain 'appbase' from system property", "appbase", appbase);
+            String appbase = _envc.appBase;
+            log.info("Using 'appbase' from bootstrap config", "appbase", appbase);
             Map<String, Object> cdata = new HashMap<>();
             cdata.put("appbase", appbase);
             config = new Config(cdata);
@@ -607,7 +583,7 @@ public class Application
             }
         }
 
-        String appPrefix = StringUtil.isBlank(_appid) ? "" : (_appid + ".");
+        String appPrefix = _envc.appId == null ? "" : (_envc.appId + ".");
 
         // determine our application class name (use app-specific class _if_ one is provided)
         _class = config.getString("class");
@@ -708,9 +684,6 @@ public class Application
             addAll(jvmargs, _jvmargs);
         }
 
-        // Add the launch specific JVM arguments
-        addAll(_extraJvmArgs, _jvmargs);
-
         // get the set of optimum JVM arguments
         _optimumJvmArgs = config.getMultiValue("optimum_jvmarg");
 
@@ -719,7 +692,7 @@ public class Application
         addAll(appargs, _appargs);
 
         // add the launch specific application arguments
-        addAll(_extraAppArgs, _appargs);
+        _appargs.addAll(_envc.appArgs);
 
         // look for custom arguments
         fillAssignmentListFromPairs("extra.txt", _txtJvmArgs);
@@ -783,7 +756,7 @@ public class Application
      */
     public File getLocalPath (String path)
     {
-        return getLocalPath(_appdir, path);
+        return getLocalPath(getAppDir(), path);
     }
 
     /**
@@ -806,7 +779,7 @@ public class Application
             // if we have an unpacked VM, check the 'release' file for its version
             Resource vmjar = getJavaVMResource();
             if (vmjar != null && vmjar.isMarkedValid()) {
-                File vmdir = new File(_appdir, LaunchUtil.LOCAL_JAVA_DIR);
+                File vmdir = new File(getAppDir(), LaunchUtil.LOCAL_JAVA_DIR);
                 File relfile = new File(vmdir, "release");
                 if (!relfile.exists()) {
                     log.warning("Unpacked JVM missing 'release' file. Assuming valid version.");
@@ -925,7 +898,7 @@ public class Application
         ArrayList<String> args = new ArrayList<>();
 
         // reconstruct the path to the JVM
-        args.add(LaunchUtil.getJVMPath(_appdir, _windebug || optimum));
+        args.add(LaunchUtil.getJVMPath(getAppDir(), _windebug || optimum));
 
         // check whether we're using -jar mode or -classpath mode
         boolean dashJarMode = MANIFEST_CLASS.equals(_class);
@@ -999,7 +972,7 @@ public class Application
         String[] sargs = args.toArray(new String[args.size()]);
         log.info("Running " + StringUtil.join(sargs, "\n  "));
 
-        return Runtime.getRuntime().exec(sargs, envp, _appdir);
+        return Runtime.getRuntime().exec(sargs, envp, getAppDir());
     }
 
     /**
@@ -1095,7 +1068,7 @@ public class Application
     /** Replaces the application directory and version in any argument. */
     protected String processArg (String arg)
     {
-        arg = arg.replace("%APPDIR%", _appdir.getAbsolutePath());
+        arg = arg.replace("%APPDIR%", getAppDir().getAbsolutePath());
         arg = arg.replace("%VERSION%", String.valueOf(_version));
 
         // if this argument contains %ENV.FOO% replace those with the associated values looked up
@@ -1135,7 +1108,7 @@ public class Application
 
         // this will read in the contents of the digest file and validate itself
         try {
-            _digest = new Digest(_appdir, _strictComments);
+            _digest = new Digest(getAppDir(), _strictComments);
         } catch (IOException ioe) {
             log.info("Failed to load digest: " + ioe.getMessage() + ". Attempting recovery...");
         }
@@ -1149,7 +1122,7 @@ public class Application
             try {
                 status.updateStatus("m.checking");
                 downloadDigestFiles();
-                _digest = new Digest(_appdir, _strictComments);
+                _digest = new Digest(getAppDir(), _strictComments);
                 if (!olddig.equals(_digest.getMetaDigest())) {
                     log.info("Unversioned digest changed. Revalidating...");
                     status.updateStatus("m.validating");
@@ -1167,7 +1140,7 @@ public class Application
         if (_digest == null) {
             status.updateStatus("m.updating_metadata");
             downloadDigestFiles();
-            _digest = new Digest(_appdir, _strictComments);
+            _digest = new Digest(getAppDir(), _strictComments);
         }
 
         // now verify the contents of our main config file
@@ -1178,7 +1151,7 @@ public class Application
             // caller because there's nothing we can do to automatically recover
             downloadConfigFile();
             downloadDigestFiles();
-            _digest = new Digest(_appdir, _strictComments);
+            _digest = new Digest(getAppDir(), _strictComments);
             // revalidate everything if we end up downloading new metadata
             clearValidationMarkers();
             // if the new copy validates, reinitialize ourselves; otherwise report baffling hoseage
@@ -1509,8 +1482,8 @@ public class Application
         File target = downloadFile(path);
 
         if (sigVersion > 0) {
-            if (_signers.isEmpty()) {
-                log.info("No signers, not verifying file", "path", path);
+            if (_envc.certs.isEmpty()) {
+                log.info("No signing certs, not verifying digest.txt", "path", path);
 
             } else {
                 File signatureFile = downloadFile(path + SIGNATURE_SUFFIX);
@@ -1523,7 +1496,7 @@ public class Application
 
                 byte[] buffer = new byte[8192];
                 int length, validated = 0;
-                for (Certificate cert : _signers) {
+                for (Certificate cert : _envc.certs) {
                     try (FileInputStream dataInput = new FileInputStream(target)) {
                         Signature sig = Signature.getInstance(Digest.sigAlgorithm(sigVersion));
                         sig.initVerify(cert);
@@ -1705,8 +1678,7 @@ public class Application
         return new File(appdir, path);
     }
 
-    protected File _appdir;
-    protected String _appid;
+    protected final EnvConfig _envc;
     protected File _config;
     protected Digest _digest;
 
@@ -1749,14 +1721,9 @@ public class Application
     protected List<String> _jvmargs = new ArrayList<>();
     protected List<String> _appargs = new ArrayList<>();
 
-    protected String[] _extraJvmArgs;
-    protected String[] _extraAppArgs;
-
     protected String[] _optimumJvmArgs;
 
     protected List<String> _txtJvmArgs = new ArrayList<>();
-
-    protected List<Certificate> _signers;
 
     /** If a warning has been issued about not being able to set modtimes. */
     protected boolean _warnedAboutSetLastModified;

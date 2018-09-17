@@ -14,24 +14,18 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
 
 import javax.swing.JFrame;
 import javax.swing.WindowConstants;
 
 import com.samskivert.swing.util.SwingUtil;
 import com.threerings.getdown.data.Digest;
+import com.threerings.getdown.data.EnvConfig;
 import com.threerings.getdown.data.SysProps;
 import com.threerings.getdown.util.LaunchUtil;
 import com.threerings.getdown.util.StringUtil;
@@ -42,11 +36,10 @@ import static com.threerings.getdown.Log.log;
  */
 public class GetdownApp
 {
-
-    private static final String USER_HOME = "${user.home}";
-
-    public static void main (String[] argv)
-    {
+    /**
+     * The main entry point of the Getdown launcher application.
+     */
+    public static void main (String[] argv) {
         try {
             start(argv);
         } catch (Exception e) {
@@ -61,58 +54,17 @@ public class GetdownApp
      * @throws Exception if anything goes wrong starting Getdown.
      */
     public static Getdown start (String[] argv) throws Exception {
-        int aidx = 0;
-        List<String> args = Arrays.asList(argv);
-
-        // check for app dir in a sysprop and then via argv
-        String adarg = SysProps.appDir();
-        if (StringUtil.isBlank(adarg)) {
-            loadBootstrapResource();
-            if (args.isEmpty() && SysProps.appDir() == null) {
-                System.err.println("Usage: java -jar getdown.jar app_dir [app_id] [app args]");
-                System.exit(-1);
-            }
-            if (!args.isEmpty()) {
-              adarg = args.get(aidx++);
-            } else {
-              adarg = SysProps.appDir();
-            }
-        }
-
-        // check for an app identifier in a sysprop and then via argv
-        String appId = SysProps.appId();
-        if (StringUtil.isBlank(appId) && aidx < args.size()) {
-            appId = args.get(aidx++);
-        }
-
-        // pass along anything after that as app args
-        String[] appArgs = (aidx >= args.size()) ? null :
-            args.subList(aidx, args.size()).toArray(new String[0]);
-
-        // ensure a valid directory was supplied
-        File appDir = new File(adarg);
-        if (!appDir.exists() || !appDir.isDirectory()) {
-            log.warning("Invalid app_dir '" + adarg + "'.");
+        List<EnvConfig.Note> notes = new ArrayList<>();
+        EnvConfig envc = EnvConfig.create(argv, notes);
+        if (envc == null) {
+            if (!notes.isEmpty()) for (EnvConfig.Note n : notes) System.err.println(n.message);
+            else System.err.println("Usage: java -jar getdown.jar [app_dir] [app_id] [app args]");
             System.exit(-1);
-        }
-
-        // load X.509 certificate if it exists
-        File crtFile = new File(appDir, Digest.digestFile(Digest.VERSION) + ".crt");
-        List<Certificate> crts = new ArrayList<>();
-        if (crtFile.exists()) {
-            try (FileInputStream fis = new FileInputStream(crtFile)) {
-                X509Certificate certificate = (X509Certificate)
-                    CertificateFactory.getInstance("X.509").generateCertificate(fis);
-                crts.add(certificate);
-            } catch (Exception e) {
-                log.warning("Certificate error: " + e.getMessage());
-                System.exit(-1);
-            }
         }
 
         // pipe our output into a file in the application directory
         if (!SysProps.noLogRedir()) {
-            File logFile = new File(appDir, "launcher.log");
+            File logFile = new File(envc.appDir, "launcher.log");
             try {
                 PrintStream logOut = new PrintStream(
                     new BufferedOutputStream(new FileOutputStream(logFile)), true);
@@ -122,6 +74,17 @@ public class GetdownApp
                 log.warning("Unable to redirect output to '" + logFile + "': " + ioe);
             }
         }
+
+        // report any notes from reading our env config, and abort if necessary
+        boolean abort = false;
+        for (EnvConfig.Note note : notes) {
+            switch (note.level) {
+            case INFO: log.info(note.message); break;
+            case WARN: log.warning(note.message); break;
+            case ERROR: log.error(note.message); abort = true; break;
+            }
+        }
+        if (abort) System.exit(-1);
 
         // record a few things for posterity
         log.info("------------------ VM Info ------------------");
@@ -135,7 +98,7 @@ public class GetdownApp
         log.info("-- Cur dir: " + System.getProperty("user.dir"));
         log.info("---------------------------------------------");
 
-        Getdown app = new Getdown(appDir, appId, crts, null, appArgs) {
+        Getdown app = new Getdown(envc) {
             @Override
             protected Container createContainer () {
                 // create our user interface, and display it
@@ -269,26 +232,5 @@ public class GetdownApp
         };
         app.start();
         return app;
-    }
-
-    private static void loadBootstrapResource() {
-      try {
-        ResourceBundle bundle = ResourceBundle.getBundle("bootstrap");
-        if (bundle.containsKey("appbase")) {
-          System.setProperty("appbase", bundle.getString("appbase"));
-        }
-        if (bundle.containsKey("appdir")) {
-          String appDir = bundle.getString("appdir");
-          appDir = appDir.replace(USER_HOME, System.getProperty("user.home"));
-          File appDirFile = new File(appDir);
-          if (!appDirFile.exists()) {
-            appDirFile.mkdirs();
-          }
-          System.setProperty("appdir", appDir);
-        }
-        log.info("bootstrap.properties found using:", "_appdir", System.getProperty("appdir"), "appbase", System.getProperty("appbase"));
-      } catch (MissingResourceException e) {
-        log.info("bootstrap.properties not found in resource bundle, starting without bootstrapping");
-      }
     }
 }

@@ -28,8 +28,8 @@ public class SysProps
         return System.getProperty("appid");
     }
 
-    /** Configures the appbase (in lieu of providing a skeleton getdown.txt, and as a last resort
-      * fallback). Usage: {@code -Dappbase=URL}. */
+    /** Configures the bootstrap appbase (used in lieu of providing a skeleton getdown.txt, and as
+      * a last resort fallback). Usage: {@code -Dappbase=URL}. */
     public static String appBase () {
         return System.getProperty("appbase");
     }

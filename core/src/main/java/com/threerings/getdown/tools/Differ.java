@@ -23,6 +23,7 @@ import java.security.MessageDigest;
 
 import com.threerings.getdown.data.Application;
 import com.threerings.getdown.data.Digest;
+import com.threerings.getdown.data.EnvConfig;
 import com.threerings.getdown.data.Resource;
 import com.threerings.getdown.util.FileUtil;
 import com.threerings.getdown.util.StreamUtil;
@@ -58,13 +59,13 @@ public class Differ
                                   ", overs=" + overs + "].");
         }
 
-        Application oapp = new Application(ovdir, null);
+        Application oapp = new Application(new EnvConfig(ovdir));
         oapp.init(false);
         ArrayList<Resource> orsrcs = new ArrayList<>();
         orsrcs.addAll(oapp.getCodeResources());
         orsrcs.addAll(oapp.getResources());
 
-        Application napp = new Application(nvdir, null);
+        Application napp = new Application(new EnvConfig(nvdir));
         napp.init(false);
         ArrayList<Resource> nrsrcs = new ArrayList<>();
         nrsrcs.addAll(napp.getCodeResources());

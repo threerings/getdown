@@ -43,22 +43,11 @@ import ca.beq.util.win32.registry.RootKey;
 import com.samskivert.swing.util.SwingUtil;
 
 import com.threerings.getdown.data.Application.UpdateInterface.Step;
-import com.threerings.getdown.data.Application;
-import com.threerings.getdown.data.Build;
-import com.threerings.getdown.data.Resource;
-import com.threerings.getdown.data.SysProps;
+import com.threerings.getdown.data.*;
 import com.threerings.getdown.net.Downloader;
 import com.threerings.getdown.net.HTTPDownloader;
 import com.threerings.getdown.tools.Patcher;
-import com.threerings.getdown.util.Config;
-import com.threerings.getdown.util.ConnectionUtil;
-import com.threerings.getdown.util.FileUtil;
-import com.threerings.getdown.util.LaunchUtil;
-import com.threerings.getdown.util.MessageUtil;
-import com.threerings.getdown.util.ProgressAggregator;
-import com.threerings.getdown.util.ProgressObserver;
-import com.threerings.getdown.util.StringUtil;
-import com.threerings.getdown.util.VersionUtil;
+import com.threerings.getdown.util.*;
 
 import static com.threerings.getdown.Log.log;
 
@@ -68,13 +57,7 @@ import static com.threerings.getdown.Log.log;
 public abstract class Getdown extends Thread
     implements Application.StatusDisplay, RotatingBackgrounds.ImageLoader
 {
-    public Getdown (File appDir, String appId)
-    {
-        this(appDir, appId, null, null, null);
-    }
-
-    public Getdown (File appDir, String appId, List<Certificate> signers,
-                    String[] jvmargs, String[] appargs)
+    public Getdown (EnvConfig envc)
     {
         super("Getdown");
         try {
@@ -94,7 +77,7 @@ public abstract class Getdown extends Thread
         } catch (Exception e) {
             // welcome to hell, where java can't cope with a classpath that contains jars that live
             // in a directory that contains a !, at least the same bug happens on all platforms
-            String dir = appDir.toString();
+            String dir = envc.appDir.toString();
             if (dir.equals(".")) {
                 dir = System.getProperty("user.dir");
             }
@@ -103,7 +86,7 @@ public abstract class Getdown extends Thread
                 "contains the '!' character, this will trigger this error.";
             fail(errmsg);
         }
-        _app = new Application(appDir, appId, signers, jvmargs, appargs);
+        _app = new Application(envc);
         _startup = System.currentTimeMillis();
     }
 
