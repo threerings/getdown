@@ -24,6 +24,8 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
 import javax.swing.JFrame;
 import javax.swing.WindowConstants;
@@ -40,6 +42,9 @@ import static com.threerings.getdown.Log.log;
  */
 public class GetdownApp
 {
+
+    private static final String USER_HOME = "${user.home}";
+
     public static void main (String[] argv)
     {
         try {
@@ -62,11 +67,16 @@ public class GetdownApp
         // check for app dir in a sysprop and then via argv
         String adarg = SysProps.appDir();
         if (StringUtil.isBlank(adarg)) {
-            if (args.isEmpty()) {
+            loadBootstrapResource();
+            if (args.isEmpty() && SysProps.appDir() == null) {
                 System.err.println("Usage: java -jar getdown.jar app_dir [app_id] [app args]");
                 System.exit(-1);
             }
-            adarg = args.get(aidx++);
+            if (!args.isEmpty()) {
+              adarg = args.get(aidx++);
+            } else {
+              adarg = SysProps.appDir();
+            }
         }
 
         // check for an app identifier in a sysprop and then via argv
@@ -259,5 +269,26 @@ public class GetdownApp
         };
         app.start();
         return app;
+    }
+
+    private static void loadBootstrapResource() {
+      try {
+        ResourceBundle bundle = ResourceBundle.getBundle("bootstrap");
+        if (bundle.containsKey("appbase")) {
+          System.setProperty("appbase", bundle.getString("appbase"));
+        }
+        if (bundle.containsKey("appdir")) {
+          String appDir = bundle.getString("appdir");
+          appDir = appDir.replace(USER_HOME, System.getProperty("user.home"));
+          File appDirFile = new File(appDir);
+          if (!appDirFile.exists()) {
+            appDirFile.mkdirs();
+          }
+          System.setProperty("appdir", appDir);
+        }
+        log.info("bootstrap.properties found using:", "_appdir", System.getProperty("appdir"), "appbase", System.getProperty("appbase"));
+      } catch (MissingResourceException e) {
+        log.info("bootstrap.properties not found in resource bundle, starting without bootstrapping");
+      }
     }
 }
