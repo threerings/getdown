@@ -149,9 +149,9 @@ public final class EnvConfig {
         if (appBase != null) notes.add(Note.info("Using appbase from " + appBaseProv + ": " +
                                                  appBase));
 
-        // pass along anything after the first tow args as extra app args
+        // pass along anything after the first two args as extra app args
         List<String> appArgs = argv.length > 2 ?
-            Arrays.asList(argv).subList(2, argv.length-2) :
+            Arrays.asList(argv).subList(2, argv.length) :
             Collections.<String>emptyList();
 
         // load X.509 certificate if it exists
