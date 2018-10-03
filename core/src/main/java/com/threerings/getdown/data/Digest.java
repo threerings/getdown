@@ -56,8 +56,7 @@ public class Digest
         throws IOException
     {
         // first compute the digests for all the resources in parallel
-        ExecutorService exec = Executors.newFixedThreadPool(
-            Runtime.getRuntime().availableProcessors());
+        ExecutorService exec = Executors.newFixedThreadPool(SysProps.threadPoolSize());
         final Map<Resource, String> digests = new ConcurrentHashMap<>();
         final BlockingQueue<Object> completed = new LinkedBlockingQueue<>();
         final int fversion = version;

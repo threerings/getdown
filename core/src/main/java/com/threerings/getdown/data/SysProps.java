@@ -107,6 +107,12 @@ public class SysProps
         return Integer.getInteger("read_timeout", 30);
     }
 
+    /** Returns the number of threads used to perform digesting and verifying operations in
+      * parallel. Usage: {@code -Dthread_pool_size=N} */
+    public static int threadPoolSize () {
+        return Integer.getInteger("thread_pool_size", Runtime.getRuntime().availableProcessors()-1);
+    }
+
     /** Parses a Java version system property using the supplied regular expression. The numbers
       * extracted from the regexp will be placed in each consecutive hundreds position in the
       * returned value.
