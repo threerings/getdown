@@ -4,7 +4,7 @@
   <parent>
     <groupId>com.threerings.getdown</groupId>
     <artifactId>getdown</artifactId>
-    <version>1.8-SNAPSHOT</version>
+    <version>1.8.0</version>
   </parent>
 
   <artifactId>getdown-core</artifactId>
@@ -34,7 +34,7 @@
        Wildcards can be used (*.mycompany.com) and multiple values can be
        separated by commas (app1.foo.com,app2.bar.com,app3.baz.com). -->
   <properties>
-    <getdown.host.whitelist></getdown.host.whitelist>
+    <getdown.host.whitelist />
   </properties>
 
   <build>
@@ -76,15 +76,13 @@
             <configuration>
               <target>
                 <tstamp>
-                  <format property="getdown.build.time" pattern="yyyy-MM-dd HH:mm"/>
+                  <format property="getdown.build.time" pattern="yyyy-MM-dd HH:mm" />
                 </tstamp>
-                <copy file="${project.build.sourceDirectory}/com/threerings/getdown/data/Build.java.tmpl"
-                      tofile="${project.build.sourceDirectory}/com/threerings/getdown/data/Build.java"
-                      overwrite="true">
+                <copy file="${project.build.sourceDirectory}/com/threerings/getdown/data/Build.java.tmpl" tofile="${project.build.sourceDirectory}/com/threerings/getdown/data/Build.java" overwrite="true">
                   <filterset>
-                    <filter token="build_time" value="${getdown.build.time}"/>
-                    <filter token="build_version" value="${project.version}"/>
-                    <filter token="host_whitelist" value="${getdown.host.whitelist}"/>
+                    <filter token="build_time" value="${getdown.build.time}" />
+                    <filter token="build_version" value="${project.version}" />
+                    <filter token="host_whitelist" value="${getdown.host.whitelist}" />
                   </filterset>
                 </copy>
               </target>
