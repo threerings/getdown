@@ -1,5 +1,53 @@
 # Getdown Releases
 
+## 1.8.0 - Oct 19, 2018
+
+* Added support for manually specifying the thread pool size via `-Dthread_pool_size`. Also reduced
+  the default thread pool size to `num_cpus-1` from `num_cpus`.
+
+* Added support for bundling a `bootstrap.properties` file with the Getdown jar file, which can
+  specify defaults for `appdir`, `appbase` and `appid`.
+
+* Added support for a host URL whitelist. Getdown can be custom built to refuse to operate with any
+  URL that does not match the built-time-specified whitelist. See `core/pom.xml` for details.
+
+* Removed the obsolete support for running Getdown in a signed applet. Applets are no longer
+  supported by any widely used browser.
+
+* Split the project into multiple Maven modules. See the notes on [migrating from 1.7 to 1.8] for
+  details.
+
+* A wide variety of small cleanups resulting from a security review generously performed by a
+  prospective user. This includes various uses of deterministic locales and encodings instead of
+  the platform default locale/encoding, in cases where platform/locale-specific behavior is not
+  desired or needed.
+
+* Made use of `appid` fall back to main app class if no `appid`-specific class is specified.
+
+* Added support for marking resources as executable (via `xresource`).
+
+* Fixed issue where entire tracking URL was being URL encoded.
+
+* Changed translations to avoid the use of the term 'game'. Use 'app' instead.
+
+## 1.7.1 - Jun 6, 2018
+
+* Made it possible to use `appbase_domain` with `https` URLs.
+
+* Fixed issue with undecorated splash window being unclosable if failures happen early in
+  initialization process. (#57)
+
+* Added support for transparent splash window. (#92)
+
+* Fixed problem with unpacked code resources (`ucode`) and `pack.gz` files. (#95)
+
+* Changed default Java version regex to support new Java 9+ version formats. (#93)
+
+* Ensure correct signature algorithm is used for each version of digest files. (#91)
+
+* Use more robust delete in all cases where Getdown needs to delete files. This should fix issues
+  with lingering files on Windows (where sometimes delete fails spuriously).
+
 ## 1.7.0 - Dec 12, 2017
 
 * Fixed issue with `Digester` thread pool not being shutdown. (#89)
@@ -77,3 +125,5 @@
 
 * The first production use of Getdown (on https://www.puzzlepirates.com which is miraculously still
   operational as of 2018 when this changelog was created).
+
+[migrating from 1.7 to 1.8]: https://github.com/threerings/getdown/wiki/Migrate17to18
