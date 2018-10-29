@@ -42,17 +42,21 @@ See [CHANGELOG.md](CHANGELOG.md) for release notes.
 
 ## Obtaining Getdown
 
-The latest version of Getdown can be obtained thusly:
+Getdown will likely need to be integrated into your build, for which we have
+[separate instructions](https://github.com/threerings/getdown/wiki/Build-Integration). You can
+also download the individual jar files from Maven Central if needed:
 
-  * Download the pre-built jar file from Maven Central:
-    [getdown-1.8.0.jar](http://repo2.maven.org/maven2/com/threerings/getdown/1.8.0/getdown-1.8.0.jar)
-  * Obtain the jar artifact via Maven with the following identifier: `com.threerings:getdown:1.8.0`.
-  * [Check out the code](https://github.com/threerings/getdown) and build it yourself.
+  * In [this Maven Central directory](http://repo2.maven.org/maven2/com/threerings/getdown) you can
+    find the latest versions of `getdown-launcher.jar` (the code that updates and launches your
+    app), `getdown-ant.jar` (build integration for the Ant build tool, and which can also be used
+    with Maven), and `getdown-core.jar` (the core updating and launching logic which you don't
+    usually use directly, unless you're embedding Getdown in your app).
 
 You can also:
 
-  * View the [javadoc documentation] online.
+  * [Check out the code](https://github.com/threerings/getdown) and build it yourself.
   * Browse the [source code] online.
+  * View the [javadoc documentation] online.
 
 ## JVM Version Requirements
 
