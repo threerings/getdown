@@ -26,7 +26,7 @@ Getdown was originally written by developers at [OOO] for the deployment of thei
 massively multiplayer games. Try out any of the following games to see it in action:
 
   * [Puzzle Pirates](https://www.puzzlepirates.com/) - OOO
-  * [Spiral Knights](https://spiralknights.com/) - OOO
+  * [Spiral Knights](https://www.spiralknights.com/) - OOO
 
 Getdown is implemented in Java, but certainly can be used to deploy non-Java-based applications.
 Doing so would be a little crazy since you may have to install a JVM on the user's machine (if they
