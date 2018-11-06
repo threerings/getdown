@@ -60,8 +60,8 @@ public final class ProxyPanel extends JPanel implements ActionListener
 
     row = new JPanel(new GridLayout());
     row.add(new SaneLabelField(get("m.proxy_auth_required")), BorderLayout.WEST);
-    JCheckBox tCheckBox = new JCheckBox();
-    row.add(tCheckBox);
+    _checkBox = new JCheckBox();
+    row.add(_checkBox);
     add(row);
 
     row = new JPanel(new GridLayout());
@@ -78,7 +78,7 @@ public final class ProxyPanel extends JPanel implements ActionListener
     row.add(_password);
     add(row);
 
-    tCheckBox.addItemListener(_itemListener);
+    _checkBox.addItemListener(_itemListener);
 
     add(new Spacer(5, 5));
     add(new SaneLabelField(get("m.proxy_extra")));
@@ -122,7 +122,7 @@ public final class ProxyPanel extends JPanel implements ActionListener
     // or the JLabel will claim a bogus height thinking it can lay its
     // text out all on one line which will booch the whole UI's
     // preferred size
-    return new Dimension(500, 450);
+    return new Dimension(500, 550);
   }
 
   // documentation inherited from interface
@@ -133,8 +133,15 @@ public final class ProxyPanel extends JPanel implements ActionListener
     if (cmd.equals("ok"))
     {
       // communicate this info back to getdown
-      _getdown.configureProxy(_host.getText(), _port.getText());
-
+      if (_checkBox.isSelected())
+      {
+      _getdown.configureProxy(_host.getText(), _port.getText(), _username.getText(),
+            _password.getPassword());
+      }
+      else
+      {
+        _getdown.configureProxy(_host.getText(), _port.getText());
+      }
     }
     else
     {
@@ -209,11 +216,13 @@ public final class ProxyPanel extends JPanel implements ActionListener
     {
       if (aE.getStateChange() == ItemEvent.SELECTED)
       {
+        _checkBox.setSelected(true);
         _username.setEnabled(true);
         _password.setEnabled(true);
       }
       else
       {
+        _checkBox.setSelected(false);
         _username.setEnabled(false);
         _password.setEnabled(false);
       }
@@ -227,4 +236,5 @@ public final class ProxyPanel extends JPanel implements ActionListener
   protected JTextField _port;
   protected JTextField _username;
   protected JPasswordField _password;
+  protected JCheckBox _checkBox;
 }

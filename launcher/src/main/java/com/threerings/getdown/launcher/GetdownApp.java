@@ -1,13 +1,15 @@
 //
-// Getdown - application installer, patcher and launcher
+//Getdown - application installer, patcher and launcher
 // Copyright (C) 2004-2018 Getdown authors
 // https://github.com/threerings/getdown/blob/master/LICENSE
 
 package com.threerings.getdown.launcher;
 
-import java.awt.EventQueue;
+import static com.threerings.getdown.Log.log;
+
 import java.awt.Color;
 import java.awt.Container;
+import java.awt.EventQueue;
 import java.awt.IllegalComponentStateException;
 import java.awt.Image;
 import java.awt.event.WindowAdapter;
@@ -28,7 +30,6 @@ import com.threerings.getdown.data.EnvConfig;
 import com.threerings.getdown.data.SysProps;
 import com.threerings.getdown.util.LaunchUtil;
 import com.threerings.getdown.util.StringUtil;
-import static com.threerings.getdown.Log.log;
 
 /**
  * The main application entry point for Getdown.
