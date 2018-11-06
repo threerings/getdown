@@ -1,3 +1,7 @@
 /*/target/
 /target/
+/*/bin/
+.settings/
+target/
 core/src/main/java/com/threerings/getdown/data/Build.java
+*.class
