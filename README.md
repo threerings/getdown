@@ -9,6 +9,12 @@ It was designed as a replacement for [Java Web Start](http://java.sun.com/produc
 due to limitations in Java Web Start's architecture which are outlined in the
 [rationale](https://github.com/threerings/getdown/wiki/Rationale) section.
 
+Note: Getdown was designed *in 2004* as an alternative to Java Web Start, because of design choices
+made by JWS that were problematic to the use cases its authors had. It is _not_ a drop-in
+replacement for JWS, aimed to help the developers left in the lurch by the deprecation of JWS in
+Java 9. It may still be a viable alternative for developers looking to replace JWS, but don't
+expect to find feature parity with JWS.
+
 ## How do I use it?
 
 A tutorial and more detailed specification are available from the [Documentation] page. Questions
@@ -28,13 +34,10 @@ massively multiplayer games. Try out any of the following games to see it in act
   * [Puzzle Pirates](https://www.puzzlepirates.com/) - OOO
   * [Spiral Knights](https://www.spiralknights.com/) - OOO
 
-Getdown is implemented in Java, but certainly can be used to deploy non-Java-based applications.
-Doing so would be a little crazy since you may have to install a JVM on the user's machine (if they
-don't already have one installed), which is a ~7MB download. This isn't so bad if you're already
-installing a Java application and must have a JVM, but it's a little crazy if the JVM is only used
-for your installer. It is probably possible to compile Getdown with
-[GCJ](http://gcc.gnu.org/java/), which would make Getdown a viable choice for non-Java
-applications.
+Getdown is implemented in Java, and is designed to deploy and update JVM-based applications. While
+it would be technically feasible to use Getdown to deploy non-JVM-based applications, it is not
+currently supported and it is unlikely that the overhead of bundling a JVM just to run Getdown
+would be worth it if the JVM were not also being used to run the target application.
 
 ## Release notes
 
