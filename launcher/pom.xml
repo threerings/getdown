@@ -35,7 +35,7 @@
       <artifactId>jregistrykey</artifactId>
       <version>1.0</version>
       <scope>system</scope>
-      <systemPath>${basedir}\..\lib\jregistrykey\jregistrykey\1.0\jregistrykey-1.0.jar</systemPath>
+      <systemPath>${basedir}/../lib/jregistrykey/jregistrykey/1.0/jregistrykey-1.0.jar</systemPath>
     </dependency>
   </dependencies>
 
