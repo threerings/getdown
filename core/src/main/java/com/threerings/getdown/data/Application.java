@@ -1078,7 +1078,8 @@ public class Application
             Matcher matcher = ENV_VAR_PATTERN.matcher(arg);
             while (matcher.find()) {
                 String varName = matcher.group(1), varValue = System.getenv(varName);
-                matcher.appendReplacement(sb, varValue == null ? "MISSING:"+varName : varValue);
+                String repValue = varValue == null ? "MISSING:"+varName : varValue;
+                matcher.appendReplacement(sb, Matcher.quoteReplacement(repValue));
             }
             matcher.appendTail(sb);
             arg = sb.toString();
