@@ -326,22 +326,6 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
       return true;
     }
 
-    //look for and read our proxy.txt file
-    File pfile = _app.getLocalPath("proxy.txt");
-    if (pfile.exists())
-    {
-      try
-      {
-        Config pconf = Config.parseConfig(pfile, Config.createOpts(false));
-        setProxyProperties(pconf.getString("host"), pconf.getString("port"));
-        proxySettingsDetected = true;
-      }
-      catch (IOException ioe)
-      {
-        log.warning("Failed to read '" + pfile + "': " + ioe);
-      }
-    }
-
     // look in the Vinders registry
     if (LaunchUtil.isWindows())
     {
@@ -410,7 +394,7 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
         }
         updateStatus("m.detecting_proxy");
 
-    boolean proxyConnected = checkProxyConnection(pfile);
+    boolean proxyConnected = checkProxyConnection();
     if (!proxySettingsDetected && proxyConnected)
     {
       // we got through, so we appear not to require a proxy; make a blank proxy config and
@@ -430,16 +414,14 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
     return proxyConnected;
   }
 
-  // -------------------------------------------------------------------
 
-  private boolean checkProxyConnection(File pfile)
+  private boolean checkProxyConnection()
   {
     boolean successfullyConnected = false;
     URL rurl = _app.getConfigResource().getRemote();
-    log.info(rurl.toString());
+    log.info("Check proxyconnection: " + rurl.toString());
     try
     {
-      // try to make a HEAD request for this URL (use short connect and read timeouts)
       URLConnection conn = ConnectionUtil.open(rurl, 5, 5);
       if (conn instanceof HttpURLConnection)
       {
@@ -448,7 +430,6 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
         {
           hcon.setRequestMethod("HEAD");
           hcon.connect();
-          // make sure we got a satisfactory response code
           if (hcon.getResponseCode() == HttpURLConnection.HTTP_PROXY_AUTH ||
               hcon.getResponseCode() == HttpURLConnection.HTTP_FORBIDDEN)
           {
