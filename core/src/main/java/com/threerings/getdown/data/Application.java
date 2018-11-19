@@ -1475,7 +1475,7 @@ public class Application
      *
      * @param sigVersion if {@code 0} no validation will be performed, if {@code > 0} then this
      * should indicate the version of the digest file being validated which indicates which
-     * algorithm to use to verify the signature. See {@link Digest#VESRION}.
+     * algorithm to use to verify the signature. See {@link Digest#VERSION}.
      */
     protected void downloadControlFile (String path, int sigVersion)
         throws IOException
