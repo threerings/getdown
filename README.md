@@ -45,15 +45,23 @@ See [CHANGELOG.md](CHANGELOG.md) for release notes.
 
 ## Obtaining Getdown
 
-Getdown will likely need to be integrated into your build, for which we have
-[separate instructions](https://github.com/threerings/getdown/wiki/Build-Integration). You can
-also download the individual jar files from Maven Central if needed:
+Getdown will likely need to be integrated into your build. We have separate instructions for
+[build integration]. You can also download the individual jar files from Maven Central if needed.
+Getdown is comprised of three Maven artifacts (jar files), though you probably only need the first
+one:
 
-  * In [this Maven Central directory](http://repo2.maven.org/maven2/com/threerings/getdown) you can
-    find the latest versions of `getdown-launcher.jar` (the code that updates and launches your
-    app), `getdown-ant.jar` (build integration for the Ant build tool, and which can also be used
-    with Maven), and `getdown-core.jar` (the core updating and launching logic which you don't
-    usually use directly, unless you're embedding Getdown in your app).
+  * [getdown-launcher](http://repo2.maven.org/maven2/com/threerings/getdown/getdown-launcher)
+    contains minified (via Proguard) code that you actually run to update and launch your app. It
+    also contains the tools needed to build a Getdown app distribution.
+
+  * [getdown-core](http://repo2.maven.org/maven2/com/threerings/getdown/getdown-core) contains the
+    core logic for downloading, verifying, patching and launching an app as well as the core logic
+    for creating an app distribution. It does not contain any user interface code. You would only
+    use this artifact if you were planning to integrate Getdown directly into your app.
+
+  * [getdown-ant](http://repo2.maven.org/maven2/com/threerings/getdown/getdown-ant) contains an Ant
+    task for building a Getdown app distribution. See the [build integration] instructions for
+    details.
 
 You can also:
 
@@ -94,3 +102,4 @@ Feel free to pop over to the [OOO Libs Google Group] to ask questions and get (a
 [source code]: https://github.com/threerings/getdown/tree/master/src/main/java/com/threerings/getdown/launcher
 [javadoc documentation]: https://threerings.github.com/getdown/apidocs/
 [OOO]: https://en.wikipedia.org/wiki/Three_Rings_Design
+[build integration]: https://github.com/threerings/getdown/wiki/Build-Integration
