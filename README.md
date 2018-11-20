@@ -1,9 +1,7 @@
 ## What is it?
 
-Getdown (yes, it's the funky stuff) aims to provide a system for downloading and installing a
-collection of files on a user's machine and upgrading those files as needed. Though just any
-collection of files would do, Getdown is mainly intended for the distribution and maintenance of
-the collection of files that make up a Java application.
+Getdown (yes, it's the funky stuff) is a system for deploying Java applications to end-user
+computers, as well as keeping those applications up to date.
 
 It was designed as a replacement for [Java Web Start](http://java.sun.com/products/javawebstart/)
 due to limitations in Java Web Start's architecture which are outlined in the
