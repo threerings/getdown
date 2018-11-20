@@ -18,6 +18,14 @@ expect to find feature parity with JWS.
 A tutorial and more detailed specification are available from the [Documentation] page. Questions
 can be posted to the [OOO Libs Google group].
 
+Note that because one can not rely on users having a JRE installed, you must create a custom
+installer for each platform that you plan to support (Windows, macOS, Linux) that installs a JRE,
+the Getdown launcher jar file, a stub configuration file that identifies the URL at which your real
+app manifest is hosted, and whatever the appropiate "desktop integration" is that provides an icon
+the user can click on. We have some details on the
+[installers](https://github.com/threerings/getdown/wiki/Installers) documentation page, though it
+is unfortunately not very detailed.
+
 ## How does it work?
 
 The main design and operation of Getdown is detailed on the
