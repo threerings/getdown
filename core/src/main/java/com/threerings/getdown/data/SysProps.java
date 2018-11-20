@@ -110,7 +110,8 @@ public class SysProps
     /** Returns the number of threads used to perform digesting and verifying operations in
       * parallel. Usage: {@code -Dthread_pool_size=N} */
     public static int threadPoolSize () {
-        return Integer.getInteger("thread_pool_size", Runtime.getRuntime().availableProcessors()-1);
+        int defaultSize = Math.max(Runtime.getRuntime().availableProcessors()-1, 1);
+        return Integer.getInteger("thread_pool_size", defaultSize);
     }
 
     /** Parses a Java version system property using the supplied regular expression. The numbers
