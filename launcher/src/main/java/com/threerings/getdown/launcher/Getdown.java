@@ -323,11 +323,11 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
     // we may already have a proxy configured
     if (System.getProperty("http.proxyHost") != null)
     {
-      return true;
+      proxySettingsDetected = true;
     }
 
     // look in the Vinders registry
-    if (LaunchUtil.isWindows())
+    if (LaunchUtil.isWindows() && !proxySettingsDetected)
     {
       try
       {
@@ -374,7 +374,7 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
 
         // otherwise look for and read our proxy.txt file
         File pfile = _app.getLocalPath("proxy.txt");
-        if (pfile.exists()) {
+        if (pfile.exists() && !proxySettingsDetected) {
             try {
                 Config pconf = Config.parseConfig(pfile, Config.createOpts(false));
                 setProxyProperties(pconf.getString("host"), pconf.getString("port"));
@@ -449,8 +449,9 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
     }
     catch (IOException ioe)
     {
-      log.info("Failed to HEAD " + rurl + ": " + ioe);
-      log.info("We probably need a proxy, but auto-detection failed.");
+        log.info("Failed to HEAD " + rurl + ": " + ioe);
+        log.info("We probably need a proxy, but auto-detection failed.");
+        log.error(ioe.getMessage(), ioe);
     }
     return successfullyConnected;
   }
