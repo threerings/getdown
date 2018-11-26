@@ -2,8 +2,13 @@
 
 ## 1.8.1 - Unreleased
 
+* If both an `appbase` and `appdir` are provided via some means (bootstrap properties file, system
+  property, etc.) and the app dir does not yet exist, Getdown will create it.
+
 * Added `max_concurrent_downloads` setting to `getdown.txt`. Controls what you would expect.
   Defaults to two.
+
+* Fixed issue with `appid` not being properly used when specified via command line arg.
 
 * Fixed issue with running Getdown on single CPU systems (or virtual systems). It was attempting to
   create a thread pool of size zero, which failed.

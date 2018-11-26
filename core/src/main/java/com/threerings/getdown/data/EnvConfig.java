@@ -60,10 +60,6 @@ public final class EnvConfig {
             if (bundle.containsKey("appdir")) {
                 appDir = bundle.getString("appdir");
                 appDir = appDir.replace(USER_HOME_KEY, System.getProperty("user.home"));
-                File appDirFile = new File(appDir);
-                if (!appDirFile.exists()) {
-                    appDirFile.mkdirs();
-                }
                 appDirProv = "bootstrap.properties";
             }
             if (bundle.containsKey("appid")) {
@@ -137,17 +133,32 @@ public final class EnvConfig {
             return null; // caller will report problem to user
         }
 
-        // ensure that the appdir refers to a directory that exists
-        File appDirFile = new File(appDir);
-        if (!appDirFile.exists() || !appDirFile.isDirectory()) {
-            notes.add(Note.error("Invalid appdir '" + appDir + "'."));
-            return null;
-        }
-
         notes.add(Note.info("Using appdir from " + appDirProv + ": " + appDir));
         if (appId != null) notes.add(Note.info("Using appid from " + appIdProv + ": " + appId));
-        if (appBase != null) notes.add(Note.info("Using appbase from " + appBaseProv + ": " +
-                                                 appBase));
+        if (appBase != null) notes.add(
+            Note.info("Using appbase from " + appBaseProv + ": " + appBase));
+
+        // ensure that the appdir refers to a directory that exists
+        File appDirFile = new File(appDir);
+        if (!appDirFile.exists()) {
+            // if we have a bootstrap URL then we auto-create the app dir; this enables an
+            // installer to simply place a getdown.jar file somewhere and create an OS shortcut
+            // that runs getdown with an appdir and appbase specified, and have getdown create the
+            // appdir and download the app into it
+            if (!StringUtil.isBlank(appBase)) {
+                if (appDirFile.mkdirs()) {
+                    notes.add(Note.info("Auto-created app directory '" + appDir + "'"));
+                } else {
+                    notes.add(Note.warn("Unable to auto-create app dir: '" + appDir + "'"));
+                }
+            } else {
+                notes.add(Note.error("Invalid appdir '" + appDir + "': directory does not exist"));
+                return null;
+            }
+        } else if (!appDirFile.isDirectory()) {
+            notes.add(Note.error("Invalid appdir '" + appDir + "': refers to non-directory"));
+            return null;
+        }
 
         // pass along anything after the first two args as extra app args
         List<String> appArgs = argv.length > 2 ?
