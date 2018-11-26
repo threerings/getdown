@@ -1,5 +1,16 @@
 # Getdown Releases
 
+## 1.8.1 - Unreleased
+
+* Added `max_concurrent_downloads` setting to `getdown.txt`. Controls what you would expect.
+  Defaults to two.
+
+* Fixed issue with running Getdown on single CPU systems (or virtual systems). It was attempting to
+  create a thread pool of size zero, which failed.
+
+* Fixed issue with backslashes (or other regular expression escape characters) in environment
+  variables being substituted into app arguments.
+
 ## 1.8.0 - Oct 19, 2018
 
 * Added support for manually specifying the thread pool size via `-Dthread_pool_size`. Also reduced
