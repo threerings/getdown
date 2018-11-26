@@ -9,6 +9,7 @@ import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
@@ -66,6 +67,13 @@ public abstract class Getdown extends Thread
             _silent = SysProps.silent();
             if (_silent) {
                 _launchInSilent = SysProps.launchInSilent();
+            }
+            // If we're running in a headless environment and have not otherwise customized
+            // silence, operate without a UI and do launch the app.
+            if (!_silent && GraphicsEnvironment.isHeadless()) {
+                log.info("Running in headless JVM, will attempt to operate without UI.");
+                _silent = true;
+                _launchInSilent = true;
             }
             _delay = SysProps.startDelay();
         } catch (SecurityException se) {
