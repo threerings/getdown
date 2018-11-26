@@ -682,20 +682,19 @@ public abstract class Getdown extends Thread
         // create our user interface
         createInterfaceAsync(false);
 
-        // create a downloader to download our resources
-        Downloader.Observer obs = new Downloader.Observer() {
-            public void resolvingDownloads () {
+        Downloader dl = new HTTPDownloader() {
+            @Override protected void resolvingDownloads () {
                 updateStatus("m.resolving");
             }
 
-            public boolean downloadProgress (int percent, long remaining) {
+            @Override protected void downloadProgress (int percent, long remaining) {
                 // check for another getdown running at 0 and every 10% after that
                 if (_lastCheck == -1 || percent >= _lastCheck + 10) {
                     if (_delay > 0) {
-                        // Stop the presses if something else is holding the lock.
+                        // stop the presses if something else is holding the lock
                         boolean locked = _app.lockForUpdates();
                         _app.releaseLock();
-                        return locked;
+                        if (locked) abort();
                     }
                     _lastCheck = percent;
                 }
@@ -703,10 +702,9 @@ public abstract class Getdown extends Thread
                 if (percent > 0) {
                     reportTrackingEvent("progress", percent);
                 }
-                return true;
             }
 
-            public void downloadFailed (Resource rsrc, Exception e) {
+            @Override protected void downloadFailed (Resource rsrc, Exception e) {
                 updateStatus(MessageUtil.tcompose("m.failure", e.getMessage()));
                 log.warning("Download failed", "rsrc", rsrc, e);
             }
@@ -715,10 +713,8 @@ public abstract class Getdown extends Thread
              * having checked at all. */
             protected int _lastCheck = -1;
         };
-
-        // start the download and wait for it to complete
-        Downloader dl = new HTTPDownloader(resources, obs);
-        if (!dl.download()) {
+        if (!dl.download(resources, _app.maxConcurrentDownloads())) {
+            // if we aborted due to detecting another getdown running, we want to report here
             throw new MultipleGetdownRunning();
         }
     }

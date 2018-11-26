@@ -14,7 +14,6 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
-import java.util.Collection;
 
 import com.threerings.getdown.data.Resource;
 import com.threerings.getdown.util.ConnectionUtil;
@@ -26,14 +25,7 @@ import static com.threerings.getdown.Log.log;
  */
 public class HTTPDownloader extends Downloader
 {
-    public HTTPDownloader (Collection<Resource> resources, Observer obs)
-    {
-        super(resources, obs);
-    }
-
-    @Override
-    protected long checkSize (Resource rsrc)
-        throws IOException
+    @Override protected long checkSize (Resource rsrc) throws IOException
     {
         URLConnection conn = ConnectionUtil.open(rsrc.getRemote(), 0, 0);
         try {
@@ -56,23 +48,60 @@ public class HTTPDownloader extends Downloader
         }
     }
 
-    @Override
-    protected void doDownload (Resource rsrc)
-        throws IOException
+    @Override protected void download (Resource rsrc) throws IOException
     {
+        // TODO: make FileChannel download impl (below) robust and allow apps to opt-into it via a
+        // system property
+        if (true) {
+            // download the resource from the specified URL
+            URLConnection conn = ConnectionUtil.open(rsrc.getRemote(), 0, 0);
+            conn.connect();
 
-        log.info("Downloading resource", "url", rsrc.getRemote(), "size", -1);
+            // make sure we got a satisfactory response code
+            if (conn instanceof HttpURLConnection) {
+                HttpURLConnection hcon = (HttpURLConnection)conn;
+                if (hcon.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                    throw new IOException("Unable to download resource " + rsrc.getRemote() + ": " +
+                                          hcon.getResponseCode());
+                }
+            }
 
-        URL remoteURL = rsrc.getRemote();
-        File localNew = rsrc.getLocalNew();
+            long actualSize = conn.getContentLength();
+            log.info("Downloading resource", "url", rsrc.getRemote(), "size", actualSize);
+            long currentSize = 0L;
+            try (InputStream in = conn.getInputStream();
+                 FileOutputStream out = new FileOutputStream(rsrc.getLocalNew())) {
 
+                // TODO: look to see if we have a download info file
+                // containing info on potentially partially downloaded data;
+                // if so, use a "Range: bytes=HAVE-" header.
 
-        try(ReadableByteChannel rbc = Channels.newChannel(remoteURL.openStream());
-            FileOutputStream fos = new FileOutputStream(localNew)) {
+                // read in the file data
+                int read;
+                while ((read = in.read(_buffer)) != -1) {
+                    // abort the download if the downloader is aborted
+                    if (_state == State.ABORTED) {
+                        break;
+                    }
+                    // write it out to our local copy
+                    out.write(_buffer, 0, read);
+                    // note that we've downloaded some data
+                    currentSize += read;
+                    reportProgress(rsrc, currentSize, actualSize);
+                }
+            }
 
-            fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-            updateObserver(rsrc, localNew.length(), localNew.length());
+        } else {
+            log.info("Downloading resource", "url", rsrc.getRemote(), "size", "unknown");
+            File localNew = rsrc.getLocalNew();
+            try (ReadableByteChannel rbc = Channels.newChannel(rsrc.getRemote().openStream());
+                 FileOutputStream fos = new FileOutputStream(localNew)) {
+                // TODO: more work is needed here, transferFrom can fail to transfer the entire
+                // file, in which case it's not clear what we're supposed to do.. call it again?
+                // will it repeatedly fail?
+                fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+                reportProgress(rsrc, localNew.length(), localNew.length());
+            }
         }
-
     }
 }

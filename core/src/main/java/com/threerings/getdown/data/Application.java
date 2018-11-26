@@ -269,6 +269,14 @@ public class Application
     }
 
     /**
+     * Returns the configured maximum concurrent downloads. Used to cap simultaneous downloads of
+     * app files from its hosting server.
+     */
+    public int maxConcurrentDownloads () {
+        return _maxConcDownloads;
+    }
+
+    /**
      * Returns a resource that refers to the application configuration file itself.
      */
     public Resource getConfigResource ()
@@ -707,6 +715,9 @@ public class Application
         // whether to cache code resources and launch from cache
         _useCodeCache = config.getBoolean("use_code_cache");
         _codeCacheRetentionDays = config.getInt("code_cache_retention_days", 7);
+
+        // maximum simultaneous downloads
+        _maxConcDownloads = Math.max(1, config.getInt("max_concurrent_downloads", 2));
 
         // parse and return our application config
         UpdateInterface ui = new UpdateInterface(config);
@@ -1694,6 +1705,7 @@ public class Application
     protected boolean _strictComments;
     protected boolean _windebug;
     protected boolean _allowOffline;
+    protected int _maxConcDownloads;
 
     protected String _trackingURL;
     protected Set<Integer> _trackingPcts;
