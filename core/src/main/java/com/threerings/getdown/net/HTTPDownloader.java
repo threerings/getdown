@@ -5,11 +5,15 @@
 
 package com.threerings.getdown.net;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.URL;
 import java.net.URLConnection;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
 import java.util.Collection;
 
 import com.threerings.getdown.data.Resource;
@@ -56,44 +60,19 @@ public class HTTPDownloader extends Downloader
     protected void doDownload (Resource rsrc)
         throws IOException
     {
-        // download the resource from the specified URL
-        URLConnection conn = ConnectionUtil.open(rsrc.getRemote(), 0, 0);
-        conn.connect();
 
-        // make sure we got a satisfactory response code
-        if (conn instanceof HttpURLConnection) {
-            HttpURLConnection hcon = (HttpURLConnection)conn;
-            if (hcon.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                throw new IOException("Unable to download resource " + rsrc.getRemote() + ": " +
-                                      hcon.getResponseCode());
-            }
+        log.info("Downloading resource", "url", rsrc.getRemote(), "size", -1);
+
+        URL remoteURL = rsrc.getRemote();
+        File localNew = rsrc.getLocalNew();
+
+
+        try(ReadableByteChannel rbc = Channels.newChannel(remoteURL.openStream());
+            FileOutputStream fos = new FileOutputStream(localNew)) {
+
+            fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+            updateObserver(rsrc, localNew.length(), localNew.length());
         }
 
-        long actualSize = conn.getContentLength();
-        log.info("Downloading resource", "url", rsrc.getRemote(), "size", actualSize);
-        long currentSize = 0L;
-        try (InputStream in = conn.getInputStream();
-             FileOutputStream out = new FileOutputStream(rsrc.getLocalNew())) {
-
-            // TODO: look to see if we have a download info file
-            // containing info on potentially partially downloaded data;
-            // if so, use a "Range: bytes=HAVE-" header.
-
-            // read in the file data
-            int read;
-            while ((read = in.read(_buffer)) != -1) {
-                // write it out to our local copy
-                out.write(_buffer, 0, read);
-
-                // if we have no observer, then don't bother computing download statistics
-                if (_obs == null) {
-                    continue;
-                }
-
-                // note that we've downloaded some data
-                currentSize += read;
-                updateObserver(rsrc, currentSize, actualSize);
-            }
-        }
     }
 }

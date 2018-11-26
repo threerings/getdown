@@ -11,6 +11,9 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import com.threerings.getdown.data.Resource;
 
@@ -106,9 +109,21 @@ public abstract class Downloader extends Thread
             // make a note of the time at which we started the download
             _start = System.currentTimeMillis();
 
+            ExecutorService exec = Executors.newCachedThreadPool();
+
             // now actually download the files
             for (Resource resource : _resources) {
-                download(resource);
+                download(resource, exec);
+            }
+
+            exec.shutdown();
+
+            try{
+                // 70 years should be long enough
+                exec.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS);
+            }catch (InterruptedException ie) {
+                log.warning("Download was interrupted...");
+                exec.shutdownNow();
             }
 
             // finally report our download completion if we did not already do so when downloading
@@ -147,7 +162,7 @@ public abstract class Downloader extends Thread
     /**
      * Downloads the specified resource from its remote location to its local location.
      */
-    protected void download (Resource rsrc)
+    protected void download (final Resource rsrc, ExecutorService exec)
         throws IOException
     {
         // make sure the resource's target directory exists
@@ -156,7 +171,17 @@ public abstract class Downloader extends Thread
             log.warning("Failed to create target directory for resource '" + rsrc + "'. " +
                     "Download will certainly fail.");
         }
-        doDownload(rsrc);
+
+        exec.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    doDownload(rsrc);
+                }catch (IOException ioe) {
+                    log.info("Error: " + rsrc.getPath() + " failed to download...");
+                }
+            }
+        });
     }
 
     /**
