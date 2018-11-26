@@ -8,6 +8,10 @@
 * Added `max_concurrent_downloads` setting to `getdown.txt`. Controls what you would expect.
   Defaults to two.
 
+* `bootstrap.properties` can now contain system properties which will be set prior to running
+  Getdown. They must be prefixed by `sys.`: for example `sys.silent = true` will set the `silent`
+  system property to `true`.
+
 * Fixed issue with `appid` not being properly used when specified via command line arg.
 
 * Fixed issue with running Getdown on single CPU systems (or virtual systems). It was attempting to

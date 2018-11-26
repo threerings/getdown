@@ -53,7 +53,7 @@ public final class EnvConfig {
         String appDir = null, appDirProv = null;
         String appId = null, appIdProv = null;
         String appBase = null, appBaseProv = null;
-        String[] sysargs;
+
         // start with bootstrap.properties config, if avaialble
         try {
             ResourceBundle bundle = ResourceBundle.getBundle("bootstrap");
@@ -70,19 +70,14 @@ public final class EnvConfig {
                 appBase = bundle.getString("appbase");
                 appBaseProv = "bootstrap.properties";
             }
-
-            // Set system properties. Should be in the form:
-            // sysargs = [key1]:[val1] , [key2]:[val2], [key3]
-            if (bundle.containsKey("sysargs")) {
-                sysargs = bundle.getString("sysargs").split(",");
-
-                for (String sysarg : sysargs) {
-                    String[] arg_value = sysarg.trim().split(":", 2);
-                    if(arg_value.length == 2){
-                        System.setProperty(arg_value[0], arg_value[1]);
-                    }else if(arg_value.length == 1) {
-                        System.setProperty(arg_value[0], "");
-                    }
+            // if any system properties are specified (keys prefixed with sys.), set those up
+            for (String key : bundle.keySet()) {
+                if (key.startsWith("sys.")) {
+                    String skey = key.substring(4);
+                    String svalue = bundle.getString(key);
+                    notes.add(Note.info("Setting system property from bundle: " +
+                                        skey + "='" + svalue + "'"));
+                    System.setProperty(skey, svalue);
                 }
             }
 
