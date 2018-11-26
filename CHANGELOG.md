@@ -1,6 +1,10 @@
 # Getdown Releases
 
-## 1.8.1 - Unreleased
+## 1.8.2 - Unreleased
+
+* Nothing yet!
+
+## 1.8.1 - Nov 26, 2018
 
 * If both an `appbase` and `appdir` are provided via some means (bootstrap properties file, system
   property, etc.) and the app dir does not yet exist, Getdown will create it.
