@@ -1236,7 +1236,7 @@ public class Application
         // resources are verified on background threads supplied by the thread pool, and progress
         // is reported by posting runnable actions to the actions queue which is processed by the
         // main (UI) thread
-        Executor exec = Executors.newFixedThreadPool(SysProps.threadPoolSize());
+        ExecutorService exec = Executors.newFixedThreadPool(SysProps.threadPoolSize());
         final BlockingQueue<Runnable> actions = new LinkedBlockingQueue<Runnable>();
         final int[] completed = new int[1];
 
@@ -1289,6 +1289,8 @@ public class Application
             Runnable action = actions.poll(60, TimeUnit.SECONDS);
             action.run();
         }
+
+        exec.shutdown();
 
         toInstall.addAll(toInstallAsync);
         toDownload.addAll(toDownloadAsync);
