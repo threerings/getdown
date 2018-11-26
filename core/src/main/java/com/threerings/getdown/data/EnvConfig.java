@@ -122,7 +122,7 @@ public final class EnvConfig {
             }
         }
         String argvAppId = argv.length > 1 ? argv[1] : null;
-        if (!StringUtil.isBlank(spropsAppId)) {
+        if (!StringUtil.isBlank(argvAppId)) {
             if (appId == null) {
                 appId = argvAppId;
                 appIdProv = "command line";
