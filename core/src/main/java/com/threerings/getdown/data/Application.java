@@ -719,6 +719,19 @@ public class Application
         // maximum simultaneous downloads
         _maxConcDownloads = Math.max(1, config.getInt("max_concurrent_downloads", 2));
 
+        try {
+            String[] predownloads = SysProps.predownloads();
+            if(predownloads!=null){
+                for (String todownload: predownloads){
+                    if (!this.getLocalPath(todownload).exists()) {
+                        this.downloadFile(todownload);
+                        this.getLocalPath(todownload + "_new").renameTo(this.getLocalPath(todownload));
+                    }
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
         // parse and return our application config
         UpdateInterface ui = new UpdateInterface(config);
         _name = ui.name;

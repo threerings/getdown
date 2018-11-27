@@ -114,6 +114,17 @@ public class SysProps
         return Integer.getInteger("thread_pool_size", defaultSize);
     }
 
+    /** Returns String[] of the names of items to predownload. E.g. -Dpredownloads=abc.png;123.txt
+     *  will return */
+    public static String[] predownloads () {
+        String value = System.getProperty("predownloads");
+        if(value==null || value.isEmpty()){
+            return null;
+        }
+        return value.split(";");
+    }
+
+
     /** Parses a Java version system property using the supplied regular expression. The numbers
       * extracted from the regexp will be placed in each consecutive hundreds position in the
       * returned value.
