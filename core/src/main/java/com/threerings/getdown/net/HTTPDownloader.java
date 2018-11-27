@@ -69,6 +69,7 @@ public class HTTPDownloader extends Downloader
             long actualSize = conn.getContentLength();
             log.info("Downloading resource", "url", rsrc.getRemote(), "size", actualSize);
             long currentSize = 0L;
+            byte[] buffer = new byte[4*4096];
             try (InputStream in = conn.getInputStream();
                  FileOutputStream out = new FileOutputStream(rsrc.getLocalNew())) {
 
@@ -78,13 +79,13 @@ public class HTTPDownloader extends Downloader
 
                 // read in the file data
                 int read;
-                while ((read = in.read(_buffer)) != -1) {
+                while ((read = in.read(buffer)) != -1) {
                     // abort the download if the downloader is aborted
                     if (_state == State.ABORTED) {
                         break;
                     }
                     // write it out to our local copy
-                    out.write(_buffer, 0, read);
+                    out.write(buffer, 0, read);
                     // note that we've downloaded some data
                     currentSize += read;
                     reportProgress(rsrc, currentSize, actualSize);
