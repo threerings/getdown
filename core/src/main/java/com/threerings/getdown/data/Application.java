@@ -510,12 +510,12 @@ public class Application
      * discovered later, the caller can use the application base to download a new {@code
      * getdown.txt} file and try again.
      *
-     * @return a configured UpdateInterface instance that will be used to configure the update UI.
+     * @return a configured Config instance that contains information from the config file.
      *
      * @exception IOException thrown if there is an error reading the file or an error encountered
      * during its parsing.
      */
-    public UpdateInterface init (boolean checkPlatform)
+    public Config init (boolean checkPlatform)
         throws IOException
     {
         Config config = null;
@@ -672,6 +672,7 @@ public class Application
         parseResources(config, "resource", Resource.NORMAL, _resources);
         parseResources(config, "uresource", Resource.UNPACK, _resources);
         parseResources(config, "xresource", Resource.EXEC, _resources);
+        parseResources(config, "presource", Resource.PREDOWNLOAD, _resources);
 
         // parse our auxiliary resource groups
         for (String auxgroup : config.getList("auxgroups")) {
@@ -719,6 +720,15 @@ public class Application
         // maximum simultaneous downloads
         _maxConcDownloads = Math.max(1, config.getInt("max_concurrent_downloads", 2));
 
+        return config;
+    }
+
+    /**
+     * Sets various properties using an UpdateInterface based on {@code config}
+     * @param config Information to base the UpdateInterface off
+     * @return a configured UpdateInterface instance that will be used to configure the update UI
+     */
+    public UpdateInterface initUpdateInterface(Config config) {
         // parse and return our application config
         UpdateInterface ui = new UpdateInterface(config);
         _name = ui.name;
@@ -1168,7 +1178,7 @@ public class Application
             clearValidationMarkers();
             // if the new copy validates, reinitialize ourselves; otherwise report baffling hoseage
             if (_digest.validateResource(crsrc, null)) {
-                init(true);
+                initUpdateInterface(init(true));
             } else {
                 log.warning(CONFIG_FILE + " failed to validate even after redownloading. " +
                             "Blindly forging onward.");

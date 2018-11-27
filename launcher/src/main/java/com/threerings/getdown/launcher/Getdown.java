@@ -33,8 +33,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 
-import java.security.cert.Certificate;
-
 import java.util.*;
 
 import ca.beq.util.win32.registry.RegistryKey;
@@ -279,7 +277,9 @@ public abstract class Getdown extends Thread
         // to get some sort of interface configuration and the appbase URL
         log.info("Checking whether we need to use a proxy...");
         try {
-            _ifc = _app.init(true);
+            Config config = _app.init(true);
+            doPredownloads(_app.getResources());
+            _ifc = _app.initUpdateInterface(config);
         } catch (IOException ioe) {
             // no worries
         }
@@ -340,6 +340,34 @@ public abstract class Getdown extends Thread
     }
 
     /**
+     * Finds resources from {@code resources} that have a {@code PREDOWNLOAD} attribute,
+     * then downloads and installs them (without verifying them)
+     * @param resources resources to predownload
+     */
+    protected void doPredownloads (Collection<Resource> resources) {
+        List<Resource> predownloads = new ArrayList<>();
+
+        for(Resource rsrc: resources) {
+            if(rsrc.shouldPredownload() && !rsrc.getLocal().exists()) {
+                predownloads.add(rsrc);
+            }
+        }
+
+        try {
+            download(predownloads);
+
+            for(Resource rsrc: predownloads) {
+                // Install but don't validate yet
+                rsrc.install(false);
+            }
+
+        } catch (IOException ioe) {
+            log.warning("Failed to predownload resources. Continuing...", ioe);
+        }
+
+    }
+
+    /**
      * Does the actual application validation, update and launching business.
      */
     protected void getdown ()
@@ -352,15 +380,23 @@ public abstract class Getdown extends Thread
         try {
             // first parses our application deployment file
             try {
-                _ifc = _app.init(true);
+                Config config = _app.init(true);
+                doPredownloads(_app.getResources());
+                _ifc = _app.initUpdateInterface(config);
             } catch (IOException ioe) {
                 log.warning("Failed to initialize: " + ioe);
                 _app.attemptRecovery(this);
                 // and re-initalize
-                _ifc = _app.init(true);
+                Config config = _app.init(true);
+                doPredownloads(_app.getResources());
+                _ifc = _app.initUpdateInterface(config);
+
                 // now force our UI to be recreated with the updated info
                 createInterfaceAsync(true);
+                setIcons(); // Force icons to be displayed
+
             }
+
             if (!_app.lockForUpdates()) {
                 throw new MultipleGetdownRunning();
             }
@@ -568,6 +604,12 @@ public abstract class Getdown extends Thread
     }
 
     /**
+     * Force app to (re)set icons
+     */
+    protected abstract void setIcons();
+
+
+    /**
      * Downloads and installs an Java VM bundled with the application. This is called if we are not
      * running with the necessary Java version.
      */
@@ -678,7 +720,8 @@ public abstract class Getdown extends Thread
         // finally update our metadata files...
         _app.updateMetadata();
         // ...and reinitialize the application
-        _ifc = _app.init(true);
+        Config config = _app.init(true);
+        _ifc = _app.initUpdateInterface(config);
     }
 
     /**
