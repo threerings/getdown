@@ -10,7 +10,7 @@
   <groupId>com.threerings.getdown</groupId>
   <artifactId>getdown</artifactId>
   <packaging>pom</packaging>
-  <version>1.8.2-SNAPSHOT</version>
+  <version>1.8.2</version>
 
   <name>getdown</name>
   <description>An application installer and updater.</description>
