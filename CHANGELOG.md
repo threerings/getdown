@@ -1,8 +1,12 @@
 # Getdown Releases
 
-## 1.8.2 - Unreleased
+## 1.8.3 - Unreleased
 
 * Nothing yet!
+
+## 1.8.2 - Nov 27, 2018
+
+* Fixed a data corruption bug introduced at last minute into 1.8.1 release. Oops.
 
 ## 1.8.1 - Nov 26, 2018
 
