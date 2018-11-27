@@ -211,9 +211,6 @@ public abstract class Downloader
     /** The bytes downloaded for each resource. */
     protected Map<Resource, Long> _downloaded = new HashMap<>();
 
-    /** Used while downloading. */
-    protected byte[] _buffer = new byte[4096];
-
     /** The time at which the file transfer began. */
     protected long _start;
 
