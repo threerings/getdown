@@ -515,7 +515,7 @@ public class Application
      * @exception IOException thrown if there is an error reading the file or an error encountered
      * during its parsing.
      */
-    public UpdateInterface init (boolean checkPlatform)
+    public Config init (boolean checkPlatform)
         throws IOException
     {
         Config config = null;
@@ -672,6 +672,7 @@ public class Application
         parseResources(config, "resource", Resource.NORMAL, _resources);
         parseResources(config, "uresource", Resource.UNPACK, _resources);
         parseResources(config, "xresource", Resource.EXEC, _resources);
+        parseResources(config, "presource", Resource.PREDOWNLOAD, _resources);
 
         // parse our auxiliary resource groups
         for (String auxgroup : config.getList("auxgroups")) {
@@ -732,6 +733,10 @@ public class Application
         }catch (Exception e){
             e.printStackTrace();
         }
+        return config;
+    }
+
+    public UpdateInterface getUpdateInterface(Config config) {
         // parse and return our application config
         UpdateInterface ui = new UpdateInterface(config);
         _name = ui.name;
@@ -1181,7 +1186,7 @@ public class Application
             clearValidationMarkers();
             // if the new copy validates, reinitialize ourselves; otherwise report baffling hoseage
             if (_digest.validateResource(crsrc, null)) {
-                init(true);
+                getUpdateInterface(init(true));
             } else {
                 log.warning(CONFIG_FILE + " failed to validate even after redownloading. " +
                             "Blindly forging onward.");

@@ -32,12 +32,15 @@ public class Resource implements Comparable<Resource>
         /** Indicates that the resource should be unpacked. */
         UNPACK,
         /** Indicates that the resource should be marked executable. */
-        EXEC
+        EXEC,
+        /** Indicates that the resource should be downloaded before a UI is displayed. */
+        PREDOWNLOAD
     };
 
     public static final EnumSet<Attr> NORMAL = EnumSet.noneOf(Attr.class);
     public static final EnumSet<Attr> UNPACK = EnumSet.of(Attr.UNPACK);
     public static final EnumSet<Attr> EXEC   = EnumSet.of(Attr.EXEC);
+    public static final EnumSet<Attr> PREDOWNLOAD   = EnumSet.of(Attr.PREDOWNLOAD);
 
     /**
      * Computes the MD5 hash of the supplied file.
@@ -196,6 +199,14 @@ public class Resource implements Comparable<Resource>
     public boolean shouldUnpack ()
     {
         return _attrs.contains(Attr.UNPACK) && !SysProps.noUnpack();
+    }
+
+    /**
+     * Returns true if this resource should be predownloaded.
+     */
+    public boolean shouldPredownload ()
+    {
+        return _attrs.contains(Attr.PREDOWNLOAD);
     }
 
     /**

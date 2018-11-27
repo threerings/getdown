@@ -60,13 +60,13 @@ public class Differ
         }
 
         Application oapp = new Application(new EnvConfig(ovdir));
-        oapp.init(false);
+        oapp.getUpdateInterface(oapp.init(false));
         ArrayList<Resource> orsrcs = new ArrayList<>();
         orsrcs.addAll(oapp.getCodeResources());
         orsrcs.addAll(oapp.getResources());
 
         Application napp = new Application(new EnvConfig(nvdir));
-        napp.init(false);
+        napp.getUpdateInterface(napp.init(false));
         ArrayList<Resource> nrsrcs = new ArrayList<>();
         nrsrcs.addAll(napp.getCodeResources());
         nrsrcs.addAll(napp.getResources());

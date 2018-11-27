@@ -279,7 +279,9 @@ public abstract class Getdown extends Thread
         // to get some sort of interface configuration and the appbase URL
         log.info("Checking whether we need to use a proxy...");
         try {
-            _ifc = _app.init(true);
+            Config config = _app.init(true);
+            doPredownloads(_app.getResources());
+            _ifc = _app.getUpdateInterface(config);
         } catch (IOException ioe) {
             // no worries
         }
@@ -339,6 +341,24 @@ public abstract class Getdown extends Thread
         }
     }
 
+    protected void doPredownloads (Collection<Resource> resources) {
+        List<Resource> predownloads = new ArrayList<>();
+
+        for(Resource rsrc: resources) {
+            if(rsrc.shouldPredownload()) {
+                predownloads.add(rsrc);
+            }
+        }
+
+        try {
+            download(predownloads);
+            install();
+        } catch (IOException ioe) {
+            //TODO logging and stuff
+        }
+
+    }
+
     /**
      * Does the actual application validation, update and launching business.
      */
@@ -352,13 +372,17 @@ public abstract class Getdown extends Thread
         try {
             // first parses our application deployment file
             try {
-                _ifc = _app.init(true);
+                Config config = _app.init(true);
+                doPredownloads(_app.getResources());
+                _ifc = _app.getUpdateInterface(config);
             } catch (IOException ioe) {
                 log.warning("Failed to initialize: " + ioe);
                 _app.attemptRecovery(this);
                 // and re-initalize
-                _ifc = _app.init(true);
-                // now force our UI to be recreated with the updated info
+                Config config = _app.init(true);
+                doPredownloads(_app.getResources());
+                _ifc = _app.getUpdateInterface(config);  // now force our UI to be recreated with the updated info
+
                 createInterfaceAsync(true);
             }
             if (!_app.lockForUpdates()) {
@@ -678,7 +702,8 @@ public abstract class Getdown extends Thread
         // finally update our metadata files...
         _app.updateMetadata();
         // ...and reinitialize the application
-        _ifc = _app.init(true);
+        Config config = _app.init(true);
+        _ifc = _app.getUpdateInterface(config);
     }
 
     /**
