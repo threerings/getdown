@@ -70,7 +70,7 @@ public class Log
     public static final Shim log = new Shim();
 
     public static String format (Object message, Object... args) {
-        if (args.length == 0) return String.valueOf(message);
+        if (args.length < 2) return String.valueOf(message);
         StringBuilder buf = new StringBuilder(String.valueOf(message));
         if (buf.length() > 0) {
             buf.append(' ');
