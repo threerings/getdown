@@ -717,7 +717,12 @@ public class Application
         _codeCacheRetentionDays = config.getInt("code_cache_retention_days", 7);
 
         // maximum simultaneous downloads
-        _maxConcDownloads = Math.max(1, config.getInt("max_concurrent_downloads", 2));
+        int userConcDownloads = config.getInt("max_concurrent_downloads", 2);
+        if(userConcDownloads==-1){
+            _maxConcDownloads = SysProps.threadPoolSize();
+        } else {
+            _maxConcDownloads = Math.max(1, userConcDownloads);
+        }
 
         // parse and return our application config
         UpdateInterface ui = new UpdateInterface(config);
