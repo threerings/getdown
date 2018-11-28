@@ -399,6 +399,7 @@ public abstract class Getdown extends Thread
             _readyToInstall = false;
 
             //setStep(Step.START);
+            boolean javavm_updated = false;
             for (int ii = 0; ii < MAX_LOOPS; ii++) {
                 // if we aren't running in a JVM that meets our version requirements, either
                 // complain or attempt to download and install the appropriate version
@@ -409,7 +410,7 @@ public abstract class Getdown extends Thread
                     setStep(Step.UPDATE_JAVA);
                     _enableTracking = true; // always track JVM downloads
                     try {
-                        updateJava();
+                    	javavm_updated = updateJava();
                     } finally {
                         _enableTracking = false;
                     }
@@ -462,6 +463,9 @@ public abstract class Getdown extends Thread
                     // now we'll loop back and try it all again
                     continue;
                 }
+                else if (!_app.haveValidJavaVersion() && !javavm_updated) 
+                	continue;
+                
 
                 // if we were downloaded in full from another service (say, Steam), we may
                 // not have unpacked all of our resources yet
@@ -571,7 +575,7 @@ public abstract class Getdown extends Thread
      * Downloads and installs an Java VM bundled with the application. This is called if we are not
      * running with the necessary Java version.
      */
-    protected void updateJava ()
+    protected boolean updateJava ()
         throws IOException
     {
         Resource vmjar = _app.getJavaVMResource();
@@ -607,6 +611,7 @@ public abstract class Getdown extends Thread
         }
 
         reportTrackingEvent("jvm_complete", -1);
+        return true;
     }
 
     /**
