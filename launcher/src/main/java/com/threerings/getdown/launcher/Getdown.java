@@ -345,16 +345,21 @@ public abstract class Getdown extends Thread
         List<Resource> predownloads = new ArrayList<>();
 
         for(Resource rsrc: resources) {
-            if(rsrc.shouldPredownload()) {
+            if(rsrc.shouldPredownload() && !rsrc.getLocal().exists()) {
                 predownloads.add(rsrc);
             }
         }
 
         try {
             download(predownloads);
-            install();
+
+            for(Resource rsrc: predownloads) {
+                // Install but don't validate yet
+                rsrc.install(false);
+            }
+
         } catch (IOException ioe) {
-            //TODO logging and stuff
+            log.warning("Failed to predownload resources. Continuing...", ioe);
         }
 
     }
@@ -384,7 +389,10 @@ public abstract class Getdown extends Thread
                 _ifc = _app.getUpdateInterface(config);  // now force our UI to be recreated with the updated info
 
                 createInterfaceAsync(true);
+                setIcons(); // Force icons to be displayed
+
             }
+
             if (!_app.lockForUpdates()) {
                 throw new MultipleGetdownRunning();
             }
@@ -590,6 +598,12 @@ public abstract class Getdown extends Thread
             return null;
         }
     }
+
+    /**
+     * Force app to (re)set icons
+     */
+    protected abstract void setIcons();
+
 
     /**
      * Downloads and installs an Java VM bundled with the application. This is called if we are not

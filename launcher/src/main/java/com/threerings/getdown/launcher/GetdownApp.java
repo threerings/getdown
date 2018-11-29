@@ -24,7 +24,6 @@ import javax.swing.JFrame;
 import javax.swing.WindowConstants;
 
 import com.samskivert.swing.util.SwingUtil;
-import com.threerings.getdown.data.Digest;
 import com.threerings.getdown.data.EnvConfig;
 import com.threerings.getdown.data.SysProps;
 import com.threerings.getdown.util.LaunchUtil;
@@ -125,6 +124,15 @@ public class GetdownApp
                     _frame.getContentPane().removeAll();
                 }
 
+                setIcons();
+
+                _frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+                return _frame.getContentPane();
+            }
+
+            protected void setIcons() {
+                if(_frame == null) return;
+
                 if (_ifc.iconImages != null) {
                     ArrayList<Image> icons = new ArrayList<>();
                     for (String path : _ifc.iconImages) {
@@ -140,10 +148,9 @@ public class GetdownApp
                     } else {
                         _frame.setIconImages(icons);
                     }
+                } else {
+                    log.info("No icons found to load...");
                 }
-
-                _frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-                return _frame.getContentPane();
             }
 
             @Override

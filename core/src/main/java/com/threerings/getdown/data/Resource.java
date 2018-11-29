@@ -264,15 +264,26 @@ public class Resource implements Comparable<Resource>
 
     /**
      * Installs the {@code getLocalNew} version of this resource to {@code getLocal}.
+     * @param validate Validate resource after installing?
      */
-    public void install () throws IOException {
+    public void install (boolean validate) throws IOException {
         File source = getLocalNew(), dest = getLocal();
         log.info("- " + source);
         if (!FileUtil.renameTo(source, dest)) {
             throw new IOException("Failed to rename " + source + " to " + dest);
         }
         applyAttrs();
-        markAsValid();
+
+        if (validate){
+            markAsValid();
+        }
+    }
+
+    /**
+     * Same as calling {@link #install(boolean)} with {@code true}
+     */
+    public void install () throws IOException {
+        install(true);
     }
 
     /**
