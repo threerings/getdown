@@ -116,7 +116,7 @@ public abstract class Getdown extends Thread
         } else if (_readyToInstall) {
             log.info("Installing " + _toInstallResources.size() + " downloaded resources:");
             for (Resource resource : _toInstallResources) {
-                resource.install();
+                resource.install(false);
             }
             _toInstallResources.clear();
             _readyToInstall = false;
@@ -589,7 +589,7 @@ public abstract class Getdown extends Thread
         reportTrackingEvent("jvm_unpack", -1);
 
         updateStatus("m.unpacking_java");
-        vmjar.install();
+        vmjar.install(true);
 
         // these only run on non-Windows platforms, so we use Unix file separators
         String localJavaDir = LaunchUtil.LOCAL_JAVA_DIR + "/";
