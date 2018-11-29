@@ -33,8 +33,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 
-import java.security.cert.Certificate;
-
 import java.util.*;
 
 import ca.beq.util.win32.registry.RegistryKey;
@@ -281,7 +279,7 @@ public abstract class Getdown extends Thread
         try {
             Config config = _app.init(true);
             doPredownloads(_app.getResources());
-            _ifc = _app.getUpdateInterface(config);
+            _ifc = _app.initUpdateInterface(config);
         } catch (IOException ioe) {
             // no worries
         }
@@ -341,6 +339,11 @@ public abstract class Getdown extends Thread
         }
     }
 
+    /**
+     * Finds resources from {@code resources} that have a {@code PREDOWNLOAD} attribute,
+     * then downloads and installs them (without verifying them)
+     * @param resources resources to predownload
+     */
     protected void doPredownloads (Collection<Resource> resources) {
         List<Resource> predownloads = new ArrayList<>();
 
@@ -379,15 +382,16 @@ public abstract class Getdown extends Thread
             try {
                 Config config = _app.init(true);
                 doPredownloads(_app.getResources());
-                _ifc = _app.getUpdateInterface(config);
+                _ifc = _app.initUpdateInterface(config);
             } catch (IOException ioe) {
                 log.warning("Failed to initialize: " + ioe);
                 _app.attemptRecovery(this);
                 // and re-initalize
                 Config config = _app.init(true);
                 doPredownloads(_app.getResources());
-                _ifc = _app.getUpdateInterface(config);  // now force our UI to be recreated with the updated info
+                _ifc = _app.initUpdateInterface(config);
 
+                // now force our UI to be recreated with the updated info
                 createInterfaceAsync(true);
                 setIcons(); // Force icons to be displayed
 
@@ -717,7 +721,7 @@ public abstract class Getdown extends Thread
         _app.updateMetadata();
         // ...and reinitialize the application
         Config config = _app.init(true);
-        _ifc = _app.getUpdateInterface(config);
+        _ifc = _app.initUpdateInterface(config);
     }
 
     /**

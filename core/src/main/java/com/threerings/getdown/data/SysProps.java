@@ -113,7 +113,6 @@ public class SysProps
         int defaultSize = Math.max(Runtime.getRuntime().availableProcessors()-1, 1);
         return Integer.getInteger("thread_pool_size", defaultSize);
     }
-    
 
     /** Parses a Java version system property using the supplied regular expression. The numbers
       * extracted from the regexp will be placed in each consecutive hundreds position in the

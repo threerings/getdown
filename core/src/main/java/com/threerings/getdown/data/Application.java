@@ -510,7 +510,7 @@ public class Application
      * discovered later, the caller can use the application base to download a new {@code
      * getdown.txt} file and try again.
      *
-     * @return a configured UpdateInterface instance that will be used to configure the update UI.
+     * @return a configured Config instance that contains information from the config file.
      *
      * @exception IOException thrown if there is an error reading the file or an error encountered
      * during its parsing.
@@ -723,7 +723,12 @@ public class Application
         return config;
     }
 
-    public UpdateInterface getUpdateInterface(Config config) {
+    /**
+     * Sets various properties using an UpdateInterface based on {@code config}
+     * @param config Information to base the UpdateInterface off
+     * @return a configured UpdateInterface instance that will be used to configure the update UI
+     */
+    public UpdateInterface initUpdateInterface(Config config) {
         // parse and return our application config
         UpdateInterface ui = new UpdateInterface(config);
         _name = ui.name;
@@ -1173,7 +1178,7 @@ public class Application
             clearValidationMarkers();
             // if the new copy validates, reinitialize ourselves; otherwise report baffling hoseage
             if (_digest.validateResource(crsrc, null)) {
-                getUpdateInterface(init(true));
+                initUpdateInterface(init(true));
             } else {
                 log.warning(CONFIG_FILE + " failed to validate even after redownloading. " +
                             "Blindly forging onward.");
