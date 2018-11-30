@@ -431,7 +431,7 @@ public class Application
         try {
             URL remote = new URL(createVAppBase(_targetVersion), encodePath(_javaLocation));
             return new Resource(vmfile, remote, getLocalPath(vmfile),
-                                EnumSet.of(Resource.Attr.UNPACK));
+                                EnumSet.of(Resource.Attr.UNPACK, Resource.Attr.CLEAN));
         } catch (Exception e) {
             log.warning("Failed to create VM resource", "vmfile", vmfile, "appbase", _appbase,
                 "tvers", _targetVersion, "javaloc", _javaLocation, "error", e);

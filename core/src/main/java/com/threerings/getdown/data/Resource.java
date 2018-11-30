@@ -31,6 +31,9 @@ public class Resource implements Comparable<Resource>
     public static enum Attr {
         /** Indicates that the resource should be unpacked. */
         UNPACK,
+        /** If present, when unpacking a resource, any directories created by the newly
+          * unpacked resource will first be cleared of files before unpacking. */
+        CLEAN,
         /** Indicates that the resource should be marked executable. */
         EXEC
     };
@@ -254,21 +257,20 @@ public class Resource implements Comparable<Resource>
     /**
      * Installs the {@code getLocalNew} version of this resource to {@code getLocal}.
      */
-    public void install (boolean cleanExistingDirs) throws IOException {
+    public void install () throws IOException {
         File source = getLocalNew(), dest = getLocal();
         log.info("- " + source);
         if (!FileUtil.renameTo(source, dest)) {
             throw new IOException("Failed to rename " + source + " to " + dest);
         }
-        applyAttrs(cleanExistingDirs);
+        applyAttrs();
         markAsValid();
     }
-
 
     /**
      * Unpacks this resource file into the directory that contains it.
      */
-    public void unpack (boolean cleanExistingDirs) throws IOException
+    public void unpack () throws IOException
     {
         // sanity check
         if (!_isJar && !_isPacked200Jar) {
@@ -276,35 +278,26 @@ public class Resource implements Comparable<Resource>
         }
         if (_isJar) {
             try (JarFile jar = new JarFile(_local)) {
-                FileUtil.unpackJar(jar, _unpacked, cleanExistingDirs);
+                FileUtil.unpackJar(jar, _unpacked, _attrs.contains(Attr.CLEAN));
             }
         } else {
             FileUtil.unpackPacked200Jar(_local, _unpacked);
         }
-    }
-    
-    public void unpack () throws IOException
-    {
-    	unpack(false);
     }
 
     /**
      * Applies this resources special attributes: unpacks this resource if needed, marks it as
      * executable if needed.
      */
-    public void applyAttrs (boolean cleanExistingDirs) throws IOException {
+    public void applyAttrs () throws IOException {
         if (shouldUnpack()) {
-            unpack(cleanExistingDirs);
+            unpack();
         }
         if (_attrs.contains(Attr.EXEC)) {
             FileUtil.makeExecutable(_local);
         }
     }
 
-    public void applyAttrs () throws IOException {
-    	applyAttrs(false);
-    }
-    
     /**
      * Wipes this resource file along with any "validated" marker file that may be associated with
      * it.

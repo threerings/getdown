@@ -93,26 +93,29 @@ public class FileUtil
 
     /**
      * Unpacks the specified jar file into the specified target directory.
+     * @param cleanExistingDirs if true, all files in all directories contained in {@code jar} will
+     * be deleted prior to unpacking the jar.
      */
-    public static void unpackJar (JarFile jar, File target, boolean cleanExistingDirs) throws IOException
+    public static void unpackJar (JarFile jar, File target, boolean cleanExistingDirs)
+        throws IOException
     {
-        Enumeration<?> entries = jar.entries();
-        if (cleanExistingDirs)
-        {
-			while (entries.hasMoreElements()) {
-				JarEntry entry = (JarEntry) entries.nextElement();
-				if (entry.isDirectory()) {
-					File efile = new File(target, entry.getName());
-					 if (efile.exists()) {
-						 for (File f : efile.listFiles()) {
-							 if (!f.isDirectory())
-								 f.delete();
-						 }
-					 }
-				}
-			}
+        if (cleanExistingDirs) {
+            Enumeration<?> entries = jar.entries();
+            while (entries.hasMoreElements()) {
+                JarEntry entry = (JarEntry)entries.nextElement();
+                if (entry.isDirectory()) {
+                    File efile = new File(target, entry.getName());
+                    if (efile.exists()) {
+                        for (File f : efile.listFiles()) {
+                            if (!f.isDirectory())
+                            f.delete();
+                        }
+                    }
+                }
+            }
         }
-        entries = jar.entries();
+
+        Enumeration<?> entries = jar.entries();
         while (entries.hasMoreElements()) {
             JarEntry entry = (JarEntry)entries.nextElement();
             File efile = new File(target, entry.getName());
