@@ -2,7 +2,11 @@
 
 ## 1.8.3 - Unreleased
 
-* Nothing yet!
+* When the app is updated to require a new version of the JVM, that JVM will be downloaded and used
+  immediately during that app invocation (instead of one invocation later). Via PR#169.
+
+* When a custom JVM is installed, old JVM files will be deleted prior to unpacking the new JVM. Via
+  PR#170.
 
 ## 1.8.2 - Nov 27, 2018
 
