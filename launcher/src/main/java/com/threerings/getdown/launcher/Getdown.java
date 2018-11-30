@@ -398,9 +398,8 @@ public abstract class Getdown extends Thread
             _toInstallResources = new HashSet<>();
             _readyToInstall = false;
 
-            //setStep(Step.START);
+            // setStep(Step.START);
             for (int ii = 0; ii < MAX_LOOPS; ii++) {
-
                 // make sure we have the desired version and that the metadata files are valid...
                 setStep(Step.VERIFY_METADATA);
                 setStatusAsync("m.validating", -1, -1L, false);
@@ -411,7 +410,7 @@ public abstract class Getdown extends Thread
                     continue;
                 }
 
-                // now verify our resources...
+                // now verify (and download) our resources...
                 setStep(Step.VERIFY_RESOURCES);
                 setStatusAsync("m.validating", -1, -1L, false);
                 Set<Resource> toDownload = new HashSet<>();
@@ -447,7 +446,7 @@ public abstract class Getdown extends Thread
                     // now we'll loop back and try it all again
                     continue;
                 }
-                
+
                 // if we aren't running in a JVM that meets our version requirements, either
                 // complain or attempt to download and install the appropriate version
                 if (!_app.haveValidJavaVersion()) {
