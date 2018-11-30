@@ -8,6 +8,9 @@
 * When a custom JVM is installed, old JVM files will be deleted prior to unpacking the new JVM. Via
   PR#170.
 
+* Number of concurrent downloads now defaults to num-cores minus one. Though downloads are I/O
+  bound rather than CPU bound, this still turns out to be a decent default.
+
 ## 1.8.2 - Nov 27, 2018
 
 * Fixed a data corruption bug introduced at last minute into 1.8.1 release. Oops.
