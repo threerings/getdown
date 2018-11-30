@@ -35,12 +35,15 @@ public class Resource implements Comparable<Resource>
           * unpacked resource will first be cleared of files before unpacking. */
         CLEAN,
         /** Indicates that the resource should be marked executable. */
-        EXEC
+        EXEC,
+        /** Indicates that the resource should be downloaded before a UI is displayed. */
+        PREDOWNLOAD
     };
 
     public static final EnumSet<Attr> NORMAL = EnumSet.noneOf(Attr.class);
     public static final EnumSet<Attr> UNPACK = EnumSet.of(Attr.UNPACK);
     public static final EnumSet<Attr> EXEC   = EnumSet.of(Attr.EXEC);
+    public static final EnumSet<Attr> PREDOWNLOAD   = EnumSet.of(Attr.PREDOWNLOAD);
 
     /**
      * Computes the MD5 hash of the supplied file.
@@ -202,6 +205,14 @@ public class Resource implements Comparable<Resource>
     }
 
     /**
+     * Returns true if this resource should be predownloaded.
+     */
+    public boolean shouldPredownload ()
+    {
+        return _attrs.contains(Attr.PREDOWNLOAD);
+    }
+
+    /**
      * Computes the MD5 hash of this resource's underlying file.
      * <em>Note:</em> This is both CPU and I/O intensive.
      * @param version the version of the digest protocol to use.
@@ -256,15 +267,26 @@ public class Resource implements Comparable<Resource>
 
     /**
      * Installs the {@code getLocalNew} version of this resource to {@code getLocal}.
+     * @param validate Validate resource after installing?
      */
-    public void install () throws IOException {
+    public void install (boolean validate) throws IOException {
         File source = getLocalNew(), dest = getLocal();
         log.info("- " + source);
         if (!FileUtil.renameTo(source, dest)) {
             throw new IOException("Failed to rename " + source + " to " + dest);
         }
         applyAttrs();
-        markAsValid();
+
+        if (validate){
+            markAsValid();
+        }
+    }
+
+    /**
+     * Same as calling {@link #install(boolean)} with {@code true}
+     */
+    public void install () throws IOException {
+        install(true);
     }
 
     /**
