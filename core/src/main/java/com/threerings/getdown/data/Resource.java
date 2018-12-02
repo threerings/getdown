@@ -37,13 +37,13 @@ public class Resource implements Comparable<Resource>
         /** Indicates that the resource should be marked executable. */
         EXEC,
         /** Indicates that the resource should be downloaded before a UI is displayed. */
-        PREDOWNLOAD
+        PRELOAD
     };
 
-    public static final EnumSet<Attr> NORMAL = EnumSet.noneOf(Attr.class);
-    public static final EnumSet<Attr> UNPACK = EnumSet.of(Attr.UNPACK);
-    public static final EnumSet<Attr> EXEC   = EnumSet.of(Attr.EXEC);
-    public static final EnumSet<Attr> PREDOWNLOAD   = EnumSet.of(Attr.PREDOWNLOAD);
+    public static final EnumSet<Attr> NORMAL  = EnumSet.noneOf(Attr.class);
+    public static final EnumSet<Attr> UNPACK  = EnumSet.of(Attr.UNPACK);
+    public static final EnumSet<Attr> EXEC    = EnumSet.of(Attr.EXEC);
+    public static final EnumSet<Attr> PRELOAD = EnumSet.of(Attr.PRELOAD);
 
     /**
      * Computes the MD5 hash of the supplied file.
@@ -205,11 +205,11 @@ public class Resource implements Comparable<Resource>
     }
 
     /**
-     * Returns true if this resource should be predownloaded.
+     * Returns true if this resource should be pre-downloaded.
      */
     public boolean shouldPredownload ()
     {
-        return _attrs.contains(Attr.PREDOWNLOAD);
+        return _attrs.contains(Attr.PRELOAD);
     }
 
     /**
@@ -267,7 +267,7 @@ public class Resource implements Comparable<Resource>
 
     /**
      * Installs the {@code getLocalNew} version of this resource to {@code getLocal}.
-     * @param validate Validate resource after installing?
+     * @param validate whether or not to mark the resource as valid after installing.
      */
     public void install (boolean validate) throws IOException {
         File source = getLocalNew(), dest = getLocal();
@@ -276,17 +276,9 @@ public class Resource implements Comparable<Resource>
             throw new IOException("Failed to rename " + source + " to " + dest);
         }
         applyAttrs();
-
-        if (validate){
+        if (validate) {
             markAsValid();
         }
-    }
-
-    /**
-     * Same as calling {@link #install(boolean)} with {@code true}
-     */
-    public void install () throws IOException {
-        install(true);
     }
 
     /**

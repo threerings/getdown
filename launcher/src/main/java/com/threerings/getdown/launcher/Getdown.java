@@ -114,7 +114,7 @@ public abstract class Getdown extends Thread
         } else if (_readyToInstall) {
             log.info("Installing " + _toInstallResources.size() + " downloaded resources:");
             for (Resource resource : _toInstallResources) {
-                resource.install();
+                resource.install(true);
             }
             _toInstallResources.clear();
             _readyToInstall = false;
@@ -157,6 +157,7 @@ public abstract class Getdown extends Thread
             } else {
                 // create a panel they can use to configure the proxy settings
                 _container = createContainer();
+                configureContainer();
                 _container.add(new ProxyPanel(this, _msgs), BorderLayout.CENTER);
                 showContainer();
                 // allow them to close the window to abort the proxy configuration
@@ -277,9 +278,7 @@ public abstract class Getdown extends Thread
         // to get some sort of interface configuration and the appbase URL
         log.info("Checking whether we need to use a proxy...");
         try {
-            Config config = _app.init(true);
-            doPredownloads(_app.getResources());
-            _ifc = _app.initUpdateInterface(config);
+            readConfig(true);
         } catch (IOException ioe) {
             // no worries
         }
@@ -339,32 +338,34 @@ public abstract class Getdown extends Thread
         }
     }
 
+    protected void readConfig (boolean preloads) throws IOException {
+        Config config = _app.init(true);
+        if (preloads) doPredownloads(_app.getResources());
+        _ifc = new Application.UpdateInterface(config);
+    }
+
     /**
-     * Finds resources from {@code resources} that have a {@code PREDOWNLOAD} attribute,
-     * then downloads and installs them (without verifying them)
-     * @param resources resources to predownload
+     * Downloads and installs (without verifying) any resources that are marked with a
+     * {@code PRELOAD} attribute.
+     * @param resources the full set of resources from the application (the predownloads will be
+     * extracted from it).
      */
     protected void doPredownloads (Collection<Resource> resources) {
         List<Resource> predownloads = new ArrayList<>();
-
-        for(Resource rsrc: resources) {
-            if(rsrc.shouldPredownload() && !rsrc.getLocal().exists()) {
+        for (Resource rsrc : resources) {
+            if (rsrc.shouldPredownload() && !rsrc.getLocal().exists()) {
                 predownloads.add(rsrc);
             }
         }
 
         try {
             download(predownloads);
-
-            for(Resource rsrc: predownloads) {
-                // Install but don't validate yet
-                rsrc.install(false);
+            for (Resource rsrc : predownloads) {
+                rsrc.install(false); // install but don't validate yet
             }
-
         } catch (IOException ioe) {
             log.warning("Failed to predownload resources. Continuing...", ioe);
         }
-
     }
 
     /**
@@ -380,23 +381,15 @@ public abstract class Getdown extends Thread
         try {
             // first parses our application deployment file
             try {
-                Config config = _app.init(true);
-                doPredownloads(_app.getResources());
-                _ifc = _app.initUpdateInterface(config);
+                readConfig(true);
             } catch (IOException ioe) {
                 log.warning("Failed to initialize: " + ioe);
                 _app.attemptRecovery(this);
                 // and re-initalize
-                Config config = _app.init(true);
-                doPredownloads(_app.getResources());
-                _ifc = _app.initUpdateInterface(config);
-
-                // now force our UI to be recreated with the updated info
+                readConfig(true);
+                // and force our UI to be recreated with the updated info
                 createInterfaceAsync(true);
-                setIcons(); // Force icons to be displayed
-
             }
-
             if (!_app.lockForUpdates()) {
                 throw new MultipleGetdownRunning();
             }
@@ -604,12 +597,6 @@ public abstract class Getdown extends Thread
     }
 
     /**
-     * Force app to (re)set icons
-     */
-    protected abstract void setIcons();
-
-
-    /**
      * Downloads and installs an Java VM bundled with the application. This is called if we are not
      * running with the necessary Java version.
      */
@@ -631,7 +618,7 @@ public abstract class Getdown extends Thread
         reportTrackingEvent("jvm_unpack", -1);
 
         updateStatus("m.unpacking_java");
-        vmjar.install();
+        vmjar.install(true);
 
         // these only run on non-Windows platforms, so we use Unix file separators
         String localJavaDir = LaunchUtil.LOCAL_JAVA_DIR + "/";
@@ -720,8 +707,7 @@ public abstract class Getdown extends Thread
         // finally update our metadata files...
         _app.updateMetadata();
         // ...and reinitialize the application
-        Config config = _app.init(true);
-        _ifc = _app.initUpdateInterface(config);
+        readConfig(false);
     }
 
     /**
@@ -879,6 +865,7 @@ public abstract class Getdown extends Thread
                     } else {
                         _container.removeAll();
                     }
+                    configureContainer();
                     _layers = new JLayeredPane();
                     _container.add(_layers, BorderLayout.CENTER);
                     _patchNotes = new JButton(new AbstractAction(_msgs.getString("m.patch_notes")) {
@@ -1058,6 +1045,11 @@ public abstract class Getdown extends Thread
      * Creates the container in which our user interface will be displayed.
      */
     protected abstract Container createContainer ();
+
+    /**
+     * Configures the interface container based on the latest UI config.
+     */
+    protected abstract void configureContainer ();
 
     /**
      * Shows the container in which our user interface will be displayed.

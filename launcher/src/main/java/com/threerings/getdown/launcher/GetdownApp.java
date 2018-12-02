@@ -101,37 +101,36 @@ public class GetdownApp
             @Override
             protected Container createContainer () {
                 // create our user interface, and display it
-                String title = StringUtil.isBlank(_ifc.name) ? "" : _ifc.name;
                 if (_frame == null) {
-                    _frame = new JFrame(title);
+                    _frame = new JFrame("");
                     _frame.addWindowListener(new WindowAdapter() {
                         @Override
                         public void windowClosing (WindowEvent evt) {
                             handleWindowClose();
                         }
                     });
+                    // this cannot be called in configureContainer as it is only allowed before the
+                    // frame has been displayed for the first time
                     _frame.setUndecorated(_ifc.hideDecorations);
-                    try {
-                        _frame.setBackground(new Color(_ifc.background, true));
-                    } catch (UnsupportedOperationException e) {
-                        log.warning("Failed to set background", e);
-                    } catch (IllegalComponentStateException e) {
-                        log.warning("Failed to set background", e);
-                    }
                     _frame.setResizable(false);
                 } else {
-                    _frame.setTitle(title);
                     _frame.getContentPane().removeAll();
                 }
-
-                setIcons();
-
                 _frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
                 return _frame.getContentPane();
             }
 
-            protected void setIcons() {
-                if(_frame == null) return;
+            @Override
+            protected void configureContainer () {
+                if (_frame == null) return;
+
+                _frame.setTitle(_ifc.name);
+
+                try {
+                    _frame.setBackground(new Color(_ifc.background, true));
+                } catch (Exception e) {
+                    log.warning("Failed to set background", "bg", _ifc.background, e);
+                }
 
                 if (_ifc.iconImages != null) {
                     ArrayList<Image> icons = new ArrayList<>();
@@ -148,8 +147,6 @@ public class GetdownApp
                     } else {
                         _frame.setIconImages(icons);
                     }
-                } else {
-                    log.info("No icons found to load...");
                 }
             }
 

@@ -75,7 +75,7 @@ public class Digester
 
         // create our application and instruct it to parse its business
         Application app = new Application(new EnvConfig(appdir));
-        app.initUpdateInterface(app.init(false));
+        app.init(false);
 
         List<Resource> rsrcs = new ArrayList<>();
         rsrcs.add(app.getConfigResource());
