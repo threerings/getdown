@@ -241,30 +241,23 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
   {
     log.info("User configured proxy", "host", host, "port", port);
 
-    // if we're provided with valid values, create a proxy.txt file
-    if (!StringUtil.isBlank(host))
+    File pfile = _app.getLocalPath("proxy.txt");
+    try (PrintStream pout = new PrintStream(new FileOutputStream(pfile)))
     {
-      File pfile = _app.getLocalPath("proxy.txt");
-      try (PrintStream pout = new PrintStream(new FileOutputStream(pfile)))
+      pout.println("host = " + host);
+      pout.println("port = " + port);
+      if (!StringUtil.isBlank(username) && password != null && password.length != 0)
       {
-        pout.println("host = " + host);
-        if (!StringUtil.isBlank(port))
-        {
-          pout.println("port = " + port);
-        }
-        if (!StringUtil.isBlank(username) && password != null && password.length != 0)
-        {
-          persistCredentials(username, password);
-        }
+        persistCredentials(username, password);
       }
-      catch (IOException ioe)
-      {
-        log.warning("Error creating proxy file '" + pfile + "': " + ioe);
-      }
-
-      // also configure them in the JVM
-      setProxyProperties(host, port, username, password);
     }
+    catch (IOException ioe)
+    {
+      log.warning("Error creating proxy file '" + pfile + "': " + ioe);
+    }
+
+    // also configure them in the JVM
+    setProxyProperties(host, port, username, password);
 
     // clear out our UI
     disposeContainer();
@@ -372,17 +365,22 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
       }
     }
 
-        // otherwise look for and read our proxy.txt file
-        File pfile = _app.getLocalPath("proxy.txt");
-        if (pfile.exists() && !proxySettingsDetected) {
-            try {
-                Config pconf = Config.parseConfig(pfile, Config.createOpts(false));
-                setProxyProperties(pconf.getString("host"), pconf.getString("port"));
-                return true;
-            } catch (IOException ioe) {
-                log.warning("Failed to read '" + pfile + "': " + ioe);
-            }
-        }
+    //otherwiselook for and read our proxy.txt file
+    File pfile = _app.getLocalPath("proxy.txt");
+    if (pfile.exists() && !proxySettingsDetected)
+    {
+      try{
+
+        Config pconf = Config.parseConfig(pfile, Config.createOpts(false));
+        if (pconf.getString("host") != null && pconf.getString("port") != null)
+        {setProxyProperties(pconf.getString("host"), pconf.getString("port"));
+        return true;}
+      }
+      catch (IOException ioe)
+      {
+        log.warning("Failed to read '" + pfile + "': " + ioe);
+      }
+    }
 
         // otherwise see if we actually need a proxy; first we have to initialize our application
         // to get some sort of interface configuration and the appbase URL
@@ -394,8 +392,8 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
         }
         updateStatus("m.detecting_proxy");
 
-    boolean proxyConnected = checkProxyConnection();
-    if (!proxySettingsDetected && proxyConnected)
+    boolean appBaseConnected = checkAppbaseConnection();
+    if (!proxySettingsDetected && appBaseConnected)
     {
       // we got through, so we appear not to require a proxy; make a blank proxy config and
       // get on gettin' down
@@ -411,11 +409,11 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
     }
 
     // let the caller know that we need a proxy but can't detect it
-    return proxyConnected;
+    return appBaseConnected;
   }
 
 
-  private boolean checkProxyConnection()
+  private boolean checkAppbaseConnection()
   {
     boolean successfullyConnected = false;
     URL rurl = _app.getConfigResource().getRemote();
@@ -447,14 +445,15 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
         }
       }
     }
-    catch (IOException ioe)
+    catch (Exception ioe)
     {
-        log.info("Failed to HEAD " + rurl + ": " + ioe);
-        log.info("We probably need a proxy, but auto-detection failed.");
-        log.error(ioe.getMessage(), ioe);
+      log.info("Failed to HEAD " + rurl + ": " + ioe);
+      log.info("We probably need a proxy, but auto-detection failed.");
+      log.error(ioe.getMessage(), ioe);
     }
     return successfullyConnected;
   }
+
 
   protected void setProxyProperties(String host, String port)
   {
@@ -466,24 +465,18 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
    */
   protected void setProxyProperties(String host, String port, String username, char[] password)
   {
-    if (!StringUtil.isBlank(host))
+    System.setProperty("http.proxyHost", host);
+    System.setProperty("https.proxyHost", host);
+    System.setProperty("http.proxyPort", port);
+    System.setProperty("https.proxyPort", port);
+    if (!StringUtil.isBlank(username) && password != null && password.length != 0)
     {
-      System.setProperty("http.proxyHost", host);
-      System.setProperty("https.proxyHost", host);
-      if (!StringUtil.isBlank(port))
-      {
-        System.setProperty("http.proxyPort", port);
-        System.setProperty("https.proxyPort", port);
-      }
-      if (!StringUtil.isBlank(username) && password != null && password.length != 0)
-      {
-        Authenticator.setDefault(new ProxyAuthenticator(username, password));
-      }
-      log.info("Using proxy", "host", host, "port", port);
+      Authenticator.setDefault(new ProxyAuthenticator(username, password));
     }
+    log.info("Using proxy", "host", host, "port", port);
   }
 
-    protected void readConfig (boolean preloads) throws IOException {
+  protected void readConfig (boolean preloads) throws IOException {
         Config config = _app.init(true);
         if (preloads) doPredownloads(_app.getResources());
         _ifc = new Application.UpdateInterface(config);
@@ -512,30 +505,31 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
             log.warning("Failed to predownload resources. Continuing...", ioe);
         }
     }/**
-     * Does the actual application validation, update and launching business.
-     */
-    protected void getdown ()
-    {
-        log.info("---------------- Proxy Info -----------------");
-        log.info("-- Proxy Host: " + System.getProperty("http.proxyHost"));
-        log.info("-- Proxy Port: " + System.getProperty("http.proxyPort"));
-        log.info("---------------------------------------------");
+   * Does the actual application validation, update and launching business.
+   */
+  protected void getdown()
+  {
 
-        try {
-            // first parses our application deployment file
-            try {
-                readConfig(true);
-            } catch (IOException ioe) {
-                log.warning("Failed to initialize: " + ioe);
-                _app.attemptRecovery(this);
-                // and re-initalize
-                readConfig(true);
-                // and force our UI to be recreated with the updated info
-                createInterfaceAsync(true);
-            }
-            if (!_app.lockForUpdates()) {
-                throw new MultipleGetdownRunning();
-            }
+
+    try{
+
+      // first parses our application deployment file
+      try{
+      readConfig(true);
+
+      }catch (IOException ioe)
+      {
+        log.warning("Failed to initialize: " + ioe);
+        _app.attemptRecovery(this);
+        // and re-initalize
+        readConfig(true);
+        // and force our UI to be recreated with the updated info
+        createInterfaceAsync(true);
+      }
+      if (!_app.lockForUpdates())
+      {
+        throw new MultipleGetdownRunning();
+      }
 
       // Update the config modtime so a sleeping getdown will notice the change.
       File config = _app.getLocalPath(Application.CONFIG_FILE);
