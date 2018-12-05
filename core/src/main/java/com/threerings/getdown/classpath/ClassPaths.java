@@ -17,7 +17,6 @@ import com.threerings.getdown.data.Resource;
 
 public class ClassPaths
 {
-    static final String CACHE_DIR = ".cache";
 
     /**
      * Builds either a default or cached classpath based on {@code app}'s configuration.
@@ -48,21 +47,18 @@ public class ClassPaths
      */
     public static ClassPath buildCachedClassPath (Application app) throws IOException
     {
-        File cacheDir = new File(app.getAppDir(), CACHE_DIR);
+        File codeCacheDir = new File(app.getAppDir(), Application.CACHE_DIR + "/code");
+
         // a negative value of code_cache_retention_days allows to clean up the cache forcefully
-        if (app.getCodeCacheRetentionDays() <= 0) {
-            runGarbageCollection(app, cacheDir);
+        if (app.getCodeCacheRetentionDays() != 0) {
+            runGarbageCollection(app, codeCacheDir);
         }
 
-        ResourceCache cache = new ResourceCache(cacheDir);
-        LinkedHashSet<File> classPathEntries = new LinkedHashSet<File>();
+        ResourceCache cache = new ResourceCache(codeCacheDir);
+        LinkedHashSet<File> classPathEntries = new LinkedHashSet<>();
         for (Resource resource: app.getActiveCodeResources()) {
             File entry = cache.cacheFile(resource.getFinalTarget(), app.getDigest(resource));
             classPathEntries.add(entry);
-        }
-
-        if (app.getCodeCacheRetentionDays() > 0) {
-            runGarbageCollection(app, cacheDir);
         }
 
         return new ClassPath(classPathEntries);

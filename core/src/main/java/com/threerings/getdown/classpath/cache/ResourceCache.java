@@ -26,13 +26,34 @@ public class ResourceCache
     }
 
     /**
-     * Caches the given file under it's {@code digest}.
-     *
+     * Caches the given file under it's {@code digest}. Same as calling {@link #cacheFile(File, String, boolean)}
+     * with {@code false}
      * @return the cached file
      */
     public File cacheFile (File fileToCache, String digest) throws IOException
     {
-        File cacheLocation = new File(_cacheDir, digest.substring(0, 2));
+        return cacheFile(fileToCache, digest, false);
+    }
+
+    /**
+     * Caches the given file under it's {@code digest}.
+     * @param fileToCache file to cache
+     * @param digest used to determine the name of the directory to store file in
+     * @param useFullHashName if true, the name of the cache directory will not be truncated.
+     *                        This is useful if you need to avoid the possibility of two files
+     *                        sharing a directory.
+     * @return the cached file
+     */
+    public File cacheFile (File fileToCache, String digest, boolean useFullHashName) throws IOException
+    {
+        File cacheLocation;
+
+        if (useFullHashName) {
+            cacheLocation = new File(_cacheDir, digest);
+        } else {
+            cacheLocation = new File(_cacheDir, digest.substring(0, 2));
+
+        }
         createDirectoryIfNecessary(cacheLocation);
 
         File cachedFile = new File(cacheLocation, digest + getFileSuffix(fileToCache));

@@ -1,6 +1,8 @@
 package com.threerings.getdown.classpath.cache;
 
 import java.io.File;
+import java.io.FileFilter;
+
 import com.threerings.getdown.util.FileUtil;
 
 /**
@@ -35,6 +37,42 @@ public class GarbageCollector
                     if (children != null && children.length == 0) {
                         FileUtil.deleteHarder(folder);
                     }
+                }
+            }
+        });
+    }
+
+    /**
+     * Collect and delete garbage in the native cache. It tries to find a jar file with a matching
+     * lastmodified file, and deletes the entire directory accordingly.
+     */
+    public static void collectNative (File cacheDir, final long retentionPeriodMillis) {
+        FileUtil.walkDirectChildren(cacheDir, new FileUtil.Visitor() {
+            @Override
+            public void visit(File file) {
+                if (file.isDirectory()) {
+                    // Get all the native jars in the directory (there should only be one though)
+                    File[] nativejars = file.listFiles(new FileFilter() {
+                        @Override
+                        public boolean accept(File pathname) {
+                            return pathname.getAbsolutePath().endsWith(".jar");
+                        }
+                    });
+                    for (File nativejar : nativejars) {
+                        if (nativejar==null || !nativejar.exists()) {
+                            continue;
+                        }
+
+                        File cachedFile = getCachedFile(nativejar);
+                        File lastAccessedFile = getLastAccessedFile(nativejar);
+
+                        if (!cachedFile.exists() || !lastAccessedFile.exists() || shouldDelete(lastAccessedFile, retentionPeriodMillis)) {
+                           FileUtil.deleteDirHarder(file);
+                        }
+                    }
+                } else {
+                    // @TODO There shouldn't be any loose files in native/ but if there are then what? Delete them?
+                    //  file.delete();
                 }
             }
         });

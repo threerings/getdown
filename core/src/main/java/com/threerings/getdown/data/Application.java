@@ -25,6 +25,7 @@ import java.util.zip.GZIPInputStream;
 
 import com.threerings.getdown.classpath.ClassPaths;
 import com.threerings.getdown.classpath.ClassPath;
+import com.threerings.getdown.classpath.NativeLibPath;
 import com.threerings.getdown.util.*;
 // avoid ambiguity with java.util.Base64 which we can't use as it's 1.8+
 import com.threerings.getdown.util.Base64;
@@ -53,6 +54,9 @@ public class Application
 
     /** A special classname that means 'use -jar code.jar' instead of a classname. */
     public static final String MANIFEST_CLASS = "manifest";
+
+    /** Name of directory to store cached files in. */
+    public static final String CACHE_DIR = ".cache";
 
     /** Used to communicate information about the UI displayed when updating the application. */
     public static final class UpdateInterface
@@ -375,6 +379,22 @@ public class Application
     }
 
     /**
+     * Returns all jar resources indicated to contain native library files (.dll, .so etc.)
+     */
+    public List<Resource> getNativeJars() {
+
+        List<Resource> nativeJars = new ArrayList<>();
+
+        for (Resource resource: _resources) {
+            if (resource.isNativeJar()) {
+                nativeJars.add(resource);
+            }
+        }
+
+        return nativeJars;
+    }
+
+    /**
      * Returns all non-code resources and all resources from active auxiliary resource groups.
      */
     public List<Resource> getActiveResources ()
@@ -673,6 +693,7 @@ public class Application
         parseResources(config, "uresource", Resource.UNPACK, _resources);
         parseResources(config, "xresource", Resource.EXEC, _resources);
         parseResources(config, "presource", Resource.PRELOAD, _resources);
+        parseResources(config, "nresource", Resource.NATIVE, _resources);
 
         // parse our auxiliary resource groups
         for (String auxgroup : config.getList("auxgroups")) {
@@ -915,6 +936,10 @@ public class Application
         // add the -classpath arguments if we're not in -jar mode
         ClassPath classPath = ClassPaths.buildClassPath(this);
 
+        // get the -Djava.library.path value to pass
+        // @TODO optional getdown.txt parameter to set addCurrentLibraryPath to true or false?
+        NativeLibPath nativeLibPaths = NativeLibPath.buildLibsPath(this, true);
+
         if (!dashJarMode) {
             args.add("-classpath");
             args.add(classPath.asArgumentString());
@@ -937,6 +962,9 @@ public class Application
 
         // add the marker indicating the app is running in getdown
         args.add("-D" + Properties.GETDOWN + "=true");
+
+        // set the native library path
+        args.add("-Djava.library.path=" + nativeLibPaths.asArgumentString());
 
         // pass along any pass-through arguments
         for (Map.Entry<Object, Object> entry : System.getProperties().entrySet()) {
