@@ -2,6 +2,10 @@
 
 ## 1.8.3 - Unreleased
 
+* Added support for `nresource` resources which must be jar files that contain native libraries.
+  Prior to launching the application, these resources will be unpacked and their contents added to
+  the `java.library.path` system property.
+
 * When the app is updated to require a new version of the JVM, that JVM will be downloaded and used
   immediately during that app invocation (instead of one invocation later). Via PR#169.
 
