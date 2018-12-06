@@ -78,6 +78,27 @@ public class FileUtil
     }
 
     /**
+     * Force deletes {@code file} and all of its children recursively using {@link #deleteHarder}.
+     * Note that some children may still be deleted even if {@code false} is returned. Also, since {@link #deleteHarder}
+     * is used, the {@code file} could be deleted once the jvm exits even if {@code false} is returned.
+     *
+     * @param file file to delete
+     * @return true iff {@code file} was successfully deleted.
+     */
+    public static boolean deleteDirHarder(File file) {
+        if (file.isDirectory()) {
+            for (File child : file.listFiles()) {
+                if (child.isDirectory()) {
+                    deleteDirHarder(child);
+                } else {
+                    deleteHarder(child);
+                }
+            }
+        }
+        return deleteHarder(file);
+    }
+
+    /**
      * Reads the contents of the supplied input stream into a list of lines. Closes the reader on
      * successful or failed completion.
      */
@@ -190,7 +211,7 @@ public class FileUtil
     }
 
     /**
-     * Used by {@link #walkTree}.
+     * Used by {@link #walkTree} and {@link #walkDirectChildren}.
      */
     public interface Visitor
     {
@@ -218,4 +239,21 @@ public class FileUtil
             }
         }
     }
+
+    /**
+     * Walks all direct sub-files of {@code root}, calling {@code visitor} on each file.
+     */
+    public static void walkDirectChildren (final File root, Visitor visitor) {
+        File[] children = root.listFiles();
+
+        if (children == null) return;
+        Deque<File> stack = new ArrayDeque<>(Arrays.asList(children));
+        while (!stack.isEmpty()) {
+            File currentFile = stack.pop();
+            if (currentFile.exists()) {
+                visitor.visit(currentFile);
+            }
+        }
+    }
+
 }

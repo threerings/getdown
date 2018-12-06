@@ -46,10 +46,10 @@ public class ClassPathsTest
         when(_application.getCodeCacheRetentionDays()).thenReturn(1);
 
         Path firstCachedJarFile = _appdir.getRoot().toPath().
-            resolve(ClassPaths.CACHE_DIR).resolve("fi").resolve("first.jar");
+            resolve(Application.CACHE_DIR + "/code").resolve("fi").resolve("first.jar");
 
         Path secondCachedJarFile = _appdir.getRoot().toPath().
-            resolve(ClassPaths.CACHE_DIR).resolve("se").resolve("second.jar");
+            resolve(Application.CACHE_DIR + "/code").resolve("se").resolve("second.jar");
 
         String expectedClassPath = firstCachedJarFile.toAbsolutePath() + File.pathSeparator +
             secondCachedJarFile.toAbsolutePath();
