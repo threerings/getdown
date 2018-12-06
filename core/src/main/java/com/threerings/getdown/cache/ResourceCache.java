@@ -1,4 +1,9 @@
-package com.threerings.getdown.classpath.cache;
+//
+// Getdown - application installer, patcher and launcher
+// Copyright (C) 2004-2016 Getdown authors
+// https://github.com/threerings/getdown/blob/master/LICENSE
+
+package com.threerings.getdown.cache;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,7 +19,6 @@ public class ResourceCache
     public ResourceCache (File _cacheDir) throws IOException
     {
         this._cacheDir = _cacheDir;
-
         createDirectoryIfNecessary(_cacheDir);
     }
 
@@ -26,34 +30,16 @@ public class ResourceCache
     }
 
     /**
-     * Caches the given file under it's {@code digest}. Same as calling {@link #cacheFile(File, String, boolean)}
-     * with {@code false}
-     * @return the cached file
+     * Caches the given file under its {@code digest}.
+     * @param fileToCache file to cache.
+     * @param cacheSubdir the subdirectory of the cache directory in which to store the cached
+     * file. Usually either {@code digest} or a prefix of {@code digest}.
+     * @param digest a crypto digest of the cached files contents.
+     * @return the cached file.
      */
-    public File cacheFile (File fileToCache, String digest) throws IOException
+    public File cacheFile (File fileToCache, String cacheSubdir, String digest) throws IOException
     {
-        return cacheFile(fileToCache, digest, false);
-    }
-
-    /**
-     * Caches the given file under it's {@code digest}.
-     * @param fileToCache file to cache
-     * @param digest used to determine the name of the directory to store file in
-     * @param useFullHashName if true, the name of the cache directory will not be truncated.
-     *                        This is useful if you need to avoid the possibility of two files
-     *                        sharing a directory.
-     * @return the cached file
-     */
-    public File cacheFile (File fileToCache, String digest, boolean useFullHashName) throws IOException
-    {
-        File cacheLocation;
-
-        if (useFullHashName) {
-            cacheLocation = new File(_cacheDir, digest);
-        } else {
-            cacheLocation = new File(_cacheDir, digest.substring(0, 2));
-
-        }
+        File cacheLocation = new File(_cacheDir, cacheSubdir);
         createDirectoryIfNecessary(cacheLocation);
 
         File cachedFile = new File(cacheLocation, digest + getFileSuffix(fileToCache));

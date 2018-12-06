@@ -1,4 +1,9 @@
-package com.threerings.getdown.classpath.cache;
+//
+// Getdown - application installer, patcher and launcher
+// Copyright (C) 2004-2016 Getdown authors
+// https://github.com/threerings/getdown/blob/master/LICENSE
+
+package com.threerings.getdown.cache;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,7 +31,7 @@ public class ResourceCacheTest
 
     private File cacheFile() throws IOException
     {
-        return _cache.cacheFile(_fileToCache, "abc123");
+        return _cache.cacheFile(_fileToCache, "abc123", "abc123");
     }
 
     @Test public void shouldTrackFileUsage () throws IOException

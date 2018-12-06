@@ -1,4 +1,9 @@
-package com.threerings.getdown.classpath.cache;
+//
+// Getdown - application installer, patcher and launcher
+// Copyright (C) 2004-2016 Getdown authors
+// https://github.com/threerings/getdown/blob/master/LICENSE
+
+package com.threerings.getdown.cache;
 
 import java.io.File;
 import java.io.IOException;

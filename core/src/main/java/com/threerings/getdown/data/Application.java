@@ -23,9 +23,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
-import com.threerings.getdown.classpath.ClassPaths;
-import com.threerings.getdown.classpath.ClassPath;
-import com.threerings.getdown.classpath.NativeLibPath;
 import com.threerings.getdown.util.*;
 // avoid ambiguity with java.util.Base64 which we can't use as it's 1.8+
 import com.threerings.getdown.util.Base64;
@@ -54,9 +51,6 @@ public class Application
 
     /** A special classname that means 'use -jar code.jar' instead of a classname. */
     public static final String MANIFEST_CLASS = "manifest";
-
-    /** Name of directory to store cached files in. */
-    public static final String CACHE_DIR = ".cache";
 
     /** Used to communicate information about the UI displayed when updating the application. */
     public static final class UpdateInterface
@@ -379,19 +373,17 @@ public class Application
     }
 
     /**
-     * Returns all jar resources indicated to contain native library files (.dll, .so etc.)
+     * Returns all resources indicated to contain native library files (.dll, .so, etc.).
      */
-    public List<Resource> getNativeJars() {
-
-        List<Resource> nativeJars = new ArrayList<>();
-
+    public List<Resource> getNativeResources ()
+    {
+        List<Resource> natives = new ArrayList<>();
         for (Resource resource: _resources) {
-            if (resource.isNativeJar()) {
-                nativeJars.add(resource);
+            if (resource.isNative()) {
+                natives.add(resource);
             }
         }
-
-        return nativeJars;
+        return natives;
     }
 
     /**
@@ -702,7 +694,10 @@ public class Application
             parseResources(config, auxgroup + ".ucode", Resource.UNPACK, codes);
             ArrayList<Resource> rsrcs = new ArrayList<>();
             parseResources(config, auxgroup + ".resource", Resource.NORMAL, rsrcs);
+            parseResources(config, auxgroup + ".xresource", Resource.EXEC, rsrcs);
             parseResources(config, auxgroup + ".uresource", Resource.UNPACK, rsrcs);
+            parseResources(config, auxgroup + ".presource", Resource.PRELOAD, rsrcs);
+            parseResources(config, auxgroup + ".nresource", Resource.NATIVE, rsrcs);
             _auxgroups.put(auxgroup, new AuxGroup(auxgroup, codes, rsrcs));
         }
 
@@ -934,12 +929,7 @@ public class Application
         boolean dashJarMode = MANIFEST_CLASS.equals(_class);
 
         // add the -classpath arguments if we're not in -jar mode
-        ClassPath classPath = ClassPaths.buildClassPath(this);
-
-        // get the -Djava.library.path value to pass
-        // @TODO optional getdown.txt parameter to set addCurrentLibraryPath to true or false?
-        NativeLibPath nativeLibPaths = NativeLibPath.buildLibsPath(this, true);
-
+        ClassPath classPath = PathBuilder.buildClassPath(this);
         if (!dashJarMode) {
             args.add("-classpath");
             args.add(classPath.asArgumentString());
@@ -963,8 +953,12 @@ public class Application
         // add the marker indicating the app is running in getdown
         args.add("-D" + Properties.GETDOWN + "=true");
 
-        // set the native library path
-        args.add("-Djava.library.path=" + nativeLibPaths.asArgumentString());
+        // set the native library path if we have native resources
+        // @TODO optional getdown.txt parameter to set addCurrentLibraryPath to true or false?
+        ClassPath javaLibPath = PathBuilder.buildLibsPath(this, true);
+        if (javaLibPath != null) {
+            args.add("-Djava.library.path=" + javaLibPath.asArgumentString());
+        }
 
         // pass along any pass-through arguments
         for (Map.Entry<Object, Object> entry : System.getProperties().entrySet()) {
@@ -1044,7 +1038,7 @@ public class Application
      */
     public void invokeDirect () throws IOException
     {
-        ClassPath classPath = ClassPaths.buildClassPath(this);
+        ClassPath classPath = PathBuilder.buildClassPath(this);
         URL[] jarUrls = classPath.asUrls();
 
         // create custom class loader

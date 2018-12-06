@@ -1,4 +1,9 @@
-package com.threerings.getdown.classpath;
+//
+// Getdown - application installer, patcher and launcher
+// Copyright (C) 2004-2016 Getdown authors
+// https://github.com/threerings/getdown/blob/master/LICENSE
+
+package com.threerings.getdown.data;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -9,9 +14,9 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
- * Represents the class path and it's elements of the application to be launched. The class path can
- * either be represented as an {@link #asArgumentString() argument string} for the java command line
- * or as an {@link #asUrls() array of URLs} to be used by a {@link URLClassLoader}.
+ * Represents the class path and it's elements of the application to be launched. The class path
+ * can either be represented as an {@link #asArgumentString() argument string} for the java command
+ * line or as an {@link #asUrls() array of URLs} to be used by a {@link URLClassLoader}.
  */
 public class ClassPath
 {

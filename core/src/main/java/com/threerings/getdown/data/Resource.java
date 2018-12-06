@@ -46,7 +46,7 @@ public class Resource implements Comparable<Resource>
     public static final EnumSet<Attr> UNPACK  = EnumSet.of(Attr.UNPACK);
     public static final EnumSet<Attr> EXEC    = EnumSet.of(Attr.EXEC);
     public static final EnumSet<Attr> PRELOAD = EnumSet.of(Attr.PRELOAD);
-    public static final EnumSet<Attr> NATIVE = EnumSet.of(Attr.NATIVE);
+    public static final EnumSet<Attr> NATIVE  = EnumSet.of(Attr.NATIVE);
 
     /**
      * Computes the MD5 hash of the supplied file.
@@ -218,11 +218,10 @@ public class Resource implements Comparable<Resource>
     /**
      * Returns true if this resource is a native lib jar.
      */
-    public boolean isNativeJar ()
+    public boolean isNative ()
     {
         return _attrs.contains(Attr.NATIVE);
     }
-
 
     /**
      * Computes the MD5 hash of this resource's underlying file.

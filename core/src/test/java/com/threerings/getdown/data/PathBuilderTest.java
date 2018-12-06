@@ -1,4 +1,9 @@
-package com.threerings.getdown.classpath;
+//
+// Getdown - application installer, patcher and launcher
+// Copyright (C) 2004-2016 Getdown authors
+// https://github.com/threerings/getdown/blob/master/LICENSE
+
+package com.threerings.getdown.data;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,11 +19,8 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import static org.mockito.Mockito.when;
 
-import com.threerings.getdown.data.Application;
-import com.threerings.getdown.data.Resource;
-
 @RunWith(MockitoJUnitRunner.class)
-public class ClassPathsTest
+public class PathBuilderTest
 {
     @Before public void setupFilesAndResources () throws IOException
     {
@@ -33,7 +35,7 @@ public class ClassPathsTest
 
     @Test public void shouldBuildDefaultClassPath () throws IOException
     {
-        ClassPath classPath = ClassPaths.buildDefaultClassPath(_application);
+        ClassPath classPath = PathBuilder.buildDefaultClassPath(_application);
         String expectedClassPath = _firstJarFile.getAbsolutePath() + File.pathSeparator +
             _secondJarFile.getAbsolutePath();
         assertEquals(expectedClassPath, classPath.asArgumentString());
@@ -46,15 +48,15 @@ public class ClassPathsTest
         when(_application.getCodeCacheRetentionDays()).thenReturn(1);
 
         Path firstCachedJarFile = _appdir.getRoot().toPath().
-            resolve(Application.CACHE_DIR + "/code").resolve("fi").resolve("first.jar");
+            resolve(PathBuilder.CODE_CACHE_DIR).resolve("fi").resolve("first.jar");
 
         Path secondCachedJarFile = _appdir.getRoot().toPath().
-            resolve(Application.CACHE_DIR + "/code").resolve("se").resolve("second.jar");
+            resolve(PathBuilder.CODE_CACHE_DIR).resolve("se").resolve("second.jar");
 
         String expectedClassPath = firstCachedJarFile.toAbsolutePath() + File.pathSeparator +
             secondCachedJarFile.toAbsolutePath();
 
-        ClassPath classPath = ClassPaths.buildCachedClassPath(_application);
+        ClassPath classPath = PathBuilder.buildCachedClassPath(_application);
         assertEquals(expectedClassPath, classPath.asArgumentString());
     }
 
