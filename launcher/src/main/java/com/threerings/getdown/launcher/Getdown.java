@@ -27,20 +27,15 @@ import java.net.Authenticator;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.ServiceLoader;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
@@ -64,6 +59,7 @@ import com.threerings.getdown.data.Resource;
 import com.threerings.getdown.data.SysProps;
 import com.threerings.getdown.net.Downloader;
 import com.threerings.getdown.net.HTTPDownloader;
+import com.threerings.getdown.spi.proxyauthentification.ProxyAuthentificationInterface;
 import com.threerings.getdown.tools.Patcher;
 import com.threerings.getdown.util.Config;
 import com.threerings.getdown.util.ConnectionUtil;
@@ -183,22 +179,28 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
       return;
     }
 
-        try
-      {      _dead = false;
-            // if we fail to detect a proxy, but we're allowed to run offline, then go ahead and
-            // run the app anyway because we're prepared to cope with not being able to update
-            if (detectProxy() || _app.allowOffline())
-        {        getdown();}
-             else if (_silent) {
-                log.warning("Need a proxy, but we don't want to bother anyone.  Exiting.");
-            } else {
-                // create a panel they can use to configure the proxy settings
-                _container = createContainer();
-                configureContainer();_container.add(new ProxyPanel(this, _msgs), BorderLayout.CENTER);
-                showContainer();
-                // allow them to close the window to abort the proxy configuration
-                _dead = true;
-            }
+    try
+    {
+      _dead = false;
+      // if we fail to detect a proxy, but we're allowed to run offline, then go ahead and
+      // run the app anyway because we're prepared to cope with not being able to update
+      if (detectProxy() || _app.allowOffline())
+      {
+        getdown();
+      }
+      else if (_silent)
+      {
+        log.warning("Need a proxy, but we don't want to bother anyone.  Exiting.");
+      }
+      else{
+
+        // create a panel they can use to configure the proxy settings
+        updateStatus("m.proxy.detecting.failed");_container = createContainer();
+        configureContainer();_container.add(new ProxyPanel(this, _msgs), BorderLayout.CENTER);
+        showContainer();
+        // allow them to close the window to abort the proxy configuration
+        _dead = true;
+      }
 
     }
     catch (Exception e)
@@ -267,41 +269,15 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
     new Thread(this).start();
   }
 
-  private void persistCredentials(String aUsername, char[] aPassword)
+  private void persistCredentials(String username, char[] password)
   {
-    File credentialsFile = createCredentialsFile();
-    Path tPath = Paths.get(credentialsFile.getAbsolutePath());
-    try
+    ServiceLoader<ProxyAuthentificationInterface> loader = ServiceLoader.load(
+        ProxyAuthentificationInterface.class);
+    Iterator<ProxyAuthentificationInterface> iterator = loader.iterator();
+    while (iterator.hasNext())
     {
-      Files.deleteIfExists(tPath);
-      try (PrintStream pout = new PrintStream(new FileOutputStream(credentialsFile, false)))
-      {
-        pout.println("username = " + aUsername);
-        byte[] tEncodedPassword = Base64.getEncoder().encode(String.valueOf(aPassword).getBytes());
-        pout.println("password = " + new String(tEncodedPassword, StandardCharsets.UTF_8));
-        if (LaunchUtil.isWindows())
-        {
-          Files.setAttribute(tPath, "dos:hidden", Boolean.TRUE, LinkOption.NOFOLLOW_LINKS);
-        }
-      }
+      iterator.next().encryptCredentials(username, password);
     }
-    catch (IOException ioe)
-    {
-      log.warning("Error persisting credentials '" + credentialsFile + "': " + ioe);
-    }
-
-  }
-
-  // -------------------------------------------------------------------
-
-  private File createCredentialsFile()
-  {
-    File credentialsFile = _app.getLocalPath("credentials.txt");
-    if (!LaunchUtil.isWindows())
-    {
-      credentialsFile = _app.getLocalPath(".credentials.txt");
-    }
-    return credentialsFile;
   }
 
   /**
