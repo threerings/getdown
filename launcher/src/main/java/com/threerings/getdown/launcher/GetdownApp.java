@@ -10,7 +10,6 @@ import static com.threerings.getdown.Log.log;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.EventQueue;
-import java.awt.IllegalComponentStateException;
 import java.awt.Image;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;

@@ -5,20 +5,7 @@
 
 package com.threerings.getdown.data;
 
-import static com.threerings.getdown.Log.log;
-import static java.nio.charset.StandardCharsets.UTF_8;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
-import java.io.RandomAccessFile;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -28,53 +15,20 @@ import java.net.URLEncoder;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
-import java.security.AllPermission;
-import java.security.CodeSource;
-import java.security.GeneralSecurityException;
-import java.security.PermissionCollection;
-import java.security.Permissions;
-import java.security.Signature;
+import java.security.*;
 import java.security.cert.Certificate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
-import com.threerings.getdown.classpath.ClassPath;
-import com.threerings.getdown.classpath.ClassPaths;
 import com.threerings.getdown.util.*;
 // avoid ambiguity with java.util.Base64 which we can't use as it's 1.8+
 import com.threerings.getdown.util.Base64;
-import com.threerings.getdown.util.Color;
-import com.threerings.getdown.util.Config;
-import com.threerings.getdown.util.ConnectionUtil;
-import com.threerings.getdown.util.FileUtil;
-import com.threerings.getdown.util.HostWhitelist;
-import com.threerings.getdown.util.LaunchUtil;
-import com.threerings.getdown.util.MessageUtil;
-import com.threerings.getdown.util.ProgressAggregator;
-import com.threerings.getdown.util.ProgressObserver;
-import com.threerings.getdown.util.Rectangle;
-import com.threerings.getdown.util.StreamUtil;
-import com.threerings.getdown.util.StringUtil;
-import com.threerings.getdown.util.VersionUtil;
+
+import static com.threerings.getdown.Log.log;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Parses and provide access to the information contained in the <code>getdown.txt</code>
@@ -82,49 +36,49 @@ import com.threerings.getdown.util.VersionUtil;
  */
 public class Application
 {
-  /** The name of our configuration file. */
-  public static final String CONFIG_FILE = "getdown.txt";
+    /** The name of our configuration file. */
+    public static final String CONFIG_FILE = "getdown.txt";
 
-  /** The name of our target version file. */
-  public static final String VERSION_FILE = "version.txt";
+    /** The name of our target version file. */
+    public static final String VERSION_FILE = "version.txt";
 
-  /** System properties that are prefixed with this string will be passed through to our
-   * application (minus this prefix). */
-  public static final String PROP_PASSTHROUGH_PREFIX = "app.";
+    /** System properties that are prefixed with this string will be passed through to our
+     * application (minus this prefix). */
+    public static final String PROP_PASSTHROUGH_PREFIX = "app.";
 
-  /** Suffix used for control file signatures. */
-  public static final String SIGNATURE_SUFFIX = ".sig";
+    /** Suffix used for control file signatures. */
+    public static final String SIGNATURE_SUFFIX = ".sig";
 
-  /** A special classname that means 'use -jar code.jar' instead of a classname. */
-  public static final String MANIFEST_CLASS = "manifest";
+    /** A special classname that means 'use -jar code.jar' instead of a classname. */
+    public static final String MANIFEST_CLASS = "manifest";
 
-  /** Used to communicate information about the UI displayed when updating the application. */
-  public static final class UpdateInterface
-  {
-    /**
-     * The major steps involved in updating, along with some arbitrary percentages
-     * assigned to them, to mark global progress.
-     */
-    public enum Step
+    /** Used to communicate information about the UI displayed when updating the application. */
+    public static final class UpdateInterface
     {
-      UPDATE_JAVA(10),
-      VERIFY_METADATA(15, 65, 95),
-      DOWNLOAD(40),
-      PATCH(60),
-      VERIFY_RESOURCES(70, 97),
-      REDOWNLOAD_RESOURCES(90),
-      UNPACK(98),
-      LAUNCH(99);
+        /**
+         * The major steps involved in updating, along with some arbitrary percentages
+         * assigned to them, to mark global progress.
+         */
+        public enum Step
+        {
+            UPDATE_JAVA(10),
+            VERIFY_METADATA(15, 65, 95),
+            DOWNLOAD(40),
+            PATCH(60),
+            VERIFY_RESOURCES(70, 97),
+            REDOWNLOAD_RESOURCES(90),
+            UNPACK(98),
+            LAUNCH(99);
 
-      /** What is the final percent value for this step? */
-      public final List<Integer> defaultPercents;
+            /** What is the final percent value for this step? */
+            public final List<Integer> defaultPercents;
 
-      /** Enum constructor. */
-      Step(int... percents)
-      {
-        this.defaultPercents = intsToList(percents);
-      }
-    }
+            /** Enum constructor. */
+            Step (int... percents)
+            {
+                this.defaultPercents = intsToList(percents);
+            }
+        }
 
     /** The human readable name of this application. */
     public final String name;
@@ -334,13 +288,12 @@ public class Application
      */
     public Resource getConfigResource ()
     {
-      return createResource(CONFIG_FILE, Resource.NORMAL);
+        try {
+            return createResource(CONFIG_FILE, Resource.NORMAL);
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid appbase '" + _vappbase + "'.", e);
+        }
     }
-    catch (Exception e)
-    {
-      throw new RuntimeException("Invalid appbase '" + _vappbase + "'.", e);
-    }
-  }
 
   /**
    * Returns a list of the code {@link Resource} objects used by this application.
