@@ -199,8 +199,8 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
       }
       else
       {
-        updateStatus("m.proxy.detecting.failed");
         // create a panel they can use to configure the proxy settings
+        updateStatus("");
         _container = createContainer();
         configureContainer();
         _container.add(new ProxyPanel(this, _msgs), BorderLayout.CENTER);

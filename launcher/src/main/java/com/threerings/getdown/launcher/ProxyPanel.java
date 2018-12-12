@@ -121,7 +121,7 @@ public final class ProxyPanel extends JPanel implements ActionListener
     // or the JLabel will claim a bogus height thinking it can lay its
     // text out all on one line which will booch the whole UI's
     // preferred size
-    return new Dimension(500, 400);
+    return new Dimension(500, 320);
   }
 
   // documentation inherited from interface
