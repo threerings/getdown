@@ -676,6 +676,9 @@ public abstract class Getdown extends Thread
             // download the patch files...
             setStep(Step.DOWNLOAD);
             download(list);
+            
+            // rename the patch files...
+            install(list);
 
             // and apply them...
             setStep(Step.PATCH);
@@ -709,6 +712,17 @@ public abstract class Getdown extends Thread
         // ...and reinitialize the application
         readConfig(false);
     }
+
+    /**
+     * Installs resources 
+     */
+    private void install (List<Resource> resources)
+    	throws IOException
+    {
+        for (Resource rsrc : resources) {
+        	rsrc.install();
+        }
+	}
 
     /**
      * Called if the application is determined to require resource downloads.
