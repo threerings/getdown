@@ -720,7 +720,7 @@ public abstract class Getdown extends Thread
     	throws IOException
     {
         for (Resource rsrc : resources) {
-        	rsrc.install();
+        	rsrc.install(true);
         }
 	}
 
