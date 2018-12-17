@@ -677,11 +677,6 @@ public abstract class Getdown extends Thread
             setStep(Step.DOWNLOAD);
             download(list);
 
-            // install the patch files (renaming them from _new)
-            for (Resource rsrc : list) {
-                rsrc.install(true);
-            }
-
             // and apply them...
             setStep(Step.PATCH);
             updateStatus("m.patching");
@@ -692,6 +687,9 @@ public abstract class Getdown extends Thread
             int ii = 0; for (Resource prsrc : list) {
                 ProgressObserver pobs = pragg.startElement(ii++);
                 try {
+                    // install the patch file (renaming them from _new)
+                    prsrc.install(false);
+                    // now apply the patch
                     Patcher patcher = new Patcher();
                     patcher.patch(prsrc.getLocal().getParentFile(), prsrc.getLocal(), pobs);
                 } catch (Exception e) {
