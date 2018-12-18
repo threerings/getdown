@@ -5,19 +5,20 @@
 
 package com.threerings.getdown.net;
 
-import static com.threerings.getdown.Log.log;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.URL;
 import java.net.URLConnection;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 
 import com.threerings.getdown.data.Resource;
 import com.threerings.getdown.util.ConnectionUtil;
+
+import static com.threerings.getdown.Log.log;
 
 /**
  * Implements downloading files over HTTP
