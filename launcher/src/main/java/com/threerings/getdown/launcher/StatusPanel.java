@@ -5,8 +5,6 @@
 
 package com.threerings.getdown.launcher;
 
-import static com.threerings.getdown.Log.log;
-
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -28,9 +26,13 @@ import com.samskivert.swing.Label;
 import com.samskivert.swing.LabelStyleConstants;
 import com.samskivert.swing.util.SwingUtil;
 import com.samskivert.util.Throttle;
+
 import com.threerings.getdown.data.Application.UpdateInterface;
 import com.threerings.getdown.util.MessageUtil;
 import com.threerings.getdown.util.Rectangle;
+import com.threerings.getdown.util.StringUtil;
+
+import static com.threerings.getdown.Log.log;
 
 /**
  * Displays download and patching status.
@@ -264,6 +266,11 @@ public final class StatusPanel extends JComponent
     protected void updateStatusLabel ()
     {
         String status = _status;
+        if (!_displayError) {
+            for (int ii = 0; ii < _statusDots; ii++) {
+                status += " .";
+            }
+        }
         _newlab = createLabel(status, new Color(_ifc.statusText, true));
         // set the width of the label to the width specified
         int width = _ifc.status.width;

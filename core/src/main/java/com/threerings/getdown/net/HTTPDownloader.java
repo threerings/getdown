@@ -5,14 +5,13 @@
 
 package com.threerings.getdown.net;
 
-import java.io.File;
 import static com.threerings.getdown.Log.log;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.URL;
 import java.net.URLConnection;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -27,7 +26,7 @@ public class HTTPDownloader extends Downloader
 {
     @Override protected long checkSize (Resource rsrc) throws IOException
     {
-    URLConnection conn = ConnectionUtil.open(rsrc.getRemote(), 0, 0);
+        URLConnection conn = ConnectionUtil.open(rsrc.getRemote(), 0, 0);
         try {
             // if we're accessing our data via HTTP, we only need a HEAD request
             if (conn instanceof HttpURLConnection) {
@@ -53,21 +52,21 @@ public class HTTPDownloader extends Downloader
         // TODO: make FileChannel download impl (below) robust and allow apps to opt-into it via a
         // system property
         if (true) {
-            //download the resource from the specified URL
-        URLConnection conn = ConnectionUtil.open(rsrc.getRemote(), 0, 0);
-        conn.connect();
+            // download the resource from the specified URL
+            URLConnection conn = ConnectionUtil.open(rsrc.getRemote(), 0, 0);
+            conn.connect();
 
-        // make sure we got a satisfactory response code
-        if (conn instanceof HttpURLConnection) {
-            HttpURLConnection hcon = (HttpURLConnection)conn;
-            if (hcon.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                throw new IOException("Unable to download resource " + rsrc.getRemote() + ": " +
-                                      hcon.getResponseCode());
+            // make sure we got a satisfactory response code
+            if (conn instanceof HttpURLConnection) {
+                HttpURLConnection hcon = (HttpURLConnection)conn;
+                if (hcon.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                    throw new IOException("Unable to download resource " + rsrc.getRemote() + ": " +
+                                          hcon.getResponseCode());
+                }
+                log.info("Used Proxy according to Java: " + hcon.usingProxy());
+                log.info("Proxy Host: " + System.getProperty("http.proxyHost"));
+                log.info("Proxy Port: " + System.getProperty("http.proxyPort"));
             }
-      log.info("Used Proxy according to Java: " + hcon.usingProxy());
-      log.info("Proxy Host: " + System.getProperty("http.proxyHost"));
-      log.info("Proxy Port: " + System.getProperty("http.proxyPort"));  }
-
             long actualSize = conn.getContentLength();
             log.info("Downloading resource", "url", rsrc.getRemote(), "size", actualSize);
             long currentSize = 0L;
