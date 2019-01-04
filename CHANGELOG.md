@@ -15,6 +15,9 @@
 * Number of concurrent downloads now defaults to num-cores minus one. Though downloads are I/O
   bound rather than CPU bound, this still turns out to be a decent default.
 
+* Avoid checking for proxy config if `https.proxyHost` is set. This matches existing behavior when
+  `http.proxyHost` is set.
+
 ## 1.8.2 - Nov 27, 2018
 
 * Fixed a data corruption bug introduced at last minute into 1.8.1 release. Oops.
