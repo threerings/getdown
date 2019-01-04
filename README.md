@@ -3,7 +3,7 @@
 Getdown (yes, it's the funky stuff) is a system for deploying Java applications to end-user
 computers, as well as keeping those applications up to date.
 
-It was designed as a replacement for [Java Web Start](http://java.sun.com/products/javawebstart/)
+It was designed as a replacement for [Java Web Start](https://docs.oracle.com/javase/8/docs/technotes/guides/javaws/)
 due to limitations in Java Web Start's architecture which are outlined in the
 [rationale](https://github.com/threerings/getdown/wiki/Rationale) section.
 
