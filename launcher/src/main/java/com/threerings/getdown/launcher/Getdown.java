@@ -223,7 +223,7 @@ public abstract class Getdown extends Thread
     protected boolean detectProxy ()
     {
         // we may already have a proxy configured
-        if (System.getProperty("http.proxyHost") != null) {
+        if (System.getProperty("http.proxyHost") != null || System.getProperty("https.proxyHost") != null) {
             return true;
         }
 
