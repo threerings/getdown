@@ -892,7 +892,7 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
       for (Resource prsrc : list)
       {
         ProgressObserver pobs = pragg.startElement(ii++);
-        try
+        try {
                     // install the patch file (renaming them from _new)
                     prsrc.install(false);
                     // now apply the patch
