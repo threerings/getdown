@@ -13,6 +13,16 @@ import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.*;
 
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
@@ -20,29 +30,9 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLayeredPane;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
-
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
-
-import java.util.*;
-
-import ca.beq.util.win32.registry.RegistryKey;
-import ca.beq.util.win32.registry.RegistryValue;
-import ca.beq.util.win32.registry.RootKey;
-
 import com.samskivert.swing.util.SwingUtil;
-
-import com.threerings.getdown.data.Application.UpdateInterface.Step;
 import com.threerings.getdown.data.*;
+import com.threerings.getdown.data.Application.UpdateInterface.Step;
 import com.threerings.getdown.net.Downloader;
 import com.threerings.getdown.net.HTTPDownloader;
 import com.threerings.getdown.tools.Patcher;
@@ -186,24 +176,12 @@ public abstract class Getdown extends Thread
     /**
      * Configures our proxy settings (called by {@link ProxyPanel}) and fires up the launcher.
      */
-    public void configureProxy (String host, String port)
+    public void configProxy (String host, String port, String username, String password)
     {
         log.info("User configured proxy", "host", host, "port", port);
 
-        // if we're provided with valid values, create a proxy.txt file
         if (!StringUtil.isBlank(host)) {
-            File pfile = _app.getLocalPath("proxy.txt");
-            try (PrintStream pout = new PrintStream(new FileOutputStream(pfile))) {
-                pout.println("host = " + host);
-                if (!StringUtil.isBlank(port)) {
-                    pout.println("port = " + port);
-                }
-            } catch (IOException ioe) {
-                log.warning("Error creating proxy file '" + pfile + "': " + ioe);
-            }
-
-            // also configure them in the JVM
-            setProxyProperties(host, port);
+            ProxyUtil.configProxy(_app, host, port, username, password);
         }
 
         // clear out our UI
@@ -214,65 +192,9 @@ public abstract class Getdown extends Thread
         new Thread(this).start();
     }
 
-    /**
-     * Reads and/or autodetects our proxy settings.
-     *
-     * @return true if we should proceed with running the launcher, false if we need to wait for
-     * the user to enter proxy settings.
-     */
-    protected boolean detectProxy ()
-    {
-        // we may already have a proxy configured
-        if (System.getProperty("http.proxyHost") != null ||
-            System.getProperty("https.proxyHost") != null) {
+    protected boolean detectProxy () {
+        if (ProxyUtil.autoDetectProxy(_app)) {
             return true;
-        }
-
-        // look in the Vinders registry
-        if (LaunchUtil.isWindows()) {
-            try {
-                String host = null, port = null;
-                boolean enabled = false;
-                RegistryKey.initialize();
-                RegistryKey r = new RegistryKey(RootKey.HKEY_CURRENT_USER, PROXY_REGISTRY);
-                for (Iterator<?> iter = r.values(); iter.hasNext(); ) {
-                    RegistryValue value = (RegistryValue)iter.next();
-                    if (value.getName().equals("ProxyEnable")) {
-                        enabled = value.getStringValue().equals("1");
-                    }
-                    if (value.getName().equals("ProxyServer")) {
-                        String strval = value.getStringValue();
-                        int cidx = strval.indexOf(":");
-                        if (cidx != -1) {
-                            port = strval.substring(cidx+1);
-                            strval = strval.substring(0, cidx);
-                        }
-                        host = strval;
-                    }
-                }
-
-                if (enabled) {
-                    setProxyProperties(host, port);
-                    return true;
-                } else {
-                    log.info("Detected no proxy settings in the registry.");
-                }
-
-            } catch (Throwable t) {
-                log.info("Failed to find proxy settings in Windows registry", "error", t);
-            }
-        }
-
-        // otherwise look for and read our proxy.txt file
-        File pfile = _app.getLocalPath("proxy.txt");
-        if (pfile.exists()) {
-            try {
-                Config pconf = Config.parseConfig(pfile, Config.createOpts(false));
-                setProxyProperties(pconf.getString("host"), pconf.getString("port"));
-                return true;
-            } catch (IOException ioe) {
-                log.warning("Failed to read '" + pfile + "': " + ioe);
-            }
         }
 
         // otherwise see if we actually need a proxy; first we have to initialize our application
@@ -284,59 +206,15 @@ public abstract class Getdown extends Thread
             // no worries
         }
         updateStatus("m.detecting_proxy");
-
-        URL rurl = _app.getConfigResource().getRemote();
-        try {
-            // try to make a HEAD request for this URL (use short connect and read timeouts)
-            URLConnection conn = ConnectionUtil.open(rurl, 5, 5);
-            if (conn instanceof HttpURLConnection) {
-                HttpURLConnection hcon = (HttpURLConnection)conn;
-                try {
-                    hcon.setRequestMethod("HEAD");
-                    hcon.connect();
-                    // make sure we got a satisfactory response code
-                    if (hcon.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                        log.warning("Got a non-200 response but assuming we're OK because we got " +
-                                    "something...", "url", rurl, "rsp", hcon.getResponseCode());
-                    }
-                } finally {
-                    hcon.disconnect();
-                }
-            }
-
-            // we got through, so we appear not to require a proxy; make a blank proxy config and
-            // get on gettin' down
-            log.info("No proxy appears to be needed.");
-            try {
-                pfile.createNewFile();
-            } catch (IOException ioe) {
-                log.warning("Failed to create blank proxy file '" + pfile + "': " + ioe);
-            }
-            return true;
-
-        } catch (IOException ioe) {
-            log.info("Failed to HEAD " + rurl + ": " + ioe);
-            log.info("We probably need a proxy, but auto-detection failed.");
+        if (!ProxyUtil.canLoadWithoutProxy(_app.getConfigResource().getRemote())) {
+            return false;
         }
 
-        // let the caller know that we need a proxy but can't detect it
-        return false;
-    }
-
-    /**
-     * Configures the JVM proxy system properties.
-     */
-    protected void setProxyProperties (String host, String port)
-    {
-        if (!StringUtil.isBlank(host)) {
-            System.setProperty("http.proxyHost", host);
-            System.setProperty("https.proxyHost", host);
-            if (!StringUtil.isBlank(port)) {
-                System.setProperty("http.proxyPort", port);
-                System.setProperty("https.proxyPort", port);
-            }
-            log.info("Using proxy", "host", host, "port", port);
-        }
+        // we got through, so we appear not to require a proxy; make a blank proxy config so that
+        // we don't go through this whole detection process again next time
+        log.info("No proxy appears to be needed.");
+        ProxyUtil.saveProxy(_app, null, null);
+        return true;
     }
 
     protected void readConfig (boolean preloads) throws IOException {
@@ -374,10 +252,6 @@ public abstract class Getdown extends Thread
      */
     protected void getdown ()
     {
-        log.info("---------------- Proxy Info -----------------");
-        log.info("-- Proxy Host: " + System.getProperty("http.proxyHost"));
-        log.info("-- Proxy Port: " + System.getProperty("http.proxyPort"));
-        log.info("---------------------------------------------");
 
         try {
             // first parses our application deployment file
@@ -723,7 +597,7 @@ public abstract class Getdown extends Thread
         // create our user interface
         createInterfaceAsync(false);
 
-        Downloader dl = new HTTPDownloader() {
+        Downloader dl = new HTTPDownloader(_app.proxy) {
             @Override protected void resolvingDownloads () {
                 updateStatus("m.resolving");
             }
@@ -1113,7 +987,7 @@ public abstract class Getdown extends Thread
         @Override
         public void run () {
             try {
-                HttpURLConnection ucon = ConnectionUtil.openHttp(_url, 0, 0);
+                HttpURLConnection ucon = ConnectionUtil.openHttp(_app.proxy, _url, 0, 0);
 
                 // if we have a tracking cookie configured, configure the request with it
                 if (_app.getTrackingCookieName() != null &&
@@ -1182,6 +1056,4 @@ public abstract class Getdown extends Thread
 
     protected static final int MAX_LOOPS = 5;
     protected static final long FALLBACK_CHECK_TIME = 1000L;
-    protected static final String PROXY_REGISTRY =
-        "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings";
 }

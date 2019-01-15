@@ -10,6 +10,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.channels.Channels;
@@ -25,9 +26,14 @@ import static com.threerings.getdown.Log.log;
  */
 public class HTTPDownloader extends Downloader
 {
+    public HTTPDownloader (Proxy proxy)
+    {
+        _proxy = proxy;
+    }
+
     @Override protected long checkSize (Resource rsrc) throws IOException
     {
-        URLConnection conn = ConnectionUtil.open(rsrc.getRemote(), 0, 0);
+        URLConnection conn = ConnectionUtil.open(_proxy, rsrc.getRemote(), 0, 0);
         try {
             // if we're accessing our data via HTTP, we only need a HEAD request
             if (conn instanceof HttpURLConnection) {
@@ -54,7 +60,7 @@ public class HTTPDownloader extends Downloader
         // system property
         if (true) {
             // download the resource from the specified URL
-            URLConnection conn = ConnectionUtil.open(rsrc.getRemote(), 0, 0);
+            URLConnection conn = ConnectionUtil.open(_proxy, rsrc.getRemote(), 0, 0);
             conn.connect();
 
             // make sure we got a satisfactory response code
@@ -65,7 +71,6 @@ public class HTTPDownloader extends Downloader
                                           hcon.getResponseCode());
                 }
             }
-
             long actualSize = conn.getContentLength();
             log.info("Downloading resource", "url", rsrc.getRemote(), "size", actualSize);
             long currentSize = 0L;
@@ -105,4 +110,6 @@ public class HTTPDownloader extends Downloader
             }
         }
     }
+
+    protected final Proxy _proxy;
 }

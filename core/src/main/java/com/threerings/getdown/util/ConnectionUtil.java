@@ -7,11 +7,12 @@ package com.threerings.getdown.util;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLDecoder;
+
 import com.threerings.getdown.data.SysProps;
-import com.threerings.getdown.util.Base64;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -19,6 +20,7 @@ public class ConnectionUtil
 {
     /**
      * Opens a connection to a URL, setting the authentication header if user info is present.
+     * @param proxy the proxy via which to perform HTTP connections.
      * @param url the URL to which to open a connection.
      * @param connectTimeout if {@code > 0} then a timeout, in seconds, to use when opening the
      * connection. If {@code 0} is supplied, the connection timeout specified via system properties
@@ -27,10 +29,10 @@ public class ConnectionUtil
      * the connection. If {@code 0} is supplied, the read timeout specified via system properties
      * will be used instead.
      */
-    public static URLConnection open (URL url, int connectTimeout, int readTimeout)
+    public static URLConnection open (Proxy proxy, URL url, int connectTimeout, int readTimeout)
         throws IOException
     {
-        URLConnection conn = url.openConnection();
+        URLConnection conn = url.openConnection(proxy);
 
         // configure a connect timeout, if requested
         int ctimeout = connectTimeout > 0 ? connectTimeout : SysProps.connectTimeout();
@@ -63,9 +65,9 @@ public class ConnectionUtil
      * present. Throws a class cast exception if the connection returned is not the right type. See
      * {@link #open} for parameter documentation.
      */
-    public static HttpURLConnection openHttp (URL url, int connectTimeout, int readTimeout)
-        throws IOException
+    public static HttpURLConnection openHttp (
+        Proxy proxy, URL url, int connectTimeout, int readTimeout) throws IOException
     {
-        return (HttpURLConnection)open(url, connectTimeout, readTimeout);
+        return (HttpURLConnection)open(proxy, url, connectTimeout, readTimeout);
     }
 }

@@ -8,6 +8,7 @@ package com.threerings.getdown.data;
 import java.io.*;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
+import java.net.Proxy;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
@@ -230,6 +231,11 @@ public class Application
             this.rsrcs = Collections.unmodifiableList(rsrcs);
         }
     }
+
+    /** The proxy that should be used to do HTTP downloads. This must be configured prior to using
+      * the application instance. Yes this is a public mutable field, no I'm not going to create a
+      * getter and setter just to pretend like that's not the case. */
+    public Proxy proxy = Proxy.NO_PROXY;
 
     /**
      * Creates an application instance which records the location of the <code>getdown.txt</code>
@@ -1208,7 +1214,7 @@ public class Application
             }
 
             if (_latest != null) {
-                try (InputStream in = ConnectionUtil.open(_latest, 0, 0).getInputStream();
+                try (InputStream in = ConnectionUtil.open(proxy, _latest, 0, 0).getInputStream();
                      InputStreamReader reader = new InputStreamReader(in, UTF_8);
                      BufferedReader bin = new BufferedReader(reader)) {
                     for (String[] pair : Config.parsePairs(bin, Config.createOpts(false))) {
@@ -1592,7 +1598,7 @@ public class Application
         log.info("Attempting to refetch '" + path + "' from '" + targetURL + "'.");
 
         // stream the URL into our temporary file
-        URLConnection uconn = ConnectionUtil.open(targetURL, 0, 0);
+        URLConnection uconn = ConnectionUtil.open(proxy, targetURL, 0, 0);
         // we have to tell Java not to use caches here, otherwise it will cache any request for
         // same URL for the lifetime of this JVM (based on the URL string, not the URL object);
         // if the getdown.txt file, for example, changes in the meanwhile, we would never hear
