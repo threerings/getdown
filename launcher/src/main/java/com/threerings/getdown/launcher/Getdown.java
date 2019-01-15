@@ -397,11 +397,9 @@ public abstract class Getdown extends Thread
         }
     }
 
-    protected void readConfig (boolean preloads) throws IOException
-    {
+    protected void readConfig (boolean preloads) throws IOException {
         Config config = _app.init(true);
-        if (preloads)
-            doPredownloads(_app.getResources());
+        if (preloads) doPredownloads(_app.getResources());
         _ifc = new Application.UpdateInterface(config);
     }
 
@@ -623,8 +621,8 @@ public abstract class Getdown extends Thread
 
     /**
      * Load the image at the path. Before trying the exact path/file specified we will look to see
-     * if we can find a localized version by sticking a {@code _<language>} in front of the "."
-     * in the filename.
+     * if we can find a localized version by sticking a {@code _<language>} in front of the "."in
+     * the filename.
      */
     @Override
     public BufferedImage loadImage (String path)
@@ -960,7 +958,7 @@ public abstract class Getdown extends Thread
         _status.setSize(size);
         _layers.setPreferredSize(size);
 
-        _patchNotes.setBounds(_ifc.patchNotes.x, _ifc.patchNotes.y, 
+        _patchNotes.setBounds(_ifc.patchNotes.x, _ifc.patchNotes.y,
                               _ifc.patchNotes.width, _ifc.patchNotes.height);
         _patchNotes.setVisible(false);
 
@@ -1042,7 +1040,7 @@ public abstract class Getdown extends Thread
      */
     protected int stepToGlobalPercent (int percent)
     {
-        int adjustedMaxPercent = 
+        int adjustedMaxPercent =
             ((_stepMaxPercent - _uiDisplayPercent) * 100) / (100 - _uiDisplayPercent);
         _lastGlobalPercent = Math.max(_lastGlobalPercent,
             _stepMinPercent + (percent * (adjustedMaxPercent - _stepMinPercent)) / 100);
@@ -1184,7 +1182,7 @@ public abstract class Getdown extends Thread
                 ucon.connect();
                 try {
                     if (ucon.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                        log.warning("Failed to report tracking event", 
+                        log.warning("Failed to report tracking event",
                             "url", _url, "rcode", ucon.getResponseCode());
                     }
                 } finally {
