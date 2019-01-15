@@ -71,25 +71,22 @@ import ca.beq.util.win32.registry.RegistryValue;
 import ca.beq.util.win32.registry.RootKey;
 
 /**
- * Manages the main control for the Getdown application updater and deployment
- * system.
+ * Manages the main control for the Getdown application updater and deployment system.
  */
-public abstract class Getdown extends Thread implements Application.StatusDisplay, RotatingBackgrounds.ImageLoader
+public abstract class Getdown extends Thread
+        implements Application.StatusDisplay, RotatingBackgrounds.ImageLoader
 {
     public Getdown(EnvConfig envc)
     {
         super("Getdown");
         try {
-            // If the silent property exists, install without bringing up any
-            // gui. If it equals
-            // launch, start the application after installing. Otherwise, just
-            // install and exit.
+            // If the silent property exists, install without bringing up any gui. If it equals
+            // launch, start the application after installing. Otherwise, just install and exit.
             _silent = SysProps.silent();
             if (_silent) {
                 _launchInSilent = SysProps.launchInSilent();
             }
-            // If we're running in a headless environment and have not otherwise
-            // customized
+            // If we're running in a headless environment and have not otherwise customized
             // silence, operate without a UI and do launch the app.
             if (!_silent && GraphicsEnvironment.isHeadless()) {
                 log.info("Running in headless JVM, will attempt to operate without UI.");
@@ -98,24 +95,21 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
             }
             _delay = SysProps.startDelay();
         } catch (SecurityException se) {
-            // don't freak out, just assume non-silent and no delay; we're
-            // probably already
+            // don't freak out, just assume non-silent and no delay; we're probably already
             // recovering from a security failure
         }
         try {
             _msgs = ResourceBundle.getBundle("com.threerings.getdown.messages");
         } catch (Exception e) {
-            // welcome to hell, where java can't cope with a classpath that
-            // contains jars that live
-            // in a directory that contains a !, at least the same bug happens
-            // on all platforms
+            // welcome to hell, where java can't cope with a classpath that contains jars that live
+            // in a directory that contains a !, at least the same bug happens on all platforms
             String dir = envc.appDir.toString();
             if (dir.equals(".")) {
                 dir = System.getProperty("user.dir");
             }
-            String errmsg = "The directory in which this application is installed:\n" + dir + "\nis invalid ("
-                    + e.getMessage() + "). If the full path to the app directory "
-                    + "contains the '!' character, this will trigger this error.";
+            String errmsg = "The directory in which this application is installed:\n" + dir +
+                    "\nis invalid (" + e.getMessage() + "). If the full path to the app directory " +
+                    "contains the '!' character, this will trigger this error.";
             fail(errmsg);
         }
         _app = new Application(envc);
@@ -125,7 +119,7 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
     /**
      * Returns true if there are pending new resources, waiting to be installed.
      */
-    public boolean isUpdateAvailable()
+    public boolean isUpdateAvailable ()
     {
         return _readyToInstall && !_toInstallResources.isEmpty();
     }
@@ -133,7 +127,7 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
     /**
      * Installs the currently pending new resources.
      */
-    public void install() throws IOException
+    public void install () throws IOException
     {
         if (SysProps.noInstall()) {
             log.info("Skipping install due to 'no_install' sysprop.");
@@ -151,10 +145,9 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
     }
 
     @Override
-    public void run()
+    public void run ()
     {
-        // if we have no messages, just bail because we're hosed; the error
-        // message will be
+        // if we have no messages, just bail because we're hosed; the error message will be
         // displayed to the user already
         if (_msgs == null) {
             return;
@@ -175,10 +168,8 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
 
         try {
             _dead = false;
-            // if we fail to detect a proxy, but we're allowed to run offline,
-            // then go ahead and
-            // run the app anyway because we're prepared to cope with not being
-            // able to update
+            // if we fail to detect a proxy, but we're allowed to run offline, then go ahead and
+            // run the app anyway because we're prepared to cope with not being able to update
             if (detectProxy() || _app.allowOffline()) {
                 getdown();
             } else if (_silent) {
@@ -190,8 +181,7 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
                 configureContainer();
                 _container.add(new ProxyPanel(this, _msgs), BorderLayout.CENTER);
                 showContainer();
-                // allow them to close the window to abort the proxy
-                // configuration
+                // allow them to close the window to abort the proxy configuration
                 _dead = true;
             }
 
@@ -203,7 +193,8 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
             } else if (!msg.startsWith("m.")) {
                 // try to do something sensible based on the type of error
                 if (e instanceof FileNotFoundException) {
-                    msg = MessageUtil.compose("m.missing_resource", MessageUtil.taint(msg), _ifc.installError);
+                    msg = MessageUtil.compose("m.missing_resource", MessageUtil.taint(msg),
+                            _ifc.installError);
                 } else {
                     msg = MessageUtil.compose("m.init_error", MessageUtil.taint(msg), _ifc.installError);
                 }
@@ -213,19 +204,17 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
     }
 
     /**
-     * Configures our proxy settings (called by {@link ProxyPanel}) and fires up the
-     * launcher.
+     * Configures our proxy settings (called by {@link ProxyPanel}) and fires up the launcher.
      */
-    public void configureProxy(String host, String port)
+    public void configureProxy (String host, String port)
     {
         configureProxy(host, port, null, null);
     }
 
     /**
-     * Configures our proxy settings (called by {@link ProxyPanel}) and fires up the
-     * launcher.
+     * Configures our proxy settings (called by {@link ProxyPanel}) and fires up the launcher.
      */
-    public void configureProxy(String host, String port, String username, char[] password)
+    public void configureProxy (String host, String port, String username, char[] password)
     {
         log.info("User configured proxy", "host", host, "port", port);
 
@@ -251,10 +240,11 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
         new Thread(this).start();
     }
 
-    private ProxyCredentials loadCredentials()
+    private ProxyCredentials loadCredentials ()
     {
         ProxyCredentials tProxyCredentials = null;
-        ServiceLoader<ProxyAuthentificationInterface> loader = ServiceLoader.load(ProxyAuthentificationInterface.class);
+        ServiceLoader<ProxyAuthentificationInterface> loader = ServiceLoader
+                .load(ProxyAuthentificationInterface.class);
         Iterator<ProxyAuthentificationInterface> iterator = loader.iterator();
         while (iterator.hasNext()) {
             tProxyCredentials = iterator.next().loadProxyCredentials(_app.getAppDir().getAbsolutePath());
@@ -263,9 +253,10 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
         return tProxyCredentials;
     }
 
-    private void persistCredentials(String username, char[] password)
+    private void persistCredentials (String username, char[] password)
     {
-        ServiceLoader<ProxyAuthentificationInterface> loader = ServiceLoader.load(ProxyAuthentificationInterface.class);
+        ServiceLoader<ProxyAuthentificationInterface> loader = ServiceLoader
+                .load(ProxyAuthentificationInterface.class);
         Iterator<ProxyAuthentificationInterface> iterator = loader.iterator();
         while (iterator.hasNext()) {
             iterator.next().encryptCredentials(username, password, _app.getAppDir().getAbsolutePath());
@@ -275,14 +266,15 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
     /**
      * Reads and/or autodetects our proxy settings.
      *
-     * @return true if we should proceed with running the launcher, false if we need
-     *         to wait for the user to enter proxy settings.
+     * @return true if we should proceed with running the launcher, false if we need to wait for the user to enter proxy
+     *         settings.
      */
-    protected boolean detectProxy()
+    protected boolean detectProxy ()
     {
         boolean proxySettingsDetected = false;
         // we may already have a proxy configured
-        if (System.getProperty("http.proxyHost") != null || System.getProperty("https.proxyHost") != null) {
+        if (System.getProperty("http.proxyHost") != null ||
+            System.getProperty("https.proxyHost") != null) {
             proxySettingsDetected = true;
         }
 
@@ -293,8 +285,8 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
                 boolean enabled = false;
                 RegistryKey.initialize();
                 RegistryKey r = new RegistryKey(RootKey.HKEY_CURRENT_USER, PROXY_REGISTRY);
-                for (Iterator<?> iter = r.values(); iter.hasNext();) {
-                    RegistryValue value = (RegistryValue) iter.next();
+                for (Iterator<?> iter = r.values(); iter.hasNext(); ) {
+                    RegistryValue value = (RegistryValue)iter.next();
                     if (value.getName().equals("ProxyEnable")) {
                         enabled = value.getStringValue().equals("1");
                     }
@@ -302,7 +294,7 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
                         String strval = value.getStringValue();
                         int cidx = strval.indexOf(":");
                         if (cidx != -1) {
-                            port = strval.substring(cidx + 1);
+                            port = strval.substring(cidx+1);
                             strval = strval.substring(0, cidx);
                         }
                         host = strval;
@@ -365,7 +357,7 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
         return appBaseConnected;
     }
 
-    private boolean checkAppbaseConnection()
+    private boolean checkAppbaseConnection ()
     {
         boolean successfullyConnected = false;
         URL rurl = _app.getConfigResource().getRemote();
@@ -377,10 +369,10 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
                 try {
                     hcon.setRequestMethod("HEAD");
                     hcon.connect();
-                    if (hcon.getResponseCode() == HttpURLConnection.HTTP_PROXY_AUTH
-                            || hcon.getResponseCode() == HttpURLConnection.HTTP_FORBIDDEN) {
-                        log.warning("Got a 407 or 403 response so we need to ask for credentials", "url", rurl, "rsp",
-                                hcon.getResponseCode());
+                    if (hcon.getResponseCode() == HttpURLConnection.HTTP_PROXY_AUTH ||
+                            hcon.getResponseCode() == HttpURLConnection.HTTP_FORBIDDEN) {
+                        log.warning("Got a 407 or 403 response so we need to ask for credentials", "url",
+                                rurl, "rsp", hcon.getResponseCode());
                     } else {
                         successfullyConnected = true;
                     }
@@ -396,7 +388,7 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
         return successfullyConnected;
     }
 
-    protected void setProxyProperties(String host, String port)
+    protected void setProxyProperties (String host, String port)
     {
         setProxyProperties(host, port, null, null);
     }
@@ -404,7 +396,7 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
     /**
      * Configures the JVM proxy system properties.
      */
-    protected void setProxyProperties(String host, String port, String username, char[] password)
+    protected void setProxyProperties (String host, String port, String username, char[] password)
     {
         System.setProperty("http.proxyHost", host);
         System.setProperty("https.proxyHost", host);
@@ -412,8 +404,8 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
         System.setProperty("https.proxyPort", port);
         ProxyCredentials tProxyCredentials = loadCredentials();
         if (tProxyCredentials != null) {
-            Authenticator.setDefault(
-                    new ProxyAuthenticator(tProxyCredentials.getUser(), tProxyCredentials.getPassword().toCharArray()));
+            Authenticator.setDefault(new ProxyAuthenticator(tProxyCredentials.getUser(),
+                    tProxyCredentials.getPassword().toCharArray()));
         } else if (!StringUtil.isBlank(username) && password != null && password.length != 0) {
             Authenticator.setDefault(new ProxyAuthenticator(username, password));
         }
@@ -421,7 +413,7 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
         log.info("Using proxy", "host", host, "port", port);
     }
 
-    protected void readConfig(boolean preloads) throws IOException
+    protected void readConfig (boolean preloads) throws IOException
     {
         Config config = _app.init(true);
         if (preloads)
@@ -430,14 +422,12 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
     }
 
     /**
-     * Downloads and installs (without verifying) any resources that are marked with
-     * a {@code PRELOAD} attribute.
-     *
-     * @param resources the full set of resources from the application (the
-     *                  predownloads will be extracted from it).
+     * Downloads and installs (without verifying) any resources that are marked with a
+     * {@code PRELOAD} attribute.
+     * @param resources the full set of resources from the application (the predownloads will be
+     * extracted from it).
      */
-    protected void doPredownloads(Collection<Resource> resources)
-    {
+    protected void doPredownloads (Collection<Resource> resources) {
         List<Resource> predownloads = new ArrayList<>();
         for (Resource rsrc : resources) {
             if (rsrc.shouldPredownload() && !rsrc.getLocal().exists()) {
@@ -458,7 +448,7 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
     /**
      * Does the actual application validation, update and launching business.
      */
-    protected void getdown()
+    protected void getdown ()
     {
 
         try {
@@ -477,19 +467,16 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
                 throw new MultipleGetdownRunning();
             }
 
-            // Update the config modtime so a sleeping getdown will notice the
-            // change.
+            // Update the config modtime so a sleeping getdown will notice the change.
             File config = _app.getLocalPath(Application.CONFIG_FILE);
             if (!config.setLastModified(System.currentTimeMillis())) {
-                log.warning("Unable to set modtime on config file, will be unable to check for "
-                        + "another instance of getdown running while this one waits.");
+                log.warning("Unable to set modtime on config file, will be unable to check for " +
+                        "another instance of getdown running while this one waits.");
             }
             if (_delay > 0) {
-                // don't hold the lock while waiting, let another getdown
-                // proceed if it starts.
+                // don't hold the lock while waiting, let another getdown proceed if it starts.
                 _app.releaseLock();
-                // Store the config modtime before waiting the delay amount of
-                // time
+                // Store the config modtime before waiting the delay amount of time
                 long lastConfigModtime = config.lastModified();
                 log.info("Waiting " + _delay + " minutes before beginning actual work.");
                 Thread.sleep(_delay * 60 * 1000);
@@ -499,16 +486,11 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
                 }
             }
 
-            // we create this tracking counter here so that we properly note the
-            // first time through
-            // the update process whether we previously had validated resources
-            // (which means this
-            // is not a first time install); we may, in the course of updating,
-            // wipe out our
-            // validation markers and revalidate which would make us think we
-            // were doing a fresh
-            // install if we didn't specifically remember that we had validated
-            // resources the first
+            // we create this tracking counter here so that we properly note the first time through
+            // the update process whether we previously had validated resources (which means this
+            // is not a first time install); we may, in the course of updating, wipe out our
+            // validation markers and revalidate which would make us think we were doing a fresh
+            // install if we didn't specifically remember that we had validated resources the first
             // time through
             int[] alreadyValid = new int[1];
 
@@ -520,8 +502,7 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
 
             // setStep(Step.START);
             for (int ii = 0; ii < MAX_LOOPS; ii++) {
-                // make sure we have the desired version and that the metadata
-                // files are valid...
+                // make sure we have the desired version and that the metadata files are valid...
                 setStep(Step.VERIFY_METADATA);
                 setStatusAsync("m.validating", -1, -1L, false);
                 if (_app.verifyMetadata(this)) {
@@ -538,8 +519,7 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
                 _app.verifyResources(_progobs, alreadyValid, unpacked, _toInstallResources, toDownload);
 
                 if (toDownload.size() > 0) {
-                    // we have resources to download, also note them as
-                    // to-be-installed
+                    // we have resources to download, also note them as to-be-installed
                     for (Resource r : toDownload) {
                         if (!_toInstallResources.contains(r)) {
                             _toInstallResources.add(r);
@@ -547,16 +527,14 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
                     }
 
                     try {
-                        // if any of our resources have already been marked
-                        // valid this is not a
-                        // first time install and we don't want to enable
-                        // tracking
+                        // if any of our resources have already been marked valid this is not a
+                        // first time install and we don't want to enable tracking
                         _enableTracking = (alreadyValid[0] == 0);
                         reportTrackingEvent("app_start", -1);
 
                         // redownload any that are corrupt or invalid...
-                        log.info(toDownload.size() + " of " + _app.getAllActiveResources().size()
-                                + " rsrcs require update (" + alreadyValid[0] + " assumed valid).");
+                        log.info(toDownload.size() + " of " + _app.getAllActiveResources().size() +
+                                " rsrcs require update (" + alreadyValid[0] + " assumed valid).");
                         setStep(Step.REDOWNLOAD_RESOURCES);
                         download(toDownload);
 
@@ -570,15 +548,11 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
                     continue;
                 }
 
-                // if we aren't running in a JVM that meets our version
-                // requirements, either
-                // complain or attempt to download and install the appropriate
-                // version
+                // if we aren't running in a JVM that meets our version requirements, either
+                // complain or attempt to download and install the appropriate version
                 if (!_app.haveValidJavaVersion()) {
-                    // download and install the necessary version of java, then
-                    // loop back again and
-                    // reverify everything; if we can't download java; we'll
-                    // throw an exception
+                    // download and install the necessary version of java, then loop back again and
+                    // reverify everything; if we can't download java; we'll throw an exception
                     log.info("Attempting to update Java VM...");
                     setStep(Step.UPDATE_JAVA);
                     _enableTracking = true; // always track JVM downloads
@@ -590,8 +564,7 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
                     continue;
                 }
 
-                // if we were downloaded in full from another service (say,
-                // Steam), we may
+                // if we were downloaded in full from another service (say, Steam), we may
                 // not have unpacked all of our resources yet
                 if (Boolean.getBoolean("check_unpacked")) {
                     File ufile = _app.getLocalPath("unpacked.dat");
@@ -620,12 +593,10 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
                 _readyToInstall = true;
                 install();
 
-                // Only launch if we aren't in silent mode. Some mystery program
-                // starting out
+                // Only launch if we aren't in silent mode. Some mystery program starting out
                 // of the blue would be disconcerting.
                 if (!_silent || _launchInSilent) {
-                    // And another final check for the lock. It'll already be
-                    // held unless
+                    // And another final check for the lock. It'll already be held unless
                     // we're in silent mode.
                     _app.lockForUpdates();
                     launch();
@@ -644,13 +615,13 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
             } else if (!msg.startsWith("m.")) {
                 // try to do something sensible based on the type of error
                 if (e instanceof FileNotFoundException) {
-                    msg = MessageUtil.compose("m.missing_resource", MessageUtil.taint(msg), _ifc.installError);
+                    msg = MessageUtil.compose("m.missing_resource", MessageUtil.taint(msg),
+                            _ifc.installError);
                 } else {
                     msg = MessageUtil.compose("m.init_error", MessageUtil.taint(msg), _ifc.installError);
                 }
             }
-            // Since we're dead, clear off the 'time remaining' label along with
-            // displaying the
+            // Since we're dead, clear off the 'time remaining' label along with displaying the
             // error message
             fail(msg);
             _app.releaseLock();
@@ -659,18 +630,18 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
 
     // documentation inherited from interface
     @Override
-    public void updateStatus(String message)
+    public void updateStatus (String message)
     {
         setStatusAsync(message, -1, -1L, true);
     }
 
     /**
-     * Load the image at the path. Before trying the exact path/file specified we
-     * will look to see if we can find a localized version by sticking a
-     * {@code _<language>} in front of the "." in the filename.
+     * Load the image at the path. Before trying the exact path/file specified we will look to see
+     * if we can find a localized version by sticking a {@code _<language>} in
+     * front of the "." in the filename.
      */
     @Override
-    public BufferedImage loadImage(String path)
+    public BufferedImage loadImage (String path)
     {
         if (StringUtil.isBlank(path)) {
             return null;
@@ -697,10 +668,10 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
     }
 
     /**
-     * Downloads and installs an Java VM bundled with the application. This is
-     * called if we are not running with the necessary Java version.
+     * Downloads and installs an Java VM bundled with the application. This is called if we are not
+     * running with the necessary Java version.
      */
-    protected void updateJava() throws IOException
+    protected void updateJava () throws IOException
     {
         Resource vmjar = _app.getJavaVMResource();
         if (vmjar == null) {
@@ -719,15 +690,13 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
         updateStatus("m.unpacking_java");
         vmjar.install(true);
 
-        // these only run on non-Windows platforms, so we use Unix file
-        // separators
+        // these only run on non-Windows platforms, so we use Unix file separators
         String localJavaDir = LaunchUtil.LOCAL_JAVA_DIR + "/";
         FileUtil.makeExecutable(_app.getLocalPath(localJavaDir + "bin/java"));
         FileUtil.makeExecutable(_app.getLocalPath(localJavaDir + "lib/jspawnhelper"));
         FileUtil.makeExecutable(_app.getLocalPath(localJavaDir + "lib/amd64/jspawnhelper"));
 
-        // lastly regenerate the .jsa dump file that helps Java to start up
-        // faster
+        // lastly regenerate the .jsa dump file that helps Java to start up faster
         String vmpath = LaunchUtil.getJVMPath(_app.getLocalPath(""));
         try {
             log.info("Regenerating classes.jsa for " + vmpath + "...");
@@ -742,7 +711,7 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
     /**
      * Called if the application is determined to be of an old version.
      */
-    protected void update() throws IOException
+    protected void update () throws IOException
     {
         // first clear all validation markers
         _app.clearValidationMarkers();
@@ -767,7 +736,7 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
             if (!StringUtil.isBlank(_ifc.patchNotesUrl)) {
                 createInterfaceAsync(false);
                 EventQueue.invokeLater(new Runnable() {
-                    public void run()
+                    public void run ()
                     {
                         _patchNotes.setVisible(true);
                     }
@@ -805,10 +774,8 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
             }
         }
 
-        // if the patch resource is null, that means something was booched in
-        // the application, so
-        // we skip the patching process but update the metadata which will
-        // result in a "brute
+        // if the patch resource is null, that means something was booched in the application, so
+        // we skip the patching process but update the metadata which will result in a "brute
         // force" upgrade
 
         // finally update our metadata files...
@@ -820,27 +787,23 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
     /**
      * Called if the application is determined to require resource downloads.
      */
-    protected void download(Collection<Resource> resources) throws IOException
+    protected void download (Collection<Resource> resources) throws IOException
     {
         // create our user interface
         createInterfaceAsync(false);
 
         Downloader dl = new HTTPDownloader() {
-            @Override
-            protected void resolvingDownloads()
+            @Override protected void resolvingDownloads ()
             {
                 updateStatus("m.resolving");
             }
 
-            @Override
-            protected void downloadProgress(int percent, long remaining)
+            @Override protected void downloadProgress (int percent, long remaining)
             {
-                // check for another getdown running at 0 and every 10% after
-                // that
+                // check for another getdown running at 0 and every 10% after that
                 if (_lastCheck == -1 || percent >= _lastCheck + 10) {
                     if (_delay > 0) {
-                        // stop the presses if something else is holding the
-                        // lock
+                        // stop the presses if something else is holding the lock
                         boolean locked = _app.lockForUpdates();
                         _app.releaseLock();
                         if (locked)
@@ -854,31 +817,27 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
                 }
             }
 
-            @Override
-            protected void downloadFailed(Resource rsrc, Exception e)
+            @Override protected void downloadFailed (Resource rsrc, Exception e)
             {
                 updateStatus(MessageUtil.tcompose("m.failure", e.getMessage()));
                 log.warning("Download failed", "rsrc", rsrc, e);
             }
 
             /**
-             * The last percentage at which we checked for another getdown running, or -1
-             * for not having checked at all.
+             * The last percentage at which we checked for another getdown running, or -1 for not having checked at all.
              */
             protected int _lastCheck = -1;
         };
         if (!dl.download(resources, _app.maxConcurrentDownloads())) {
-            // if we aborted due to detecting another getdown running, we want
-            // to report here
+            // if we aborted due to detecting another getdown running, we want to report here
             throw new MultipleGetdownRunning();
         }
     }
 
     /**
-     * Called to launch the application if everything is determined to be ready to
-     * go.
+     * Called to launch the application if everything is determined to be ready to go.
      */
-    protected void launch()
+    protected void launch ()
     {
         setStep(Step.LAUNCH);
         setStatusAsync("m.launching", stepToGlobalPercent(100), -1L, false);
@@ -893,8 +852,7 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
             } else {
                 Process proc;
                 if (_app.hasOptimumJvmArgs()) {
-                    // if we have "optimum" arguments, we want to try launching
-                    // with them first
+                    // if we have "optimum" arguments, we want to try launching with them first
                     proc = _app.createProcess(true);
 
                     long fallback = System.currentTimeMillis() + FALLBACK_CHECK_TIME;
@@ -916,15 +874,12 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
                     proc = _app.createProcess(false);
                 }
 
-                // close standard in to avoid choking standard out of the
-                // launched process
+                // close standard in to avoid choking standard out of the launched process
                 proc.getInputStream().close();
-                // close standard out, since we're not going to write to
-                // anything to it anyway
+                // close standard out, since we're not going to write to anything to it anyway
                 proc.getOutputStream().close();
 
-                // on Windows 98 and ME we need to stick around and read the
-                // output of stderr lest
+                // on Windows 98 and ME we need to stick around and read the output of stderr lest
                 // the process fill its output buffer and choke, yay!
                 final InputStream stderr = proc.getErrorStream();
                 if (LaunchUtil.mustMonitorChildren()) {
@@ -935,12 +890,10 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
                     log.info("Process exited: " + proc.waitFor());
 
                 } else {
-                    // spawn a daemon thread that will catch the early bits of
-                    // stderr in case the
+                    // spawn a daemon thread that will catch the early bits of stderr in case the
                     // launch fails
                     Thread t = new Thread() {
-                        @Override
-                        public void run()
+                        @Override public void run ()
                         {
                             copyStream(stderr, System.err);
                         }
@@ -950,10 +903,8 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
                 }
             }
 
-            // if we have a UI open and we haven't been around for at least 5
-            // seconds (the default
-            // for min_show_seconds), don't stick a fork in ourselves straight
-            // away but give our
+            // if we have a UI open and we haven't been around for at least 5 seconds (the default
+            // for min_show_seconds), don't stick a fork in ourselves straight away but give our
             // lovely user a chance to see what we're doing
             long uptime = System.currentTimeMillis() - _startup;
             long minshow = _ifc.minShowSeconds * 1000L;
@@ -974,21 +925,19 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
     }
 
     /**
-     * Creates our user interface, which we avoid doing unless we actually have to
-     * update something. NOTE: this happens on the next UI tick, not immediately.
+     * Creates our user interface, which we avoid doing unless we actually have to update
+     * something. NOTE: this happens on the next UI tick, not immediately.
      *
-     * @param reinit - if the interface should be reinitialized if it already
-     *               exists.
+     * @param reinit - if the interface should be reinitialized if it already exists.
      */
-    protected void createInterfaceAsync(final boolean reinit)
+    protected void createInterfaceAsync (final boolean reinit)
     {
         if (_silent || (_container != null && !reinit)) {
             return;
         }
 
         EventQueue.invokeLater(new Runnable() {
-            public void run()
-            {
+            public void run () {
                 if (_container == null || reinit) {
                     if (_container == null) {
                         _container = createContainer();
@@ -999,8 +948,7 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
                     _layers = new JLayeredPane();
                     _container.add(_layers, BorderLayout.CENTER);
                     _patchNotes = new JButton(new AbstractAction(_msgs.getString("m.patch_notes")) {
-                        @Override
-                        public void actionPerformed(ActionEvent event)
+                        @Override public void actionPerformed (ActionEvent event)
                         {
                             showDocument(_ifc.patchNotesUrl);
                         }
@@ -1019,12 +967,11 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
     /**
      * Initializes the interface with the current UpdateInterface and backgrounds.
      */
-    protected void initInterface()
+    protected void initInterface ()
     {
         RotatingBackgrounds newBackgrounds = getBackground();
         if (_background == null || newBackgrounds.getNumImages() > 0) {
-            // Leave the old _background in place if there is an old one to
-            // leave in place
+            // Leave the old _background in place if there is an old one to leave in place
             // and the new getdown.txt didn't yield any images.
             _background = newBackgrounds;
         }
@@ -1033,22 +980,22 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
         _status.setSize(size);
         _layers.setPreferredSize(size);
 
-        _patchNotes.setBounds(_ifc.patchNotes.x, _ifc.patchNotes.y, _ifc.patchNotes.width, _ifc.patchNotes.height);
+        _patchNotes.setBounds(_ifc.patchNotes.x, _ifc.patchNotes.y, _ifc.patchNotes.width,
+                _ifc.patchNotes.height);
         _patchNotes.setVisible(false);
 
-        // we were displaying progress while the UI wasn't up. Now that it is,
-        // whatever progress
+        // we were displaying progress while the UI wasn't up. Now that it is, whatever progress
         // is left is scaled into a 0-100 DISPLAYED progress.
         _uiDisplayPercent = _lastGlobalPercent;
         _stepMinPercent = _lastGlobalPercent = 0;
     }
 
-    protected RotatingBackgrounds getBackground()
+    protected RotatingBackgrounds getBackground ()
     {
         if (_ifc.rotatingBackgrounds != null) {
             if (_ifc.backgroundImage != null) {
-                log.warning("ui.background_image and ui.rotating_background were both specified. "
-                        + "The rotating images are being used.");
+                log.warning("ui.background_image and ui.rotating_background were both specified. " +
+                        "The rotating images are being used.");
             }
             return new RotatingBackgrounds(_ifc.rotatingBackgrounds, _ifc.errorBackground, Getdown.this);
         } else if (_ifc.backgroundImage != null) {
@@ -1058,12 +1005,12 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
         }
     }
 
-    protected Image getProgressImage()
+    protected Image getProgressImage ()
     {
         return loadImage(_ifc.progressImage);
     }
 
-    protected void handleWindowClose()
+    protected void handleWindowClose ()
     {
         if (_dead) {
             exit(0);
@@ -1080,10 +1027,9 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
     }
 
     /**
-     * Update the status to indicate getdown has failed for the reason in
-     * <code>message</code>.
+     * Update the status to indicate getdown has failed for the reason in <code>message</code>.
      */
-    protected void fail(String message)
+    protected void fail (String message)
     {
         _dead = true;
         setStatusAsync(message, stepToGlobalPercent(0), -1L, true);
@@ -1092,7 +1038,7 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
     /**
      * Set the current step, which will be used to globalize per-step percentages.
      */
-    protected void setStep(Step step)
+    protected void setStep (Step step)
     {
         int finalPercent = -1;
         for (Integer perc : _ifc.stepPercentages.get(step)) {
@@ -1113,7 +1059,7 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
     /**
      * Convert a step percentage to the global percentage.
      */
-    protected int stepToGlobalPercent(int percent)
+    protected int stepToGlobalPercent (int percent)
     {
         int adjustedMaxPercent = ((_stepMaxPercent - _uiDisplayPercent) * 100) / (100 - _uiDisplayPercent);
         _lastGlobalPercent = Math.max(_lastGlobalPercent,
@@ -1124,15 +1070,15 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
     /**
      * Updates the status. NOTE: this happens on the next UI tick, not immediately.
      */
-    protected void setStatusAsync(final String message, final int percent, final long remaining, boolean createUI)
+    protected void setStatusAsync (final String message, final int percent, final long remaining,
+            boolean createUI)
     {
         if (_status == null && createUI) {
             createInterfaceAsync(false);
         }
 
         EventQueue.invokeLater(new Runnable() {
-            public void run()
-            {
+            public void run () {
                 if (_status == null) {
                     if (message != null) {
                         log.info("Dropping status '" + message + "'.");
@@ -1151,14 +1097,13 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
         });
     }
 
-    protected void reportTrackingEvent(String event, int progress)
+    protected void reportTrackingEvent (String event, int progress)
     {
         if (!_enableTracking) {
             return;
 
         } else if (progress > 0) {
-            // we need to make sure we do the right thing if we skip over
-            // progress levels
+            // we need to make sure we do the right thing if we skip over progress levels
             do {
                 URL url = _app.getTrackingProgressURL(++_reportedProgress);
                 if (url != null) {
@@ -1177,29 +1122,28 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
     /**
      * Creates the container in which our user interface will be displayed.
      */
-    protected abstract Container createContainer();
+    protected abstract Container createContainer ();
 
     /**
      * Configures the interface container based on the latest UI config.
      */
-    protected abstract void configureContainer();
+    protected abstract void configureContainer ();
 
     /**
      * Shows the container in which our user interface will be displayed.
      */
-    protected abstract void showContainer();
+    protected abstract void showContainer ();
 
     /**
      * Disposes the container in which we have our user interface.
      */
-    protected abstract void disposeContainer();
+    protected abstract void disposeContainer ();
 
     /**
-     * If this method returns true we will run the application in the same JVM,
-     * otherwise we will fork off a new JVM. Some options are not supported if we do
-     * not fork off a new JVM.
+     * If this method returns true we will run the application in the same JVM, otherwise we will
+     * fork off a new JVM. Some options are not supported if we do not fork off a new JVM.
      */
-    protected boolean invokeDirect()
+    protected boolean invokeDirect ()
     {
         return SysProps.direct();
     }
@@ -1207,19 +1151,18 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
     /**
      * Requests to show the document at the specified URL in a new window.
      */
-    protected abstract void showDocument(String url);
+    protected abstract void showDocument (String url);
 
     /**
      * Requests that Getdown exit.
      */
-    protected abstract void exit(int exitCode);
+    protected abstract void exit (int exitCode);
 
     /**
-     * Copies the supplied stream from the specified input to the specified output.
-     * Used to copy our child processes stderr and stdout to our own stderr and
-     * stdout.
+     * Copies the supplied stream from the specified input to the specified output. Used to copy
+     * our child processes stderr and stdout to our own stderr and stdout.
      */
-    protected static void copyStream(InputStream in, PrintStream out)
+    protected static void copyStream (InputStream in, PrintStream out)
     {
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(in));
@@ -1243,13 +1186,12 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
         }
 
         @Override
-        public void run()
+        public void run ()
         {
             try {
                 HttpURLConnection ucon = ConnectionUtil.openHttp(_url, 0, 0);
 
-                // if we have a tracking cookie configured, configure the
-                // request with it
+                // if we have a tracking cookie configured, configure the request with it
                 if (_app.getTrackingCookieName() != null && _app.getTrackingCookieProperty() != null) {
                     String val = System.getProperty(_app.getTrackingCookieProperty());
                     if (val != null) {
@@ -1257,12 +1199,12 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
                     }
                 }
 
-                // now request our tracking URL and ensure that we get a
-                // non-error response
+                // now request our tracking URL and ensure that we get a non-error response
                 ucon.connect();
                 try {
                     if (ucon.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                        log.warning("Failed to report tracking event", "url", _url, "rcode", ucon.getResponseCode());
+                        log.warning("Failed to report tracking event", "url", _url, "rcode",
+                                ucon.getResponseCode());
                     }
                 } finally {
                     ucon.disconnect();
@@ -1278,7 +1220,7 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
 
     /** Used to pass progress on to our user interface. */
     protected ProgressObserver _progobs = new ProgressObserver() {
-        public void progress(int percent)
+        public void progress (int percent)
         {
             setStatusAsync(null, stepToGlobalPercent(percent), -1L, false);
         }
@@ -1307,8 +1249,7 @@ public abstract class Getdown extends Thread implements Application.StatusDispla
     protected int _reportedProgress = 0;
 
     /**
-     * Number of minutes to wait after startup before beginning any real heavy
-     * lifting.
+     * Number of minutes to wait after startup before beginning any real heavy lifting.
      */
     protected int _delay;
 
