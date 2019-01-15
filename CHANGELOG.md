@@ -18,6 +18,11 @@
 * Avoid checking for proxy config if `https.proxyHost` is set. This matches existing behavior when
   `http.proxyHost` is set.
 
+* Added support for proxy authentication. A deployment must also use the
+  `com.threerings.getdown.spi.ProxyAuth` service provider interface to persist the proxy
+  credentials supplied by the user. Otherwise they will be requested every time Getdown runs, which
+  is not a viable user experience.
+
 ## 1.8.2 - Nov 27, 2018
 
 * Fixed a data corruption bug introduced at last minute into 1.8.1 release. Oops.
