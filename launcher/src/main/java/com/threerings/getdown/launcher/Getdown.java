@@ -27,16 +27,7 @@ import java.net.Authenticator;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.ResourceBundle;
-import java.util.ServiceLoader;
-import java.util.Set;
+import java.util.*;
 
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
@@ -45,26 +36,14 @@ import javax.swing.JFrame;
 import javax.swing.JLayeredPane;
 
 import com.samskivert.swing.util.SwingUtil;
-import com.threerings.getdown.data.Application;
+import com.threerings.getdown.data.*;
 import com.threerings.getdown.data.Application.UpdateInterface.Step;
-import com.threerings.getdown.data.Build;
-import com.threerings.getdown.data.EnvConfig;
-import com.threerings.getdown.data.Resource;
-import com.threerings.getdown.data.SysProps;
 import com.threerings.getdown.net.Downloader;
 import com.threerings.getdown.net.HTTPDownloader;
 import com.threerings.getdown.spi.proxyauthentification.ProxyAuthentificationInterface;
 import com.threerings.getdown.spi.proxyauthentification.ProxyCredentials;
 import com.threerings.getdown.tools.Patcher;
-import com.threerings.getdown.util.Config;
-import com.threerings.getdown.util.ConnectionUtil;
-import com.threerings.getdown.util.FileUtil;
-import com.threerings.getdown.util.LaunchUtil;
-import com.threerings.getdown.util.MessageUtil;
-import com.threerings.getdown.util.ProgressAggregator;
-import com.threerings.getdown.util.ProgressObserver;
-import com.threerings.getdown.util.StringUtil;
-import com.threerings.getdown.util.VersionUtil;
+import com.threerings.getdown.util.*;
 
 import ca.beq.util.win32.registry.RegistryKey;
 import ca.beq.util.win32.registry.RegistryValue;
@@ -74,9 +53,9 @@ import ca.beq.util.win32.registry.RootKey;
  * Manages the main control for the Getdown application updater and deployment system.
  */
 public abstract class Getdown extends Thread
-        implements Application.StatusDisplay, RotatingBackgrounds.ImageLoader
+    implements Application.StatusDisplay, RotatingBackgrounds.ImageLoader
 {
-    public Getdown(EnvConfig envc)
+    public Getdown (EnvConfig envc)
     {
         super("Getdown");
         try {
@@ -108,8 +87,8 @@ public abstract class Getdown extends Thread
                 dir = System.getProperty("user.dir");
             }
             String errmsg = "The directory in which this application is installed:\n" + dir +
-                    "\nis invalid (" + e.getMessage() + "). If the full path to the app directory " +
-                    "contains the '!' character, this will trigger this error.";
+                "\nis invalid (" + e.getMessage() + "). If the full path to the app directory " +
+                "contains the '!' character, this will trigger this error.";
             fail(errmsg);
         }
         _app = new Application(envc);
@@ -193,10 +172,11 @@ public abstract class Getdown extends Thread
             } else if (!msg.startsWith("m.")) {
                 // try to do something sensible based on the type of error
                 if (e instanceof FileNotFoundException) {
-                    msg = MessageUtil.compose("m.missing_resource", MessageUtil.taint(msg),
-                            _ifc.installError);
+                    msg = MessageUtil.compose(
+                            "m.missing_resource", MessageUtil.taint(msg), _ifc.installError);
                 } else {
-                    msg = MessageUtil.compose("m.init_error", MessageUtil.taint(msg), _ifc.installError);
+                    msg = MessageUtil.compose(
+                            "m.init_error", MessageUtil.taint(msg), _ifc.installError);
                 }
             }
             fail(msg);
@@ -247,7 +227,8 @@ public abstract class Getdown extends Thread
                 .load(ProxyAuthentificationInterface.class);
         Iterator<ProxyAuthentificationInterface> iterator = loader.iterator();
         while (iterator.hasNext()) {
-            tProxyCredentials = iterator.next().loadProxyCredentials(_app.getAppDir().getAbsolutePath());
+            tProxyCredentials = iterator.next()
+                    .loadProxyCredentials(_app.getAppDir().getAbsolutePath());
             break;
         }
         return tProxyCredentials;
@@ -259,15 +240,16 @@ public abstract class Getdown extends Thread
                 .load(ProxyAuthentificationInterface.class);
         Iterator<ProxyAuthentificationInterface> iterator = loader.iterator();
         while (iterator.hasNext()) {
-            iterator.next().encryptCredentials(username, password, _app.getAppDir().getAbsolutePath());
+            iterator.next().encryptCredentials(username, password,
+                    _app.getAppDir().getAbsolutePath());
         }
     }
 
     /**
      * Reads and/or autodetects our proxy settings.
      *
-     * @return true if we should proceed with running the launcher, false if we need to wait for the user to enter proxy
-     *         settings.
+     * @return true if we should proceed with running the launcher, false if we need to wait for
+     * the user to enter proxy settings.
      */
     protected boolean detectProxy ()
     {
@@ -285,8 +267,8 @@ public abstract class Getdown extends Thread
                 boolean enabled = false;
                 RegistryKey.initialize();
                 RegistryKey r = new RegistryKey(RootKey.HKEY_CURRENT_USER, PROXY_REGISTRY);
-                for (Iterator<?> iter = r.values(); iter.hasNext(); ) {
-                    RegistryValue value = (RegistryValue)iter.next();
+                for (Iterator<?> iter = r.values(); iter.hasNext();) {
+                    RegistryValue value = (RegistryValue) iter.next();
                     if (value.getName().equals("ProxyEnable")) {
                         enabled = value.getStringValue().equals("1");
                     }
@@ -294,7 +276,7 @@ public abstract class Getdown extends Thread
                         String strval = value.getStringValue();
                         int cidx = strval.indexOf(":");
                         if (cidx != -1) {
-                            port = strval.substring(cidx+1);
+                            port = strval.substring(cidx + 1);
                             strval = strval.substring(0, cidx);
                         }
                         host = strval;
@@ -327,8 +309,7 @@ public abstract class Getdown extends Thread
             }
         }
 
-        // otherwise see if we actually need a proxy; first we have to
-        // initialize our application
+        // otherwise see if we actually need a proxy; first we have to initialize our application
         // to get some sort of interface configuration and the appbase URL
         log.info("Checking whether we need to use a proxy...");
         try {
@@ -338,12 +319,11 @@ public abstract class Getdown extends Thread
         }
         updateStatus("m.detecting_proxy");
         if (proxySettingsDetected) {
-            ProxyCredentials tProxyCredentials = loadCredentials();
+            loadCredentials();
         }
         boolean appBaseConnected = checkAppbaseConnection();
         if (!proxySettingsDetected && appBaseConnected) {
-            // we got through, so we appear not to require a proxy; make a blank
-            // proxy config and
+            // we got through, so we appear not to require a proxy; make a blank proxy config and
             // get on gettin' down
             log.info("No proxy appears to be needed.");
             try {
@@ -370,9 +350,9 @@ public abstract class Getdown extends Thread
                     hcon.setRequestMethod("HEAD");
                     hcon.connect();
                     if (hcon.getResponseCode() == HttpURLConnection.HTTP_PROXY_AUTH ||
-                            hcon.getResponseCode() == HttpURLConnection.HTTP_FORBIDDEN) {
-                        log.warning("Got a 407 or 403 response so we need to ask for credentials", "url",
-                                rurl, "rsp", hcon.getResponseCode());
+                        hcon.getResponseCode() == HttpURLConnection.HTTP_FORBIDDEN) {
+                        log.warning("Got a 407 or 403 response so we need to ask for credentials",
+                                "url", rurl, "rsp", hcon.getResponseCode());
                     } else {
                         successfullyConnected = true;
                     }
@@ -398,36 +378,37 @@ public abstract class Getdown extends Thread
      */
     protected void setProxyProperties (String host, String port, String username, char[] password)
     {
-        System.setProperty("http.proxyHost", host);
-        System.setProperty("https.proxyHost", host);
-        System.setProperty("http.proxyPort", port);
-        System.setProperty("https.proxyPort", port);
-        ProxyCredentials tProxyCredentials = loadCredentials();
-        if (tProxyCredentials != null) {
-            Authenticator.setDefault(new ProxyAuthenticator(tProxyCredentials.getUser(),
-                    tProxyCredentials.getPassword().toCharArray()));
-        } else if (!StringUtil.isBlank(username) && password != null && password.length != 0) {
-            Authenticator.setDefault(new ProxyAuthenticator(username, password));
+        if (!StringUtil.isBlank(host)) {
+            System.setProperty("http.proxyHost", host);
+            System.setProperty("https.proxyHost", host);
+            if (!StringUtil.isBlank(port)) {
+                System.setProperty("http.proxyPort", port);
+                System.setProperty("https.proxyPort", port);
+            }
+            ProxyCredentials tProxyCredentials = loadCredentials();
+            if (tProxyCredentials != null) {
+                Authenticator.setDefault(new ProxyAuthenticator(tProxyCredentials.getUser(),
+                        tProxyCredentials.getPassword().toCharArray()));
+            } else if (!StringUtil.isBlank(username) && password != null && password.length != 0) {
+                Authenticator.setDefault(new ProxyAuthenticator(username, password));
+            }
+            log.info("Using proxy", "host", host, "port", port);
         }
-
-        log.info("Using proxy", "host", host, "port", port);
     }
 
-    protected void readConfig (boolean preloads) throws IOException
-    {
+    protected void readConfig (boolean preloads) throws IOException {
         Config config = _app.init(true);
-        if (preloads)
-            doPredownloads(_app.getResources());
+        if (preloads) doPredownloads(_app.getResources());
         _ifc = new Application.UpdateInterface(config);
     }
 
     /**
-     * Downloads and installs (without verifying) any resources that are marked with a
-     * {@code PRELOAD} attribute.
-     * @param resources the full set of resources from the application (the predownloads will be
-     * extracted from it).
+     * Downloads and installs (without verifying) any resources that are marked with a {@code PRELOAD} attribute.
+     *
+     * @param resources the full set of resources from the application (the predownloads will be extracted from it).
      */
-    protected void doPredownloads (Collection<Resource> resources) {
+    protected void doPredownloads (Collection<Resource> resources)
+    {
         List<Resource> predownloads = new ArrayList<>();
         for (Resource rsrc : resources) {
             if (rsrc.shouldPredownload() && !rsrc.getLocal().exists()) {
@@ -471,7 +452,7 @@ public abstract class Getdown extends Thread
             File config = _app.getLocalPath(Application.CONFIG_FILE);
             if (!config.setLastModified(System.currentTimeMillis())) {
                 log.warning("Unable to set modtime on config file, will be unable to check for " +
-                        "another instance of getdown running while this one waits.");
+                    "another instance of getdown running while this one waits.");
             }
             if (_delay > 0) {
                 // don't hold the lock while waiting, let another getdown proceed if it starts.
@@ -516,7 +497,8 @@ public abstract class Getdown extends Thread
                 setStep(Step.VERIFY_RESOURCES);
                 setStatusAsync("m.validating", -1, -1L, false);
                 Set<Resource> toDownload = new HashSet<>();
-                _app.verifyResources(_progobs, alreadyValid, unpacked, _toInstallResources, toDownload);
+                _app.verifyResources(_progobs, alreadyValid, unpacked,
+                                     _toInstallResources, toDownload);
 
                 if (toDownload.size() > 0) {
                     // we have resources to download, also note them as to-be-installed
@@ -534,7 +516,7 @@ public abstract class Getdown extends Thread
 
                         // redownload any that are corrupt or invalid...
                         log.info(toDownload.size() + " of " + _app.getAllActiveResources().size() +
-                                " rsrcs require update (" + alreadyValid[0] + " assumed valid).");
+                            " rsrcs require update (" + alreadyValid[0] + " assumed valid).");
                         setStep(Step.REDOWNLOAD_RESOURCES);
                         download(toDownload);
 
@@ -615,10 +597,11 @@ public abstract class Getdown extends Thread
             } else if (!msg.startsWith("m.")) {
                 // try to do something sensible based on the type of error
                 if (e instanceof FileNotFoundException) {
-                    msg = MessageUtil.compose("m.missing_resource", MessageUtil.taint(msg),
-                            _ifc.installError);
+                    msg = MessageUtil.compose(
+                        "m.missing_resource", MessageUtil.taint(msg), _ifc.installError);
                 } else {
-                    msg = MessageUtil.compose("m.init_error", MessageUtil.taint(msg), _ifc.installError);
+                    msg = MessageUtil.compose(
+                        "m.init_error", MessageUtil.taint(msg), _ifc.installError);
                 }
             }
             // Since we're dead, clear off the 'time remaining' label along with displaying the
@@ -637,8 +620,8 @@ public abstract class Getdown extends Thread
 
     /**
      * Load the image at the path. Before trying the exact path/file specified we will look to see
-     * if we can find a localized version by sticking a {@code _<language>} in
-     * front of the "." in the filename.
+     * if we can find a localized version by sticking a {@code _<language>} in front of the "." in
+     * the filename.
      */
     @Override
     public BufferedImage loadImage (String path)
@@ -668,10 +651,11 @@ public abstract class Getdown extends Thread
     }
 
     /**
-     * Downloads and installs an Java VM bundled with the application. This is called if we are not
-     * running with the necessary Java version.
+     * Downloads and installs an Java VM bundled with the application. This is called if we are not running with the
+     * necessary Java version.
      */
-    protected void updateJava () throws IOException
+    protected void updateJava ()
+        throws IOException
     {
         Resource vmjar = _app.getJavaVMResource();
         if (vmjar == null) {
@@ -711,7 +695,8 @@ public abstract class Getdown extends Thread
     /**
      * Called if the application is determined to be of an old version.
      */
-    protected void update () throws IOException
+    protected void update ()
+        throws IOException
     {
         // first clear all validation markers
         _app.clearValidationMarkers();
@@ -736,8 +721,7 @@ public abstract class Getdown extends Thread
             if (!StringUtil.isBlank(_ifc.patchNotesUrl)) {
                 createInterfaceAsync(false);
                 EventQueue.invokeLater(new Runnable() {
-                    public void run ()
-                    {
+                    public void run () {
                         _patchNotes.setVisible(true);
                     }
                 });
@@ -754,8 +738,7 @@ public abstract class Getdown extends Thread
             long[] sizes = new long[list.size()];
             Arrays.fill(sizes, 1L);
             ProgressAggregator pragg = new ProgressAggregator(_progobs, sizes);
-            int ii = 0;
-            for (Resource prsrc : list) {
+            int ii = 0; for (Resource prsrc : list) {
                 ProgressObserver pobs = pragg.startElement(ii++);
                 try {
                     // install the patch file (renaming them from _new)
@@ -787,27 +770,25 @@ public abstract class Getdown extends Thread
     /**
      * Called if the application is determined to require resource downloads.
      */
-    protected void download (Collection<Resource> resources) throws IOException
+    protected void download (Collection<Resource> resources)
+        throws IOException
     {
         // create our user interface
         createInterfaceAsync(false);
 
         Downloader dl = new HTTPDownloader() {
-            @Override protected void resolvingDownloads ()
-            {
+            @Override protected void resolvingDownloads () {
                 updateStatus("m.resolving");
             }
 
-            @Override protected void downloadProgress (int percent, long remaining)
-            {
+            @Override protected void downloadProgress (int percent, long remaining) {
                 // check for another getdown running at 0 and every 10% after that
                 if (_lastCheck == -1 || percent >= _lastCheck + 10) {
                     if (_delay > 0) {
                         // stop the presses if something else is holding the lock
                         boolean locked = _app.lockForUpdates();
                         _app.releaseLock();
-                        if (locked)
-                            abort();
+                        if (locked) abort();
                     }
                     _lastCheck = percent;
                 }
@@ -817,15 +798,14 @@ public abstract class Getdown extends Thread
                 }
             }
 
-            @Override protected void downloadFailed (Resource rsrc, Exception e)
-            {
+            @Override protected void downloadFailed (Resource rsrc, Exception e) {
                 updateStatus(MessageUtil.tcompose("m.failure", e.getMessage()));
                 log.warning("Download failed", "rsrc", rsrc, e);
             }
 
             /**
-             * The last percentage at which we checked for another getdown running, or -1 for not having checked at all.
-             */
+             * The last percentage at which we checked for another getdown running, or -1 for not
+             * having checked at all. */
             protected int _lastCheck = -1;
         };
         if (!dl.download(resources, _app.maxConcurrentDownloads())) {
@@ -893,8 +873,7 @@ public abstract class Getdown extends Thread
                     // spawn a daemon thread that will catch the early bits of stderr in case the
                     // launch fails
                     Thread t = new Thread() {
-                        @Override public void run ()
-                        {
+                        @Override public void run () {
                             copyStream(stderr, System.err);
                         }
                     };
@@ -925,8 +904,8 @@ public abstract class Getdown extends Thread
     }
 
     /**
-     * Creates our user interface, which we avoid doing unless we actually have to update
-     * something. NOTE: this happens on the next UI tick, not immediately.
+     * Creates our user interface, which we avoid doing unless we actually have to update something. NOTE: this happens on
+     * the next UI tick, not immediately.
      *
      * @param reinit - if the interface should be reinitialized if it already exists.
      */
@@ -937,7 +916,8 @@ public abstract class Getdown extends Thread
         }
 
         EventQueue.invokeLater(new Runnable() {
-            public void run () {
+            public void run ()
+            {
                 if (_container == null || reinit) {
                     if (_container == null) {
                         _container = createContainer();
@@ -948,7 +928,8 @@ public abstract class Getdown extends Thread
                     _layers = new JLayeredPane();
                     _container.add(_layers, BorderLayout.CENTER);
                     _patchNotes = new JButton(new AbstractAction(_msgs.getString("m.patch_notes")) {
-                        @Override public void actionPerformed (ActionEvent event)
+                        @Override
+                        public void actionPerformed (ActionEvent event)
                         {
                             showDocument(_ifc.patchNotesUrl);
                         }
@@ -980,8 +961,8 @@ public abstract class Getdown extends Thread
         _status.setSize(size);
         _layers.setPreferredSize(size);
 
-        _patchNotes.setBounds(_ifc.patchNotes.x, _ifc.patchNotes.y, _ifc.patchNotes.width,
-                _ifc.patchNotes.height);
+        _patchNotes.setBounds(_ifc.patchNotes.x, _ifc.patchNotes.y,
+                              _ifc.patchNotes.width, _ifc.patchNotes.height);
         _patchNotes.setVisible(false);
 
         // we were displaying progress while the UI wasn't up. Now that it is, whatever progress
@@ -995,9 +976,10 @@ public abstract class Getdown extends Thread
         if (_ifc.rotatingBackgrounds != null) {
             if (_ifc.backgroundImage != null) {
                 log.warning("ui.background_image and ui.rotating_background were both specified. " +
-                        "The rotating images are being used.");
+                    "The rotating images are being used.");
             }
-            return new RotatingBackgrounds(_ifc.rotatingBackgrounds, _ifc.errorBackground, Getdown.this);
+            return new RotatingBackgrounds(_ifc.rotatingBackgrounds, _ifc.errorBackground,
+                Getdown.this);
         } else if (_ifc.backgroundImage != null) {
             return new RotatingBackgrounds(loadImage(_ifc.backgroundImage));
         } else {
@@ -1061,9 +1043,10 @@ public abstract class Getdown extends Thread
      */
     protected int stepToGlobalPercent (int percent)
     {
-        int adjustedMaxPercent = ((_stepMaxPercent - _uiDisplayPercent) * 100) / (100 - _uiDisplayPercent);
+        int adjustedMaxPercent =
+            ((_stepMaxPercent - _uiDisplayPercent) * 100) / (100 - _uiDisplayPercent);
         _lastGlobalPercent = Math.max(_lastGlobalPercent,
-                _stepMinPercent + (percent * (adjustedMaxPercent - _stepMinPercent)) / 100);
+            _stepMinPercent + (percent * (adjustedMaxPercent - _stepMinPercent)) / 100);
         return _lastGlobalPercent;
     }
 
@@ -1071,7 +1054,7 @@ public abstract class Getdown extends Thread
      * Updates the status. NOTE: this happens on the next UI tick, not immediately.
      */
     protected void setStatusAsync (final String message, final int percent, final long remaining,
-            boolean createUI)
+                                   boolean createUI)
     {
         if (_status == null && createUI) {
             createInterfaceAsync(false);
@@ -1140,8 +1123,8 @@ public abstract class Getdown extends Thread
     protected abstract void disposeContainer ();
 
     /**
-     * If this method returns true we will run the application in the same JVM, otherwise we will
-     * fork off a new JVM. Some options are not supported if we do not fork off a new JVM.
+     * If this method returns true we will run the application in the same JVM, otherwise we will fork off a new JVM. Some
+     * options are not supported if we do not fork off a new JVM.
      */
     protected boolean invokeDirect ()
     {
@@ -1159,8 +1142,8 @@ public abstract class Getdown extends Thread
     protected abstract void exit (int exitCode);
 
     /**
-     * Copies the supplied stream from the specified input to the specified output. Used to copy
-     * our child processes stderr and stdout to our own stderr and stdout.
+     * Copies the supplied stream from the specified input to the specified output. Used to copy our child processes stderr
+     * and stdout to our own stderr and stdout.
      */
     protected static void copyStream (InputStream in, PrintStream out)
     {
@@ -1179,20 +1162,19 @@ public abstract class Getdown extends Thread
     /** Used to fetch a progress report URL. */
     protected class ProgressReporter extends Thread
     {
-        public ProgressReporter(URL url)
-        {
+        public ProgressReporter (URL url) {
             setDaemon(true);
             _url = url;
         }
 
         @Override
-        public void run ()
-        {
+        public void run () {
             try {
                 HttpURLConnection ucon = ConnectionUtil.openHttp(_url, 0, 0);
 
                 // if we have a tracking cookie configured, configure the request with it
-                if (_app.getTrackingCookieName() != null && _app.getTrackingCookieProperty() != null) {
+                if (_app.getTrackingCookieName() != null &&
+                    _app.getTrackingCookieProperty() != null) {
                     String val = System.getProperty(_app.getTrackingCookieProperty());
                     if (val != null) {
                         ucon.setRequestProperty("Cookie", _app.getTrackingCookieName() + "=" + val);
@@ -1203,8 +1185,8 @@ public abstract class Getdown extends Thread
                 ucon.connect();
                 try {
                     if (ucon.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                        log.warning("Failed to report tracking event", "url", _url, "rcode",
-                                ucon.getResponseCode());
+                        log.warning("Failed to report tracking event",
+                            "url", _url, "rcode", ucon.getResponseCode());
                     }
                 } finally {
                     ucon.disconnect();
@@ -1220,8 +1202,7 @@ public abstract class Getdown extends Thread
 
     /** Used to pass progress on to our user interface. */
     protected ProgressObserver _progobs = new ProgressObserver() {
-        public void progress (int percent)
-        {
+        public void progress (int percent) {
             setStatusAsync(null, stepToGlobalPercent(percent), -1L, false);
         }
     };
@@ -1248,9 +1229,7 @@ public abstract class Getdown extends Thread
     protected boolean _enableTracking = true;
     protected int _reportedProgress = 0;
 
-    /**
-     * Number of minutes to wait after startup before beginning any real heavy lifting.
-     */
+    /**  Number of minutes to wait after startup before beginning any real heavy lifting. */
     protected int _delay;
 
     protected int _stepMaxPercent;
