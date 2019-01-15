@@ -148,7 +148,11 @@ public abstract class Getdown extends Thread
                 // create a panel they can use to configure the proxy settings
                 _container = createContainer();
                 configureContainer();
-                _container.add(new ProxyPanel(this, _msgs), BorderLayout.CENTER);
+                ProxyPanel panel = new ProxyPanel(this, _msgs);
+                // set up any existing configured proxy
+                String[] hostPort = ProxyUtil.loadProxy(_app);
+                panel.setProxy(hostPort[0], hostPort[1]);
+                _container.add(panel, BorderLayout.CENTER);
                 showContainer();
                 // allow them to close the window to abort the proxy configuration
                 _dead = true;

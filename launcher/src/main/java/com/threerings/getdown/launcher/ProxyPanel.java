@@ -96,13 +96,12 @@ public final class ProxyPanel extends JPanel implements ActionListener
         button.setActionCommand("cancel");
         button.addActionListener(this);
         add(row);
+    }
 
-        // set up any existing proxy defaults
-        String host = System.getProperty("http.proxyHost");
+    public void setProxy (String host, String port) {
         if (host != null) {
             _host.setText(host);
         }
-        String port = System.getProperty("http.proxyPort");
         if (port != null) {
             _port.setText(port);
         }
