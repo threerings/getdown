@@ -249,8 +249,8 @@ public abstract class Getdown extends Thread
     /**
      * Reads and/or autodetects our proxy settings.
      *
-     * @return true if we should proceed with running the launcher, false if we need to wait for the user to enter proxy
-     *         settings.
+     * @return true if we should proceed with running the launcher, false if we need to wait for
+     * the user to enter proxy settings.
      */
     protected boolean detectProxy ()
     {
@@ -500,8 +500,8 @@ public abstract class Getdown extends Thread
                 setStep(Step.VERIFY_RESOURCES);
                 setStatusAsync("m.validating", -1, -1L, false);
                 Set<Resource> toDownload = new HashSet<>();
-                _app.verifyResources(_progobs, alreadyValid, unpacked, _toInstallResources,
-                        toDownload);
+                _app.verifyResources(_progobs, alreadyValid, unpacked,
+                                     _toInstallResources, toDownload);
 
                 if (toDownload.size() > 0) {
                     // we have resources to download, also note them as to-be-installed
@@ -519,7 +519,7 @@ public abstract class Getdown extends Thread
 
                         // redownload any that are corrupt or invalid...
                         log.info(toDownload.size() + " of " + _app.getAllActiveResources().size() +
-                            " rsrcs require update (" + alreadyValid[0] + " assumed valid).");
+                                 " rsrcs require update (" + alreadyValid[0] + " assumed valid).");
                         setStep(Step.REDOWNLOAD_RESOURCES);
                         download(toDownload);
 
@@ -600,11 +600,11 @@ public abstract class Getdown extends Thread
             } else if (!msg.startsWith("m.")) {
                 // try to do something sensible based on the type of error
                 if (e instanceof FileNotFoundException) {
-                    msg = MessageUtil.compose("m.missing_resource", MessageUtil.taint(msg),
-                            _ifc.installError);
+                    msg = MessageUtil.compose(
+                        "m.missing_resource", MessageUtil.taint(msg), _ifc.installError);
                 } else {
-                    msg = MessageUtil.compose("m.init_error", MessageUtil.taint(msg),
-                            _ifc.installError);
+                    msg = MessageUtil.compose(
+                        "m.init_error", MessageUtil.taint(msg), _ifc.installError);
                 }
             }
             // Since we're dead, clear off the 'time remaining' label along with displaying the
@@ -622,8 +622,9 @@ public abstract class Getdown extends Thread
     }
 
     /**
-     * Load the image at the path. Before trying the exact path/file specified we will look to see if we can find a
-     * localized version by sticking a {@code _<language>} in front of the "." in the filename.
+     * Load the image at the path. Before trying the exact path/file specified we will look to see
+     * if we can find a localized version by sticking a {@code _<language>} in front of the "."
+     * in the filename.
      */
     @Override
     public BufferedImage loadImage (String path)
@@ -656,7 +657,8 @@ public abstract class Getdown extends Thread
      * Downloads and installs an Java VM bundled with the application. This is called if we are not
      * running with the necessary Java version.
      */
-    protected void updateJava () throws IOException
+    protected void updateJava ()
+        throws IOException
     {
         Resource vmjar = _app.getJavaVMResource();
         if (vmjar == null) {
@@ -696,7 +698,8 @@ public abstract class Getdown extends Thread
     /**
      * Called if the application is determined to be of an old version.
      */
-    protected void update () throws IOException
+    protected void update ()
+        throws IOException
     {
         // first clear all validation markers
         _app.clearValidationMarkers();
@@ -721,8 +724,7 @@ public abstract class Getdown extends Thread
             if (!StringUtil.isBlank(_ifc.patchNotesUrl)) {
                 createInterfaceAsync(false);
                 EventQueue.invokeLater(new Runnable() {
-                    public void run ()
-                    {
+                    public void run () {
                         _patchNotes.setVisible(true);
                     }
                 });
@@ -739,8 +741,7 @@ public abstract class Getdown extends Thread
             long[] sizes = new long[list.size()];
             Arrays.fill(sizes, 1L);
             ProgressAggregator pragg = new ProgressAggregator(_progobs, sizes);
-            int ii = 0;
-            for (Resource prsrc : list) {
+            int ii = 0; for (Resource prsrc : list) {
                 ProgressObserver pobs = pragg.startElement(ii++);
                 try {
                     // install the patch file (renaming them from _new)
@@ -772,29 +773,25 @@ public abstract class Getdown extends Thread
     /**
      * Called if the application is determined to require resource downloads.
      */
-    protected void download (Collection<Resource> resources) throws IOException
+    protected void download (Collection<Resource> resources)
+        throws IOException
     {
         // create our user interface
         createInterfaceAsync(false);
 
         Downloader dl = new HTTPDownloader() {
-            @Override
-            protected void resolvingDownloads ()
-            {
+            @Override protected void resolvingDownloads () {
                 updateStatus("m.resolving");
             }
 
-            @Override
-            protected void downloadProgress (int percent, long remaining)
-            {
+            @Override protected void downloadProgress (int percent, long remaining) {
                 // check for another getdown running at 0 and every 10% after that
                 if (_lastCheck == -1 || percent >= _lastCheck + 10) {
                     if (_delay > 0) {
                         // stop the presses if something else is holding the lock
                         boolean locked = _app.lockForUpdates();
                         _app.releaseLock();
-                        if (locked)
-                            abort();
+                        if (locked) abort();
                     }
                     _lastCheck = percent;
                 }
@@ -804,17 +801,13 @@ public abstract class Getdown extends Thread
                 }
             }
 
-            @Override
-            protected void downloadFailed (Resource rsrc, Exception e)
-            {
+            @Override protected void downloadFailed (Resource rsrc, Exception e) {
                 updateStatus(MessageUtil.tcompose("m.failure", e.getMessage()));
                 log.warning("Download failed", "rsrc", rsrc, e);
             }
 
-
             /** The last percentage at which we checked for another getdown running, or -1 for not
-             * having checked at all.
-             */
+             * having checked at all. */
             protected int _lastCheck = -1;
         };
         if (!dl.download(resources, _app.maxConcurrentDownloads())) {
@@ -882,9 +875,7 @@ public abstract class Getdown extends Thread
                     // spawn a daemon thread that will catch the early bits of stderr in case the
                     // launch fails
                     Thread t = new Thread() {
-                        @Override
-                        public void run ()
-                        {
+                        @Override public void run () {
                             copyStream(stderr, System.err);
                         }
                     };
@@ -969,8 +960,8 @@ public abstract class Getdown extends Thread
         _status.setSize(size);
         _layers.setPreferredSize(size);
 
-        _patchNotes.setBounds(_ifc.patchNotes.x, _ifc.patchNotes.y, _ifc.patchNotes.width,
-                _ifc.patchNotes.height);
+        _patchNotes.setBounds(_ifc.patchNotes.x, _ifc.patchNotes.y, 
+                              _ifc.patchNotes.width, _ifc.patchNotes.height);
         _patchNotes.setVisible(false);
 
         // we were displaying progress while the UI wasn't up. Now that it is, whatever progress
@@ -987,7 +978,7 @@ public abstract class Getdown extends Thread
                             "The rotating images are being used.");
             }
             return new RotatingBackgrounds(_ifc.rotatingBackgrounds, _ifc.errorBackground,
-                    Getdown.this);
+                Getdown.this);
         } else if (_ifc.backgroundImage != null) {
             return new RotatingBackgrounds(loadImage(_ifc.backgroundImage));
         } else {
@@ -1051,10 +1042,10 @@ public abstract class Getdown extends Thread
      */
     protected int stepToGlobalPercent (int percent)
     {
-        int adjustedMaxPercent = ((_stepMaxPercent - _uiDisplayPercent) * 100) /
-            (100 - _uiDisplayPercent);
+        int adjustedMaxPercent = 
+            ((_stepMaxPercent - _uiDisplayPercent) * 100) / (100 - _uiDisplayPercent);
         _lastGlobalPercent = Math.max(_lastGlobalPercent,
-                _stepMinPercent + (percent * (adjustedMaxPercent - _stepMinPercent)) / 100);
+            _stepMinPercent + (percent * (adjustedMaxPercent - _stepMinPercent)) / 100);
         return _lastGlobalPercent;
     }
 
@@ -1062,15 +1053,14 @@ public abstract class Getdown extends Thread
      * Updates the status. NOTE: this happens on the next UI tick, not immediately.
      */
     protected void setStatusAsync (final String message, final int percent, final long remaining,
-            boolean createUI)
+                                   boolean createUI)
     {
         if (_status == null && createUI) {
             createInterfaceAsync(false);
         }
 
         EventQueue.invokeLater(new Runnable() {
-            public void run ()
-            {
+            public void run () {
                 if (_status == null) {
                     if (message != null) {
                         log.info("Dropping status '" + message + "'.");
@@ -1171,15 +1161,13 @@ public abstract class Getdown extends Thread
     /** Used to fetch a progress report URL. */
     protected class ProgressReporter extends Thread
     {
-        public ProgressReporter (URL url)
-        {
+        public ProgressReporter (URL url) {
             setDaemon(true);
             _url = url;
         }
 
         @Override
-        public void run ()
-        {
+        public void run () {
             try {
                 HttpURLConnection ucon = ConnectionUtil.openHttp(_url, 0, 0);
 
@@ -1196,8 +1184,8 @@ public abstract class Getdown extends Thread
                 ucon.connect();
                 try {
                     if (ucon.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                        log.warning("Failed to report tracking event", "url", _url, "rcode",
-                                ucon.getResponseCode());
+                        log.warning("Failed to report tracking event", 
+                            "url", _url, "rcode", ucon.getResponseCode());
                     }
                 } finally {
                     ucon.disconnect();
@@ -1213,8 +1201,7 @@ public abstract class Getdown extends Thread
 
     /** Used to pass progress on to our user interface. */
     protected ProgressObserver _progobs = new ProgressObserver() {
-        public void progress (int percent)
-        {
+        public void progress (int percent) {
             setStatusAsync(null, stepToGlobalPercent(percent), -1L, false);
         }
     };
