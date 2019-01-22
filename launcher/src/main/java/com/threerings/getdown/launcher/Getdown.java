@@ -16,6 +16,7 @@ import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -305,6 +306,7 @@ public abstract class Getdown extends Thread
 
             _toInstallResources = new HashSet<>();
             _readyToInstall = false;
+            boolean javaInUse = false;
 
             // setStep(Step.START);
             for (int ii = 0; ii < MAX_LOOPS; ii++) {
@@ -361,6 +363,24 @@ public abstract class Getdown extends Thread
                     // download and install the necessary version of java, then loop back again and
                     // reverify everything; if we can't download java; we'll throw an exception
                     log.info("Attempting to update Java VM...");
+                    
+                    Resource vmjar = _app.getJavaVMResource();
+                    if (vmjar != null)
+                    {
+                    	// On Windows some dll files might be locked if the application is still open  
+                    	File javaDll = new File(vmjar.getUnpacked().getAbsolutePath() + File.separator + "java_vm" + File.separator + "bin" + File.separator + "java.dll");
+                    	if (javaDll.exists()) {
+                    		try {
+                    			new FileOutputStream(javaDll).close();
+                    		}
+                    		catch (FileNotFoundException e) {
+                    			log.info("Cannot update Java VM because still in use: " + e.getMessage());
+                    			javaInUse = true;
+                    			continue;
+							}
+                    	}
+                    }
+                    
                     setStep(Step.UPDATE_JAVA);
                     _enableTracking = true; // always track JVM downloads
                     try {
