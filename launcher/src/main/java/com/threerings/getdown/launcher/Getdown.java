@@ -364,22 +364,22 @@ public abstract class Getdown extends Thread
                     // reverify everything; if we can't download java; we'll throw an exception
                     log.info("Attempting to update Java VM...");
                     
-                    Resource vmjar = _app.getJavaVMResource();
-                    if (vmjar != null)
-                    {
-                    	// On Windows some dll files might be locked if the application is still open  
-                    	File javaDll = new File(vmjar.getUnpacked().getAbsolutePath() + File.separator + "java_vm" + File.separator + "bin" + File.separator + "java.dll");
-                    	if (javaDll.exists()) {
-                    		try {
-                    			new FileOutputStream(javaDll).close();
-                    		}
-                    		catch (FileNotFoundException e) {
-                    			log.info("Cannot update Java VM because still in use: " + e.getMessage());
-                    			javaInUse = true;
-                    			continue;
+					Resource vmjar = _app.getJavaVMResource();
+					if (vmjar != null) {
+						// On Windows some dll files might be locked if the
+						// application is still open
+						File javaDll = new File(vmjar.getUnpacked().getAbsolutePath() + File.separator + "java_vm"
+								+ File.separator + "bin" + File.separator + "java.dll");
+						if (javaDll.exists()) {
+							try {
+								new FileOutputStream(javaDll).close();
+							} catch (FileNotFoundException e) {
+								log.info("Cannot update Java VM because still in use: " + e.getMessage());
+								javaInUse = true;
+								continue;
 							}
-                    	}
-                    }
+						}
+					}
                     
                     setStep(Step.UPDATE_JAVA);
                     _enableTracking = true; // always track JVM downloads
