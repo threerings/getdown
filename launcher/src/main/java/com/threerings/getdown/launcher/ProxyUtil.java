@@ -19,6 +19,8 @@ import java.net.URLConnection;
 import java.util.Iterator;
 import java.util.ServiceLoader;
 
+import javax.net.ssl.SSLHandshakeException;
+
 import ca.beq.util.win32.registry.RegistryKey;
 import ca.beq.util.win32.registry.RegistryValue;
 import ca.beq.util.win32.registry.RootKey;
@@ -123,10 +125,13 @@ public class ProxyUtil {
                 // if the appbase is not an HTTP/S URL (like file:), then we don't need a proxy
                 return true;
             }
+        } catch (SSLHandshakeException she) {
+            throw new RuntimeException(she);
         } catch (IOException ioe) {
             log.info("Failed to HEAD " + rurl + ": " + ioe);
             log.info("We probably need a proxy, but auto-detection failed.");
         }
+        
         return false;
     }
 
