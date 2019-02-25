@@ -5,8 +5,14 @@
 
 package com.threerings.getdown.data;
 
-import java.io.*;
+import static com.threerings.getdown.Log.log;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.util.Collections;
 import java.util.Comparator;
@@ -19,8 +25,6 @@ import java.util.jar.JarFile;
 import com.threerings.getdown.util.FileUtil;
 import com.threerings.getdown.util.ProgressObserver;
 import com.threerings.getdown.util.StringUtil;
-
-import static com.threerings.getdown.Log.log;
 
 /**
  * Models a single file resource used by an {@link Application}.
@@ -136,7 +140,7 @@ public class Resource implements Comparable<Resource>
         _local = local;
         _localNew = new File(local.toString() + "_new");
         String lpath = _local.getPath();
-        _marker = new File(lpath + "v");
+        _marker = new File(".getdown", lpath + "v");
 
         _attrs = attrs;
         _isJar = isJar(lpath);
@@ -263,6 +267,7 @@ public class Resource implements Comparable<Resource>
     public void markAsValid ()
         throws IOException
     {
+        Files.createDirectories(_marker.getParentFile().toPath());
         _marker.createNewFile();
     }
 
