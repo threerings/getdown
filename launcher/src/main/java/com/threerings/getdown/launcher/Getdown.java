@@ -270,7 +270,7 @@ public abstract class Getdown extends Thread
                 // and force our UI to be recreated with the updated info
                 createInterfaceAsync(true);
             }
-            if (!_app.lockForUpdates()) {
+            if (!_noUpdate && !_app.lockForUpdates()) {
                 throw new MultipleGetdownRunning();
             }
 
