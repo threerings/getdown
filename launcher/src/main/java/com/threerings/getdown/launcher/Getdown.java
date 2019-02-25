@@ -54,6 +54,7 @@ public abstract class Getdown extends Thread
             // launch, start the application after installing. Otherwise, just install and exit.
             _silent = SysProps.silent();
             if (_silent) {
+                _noUpdate = SysProps.noUpdate();
                 _launchInSilent = SysProps.launchInSilent();
             }
             // If we're running in a headless environment and have not otherwise customized
@@ -305,6 +306,13 @@ public abstract class Getdown extends Thread
 
             _toInstallResources = new HashSet<>();
             _readyToInstall = false;
+
+            // directly start the app with the noupdate flag
+            if (_noUpdate) {
+                log.info("Launching without update!");
+                launch();
+                return;
+            }
 
             // setStep(Step.START);
             for (int ii = 0; ii < MAX_LOOPS; ii++) {
@@ -1041,6 +1049,7 @@ public abstract class Getdown extends Thread
 
     protected boolean _dead;
     protected boolean _silent;
+    protected boolean _noUpdate;
     protected boolean _launchInSilent;
     protected long _startup;
 
