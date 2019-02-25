@@ -5,11 +5,14 @@
 
 package com.threerings.getdown.launcher;
 
-import java.awt.EventQueue;
+import static com.threerings.getdown.Log.log;
+
 import java.awt.Color;
 import java.awt.Container;
-import java.awt.IllegalComponentStateException;
+import java.awt.EventQueue;
 import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.BufferedOutputStream;
@@ -20,7 +23,10 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.AbstractAction;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.KeyStroke;
 import javax.swing.WindowConstants;
 
 import com.samskivert.swing.util.SwingUtil;
@@ -28,7 +34,6 @@ import com.threerings.getdown.data.EnvConfig;
 import com.threerings.getdown.data.SysProps;
 import com.threerings.getdown.util.LaunchUtil;
 import com.threerings.getdown.util.StringUtil;
-import static com.threerings.getdown.Log.log;
 
 /**
  * The main application entry point for Getdown.
@@ -106,6 +111,14 @@ public class GetdownApp
                     _frame.addWindowListener(new WindowAdapter() {
                         @Override
                         public void windowClosing (WindowEvent evt) {
+                            handleWindowClose();
+                        }
+                    });
+                    // handle close on ESC
+                    _frame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                            .put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "Cancel"); //$NON-NLS-1$
+                    _frame.getRootPane().getActionMap().put("Cancel", new AbstractAction() { //$NON-NLS-1$
+                        public void actionPerformed(ActionEvent e) {
                             handleWindowClose();
                         }
                     });
