@@ -5,8 +5,6 @@
 
 package com.threerings.getdown.launcher;
 
-import static com.threerings.getdown.Log.log;
-
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.EventQueue;
@@ -34,6 +32,7 @@ import com.threerings.getdown.data.EnvConfig;
 import com.threerings.getdown.data.SysProps;
 import com.threerings.getdown.util.LaunchUtil;
 import com.threerings.getdown.util.StringUtil;
+import static com.threerings.getdown.Log.log;
 
 /**
  * The main application entry point for Getdown.
@@ -115,10 +114,11 @@ public class GetdownApp
                         }
                     });
                     // handle close on ESC
-                    _frame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
-                            .put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "Cancel"); //$NON-NLS-1$
-                    _frame.getRootPane().getActionMap().put("Cancel", new AbstractAction() { //$NON-NLS-1$
-                        public void actionPerformed(ActionEvent e) {
+                    String cancelId = "Cancel"; // $NON-NLS-1$
+                    _frame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+                        KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), cancelId);
+                    _frame.getRootPane().getActionMap().put(cancelId, new AbstractAction() {
+                        public void actionPerformed (ActionEvent e) {
                             handleWindowClose();
                         }
                     });
