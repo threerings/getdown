@@ -50,32 +50,34 @@ public class SysProps
         return System.getProperty("appbase_override");
     }
 
-    /** If true, Getdown installs the app without ever bringing up a UI, except in the event of an
-      * error. NOTE: it does not launch the app. See {@link #launchInSilent}.
+    /** If true, Getdown installs the app without ever bringing up a UI (except in the event of an
+      * error). NOTE: it does not launch the app. See {@link #launchInSilent}.
       * Usage: {@code -Dsilent}. */
     public static boolean silent () {
         return System.getProperty("silent") != null;
+    }
+
+    /** Instructs Getdown to install/update the app without ever bringing up a UI (except in the
+      * event of an error), and then launch it.
+      * Usage: {@code -Dsilent=launch}. */
+    public static boolean launchInSilent () {
+        return "launch".equals(System.getProperty("silent"));
+    }
+
+    /**
+     * Instructs Getdown to launch the app without updating it, or ever bringing up a UI (except
+     * in the event of an error).
+     * Usage: {@code -Dsilent=noupdate}.
+     */
+    public static boolean noUpdate() {
+        return "noupdate".equals(System.getProperty("silent"));
     }
 
     /** If true, Getdown does not automatically install updates after downloading them. It waits
       * for the application to call `Getdown.install`.
       * Usage: {@code -Dno_install}. */
     public static boolean noInstall () {
-     return System.getProperty("no_install") != null;
-    }
-
-    /**
-     * If true, Getdown launches the app without updating. Usage:
-     * {@code -Dsilent=noupdate}.
-     */
-    public static boolean noUpdate() {
-        return "noupdate".equals(System.getProperty("silent"));
-    }
-
-    /** If true, Getdown installs the app without ever bringing up a UI and then launches it.
-      * Usage: {@code -Dsilent=launch}. */
-    public static boolean launchInSilent () {
-        return "launch".equals(System.getProperty("silent"));
+        return System.getProperty("no_install") != null;
     }
 
     /** Specifies the delay (in minutes) to wait before starting the update and install process.

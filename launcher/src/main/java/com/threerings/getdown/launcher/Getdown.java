@@ -54,8 +54,8 @@ public abstract class Getdown extends Thread
             // launch, start the application after installing. Otherwise, just install and exit.
             _silent = SysProps.silent();
             if (_silent) {
-                _noUpdate = SysProps.noUpdate();
                 _launchInSilent = SysProps.launchInSilent();
+                _noUpdate = SysProps.noUpdate();
             }
             // If we're running in a headless environment and have not otherwise customized
             // silence, operate without a UI and do launch the app.
@@ -257,7 +257,6 @@ public abstract class Getdown extends Thread
      */
     protected void getdown ()
     {
-
         try {
             // first parses our application deployment file
             try {
@@ -293,6 +292,13 @@ public abstract class Getdown extends Thread
                 }
             }
 
+            // if no_update was specified, directly start the app without updating
+            if (_noUpdate) {
+                log.info("Launching without update!");
+                launch();
+                return;
+            }
+
             // we create this tracking counter here so that we properly note the first time through
             // the update process whether we previously had validated resources (which means this
             // is not a first time install); we may, in the course of updating, wipe out our
@@ -306,13 +312,6 @@ public abstract class Getdown extends Thread
 
             _toInstallResources = new HashSet<>();
             _readyToInstall = false;
-
-            // directly start the app with the noupdate flag
-            if (_noUpdate) {
-                log.info("Launching without update!");
-                launch();
-                return;
-            }
 
             // setStep(Step.START);
             for (int ii = 0; ii < MAX_LOOPS; ii++) {
@@ -1049,8 +1048,8 @@ public abstract class Getdown extends Thread
 
     protected boolean _dead;
     protected boolean _silent;
-    protected boolean _noUpdate;
     protected boolean _launchInSilent;
+    protected boolean _noUpdate;
     protected long _startup;
 
     protected Set<Resource> _toInstallResources;
