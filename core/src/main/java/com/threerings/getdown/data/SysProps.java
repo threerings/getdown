@@ -64,6 +64,14 @@ public class SysProps
      return System.getProperty("no_install") != null;
     }
 
+    /**
+     * If true, Getdown launches the app without updating. Usage:
+     * {@code -Dsilent=noupdate}.
+     */
+    public static boolean noUpdate() {
+        return "noupdate".equals(System.getProperty("silent"));
+    }
+
     /** If true, Getdown installs the app without ever bringing up a UI and then launches it.
       * Usage: {@code -Dsilent=launch}. */
     public static boolean launchInSilent () {
