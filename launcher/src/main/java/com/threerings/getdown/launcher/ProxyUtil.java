@@ -5,9 +5,12 @@
 
 package com.threerings.getdown.launcher;
 
+import static com.threerings.getdown.Log.log;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.Authenticator;
 import java.net.HttpURLConnection;
@@ -19,9 +22,9 @@ import java.net.URLConnection;
 import java.util.Iterator;
 import java.util.ServiceLoader;
 
-import ca.beq.util.win32.registry.RegistryKey;
-import ca.beq.util.win32.registry.RegistryValue;
-import ca.beq.util.win32.registry.RootKey;
+import javax.script.Invocable;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 
 import com.threerings.getdown.data.Application;
 import com.threerings.getdown.spi.ProxyAuth;
@@ -30,10 +33,12 @@ import com.threerings.getdown.util.ConnectionUtil;
 import com.threerings.getdown.util.LaunchUtil;
 import com.threerings.getdown.util.StringUtil;
 
-import static com.threerings.getdown.Log.log;
+import ca.beq.util.win32.registry.RegistryKey;
+import ca.beq.util.win32.registry.RegistryValue;
+import ca.beq.util.win32.registry.RootKey;
 
 public class ProxyUtil {
-
+	
     public static boolean autoDetectProxy (Application app)
     {
         String host = null, port = null;
@@ -51,7 +56,7 @@ public class ProxyUtil {
         // check the Windows registry
         if (StringUtil.isBlank(host) && LaunchUtil.isWindows()) {
             try {
-                String rhost = null, rport = null;
+                String rhost = null, rport = null, rpac = null;
                 boolean enabled = false;
                 RegistryKey.initialize();
                 RegistryKey r = new RegistryKey(RootKey.HKEY_CURRENT_USER, PROXY_REGISTRY);
@@ -69,17 +74,39 @@ public class ProxyUtil {
                         }
                         rhost = strval;
                     }
+                    if (value.getName().equals("AutoConfigURL")) {
+                    	rpac = value.getStringValue();                        
+                    }
                 }
-                if (enabled) {
-                    host = rhost;
-                    port = rport;
-                } else {
-                    log.info("Detected no proxy settings in the registry.");
-                }
+                
+                if (!StringUtil.isBlank(rpac)) {
+                	// AutoConfigProxy (proxy PAC)
+                    host = rpac;
+                    String proxy = findProxyForURL(rpac, System.getProperty("appbase"));
+                    if (proxy.startsWith("PROXY ")) {
+                    	proxy = proxy.replace("PROXY ", "");
+                    	int cidx = proxy.indexOf(":");
+                        if (cidx != -1) {
+                        	host = proxy.substring(0, cidx);
+                        	port = proxy.substring(cidx+1);
+                        }
+                    }
+                 } else {
+                	 if (enabled) {
+                		 // ProxyEnable
+                         host = rhost;
+                         port = rport;
+                	 } else {
+                		 //No proxy settings
+                         log.info("Detected no proxy settings in the registry.");
+                     }	 
+                 }
+
             } catch (Throwable t) {
                 log.info("Failed to find proxy settings in Windows registry", "error", t);
             }
         }
+        
 
         // look for a proxy.txt file
         if (StringUtil.isBlank(host)) {
@@ -96,7 +123,28 @@ public class ProxyUtil {
         initProxy(app, host, port, null, null);
         return true;
     }
-
+    
+    
+    
+    private static String findProxyForURL(String upac, Object... args) {
+    	ScriptEngineManager manager = new ScriptEngineManager();
+    	ScriptEngine engine = manager.getEngineByName("javascript");
+    	try {
+    		InputStreamReader isrUtils = new InputStreamReader(ProxyUtil.class.getResourceAsStream("PacUtils.js"));
+    		URL urlPAC = new URL(upac);
+    		Object res=engine.eval(new InputStreamReader(urlPAC.openStream()));
+    		engine.eval(isrUtils);
+			if (engine instanceof Invocable) {
+				Invocable invoke = (Invocable) engine;
+				res = invoke.invokeFunction("FindProxyForURL", args);
+			}
+    		return res.toString();
+    	} catch (Exception e) {
+    		log.error("",e);
+    	}
+    	return null;
+    }
+  
     public static boolean canLoadWithoutProxy (URL rurl)
     {
         log.info("Testing whether proxy is needed, via: " + rurl);
