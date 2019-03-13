@@ -148,6 +148,8 @@ public abstract class Getdown extends Thread
             } else {
                 // create a panel they can use to configure the proxy settings
                 _container = createContainer();
+                // allow them to close the window to abort the proxy configuration
+                _dead = true;
                 configureContainer();
                 ProxyPanel panel = new ProxyPanel(this, _msgs);
                 // set up any existing configured proxy
@@ -155,8 +157,6 @@ public abstract class Getdown extends Thread
                 panel.setProxy(hostPort[0], hostPort[1]);
                 _container.add(panel, BorderLayout.CENTER);
                 showContainer();
-                // allow them to close the window to abort the proxy configuration
-                _dead = true;
             }
 
         } catch (Exception e) {
