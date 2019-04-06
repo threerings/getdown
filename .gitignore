@@ -1,3 +1,9 @@
 /*/target/
 /target/
 core/src/main/java/com/threerings/getdown/data/Build.java
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
