@@ -45,9 +45,8 @@ public class GetdownApp
     public static void main (String[] argv) {
         if (argv.length == 0) {
             // log object should not be used here yet, otherwise it will be initialized incorrectly
-            final String workinDir = new File(".").getAbsolutePath();
-            argv = new String[]{workinDir};
-            System.out.printf("No args passed, running from working dir. [working dir=%s]\n", workinDir);
+            argv = new String[]{"."}; // Getdown will properly resolve it later as a working dir
+            System.out.printf("No args passed, running from working dir.");
         }
         try {
             start(argv);
