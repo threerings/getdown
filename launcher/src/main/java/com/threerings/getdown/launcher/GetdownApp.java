@@ -45,14 +45,9 @@ public class GetdownApp
     public static void main (String[] argv) {
         if (argv.length == 0) {
             // log object should not be used here yet, otherwise it will be initialized incorrectly
-            try {
-                final File jarFile = new File(GetdownApp.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-                String jarDir = jarFile.getParent();
-                argv = new String[]{jarDir};
-                System.out.printf("No args passed, running from current dir. [current dir=%s]\n", jarDir);
-            } catch (Exception e) {
-                System.err.printf("No args passed, failed to fallback to current dir. %s\n", e);
-            }
+            final String workinDir = new File(".").getAbsolutePath();
+            argv = new String[]{workinDir};
+            System.out.printf("No args passed, running from working dir. [working dir=%s]\n", workinDir);
         }
         try {
             start(argv);
