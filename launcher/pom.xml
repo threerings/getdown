@@ -24,11 +24,13 @@
       <groupId>com.threerings.getdown</groupId>
       <artifactId>getdown-core</artifactId>
       <version>${project.version}</version>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>com.samskivert</groupId>
       <artifactId>samskivert</artifactId>
       <version>1.2</version>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>jregistrykey</groupId>
