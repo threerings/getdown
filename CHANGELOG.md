@@ -23,6 +23,13 @@
   credentials supplied by the user. Otherwise they will be requested every time Getdown runs, which
   is not a viable user experience.
 
+* The Getdown window can be now closed by pressing the `ESC` key.
+
+* If no `appdir` is specified via the command line or system property, the current working
+  directory will be used as the `appdir`.
+
+* A basic Russian translation has been added. Thanks @sergiorussia!
+
 ## 1.8.2 - Nov 27, 2018
 
 * Fixed a data corruption bug introduced at last minute into 1.8.1 release. Oops.
