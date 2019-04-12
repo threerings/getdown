@@ -1,6 +1,6 @@
 # Getdown Releases
 
-## 1.8.3 - Unreleased
+## 1.8.3 - Apr 10, 2019
 
 * Added support for `nresource` resources which must be jar files that contain native libraries.
   Prior to launching the application, these resources will be unpacked and their contents added to
