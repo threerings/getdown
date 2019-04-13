@@ -32,8 +32,7 @@ import static com.threerings.getdown.Log.log;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
- * Parses and provide access to the information contained in the <code>getdown.txt</code>
- * configuration file.
+ * Parses and provide access to the information contained in the {@code getdown.txt} configuration file.
  */
 public class Application
 {
@@ -211,10 +210,10 @@ public class Application
      * Used by {@link #verifyMetadata} to communicate status in circumstances where it needs to
      * take network actions.
      */
-    public static interface StatusDisplay
+    public interface StatusDisplay
     {
         /** Requests that the specified status message be displayed. */
-        public void updateStatus (String message);
+        void updateStatus (String message);
     }
 
     /**
@@ -238,13 +237,12 @@ public class Application
     public Proxy proxy = Proxy.NO_PROXY;
 
     /**
-     * Creates an application instance which records the location of the <code>getdown.txt</code>
+     * Creates an application instance which records the location of the {@code getdown.txt}
      * configuration file from the supplied application directory.
-     *
      */
     public Application (EnvConfig envc) {
         _envc = envc;
-        _config = getLocalPath(envc.appDir, CONFIG_FILE);
+        _config = new File(envc.appDir, CONFIG_FILE);
     }
 
     /**
@@ -368,8 +366,7 @@ public class Application
      */
     public List<Resource> getActiveCodeResources ()
     {
-        ArrayList<Resource> codes = new ArrayList<>();
-        codes.addAll(getCodeResources());
+        List<Resource> codes = new ArrayList<>(getCodeResources());
         for (AuxGroup aux : getAuxGroups()) {
             if (isAuxGroupActive(aux.name)) {
                 codes.addAll(aux.codes);
@@ -397,8 +394,7 @@ public class Application
      */
     public List<Resource> getActiveResources ()
     {
-        ArrayList<Resource> rsrcs = new ArrayList<>();
-        rsrcs.addAll(getResources());
+        List<Resource> rsrcs = new ArrayList<>(getResources());
         for (AuxGroup aux : getAuxGroups()) {
             if (isAuxGroupActive(aux.name)) {
                 rsrcs.addAll(aux.rsrcs);
@@ -435,7 +431,15 @@ public class Application
     }
 
     /**
-     * Returns a resource for a zip file containing a Java VM that can be downloaded to use in
+     * @return directory into which a local VM installation should be unpacked.
+     */
+    public File getJavaLocalDir ()
+    {
+        return _javaLocalDir;
+    }
+
+    /**
+     * @return a resource for a zip file containing a Java VM that can be downloaded to use in
      * place of the installed VM (in the case where the VM that launched Getdown does not meet the
      * application's version requirements) or null if no VM is available for this platform.
      */
@@ -445,7 +449,7 @@ public class Application
             return null;
         }
 
-        String vmfile = LaunchUtil.LOCAL_JAVA_DIR + ".jar";
+        String vmfile = _javaLocalDir.getName() + ".jar";
         try {
             URL remote = new URL(createVAppBase(_targetVersion), encodePath(_javaLocation));
             return new Resource(vmfile, remote, getLocalPath(vmfile),
@@ -591,7 +595,7 @@ public class Application
             _vappbase = createVAppBase(_version);
         } catch (MalformedURLException mue) {
             String err = MessageUtil.tcompose("m.invalid_appbase", _appbase);
-            throw (IOException) new IOException(err).initCause(mue);
+            throw new IOException(err, mue);
         }
 
         // check for a latest config URL
@@ -644,6 +648,9 @@ public class Application
         if (javaloc instanceof String) {
             _javaLocation = (String)javaloc;
         }
+
+        // used only in conjunction with java_location
+        _javaLocalDir = getLocalPath(config.getString("java_local_dir", LaunchUtil.LOCAL_JAVA_DIR));
 
         // determine whether we have any tracking configuration
         _trackingURL = config.getString("tracking_url");
@@ -753,7 +760,7 @@ public class Application
     /**
      * Adds strings of the form pair0=pair1 to collector for each pair parsed out of pairLocation.
      */
-    protected void fillAssignmentListFromPairs (String pairLocation, List<String> collector)
+    protected void fillAssignmentListFromPairs (String pairLocation, Collection<String> collector)
     {
         File pairFile = getLocalPath(pairLocation);
         if (pairFile.exists()) {
@@ -787,7 +794,7 @@ public class Application
      */
     public File getLocalPath (String path)
     {
-        return getLocalPath(getAppDir(), path);
+        return new File(getAppDir(), path);
     }
 
     /**
@@ -810,8 +817,7 @@ public class Application
             // if we have an unpacked VM, check the 'release' file for its version
             Resource vmjar = getJavaVMResource();
             if (vmjar != null && vmjar.isMarkedValid()) {
-                File vmdir = new File(getAppDir(), LaunchUtil.LOCAL_JAVA_DIR);
-                File relfile = new File(vmdir, "release");
+                File relfile = new File(_javaLocalDir, "release");
                 if (!relfile.exists()) {
                     log.warning("Unpacked JVM missing 'release' file. Assuming valid version.");
                     return true;
@@ -868,7 +874,7 @@ public class Application
     }
 
     /**
-     * Attempts to redownload the <code>getdown.txt</code> file based on information parsed from a
+     * Attempts to redownload the {@code getdown.txt} file based on information parsed from a
      * previous call to {@link #init}.
      */
     public void attemptRecovery (StatusDisplay status)
@@ -879,7 +885,7 @@ public class Application
     }
 
     /**
-     * Downloads and replaces the <code>getdown.txt</code> and <code>digest.txt</code> files with
+     * Downloads and replaces the {@code getdown.txt} and {@code digest.txt} files with
      * those for the target version of our application.
      */
     public void updateMetadata ()
@@ -890,7 +896,7 @@ public class Application
             _vappbase = createVAppBase(_targetVersion);
         } catch (MalformedURLException mue) {
             String err = MessageUtil.tcompose("m.invalid_appbase", _appbase);
-            throw (IOException) new IOException(err).initCause(mue);
+            throw new IOException(err, mue);
         }
 
         try {
@@ -926,10 +932,10 @@ public class Application
     public Process createProcess (boolean optimum)
         throws IOException
     {
-        ArrayList<String> args = new ArrayList<>();
+        List<String> args = new ArrayList<>();
 
         // reconstruct the path to the JVM
-        args.add(LaunchUtil.getJVMPath(getAppDir(), _windebug || optimum));
+        args.add(LaunchUtil.getJVMBinaryPath(_javaLocalDir, _windebug || optimum));
 
         // check whether we're using -jar mode or -classpath mode
         boolean dashJarMode = MANIFEST_CLASS.equals(_class);
@@ -1126,8 +1132,8 @@ public class Application
     }
 
     /**
-     * Loads the <code>digest.txt</code> file and verifies the contents of both that file and the
-     * <code>getdown.text</code> file. Then it loads the <code>version.txt</code> and decides
+     * Loads the {@code digest.txt} file and verifies the contents of both that file and the
+     * {@code getdown.text} file. Then it loads the {@code version.txt} and decides
      * whether or not the application needs to be updated or whether we can proceed to verification
      * and execution.
      *
@@ -1421,7 +1427,7 @@ public class Application
     protected URL createVAppBase (long version)
         throws MalformedURLException
     {
-        String url = version < 0 ? _appbase : _appbase.replace("%VERSION%", "" + version);
+        String url = version < 0 ? _appbase : _appbase.replace("%VERSION%", String.valueOf(version));
         return HostWhitelist.verify(new URL(url));
     }
 
@@ -1546,7 +1552,6 @@ public class Application
 
                         if (!sig.verify(Base64.decode(signature, Base64.DEFAULT))) {
                             log.info("Signature does not match", "cert", cert.getPublicKey());
-                            continue;
                         } else {
                             log.info("Signature matches", "cert", cert.getPublicKey());
                             validated++;
@@ -1592,7 +1597,7 @@ public class Application
         } catch (Exception e) {
             log.warning("Requested to download invalid control file",
                 "appbase", _vappbase, "path", path, "error", e);
-            throw (IOException) new IOException("Invalid path '" + path + "'.").initCause(e);
+            throw new IOException("Invalid path '" + path + "'.", e);
         }
 
         log.info("Attempting to refetch '" + path + "' from '" + targetURL + "'.");
@@ -1627,11 +1632,9 @@ public class Application
     }
 
     /** Helper function to add all values in {@code values} (if non-null) to {@code target}. */
-    protected static void addAll (String[] values, List<String> target) {
+    protected static void addAll (String[] values, Collection<String> target) {
         if (values != null) {
-            for (String value : values) {
-                target.add(value);
-            }
+            Collections.addAll(target, values);
         }
     }
 
@@ -1713,11 +1716,6 @@ public class Application
         }
     }
 
-    protected File getLocalPath (File appdir, String path)
-    {
-        return new File(appdir, path);
-    }
-
     protected final EnvConfig _envc;
     protected File _config;
     protected Digest _digest;
@@ -1749,6 +1747,7 @@ public class Application
     protected long _javaMinVersion, _javaMaxVersion;
     protected boolean _javaExactVersionRequired;
     protected String _javaLocation;
+    protected File _javaLocalDir;
 
     protected List<Resource> _codes = new ArrayList<>();
     protected List<Resource> _resources = new ArrayList<>();
@@ -1765,9 +1764,6 @@ public class Application
     protected String[] _optimumJvmArgs;
 
     protected List<String> _txtJvmArgs = new ArrayList<>();
-
-    /** If a warning has been issued about not being able to set modtimes. */
-    protected boolean _warnedAboutSetLastModified;
 
     /** Locks gettingdown.lock in the app dir. Held the entire time updating is going on.*/
     protected FileLock _lock;

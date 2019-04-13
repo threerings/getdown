@@ -75,7 +75,7 @@ public abstract class Getdown extends Thread
             // welcome to hell, where java can't cope with a classpath that contains jars that live
             // in a directory that contains a !, at least the same bug happens on all platforms
             String dir = envc.appDir.toString();
-            if (dir.equals(".")) {
+            if (".".equals(dir)) {
                 dir = System.getProperty("user.dir");
             }
             String errmsg = "The directory in which this application is installed:\n" + dir +
@@ -130,7 +130,7 @@ public abstract class Getdown extends Thread
         File instdir = _app.getLocalPath("");
         if (!instdir.canWrite()) {
             String path = instdir.getPath();
-            if (path.equals(".")) {
+            if (".".equals(path)) {
                 path = System.getProperty("user.dir");
             }
             fail(MessageUtil.tcompose("m.readonly_error", path));
@@ -161,20 +161,7 @@ public abstract class Getdown extends Thread
 
         } catch (Exception e) {
             log.warning("run() failed.", e);
-            String msg = e.getMessage();
-            if (msg == null) {
-                msg = MessageUtil.compose("m.unknown_error", _ifc.installError);
-            } else if (!msg.startsWith("m.")) {
-                // try to do something sensible based on the type of error
-                if (e instanceof FileNotFoundException) {
-                    msg = MessageUtil.compose(
-                        "m.missing_resource", MessageUtil.taint(msg), _ifc.installError);
-                } else {
-                    msg = MessageUtil.compose(
-                        "m.init_error", MessageUtil.taint(msg), _ifc.installError);
-                }
-            }
-            fail(msg);
+            fail(e);
         }
     }
 
@@ -423,22 +410,7 @@ public abstract class Getdown extends Thread
 
         } catch (Exception e) {
             log.warning("getdown() failed.", e);
-            String msg = e.getMessage();
-            if (msg == null) {
-                msg = MessageUtil.compose("m.unknown_error", _ifc.installError);
-            } else if (!msg.startsWith("m.")) {
-                // try to do something sensible based on the type of error
-                if (e instanceof FileNotFoundException) {
-                    msg = MessageUtil.compose(
-                        "m.missing_resource", MessageUtil.taint(msg), _ifc.installError);
-                } else {
-                    msg = MessageUtil.compose(
-                        "m.init_error", MessageUtil.taint(msg), _ifc.installError);
-                }
-            }
-            // Since we're dead, clear off the 'time remaining' label along with displaying the
-            // error message
-            fail(msg);
+            fail(e);
             _app.releaseLock();
         }
     }
@@ -507,13 +479,13 @@ public abstract class Getdown extends Thread
         vmjar.install(true);
 
         // these only run on non-Windows platforms, so we use Unix file separators
-        String localJavaDir = LaunchUtil.LOCAL_JAVA_DIR + "/";
-        FileUtil.makeExecutable(_app.getLocalPath(localJavaDir + "bin/java"));
-        FileUtil.makeExecutable(_app.getLocalPath(localJavaDir + "lib/jspawnhelper"));
-        FileUtil.makeExecutable(_app.getLocalPath(localJavaDir + "lib/amd64/jspawnhelper"));
+        File javaLocalDir = _app.getJavaLocalDir();
+        FileUtil.makeExecutable(new File(javaLocalDir, "bin/java"));
+        FileUtil.makeExecutable(new File(javaLocalDir, "lib/jspawnhelper"));
+        FileUtil.makeExecutable(new File(javaLocalDir, "lib/amd64/jspawnhelper"));
 
         // lastly regenerate the .jsa dump file that helps Java to start up faster
-        String vmpath = LaunchUtil.getJVMPath(_app.getLocalPath(""));
+        String vmpath = LaunchUtil.getJVMBinaryPath(javaLocalDir, false);
         try {
             log.info("Regenerating classes.jsa for " + vmpath + "...");
             Runtime.getRuntime().exec(vmpath + " -Xshare:dump");
@@ -836,8 +808,23 @@ public abstract class Getdown extends Thread
         }
     }
 
+    private void fail(Exception e) {
+        String msg = e.getMessage();
+        if (msg == null) {
+            msg = MessageUtil.compose("m.unknown_error", _ifc.installError);
+        } else if (!msg.startsWith("m.")) {
+            // try to do something sensible based on the type of error
+            if (e instanceof FileNotFoundException) {
+                msg = MessageUtil.compose("m.missing_resource", MessageUtil.taint(msg), _ifc.installError);
+            } else {
+                msg = MessageUtil.compose("m.init_error", MessageUtil.taint(msg), _ifc.installError);
+            }
+        }
+        fail(msg);
+    }
+
     /**
-     * Update the status to indicate getdown has failed for the reason in <code>message</code>.
+     * Update the status to indicate getdown has failed for the reason in {@code message}.
      */
     protected void fail (String message)
     {

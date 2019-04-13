@@ -17,21 +17,22 @@ import static com.threerings.getdown.Log.log;
  * Useful routines for launching Java applications from within other Java
  * applications.
  */
-public class LaunchUtil
+public final class LaunchUtil
 {
-    /** The directory into which a local VM installation should be unpacked. */
+    /** The default directory into which a local VM installation should be unpacked. */
     public static final String LOCAL_JAVA_DIR = "java_vm";
 
     /**
-     * Writes a <code>version.txt</code> file into the specified application directory and
+     * Writes a {@code version.txt} file into the specified application directory and
      * attempts to relaunch Getdown in that directory which will cause it to upgrade to the newly
      * specified version and relaunch the application.
      *
      * @param appdir the directory in which the application is installed.
      * @param getdownJarName the name of the getdown jar file in the application directory. This is
-     * probably <code>getdown-pro.jar</code> or <code>getdown-retro-pro.jar</code> if you are using
+     * probably {@code getdown-pro.jar} or <code>getdown-retro-pro.jar</code> if you are using
      * the results of the standard build.
      * @param newVersion the new version to which Getdown will update when it is executed.
+     * @param javaLocalDir JRE location within appdir, falls back to {@link #LOCAL_JAVA_DIR} in case if null is passed
      *
      * @return true if the relaunch succeeded, false if we were unable to relaunch due to being on
      * Windows 9x where we cannot launch subprocesses without waiting around for them to exit,
@@ -39,13 +40,13 @@ public class LaunchUtil
      * after making this call as it will be upgraded and restarted. If false is returned, the
      * application should tell the user that they must restart the application manually.
      *
-     * @exception IOException thrown if we were unable to create the <code>version.txt</code> file
+     * @exception IOException thrown if we were unable to create the {@code version.txt} file
      * in the supplied application directory. If the version.txt file cannot be created, restarting
      * Getdown will not cause the application to be upgraded, so the application will have to
      * resort to telling the user that it is in a bad way.
      */
     public static boolean updateVersionAndRelaunch (
-            File appdir, String getdownJarName, String newVersion)
+            File appdir, String getdownJarName, String newVersion, String javaLocalDir)
         throws IOException
     {
         // create the file that instructs Getdown to upgrade
@@ -61,8 +62,11 @@ public class LaunchUtil
         }
 
         // do the deed
-        String[] args = new String[] {
-            getJVMPath(appdir), "-jar", pro.toString(), appdir.getPath()
+        String[] args = {
+            getJVMBinaryPath(new File(appdir, StringUtil.isBlank(javaLocalDir) ? LOCAL_JAVA_DIR : javaLocalDir), false),
+            "-jar",
+            pro.toString(),
+            appdir.getPath()
         };
         log.info("Running " + StringUtil.join(args, "\n  "));
         try {
@@ -75,22 +79,14 @@ public class LaunchUtil
     }
 
     /**
-     * Reconstructs the path to the JVM used to launch this process.
-     */
-    public static String getJVMPath (File appdir)
-    {
-        return getJVMPath(appdir, false);
-    }
-
-    /**
-     * Reconstructs the path to the JVM used to launch this process.
-     *
+     * @param javaLocalDir JRE location within appdir
      * @param windebug if true we will use java.exe instead of javaw.exe on Windows.
+     * @return the path to the JVM binary used to launch this process.
      */
-    public static String getJVMPath (File appdir, boolean windebug)
+    public static String getJVMBinaryPath(File javaLocalDir, boolean windebug)
     {
         // first look in our application directory for an installed VM
-        String vmpath = checkJVMPath(new File(appdir, LOCAL_JAVA_DIR).getAbsolutePath(), windebug);
+        String vmpath = checkJVMPath(javaLocalDir.getAbsolutePath(), windebug);
 
         // then fall back to the VM in which we're already running
         if (vmpath == null) {
@@ -99,7 +95,7 @@ public class LaunchUtil
 
         // then throw up our hands and hope for the best
         if (vmpath == null) {
-            log.warning("Unable to find java [appdir=" + appdir +
+            log.warning("Unable to find java [javaLocalDir=" + javaLocalDir +
                         ", java.home=" + System.getProperty("java.home") + "]!");
             vmpath = "java";
         }
@@ -150,8 +146,7 @@ public class LaunchUtil
             if (newgd.renameTo(curgd)) {
                 FileUtil.deleteHarder(oldgd); // yay!
                 try {
-                    // copy the moved file back to getdown-dop-new.jar so that we don't end up
-                    // downloading another copy next time
+                    // copy the moved file back to newgd so that we don't end up downloading another copy next time
                     FileUtil.copy(curgd, newgd);
                 } catch (IOException e) {
                     log.warning("Error copying updated Getdown back: " + e);
@@ -182,23 +177,23 @@ public class LaunchUtil
     public static boolean mustMonitorChildren ()
     {
         String osname = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
-        return (osname.indexOf("windows 98") != -1 || osname.indexOf("windows me") != -1);
+        return osname.contains("windows 98") || osname.contains("windows me");
     }
 
     /**
      * Returns true if we're running in a JVM that identifies its operating system as Windows.
      */
-    public static final boolean isWindows () { return _isWindows; }
+    public static boolean isWindows () { return _isWindows; }
 
     /**
      * Returns true if we're running in a JVM that identifies its operating system as MacOS.
      */
-    public static final boolean isMacOS () { return _isMacOS; }
+    public static boolean isMacOS () { return _isMacOS; }
 
     /**
      * Returns true if we're running in a JVM that identifies its operating system as Linux.
      */
-    public static final boolean isLinux () { return _isLinux; }
+    public static boolean isLinux () { return _isLinux; }
 
     /**
      * Checks whether a Java Virtual Machine can be located in the supplied path.
@@ -236,11 +231,10 @@ public class LaunchUtil
     static {
         try {
             String osname = System.getProperty("os.name");
-            osname = (osname == null) ? "" : osname;
-            _isWindows = (osname.indexOf("Windows") != -1);
-            _isMacOS = (osname.indexOf("Mac OS") != -1 ||
-                        osname.indexOf("MacOS") != -1);
-            _isLinux = (osname.indexOf("Linux") != -1);
+            osname = osname == null ? "" : osname;
+            _isWindows = osname.contains("Windows");
+            _isMacOS = osname.contains("Mac OS") || osname.contains("MacOS");
+            _isLinux = osname.contains("Linux");
         } catch (Exception e) {
             // can't grab system properties; we'll just pretend we're not on any of these OSes
         }

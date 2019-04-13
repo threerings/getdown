@@ -237,7 +237,7 @@ public class Config
      */
     public String getString (String name, String def) {
         String value = (String)_data.get(name);
-        return value == null ? def : value;
+        return StringUtil.isBlank(value) ? def : value;
     }
 
     /**
