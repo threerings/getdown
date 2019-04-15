@@ -75,7 +75,7 @@ public abstract class Getdown extends Thread
             // welcome to hell, where java can't cope with a classpath that contains jars that live
             // in a directory that contains a !, at least the same bug happens on all platforms
             String dir = envc.appDir.toString();
-            if (".".equals(dir)) {
+            if (dir.equals(".")) {
                 dir = System.getProperty("user.dir");
             }
             String errmsg = "The directory in which this application is installed:\n" + dir +
@@ -130,7 +130,7 @@ public abstract class Getdown extends Thread
         File instdir = _app.getLocalPath("");
         if (!instdir.canWrite()) {
             String path = instdir.getPath();
-            if (".".equals(path)) {
+            if (path.equals(".")) {
                 path = System.getProperty("user.dir");
             }
             fail(MessageUtil.tcompose("m.readonly_error", path));
@@ -824,7 +824,7 @@ public abstract class Getdown extends Thread
     }
 
     /**
-     * Update the status to indicate getdown has failed for the reason in {@code message}.
+     * Update the status to indicate getdown has failed for the reason in <code>message</code>.
      */
     protected void fail (String message)
     {

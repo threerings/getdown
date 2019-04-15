@@ -32,7 +32,8 @@ import static com.threerings.getdown.Log.log;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
- * Parses and provide access to the information contained in the {@code getdown.txt} configuration file.
+ * Parses and provide access to the information contained in the <code>getdown.txt</code>
+ * configuration file.
  */
 public class Application
 {
@@ -449,7 +450,9 @@ public class Application
             return null;
         }
 
-        String vmfile = _javaLocalDir.getName() + ".jar";
+        // take extension from java location
+        String vmfileExt = _javaLocation.substring(_javaLocation.lastIndexOf('.'));
+        String vmfile = _javaLocalDir.getName() + vmfileExt;
         try {
             URL remote = new URL(createVAppBase(_targetVersion), encodePath(_javaLocation));
             return new Resource(vmfile, remote, getLocalPath(vmfile),
@@ -874,7 +877,7 @@ public class Application
     }
 
     /**
-     * Attempts to redownload the {@code getdown.txt} file based on information parsed from a
+     * Attempts to redownload the <code>getdown.txt</code> file based on information parsed from a
      * previous call to {@link #init}.
      */
     public void attemptRecovery (StatusDisplay status)
@@ -885,7 +888,7 @@ public class Application
     }
 
     /**
-     * Downloads and replaces the {@code getdown.txt} and {@code digest.txt} files with
+     * Downloads and replaces the <code>getdown.txt</code> and <code>digest.txt</code> files with
      * those for the target version of our application.
      */
     public void updateMetadata ()
@@ -932,7 +935,7 @@ public class Application
     public Process createProcess (boolean optimum)
         throws IOException
     {
-        List<String> args = new ArrayList<>();
+        ArrayList<String> args = new ArrayList<>();
 
         // reconstruct the path to the JVM
         args.add(LaunchUtil.getJVMBinaryPath(_javaLocalDir, _windebug || optimum));
@@ -1132,8 +1135,8 @@ public class Application
     }
 
     /**
-     * Loads the {@code digest.txt} file and verifies the contents of both that file and the
-     * {@code getdown.text} file. Then it loads the {@code version.txt} and decides
+     * Loads the <code>digest.txt</code> file and verifies the contents of both that file and the
+     * <code>getdown.text</code> file. Then it loads the <code>version.txt</code> and decides
      * whether or not the application needs to be updated or whether we can proceed to verification
      * and execution.
      *
@@ -1552,6 +1555,7 @@ public class Application
 
                         if (!sig.verify(Base64.decode(signature, Base64.DEFAULT))) {
                             log.info("Signature does not match", "cert", cert.getPublicKey());
+                            continue;
                         } else {
                             log.info("Signature matches", "cert", cert.getPublicKey());
                             validated++;
