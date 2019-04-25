@@ -70,7 +70,7 @@ public abstract class Getdown extends Thread
             // recovering from a security failure
         }
         try {
-            _msgs = ResourceBundle.getBundle("com.threerings.getdown.messages");
+            _msgs = ResourceBundle.getBundle("com.threerings.getdown.messages",  new UTFControl());
         } catch (Exception e) {
             // welcome to hell, where java can't cope with a classpath that contains jars that live
             // in a directory that contains a !, at least the same bug happens on all platforms
