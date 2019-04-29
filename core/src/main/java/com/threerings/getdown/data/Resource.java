@@ -5,7 +5,10 @@
 
 package com.threerings.getdown.data;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.util.Collections;
@@ -13,13 +16,12 @@ import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import com.threerings.getdown.util.FileUtil;
 import com.threerings.getdown.util.ProgressObserver;
 import com.threerings.getdown.util.StringUtil;
-
 import static com.threerings.getdown.Log.log;
 
 /**
@@ -66,23 +68,22 @@ public class Resource implements Comparable<Resource>
         // if this is a jar, we need to compute the digest in a "timestamp and file order" agnostic
         // manner to properly correlate jardiff patched jars with their unpatched originals
         if (isJar || isPacked200Jar){
-            File tmpJarFile = null;
-            JarFile jar = null;
+            ZipFile jar = null;
             try {
                 // if this is a compressed jar file, uncompress it to compute the jar file digest
                 if (isPacked200Jar){
-                    tmpJarFile = new File(target.getPath() + ".tmp");
-                    FileUtil.unpackPacked200Jar(target, tmpJarFile);
-                    jar = new JarFile(tmpJarFile);
+                    File tmpJarFile = new File(target.getPath() + ".tmp");
+                    tmpJarFile.deleteOnExit();
+                    jar = FileUtil.unpackPacked200Jar(target, tmpJarFile);
                 } else{
-                    jar = new JarFile(target);
+                    jar = new ZipFile(target);
                 }
 
-                List<JarEntry> entries = Collections.list(jar.entries());
+                List<? extends ZipEntry> entries = Collections.list(jar.entries());
                 Collections.sort(entries, ENTRY_COMP);
 
                 int eidx = 0;
-                for (JarEntry entry : entries) {
+                for (ZipEntry entry : entries) {
                     // old versions of the digest code skipped metadata
                     if (version < 2) {
                         if (entry.getName().startsWith("META-INF")) {
@@ -107,9 +108,6 @@ public class Resource implements Comparable<Resource>
                     } catch (IOException ioe) {
                         log.warning("Error closing jar", "path", target, "jar", jar, "error", ioe);
                     }
-                }
-                if (tmpJarFile != null) {
-                    FileUtil.deleteHarder(tmpJarFile);
                 }
             }
 
@@ -302,7 +300,7 @@ public class Resource implements Comparable<Resource>
             throw new IOException("Requested to unpack non-jar file '" + _local + "'.");
         }
         if (_isJar) {
-            try (JarFile jar = new JarFile(_local)) {
+            try (ZipFile jar = new ZipFile(_local)) {
                 FileUtil.unpackJar(jar, _unpacked, _attrs.contains(Attr.CLEAN));
             }
         } else {
@@ -341,11 +339,7 @@ public class Resource implements Comparable<Resource>
 
     @Override public boolean equals (Object other)
     {
-        if (other instanceof Resource) {
-            return _path.equals(((Resource)other)._path);
-        } else {
-            return false;
-        }
+        return other instanceof Resource && _path.equals(((Resource) other)._path);
     }
 
     @Override public int hashCode ()
@@ -368,7 +362,7 @@ public class Resource implements Comparable<Resource>
 
     protected static boolean isJar (String path)
     {
-        return path.endsWith(".jar") || path.endsWith(".jar_new");
+        return path.endsWith(".jar") || path.endsWith(".jar_new") || path.endsWith(".zip");
     }
 
     protected static boolean isPacked200Jar (String path)
@@ -384,8 +378,8 @@ public class Resource implements Comparable<Resource>
     protected boolean _isJar, _isPacked200Jar;
 
     /** Used to sort the entries in a jar file. */
-    protected static final Comparator<JarEntry> ENTRY_COMP = new Comparator<JarEntry>() {
-        @Override public int compare (JarEntry e1, JarEntry e2) {
+    protected static final Comparator<ZipEntry> ENTRY_COMP = new Comparator<ZipEntry>() {
+        @Override public int compare (ZipEntry e1, ZipEntry e2) {
             return e1.getName().compareTo(e2.getName());
         }
     };

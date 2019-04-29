@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.jar.JarFile;
+import java.util.zip.ZipFile;
 
 import com.threerings.getdown.cache.GarbageCollector;
 import com.threerings.getdown.cache.ResourceCache;
@@ -112,7 +112,7 @@ public class PathBuilder
 
             if (!unpackedIndicator.exists()) {
                 try {
-                    FileUtil.unpackJar(new JarFile(cachedFile), cachedParent, false);
+                    FileUtil.unpackJar(new ZipFile(cachedFile), cachedParent, false);
                     unpackedIndicator.createNewFile();
                 } catch (IOException ioe) {
                     log.warning("Failed to unpack native jar",
