@@ -84,8 +84,8 @@ You can also:
 
 ## Migrating from Getdown 1.7 to Getdown 1.8
 
-See [this document](https://github.com/threerings/getdown/wiki/Migrate17to18) on the changes needed
-to migrate from Getdown 1.7 to 1.8.
+See [this document](https://github.com/threerings/getdown/wiki/Migrating-from-1.7-to-1.8) on the
+changes needed to migrate from Getdown 1.7 to 1.8.
 
 ## Building
 

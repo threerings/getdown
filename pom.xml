@@ -10,7 +10,7 @@
   <groupId>com.threerings.getdown</groupId>
   <artifactId>getdown</artifactId>
   <packaging>pom</packaging>
-  <version>1.8.3-SNAPSHOT</version>
+  <version>1.8.4-SNAPSHOT</version>
 
   <name>getdown</name>
   <description>An application installer and updater.</description>
@@ -34,6 +34,10 @@
       <email>mdb@samskivert.com</email>
     </developer>
   </developers>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
 
   <scm>
     <connection>scm:git:git://github.com/threerings/getdown.git</connection>
@@ -88,9 +92,6 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-resources-plugin</artifactId>
           <version>3.0.2</version>
-          <configuration>
-            <encoding>UTF-8</encoding>
-          </configuration>
         </plugin>
 
         <plugin>

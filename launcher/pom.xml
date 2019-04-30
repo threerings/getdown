@@ -4,7 +4,7 @@
   <parent>
     <groupId>com.threerings.getdown</groupId>
     <artifactId>getdown</artifactId>
-    <version>1.8.3-SNAPSHOT</version>
+    <version>1.8.4-SNAPSHOT</version>
   </parent>
 
   <artifactId>getdown-launcher</artifactId>
@@ -24,11 +24,13 @@
       <groupId>com.threerings.getdown</groupId>
       <artifactId>getdown-core</artifactId>
       <version>${project.version}</version>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>com.samskivert</groupId>
       <artifactId>samskivert</artifactId>
       <version>1.2</version>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>jregistrykey</groupId>
@@ -41,14 +43,36 @@
   <build>
     <plugins>
       <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>native2ascii-maven-plugin</artifactId>
+        <version>2.0.1</version>
+        <executions>
+          <execution>
+            <id>utf8-to-latin1</id>
+            <goals>
+              <goal>inplace</goal>
+            </goals>
+            <phase>process-resources</phase>
+            <configuration>
+              <dir>${project.build.outputDirectory}</dir>
+              <encoding>${project.build.sourceEncoding}</encoding>
+              <includes>
+                <include>**/*.properties</include>
+              </includes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
         <groupId>com.github.wvengen</groupId>
         <artifactId>proguard-maven-plugin</artifactId>
         <version>2.0.14</version>
         <executions>
-         <execution>
-           <phase>package</phase>
+          <execution>
+            <phase>package</phase>
             <goals><goal>proguard</goal></goals>
-         </execution>
+          </execution>
         </executions>
         <dependencies>
           <dependency>
