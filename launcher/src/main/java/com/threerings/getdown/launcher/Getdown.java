@@ -161,7 +161,20 @@ public abstract class Getdown extends Thread
 
         } catch (Exception e) {
             log.warning("run() failed.", e);
-            fail(e);
+            String msg = e.getMessage();
+            if (msg == null) {
+                msg = MessageUtil.compose("m.unknown_error", _ifc.installError);
+            } else if (!msg.startsWith("m.")) {
+                // try to do something sensible based on the type of error
+                if (e instanceof FileNotFoundException) {
+                    msg = MessageUtil.compose(
+                        "m.missing_resource", MessageUtil.taint(msg), _ifc.installError);
+                } else {
+                    msg = MessageUtil.compose(
+                        "m.init_error", MessageUtil.taint(msg), _ifc.installError);
+                }
+            }
+            fail(msg);
         }
     }
 
@@ -410,7 +423,22 @@ public abstract class Getdown extends Thread
 
         } catch (Exception e) {
             log.warning("getdown() failed.", e);
-            fail(e);
+            String msg = e.getMessage();
+            if (msg == null) {
+                msg = MessageUtil.compose("m.unknown_error", _ifc.installError);
+            } else if (!msg.startsWith("m.")) {
+                // try to do something sensible based on the type of error
+                if (e instanceof FileNotFoundException) {
+                    msg = MessageUtil.compose(
+                        "m.missing_resource", MessageUtil.taint(msg), _ifc.installError);
+                } else {
+                    msg = MessageUtil.compose(
+                        "m.init_error", MessageUtil.taint(msg), _ifc.installError);
+                }
+            }
+            // Since we're dead, clear off the 'time remaining' label along with displaying the
+            // error message
+            fail(msg);
             _app.releaseLock();
         }
     }
@@ -806,21 +834,6 @@ public abstract class Getdown extends Thread
             _abort.setState(JFrame.NORMAL);
             _abort.requestFocus();
         }
-    }
-
-    private void fail(Exception e) {
-        String msg = e.getMessage();
-        if (msg == null) {
-            msg = MessageUtil.compose("m.unknown_error", _ifc.installError);
-        } else if (!msg.startsWith("m.")) {
-            // try to do something sensible based on the type of error
-            if (e instanceof FileNotFoundException) {
-                msg = MessageUtil.compose("m.missing_resource", MessageUtil.taint(msg), _ifc.installError);
-            } else {
-                msg = MessageUtil.compose("m.init_error", MessageUtil.taint(msg), _ifc.installError);
-            }
-        }
-        fail(msg);
     }
 
     /**

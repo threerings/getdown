@@ -211,10 +211,10 @@ public class Application
      * Used by {@link #verifyMetadata} to communicate status in circumstances where it needs to
      * take network actions.
      */
-    public interface StatusDisplay
+    public static interface StatusDisplay
     {
         /** Requests that the specified status message be displayed. */
-        void updateStatus (String message);
+        public void updateStatus (String message);
     }
 
     /**
@@ -238,8 +238,9 @@ public class Application
     public Proxy proxy = Proxy.NO_PROXY;
 
     /**
-     * Creates an application instance which records the location of the {@code getdown.txt}
+     * Creates an application instance which records the location of the <code>getdown.txt</code>
      * configuration file from the supplied application directory.
+     *
      */
     public Application (EnvConfig envc) {
         _envc = envc;
@@ -367,7 +368,8 @@ public class Application
      */
     public List<Resource> getActiveCodeResources ()
     {
-        List<Resource> codes = new ArrayList<>(getCodeResources());
+        ArrayList<Resource> codes = new ArrayList<>();
+        codes.addAll(getCodeResources());
         for (AuxGroup aux : getAuxGroups()) {
             if (isAuxGroupActive(aux.name)) {
                 codes.addAll(aux.codes);
@@ -395,7 +397,8 @@ public class Application
      */
     public List<Resource> getActiveResources ()
     {
-        List<Resource> rsrcs = new ArrayList<>(getResources());
+        ArrayList<Resource> rsrcs = new ArrayList<>();
+        rsrcs.addAll(getResources());
         for (AuxGroup aux : getAuxGroups()) {
             if (isAuxGroupActive(aux.name)) {
                 rsrcs.addAll(aux.rsrcs);
@@ -598,7 +601,7 @@ public class Application
             _vappbase = createVAppBase(_version);
         } catch (MalformedURLException mue) {
             String err = MessageUtil.tcompose("m.invalid_appbase", _appbase);
-            throw new IOException(err, mue);
+            throw (IOException) new IOException(err).initCause(mue);
         }
 
         // check for a latest config URL
@@ -763,7 +766,7 @@ public class Application
     /**
      * Adds strings of the form pair0=pair1 to collector for each pair parsed out of pairLocation.
      */
-    protected void fillAssignmentListFromPairs (String pairLocation, Collection<String> collector)
+    protected void fillAssignmentListFromPairs (String pairLocation, List<String> collector)
     {
         File pairFile = getLocalPath(pairLocation);
         if (pairFile.exists()) {
@@ -899,7 +902,7 @@ public class Application
             _vappbase = createVAppBase(_targetVersion);
         } catch (MalformedURLException mue) {
             String err = MessageUtil.tcompose("m.invalid_appbase", _appbase);
-            throw new IOException(err, mue);
+            throw (IOException) new IOException(err).initCause(mue);
         }
 
         try {
@@ -1430,7 +1433,7 @@ public class Application
     protected URL createVAppBase (long version)
         throws MalformedURLException
     {
-        String url = version < 0 ? _appbase : _appbase.replace("%VERSION%", String.valueOf(version));
+        String url = version < 0 ? _appbase : _appbase.replace("%VERSION%", "" + version);
         return HostWhitelist.verify(new URL(url));
     }
 
@@ -1601,7 +1604,7 @@ public class Application
         } catch (Exception e) {
             log.warning("Requested to download invalid control file",
                 "appbase", _vappbase, "path", path, "error", e);
-            throw new IOException("Invalid path '" + path + "'.", e);
+            throw (IOException) new IOException("Invalid path '" + path + "'.").initCause(e);
         }
 
         log.info("Attempting to refetch '" + path + "' from '" + targetURL + "'.");
@@ -1636,9 +1639,11 @@ public class Application
     }
 
     /** Helper function to add all values in {@code values} (if non-null) to {@code target}. */
-    protected static void addAll (String[] values, Collection<String> target) {
+    protected static void addAll (String[] values, List<String> target) {
         if (values != null) {
-            Collections.addAll(target, values);
+            for (String value : values) {
+                target.add(value);
+            }
         }
     }
 
