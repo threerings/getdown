@@ -1,5 +1,10 @@
 # Getdown Releases
 
+## 1.8.4 - Unreleased
+
+* `messages_XX.properties` files are now all maintained in UTF-8 encoding and then converted to
+  escaped ISO-8859-1 during the build process.
+
 ## 1.8.3 - Apr 10, 2019
 
 * Added support for `nresource` resources which must be jar files that contain native libraries.
