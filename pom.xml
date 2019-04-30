@@ -35,6 +35,10 @@
     </developer>
   </developers>
 
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
   <scm>
     <connection>scm:git:git://github.com/threerings/getdown.git</connection>
     <developerConnection>scm:git:git@github.com:threerings/getdown.git</developerConnection>
@@ -88,9 +92,6 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-resources-plugin</artifactId>
           <version>3.0.2</version>
-          <configuration>
-            <encoding>UTF-8</encoding>
-          </configuration>
         </plugin>
 
         <plugin>
