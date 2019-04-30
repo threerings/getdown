@@ -2,6 +2,10 @@
 
 ## 1.8.4 - Unreleased
 
+* Added `verify_timeout` config to allow customization of the default (60 second) timeout during
+  the resource verification process. Apparently in some pathological situations, this is needed.
+  Woe betide the users who have to stare at an unmoving progress bar for more than 60 seconds.
+
 * `messages_XX.properties` files are now all maintained in UTF-8 encoding and then converted to
   escaped ISO-8859-1 during the build process.
 
