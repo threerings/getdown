@@ -747,6 +747,7 @@ public class Application
         _dockName = config.getString("ui.name");
         _dockIconPath = config.getString("ui.mac_dock_icon", "../desktop.icns");
 
+        _timeoutVerify = config.getInt("timeout_verify", 60);
         return config;
     }
 
@@ -1312,7 +1313,10 @@ public class Application
         while (completed[0] < rsrcs.size()) {
             // we should be getting progress completion updates WAY more often than one every
             // minute, so if things freeze up for 60 seconds, abandon ship
-            Runnable action = actions.poll(60, TimeUnit.SECONDS);
+            Runnable action = actions.poll(_timeoutVerify, TimeUnit.SECONDS);
+            if (action == null) {
+              throw new IllegalStateException("m.timeout_verify");
+            }
             action.run();
         }
 
@@ -1752,6 +1756,8 @@ public class Application
 
     protected List<Resource> _codes = new ArrayList<>();
     protected List<Resource> _resources = new ArrayList<>();
+
+    protected int _timeoutVerify = 60;
 
     protected boolean _useCodeCache;
     protected int _codeCacheRetentionDays;
