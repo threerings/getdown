@@ -507,13 +507,13 @@ public abstract class Getdown extends Thread
         vmjar.install(true);
 
         // these only run on non-Windows platforms, so we use Unix file separators
-        String localJavaDir = LaunchUtil.LOCAL_JAVA_DIR + "/";
-        FileUtil.makeExecutable(_app.getLocalPath(localJavaDir + "bin/java"));
-        FileUtil.makeExecutable(_app.getLocalPath(localJavaDir + "lib/jspawnhelper"));
-        FileUtil.makeExecutable(_app.getLocalPath(localJavaDir + "lib/amd64/jspawnhelper"));
+        File javaLocalDir = _app.getJavaLocalDir();
+        FileUtil.makeExecutable(new File(javaLocalDir, "bin/java"));
+        FileUtil.makeExecutable(new File(javaLocalDir, "lib/jspawnhelper"));
+        FileUtil.makeExecutable(new File(javaLocalDir, "lib/amd64/jspawnhelper"));
 
         // lastly regenerate the .jsa dump file that helps Java to start up faster
-        String vmpath = LaunchUtil.getJVMPath(_app.getLocalPath(""));
+        String vmpath = LaunchUtil.getJVMBinaryPath(javaLocalDir, false);
         try {
             log.info("Regenerating classes.jsa for " + vmpath + "...");
             Runtime.getRuntime().exec(vmpath + " -Xshare:dump");

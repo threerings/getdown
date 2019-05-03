@@ -244,7 +244,7 @@ public class Application
      */
     public Application (EnvConfig envc) {
         _envc = envc;
-        _config = getLocalPath(envc.appDir, CONFIG_FILE);
+        _config = new File(envc.appDir, CONFIG_FILE);
     }
 
     /**
@@ -435,7 +435,15 @@ public class Application
     }
 
     /**
-     * Returns a resource for a zip file containing a Java VM that can be downloaded to use in
+     * @return directory into which a local VM installation should be unpacked.
+     */
+    public File getJavaLocalDir ()
+    {
+        return _javaLocalDir;
+    }
+
+    /**
+     * @return a resource for a zip file containing a Java VM that can be downloaded to use in
      * place of the installed VM (in the case where the VM that launched Getdown does not meet the
      * application's version requirements) or null if no VM is available for this platform.
      */
@@ -445,7 +453,9 @@ public class Application
             return null;
         }
 
-        String vmfile = LaunchUtil.LOCAL_JAVA_DIR + ".jar";
+        // take extension from java location
+        String vmfileExt = _javaLocation.substring(_javaLocation.lastIndexOf('.'));
+        String vmfile = _javaLocalDir.getName() + vmfileExt;
         try {
             URL remote = new URL(createVAppBase(_targetVersion), encodePath(_javaLocation));
             return new Resource(vmfile, remote, getLocalPath(vmfile),
@@ -645,6 +655,9 @@ public class Application
             _javaLocation = (String)javaloc;
         }
 
+        // used only in conjunction with java_location
+        _javaLocalDir = getLocalPath(config.getString("java_local_dir", LaunchUtil.LOCAL_JAVA_DIR));
+
         // determine whether we have any tracking configuration
         _trackingURL = config.getString("tracking_url");
 
@@ -788,7 +801,7 @@ public class Application
      */
     public File getLocalPath (String path)
     {
-        return getLocalPath(getAppDir(), path);
+        return new File(getAppDir(), path);
     }
 
     /**
@@ -811,8 +824,7 @@ public class Application
             // if we have an unpacked VM, check the 'release' file for its version
             Resource vmjar = getJavaVMResource();
             if (vmjar != null && vmjar.isMarkedValid()) {
-                File vmdir = new File(getAppDir(), LaunchUtil.LOCAL_JAVA_DIR);
-                File relfile = new File(vmdir, "release");
+                File relfile = new File(_javaLocalDir, "release");
                 if (!relfile.exists()) {
                     log.warning("Unpacked JVM missing 'release' file. Assuming valid version.");
                     return true;
@@ -930,7 +942,7 @@ public class Application
         ArrayList<String> args = new ArrayList<>();
 
         // reconstruct the path to the JVM
-        args.add(LaunchUtil.getJVMPath(getAppDir(), _windebug || optimum));
+        args.add(LaunchUtil.getJVMBinaryPath(_javaLocalDir, _windebug || optimum));
 
         // check whether we're using -jar mode or -classpath mode
         boolean dashJarMode = MANIFEST_CLASS.equals(_class);
@@ -1717,11 +1729,6 @@ public class Application
         }
     }
 
-    protected File getLocalPath (File appdir, String path)
-    {
-        return new File(appdir, path);
-    }
-
     protected final EnvConfig _envc;
     protected File _config;
     protected Digest _digest;
@@ -1753,6 +1760,7 @@ public class Application
     protected long _javaMinVersion, _javaMaxVersion;
     protected boolean _javaExactVersionRequired;
     protected String _javaLocation;
+    protected File _javaLocalDir;
 
     protected List<Resource> _codes = new ArrayList<>();
     protected List<Resource> _resources = new ArrayList<>();
@@ -1771,9 +1779,6 @@ public class Application
     protected String[] _optimumJvmArgs;
 
     protected List<String> _txtJvmArgs = new ArrayList<>();
-
-    /** If a warning has been issued about not being able to set modtimes. */
-    protected boolean _warnedAboutSetLastModified;
 
     /** Locks gettingdown.lock in the app dir. Held the entire time updating is going on.*/
     protected FileLock _lock;
