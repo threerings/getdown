@@ -494,6 +494,18 @@ public abstract class Getdown extends Thread
             throw new IOException("m.java_download_failed");
         }
 
+        // on Windows, if the local JVM is in use, we will not be able to replace it with an
+        // updated JVM; we detect this by attempting to rename the java.dll to its same name, which
+        // will fail on Windows for in use files; hackery!
+        File javaLocalDir = _app.getJavaLocalDir();
+        File javaDll = new File(javaLocalDir, "bin" + File.separator + "java.dll");
+        if (javaDll.exists()) {
+            if (!javaDll.renameTo(javaDll)) {
+                log.info("Cannot update local Java VM as it is in use.");
+                return;
+            }
+        }
+
         reportTrackingEvent("jvm_start", -1);
 
         updateStatus("m.downloading_java");
@@ -507,7 +519,6 @@ public abstract class Getdown extends Thread
         vmjar.install(true);
 
         // these only run on non-Windows platforms, so we use Unix file separators
-        File javaLocalDir = _app.getJavaLocalDir();
         FileUtil.makeExecutable(new File(javaLocalDir, "bin/java"));
         FileUtil.makeExecutable(new File(javaLocalDir, "lib/jspawnhelper"));
         FileUtil.makeExecutable(new File(javaLocalDir, "lib/amd64/jspawnhelper"));
