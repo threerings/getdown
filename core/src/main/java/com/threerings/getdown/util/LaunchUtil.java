@@ -32,7 +32,8 @@ public class LaunchUtil
      * probably <code>getdown-pro.jar</code> or <code>getdown-retro-pro.jar</code> if you are using
      * the results of the standard build.
      * @param newVersion the new version to which Getdown will update when it is executed.
-     * @param javaLocalDir JRE location within appdir, falls back to {@link #LOCAL_JAVA_DIR} in case if null is passed
+     * @param javaLocalDir the name of the directory (inside {@code appdir}) that contains a
+     * locally installed JRE. Defaults to {@link #LOCAL_JAVA_DIR} if null is passed.
      *
      * @return true if the relaunch succeeded, false if we were unable to relaunch due to being on
      * Windows 9x where we cannot launch subprocesses without waiting around for them to exit,
@@ -62,10 +63,9 @@ public class LaunchUtil
         }
 
         // do the deed
-        String[] args = {
-            getJVMBinaryPath(new File(appdir, StringUtil.isBlank(javaLocalDir) ? LOCAL_JAVA_DIR : javaLocalDir), false),
-            "-jar", pro.toString(), appdir.getPath()
-        };
+        String javaDir = StringUtil.isBlank(javaLocalDir) ? LOCAL_JAVA_DIR : javaLocalDir;
+        String javaBin = getJVMBinaryPath(new File(appdir, javaDir), false);
+        String[] args = { javaBin, "-jar", pro.toString(), appdir.getPath() };
         log.info("Running " + StringUtil.join(args, "\n  "));
         try {
             Runtime.getRuntime().exec(args, null);
@@ -77,11 +77,12 @@ public class LaunchUtil
     }
 
     /**
-     * @param javaLocalDir JRE location within appdir
+     * Resolves a path to a JVM binary.
+     * @param javaLocalDir JRE location within appdir.
      * @param windebug if true we will use java.exe instead of javaw.exe on Windows.
      * @return the path to the JVM binary used to launch this process.
      */
-    public static String getJVMBinaryPath(File javaLocalDir, boolean windebug)
+    public static String getJVMBinaryPath (File javaLocalDir, boolean windebug)
     {
         // first look in our application directory for an installed VM
         String vmpath = checkJVMPath(javaLocalDir.getAbsolutePath(), windebug);
@@ -93,7 +94,7 @@ public class LaunchUtil
 
         // then throw up our hands and hope for the best
         if (vmpath == null) {
-            log.warning("Unable to find java [javaLocalDir=" + javaLocalDir +
+            log.warning("Unable to find java [local=" + javaLocalDir +
                         ", java.home=" + System.getProperty("java.home") + "]!");
             vmpath = "java";
         }
