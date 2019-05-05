@@ -88,8 +88,8 @@ public class Differ
         }
     }
 
-    protected static void createPatch(File patch, ArrayList<Resource> orsrcs,
-                                      ArrayList<Resource> nrsrcs, boolean verbose)
+    protected void createPatch (File patch, ArrayList<Resource> orsrcs,
+                                ArrayList<Resource> nrsrcs, boolean verbose)
         throws IOException
     {
         int version = Digest.VERSION;
@@ -165,7 +165,8 @@ public class Differ
         }
     }
 
-    protected static File rebuildJar(File target) throws IOException
+    protected File rebuildJar (File target)
+        throws IOException
     {
         File temp = File.createTempFile("differ", "jar");
         try (ZipFile jar = new ZipFile(target);
@@ -189,7 +190,8 @@ public class Differ
         return temp;
     }
 
-    protected static void jarDiff(File ofile, File nfile, ZipOutputStream jout) throws IOException
+    protected void jarDiff (File ofile, File nfile, ZipOutputStream jout)
+        throws IOException
     {
         JarDiff.createPatch(ofile.getPath(), nfile.getPath(), jout, false);
     }
@@ -197,7 +199,8 @@ public class Differ
     public static void main (String[] args)
     {
         if (args.length < 2) {
-            System.err.println("Usage: Differ [-verbose] new_vers_dir old_vers_dir");
+            System.err.println(
+                "Usage: Differ [-verbose] new_vers_dir old_vers_dir");
             System.exit(255);
         }
         Differ differ = new Differ();

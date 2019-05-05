@@ -74,16 +74,18 @@ public class JarDiff implements JarDiffCodes
     private static boolean _debug;
 
     /**
-     * Creates a patch from the two passed in files, writing the result to {@code os}.
+     * Creates a patch from the two passed in files, writing the result to <code>os</code>.
      */
     public static void createPatch (String oldPath, String newPath,
                                     OutputStream os, boolean minimal) throws IOException
     {
-        try (JarFile2 oldJar = new JarFile2(oldPath); JarFile2 newJar = new JarFile2(newPath)) {
-            final Map<String, String> moved = new HashMap<>();
-            final Set<String> implicit = new HashSet<>();
-            final Set<String> moveSrc = new HashSet<>();
-            final Set<String> newEntries = new HashSet<>();
+        try (JarFile2 oldJar = new JarFile2(oldPath);
+             JarFile2 newJar = new JarFile2(newPath)) {
+
+            HashMap<String,String> moved = new HashMap<>();
+            HashSet<String> implicit = new HashSet<>();
+            HashSet<String> moveSrc = new HashSet<>();
+            HashSet<String> newEntries = new HashSet<>();
 
             // FIRST PASS
             // Go through the entries in new jar and
@@ -128,6 +130,7 @@ public class JarDiff implements JarDiffCodes
                             // for backward compatibility
 
                             if (_debug) {
+
                                 System.out.println("NEW: "+ newname);
                             }
                             newEntries.add(newname);
@@ -141,9 +144,12 @@ public class JarDiff implements JarDiffCodes
                         }
                         // Check if this disables an implicit 'move <oldname> <oldname>'
                         if (implicit.contains(oldname) && minimal) {
+
                             if (_debug) {
                                 System.err.println("implicit.remove " + oldname);
+
                                 System.err.println("moved.put " + oldname + " " + oldname);
+
                             }
                             implicit.remove(oldname);
                             moved.put(oldname, oldname);
@@ -155,7 +161,7 @@ public class JarDiff implements JarDiffCodes
 
             // SECOND PASS: <deleted files> = <oldjarnames> - <implicitmoves> -
             // <source of move commands> - <new or modified entries>
-            final List<String> deleted = new ArrayList<>();
+            ArrayList<String> deleted = new ArrayList<>();
             for (ZipEntry oldEntry : oldJar) {
                 String oldName = oldEntry.getName();
                 if (!implicit.contains(oldName) && !moveSrc.contains(oldName)
@@ -201,11 +207,12 @@ public class JarDiff implements JarDiffCodes
     }
 
     /**
-     * Writes the index file out to {@code jos}.
-     * {@code oldEntries} gives the names of the files that were removed,
-     * {@code movedMap} maps from the new name to the old name.
+     * Writes the index file out to <code>jos</code>.
+     * <code>oldEntries</code> gives the names of the files that were removed,
+     * <code>movedMap</code> maps from the new name to the old name.
      */
-    private static void createIndex (ZipOutputStream jos, List<String> oldEntries, Map<String,String> movedMap)
+    private static void createIndex (ZipOutputStream jos, List<String> oldEntries,
+                                     Map<String,String> movedMap)
         throws IOException
     {
         StringWriter writer = new StringWriter();
@@ -236,7 +243,7 @@ public class JarDiff implements JarDiffCodes
         jos.write(bytes, 0, bytes.length);
     }
 
-    protected static void writeEscapedString (Writer writer, String string)
+    protected static Writer writeEscapedString (Writer writer, String string)
         throws IOException
     {
         int index = 0;
@@ -262,6 +269,7 @@ public class JarDiff implements JarDiffCodes
             writer.write(string);
         }
 
+        return writer;
     }
 
     private static void writeEntry (ZipOutputStream jos, ZipEntry entry, JarFile2 file)
@@ -380,7 +388,7 @@ public class JarDiff implements JarDiffCodes
 
         public String hasSameContent (JarFile2 file, ZipEntry entry) throws IOException {
             String thisName = null;
-            Long crcL = entry.getCrc();
+            Long crcL = Long.valueOf(entry.getCrc());
             // check if this jar contains files with the passed in entry's crc
             if (_crcToEntryMap.containsKey(crcL)) {
                 // get the Linked List with files with the crc
@@ -415,7 +423,7 @@ public class JarDiff implements JarDiffCodes
                 while (entries.hasMoreElements()) {
                     ZipEntry entry = entries.nextElement();
                     long crc = entry.getCrc();
-                    Long crcL = crc;
+                    Long crcL = Long.valueOf(crc);
                     if (_debug) {
                         System.out.println("\t" + entry.getName() + " CRC " + crc);
                     }
@@ -432,7 +440,7 @@ public class JarDiff implements JarDiffCodes
 
                     } else {
                         // create a new entry in the hashmap for the new key
-                        LinkedList<ZipEntry> ll = new LinkedList<ZipEntry>();
+                        LinkedList<ZipEntry> ll = new LinkedList<>();
                         ll.add(entry);
                         _crcToEntryMap.put(crcL, ll);
                     }

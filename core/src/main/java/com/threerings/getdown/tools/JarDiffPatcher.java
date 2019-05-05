@@ -41,22 +41,22 @@ public class JarDiffPatcher implements JarDiffCodes
      *
      * @throws IOException if any problem occurs during patching.
      */
-    public static void patchJar(String jarPath, String diffPath, File target, ProgressObserver observer)
+    public void patchJar (String jarPath, String diffPath, File target, ProgressObserver observer)
         throws IOException
     {
         File oldFile = new File(jarPath), diffFile = new File(diffPath);
         try (ZipFile oldJar = new ZipFile(oldFile);
             ZipFile jarDiff = new ZipFile(diffFile);
             ZipOutputStream jos = new ZipOutputStream(new FileOutputStream(target))) {
-            final Set<String> ignoreSet = new HashSet<>();
-            final Map<String, String> renameMap = new HashMap<>();
+            Set<String> ignoreSet = new HashSet<>();
+            Map<String, String> renameMap = new HashMap<>();
             determineNameMapping(jarDiff, ignoreSet, renameMap);
 
             // get all keys in renameMap
             String[] keys = renameMap.keySet().toArray(new String[renameMap.size()]);
 
             // Files to implicit move
-            final Set<String> oldjarNames  = new HashSet<>();
+            Set<String> oldjarNames  = new HashSet<>();
             Enumeration<? extends ZipEntry> oldEntries = oldJar.entries();
             if (oldEntries != null) {
                 while  (oldEntries.hasMoreElements()) {
@@ -111,7 +111,8 @@ public class JarDiffPatcher implements JarDiffCodes
                 // Get source ZipEntry
                 ZipEntry oldEntry = oldJar.getEntry(oldName);
                 if (oldEntry == null) {
-                    throw new IOException("error.badmove: " + MOVE_COMMAND + oldName + " " + newName);
+                    String moveCmd = MOVE_COMMAND + oldName + " " + newName;
+                    throw new IOException("error.badmove: " + moveCmd);
                 }
 
                 // Create dest ZipEntry
@@ -156,14 +157,14 @@ public class JarDiffPatcher implements JarDiffCodes
         }
     }
 
-    protected static void updateObserver(ProgressObserver observer, double currentSize, double size)
+    protected void updateObserver (ProgressObserver observer, double currentSize, double size)
     {
         if (observer != null) {
             observer.progress((int)(100*currentSize/size));
         }
     }
 
-    protected static void determineNameMapping(
+    protected void determineNameMapping (
         ZipFile jarDiff, Set<String> ignoreSet, Map<String, String> renameMap)
         throws IOException
     {
@@ -172,7 +173,8 @@ public class JarDiffPatcher implements JarDiffCodes
             throw new IOException("error.noindex");
         }
 
-        LineNumberReader indexReader = new LineNumberReader(new InputStreamReader(is, UTF_8));
+        LineNumberReader indexReader =
+            new LineNumberReader(new InputStreamReader(is, UTF_8));
         String line = indexReader.readLine();
         if (line == null || !line.equals(VERSION_HEADER)) {
             throw new IOException("jardiff.error.badheader: " + line);
@@ -207,11 +209,12 @@ public class JarDiffPatcher implements JarDiffCodes
         }
     }
 
-    protected static List<String> getSubpaths(String path)
+    protected List<String> getSubpaths (String path)
     {
         int index = 0;
         int length = path.length();
-        final List<String> sub = new ArrayList<>();
+        ArrayList<String> sub = new ArrayList<>();
+
         while (index < length) {
             while (index < length && Character.isWhitespace
                    (path.charAt(index))) {
@@ -251,7 +254,7 @@ public class JarDiffPatcher implements JarDiffCodes
         return sub;
     }
 
-    protected static void writeEntry(ZipOutputStream jos, ZipEntry entry, ZipFile file)
+    protected void writeEntry (ZipOutputStream jos, ZipEntry entry, ZipFile file)
         throws IOException
     {
         try (InputStream data = file.getInputStream(entry)) {
@@ -259,7 +262,7 @@ public class JarDiffPatcher implements JarDiffCodes
         }
     }
 
-    protected static void writeEntry(ZipOutputStream jos, ZipEntry entry, InputStream data)
+    protected void writeEntry (ZipOutputStream jos, ZipEntry entry, InputStream data)
         throws IOException
     {
         jos.putNextEntry(new ZipEntry(entry.getName()));

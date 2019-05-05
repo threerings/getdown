@@ -62,17 +62,18 @@ public class Resource implements Comparable<Resource>
         byte[] buffer = new byte[DIGEST_BUFFER_SIZE];
         int read;
 
-        boolean isJar = isJar(target.getPath());
-        boolean isPacked200Jar = isPacked200Jar(target.getPath());
+        boolean isJar = isJar(target);
+        boolean isPacked200Jar = isPacked200Jar(target);
 
         // if this is a jar, we need to compute the digest in a "timestamp and file order" agnostic
         // manner to properly correlate jardiff patched jars with their unpatched originals
         if (isJar || isPacked200Jar){
+            File tmpJarFile = null;
             ZipFile jar = null;
             try {
                 // if this is a compressed jar file, uncompress it to compute the jar file digest
                 if (isPacked200Jar){
-                    File tmpJarFile = new File(target.getPath() + ".tmp");
+                    tmpJarFile = new File(target.getPath() + ".tmp");
                     tmpJarFile.deleteOnExit();
                     jar = FileUtil.unpackPacked200Jar(target, tmpJarFile);
                 } else{
@@ -109,6 +110,9 @@ public class Resource implements Comparable<Resource>
                         log.warning("Error closing jar", "path", target, "jar", jar, "error", ioe);
                     }
                 }
+                if (tmpJarFile != null) {
+                    FileUtil.deleteHarder(tmpJarFile);
+                }
             }
 
         } else {
@@ -133,12 +137,11 @@ public class Resource implements Comparable<Resource>
         _remote = remote;
         _local = local;
         _localNew = new File(local.toString() + "_new");
-        String lpath = _local.getPath();
-        _marker = new File(lpath + "v");
+        _marker = new File(_local.getPath() + "v");
 
         _attrs = attrs;
-        _isJar = isJar(lpath);
-        _isPacked200Jar = isPacked200Jar(lpath);
+        _isJar = isJar(local);
+        _isPacked200Jar = isPacked200Jar(local);
         boolean unpack = attrs.contains(Attr.UNPACK);
         if (unpack && _isJar) {
             _unpacked = _local.getParentFile();
@@ -339,7 +342,11 @@ public class Resource implements Comparable<Resource>
 
     @Override public boolean equals (Object other)
     {
-        return other instanceof Resource && _path.equals(((Resource) other)._path);
+        if (other instanceof Resource) {
+            return _path.equals(((Resource)other)._path);
+        } else {
+            return false;
+        }
     }
 
     @Override public int hashCode ()
@@ -360,13 +367,16 @@ public class Resource implements Comparable<Resource>
         }
     }
 
-    protected static boolean isJar (String path)
+    protected static boolean isJar (File file)
     {
-        return path.endsWith(".jar") || path.endsWith(".jar_new") || path.endsWith(".zip");
+        String path = file.getName();
+        return path.endsWith(".jar") || path.endsWith(".jar_new") ||
+            path.endsWith(".zip") || path.endsWith(".zip_new");
     }
 
-    protected static boolean isPacked200Jar (String path)
+    protected static boolean isPacked200Jar (File file)
     {
+        String path = file.getName();
         return path.endsWith(".jar.pack") || path.endsWith(".jar.pack_new") ||
             path.endsWith(".jar.pack.gz")|| path.endsWith(".jar.pack.gz_new");
     }

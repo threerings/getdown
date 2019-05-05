@@ -120,9 +120,7 @@ public final class FileUtil
     {
         List<String> lines = new ArrayList<>();
         try (BufferedReader bin = new BufferedReader(in)) {
-            for (String line; (line = bin.readLine()) != null;) {
-                lines.add(line);
-            }
+            for (String line = null; (line = bin.readLine()) != null; lines.add(line)) {}
         }
         return lines;
     }
@@ -142,9 +140,8 @@ public final class FileUtil
                     File efile = new File(target, entry.getName());
                     if (efile.exists()) {
                         for (File f : efile.listFiles()) {
-                            if (!f.isDirectory()) {
-                                f.delete();
-                            }
+                            if (!f.isDirectory())
+                            f.delete();
                         }
                     }
                 }

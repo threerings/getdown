@@ -121,7 +121,8 @@ public class Patcher
         }
     }
 
-    protected void patchFile (ZipFile file, ZipEntry entry, File appdir, String path)
+    protected void patchFile (ZipFile file, ZipEntry entry,
+                              File appdir, String path)
     {
         File target = new File(appdir, path);
         File patch = new File(appdir, entry.getName());
@@ -154,7 +155,7 @@ public class Patcher
 
             // now apply the patch to create the new target file
             patcher = new JarDiffPatcher();
-            JarDiffPatcher.patchJar(otarget.getPath(), patch.getPath(), target, obs);
+            patcher.patchJar(otarget.getPath(), patch.getPath(), target, obs);
 
         } catch (IOException ioe) {
             if (patcher == null) {
