@@ -9,6 +9,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.FieldPosition;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.logging.*;
 
@@ -58,6 +59,7 @@ public class Log
                     err = (Throwable)message;
                 } else if (nn % 2 == 1 && (args[nn - 1] instanceof Throwable)) {
                     err = (Throwable)args[--nn];
+                    args = Arrays.copyOfRange(args, 0, nn);
                 }
                 _impl.log(LEVELS[levIdx], format(message, args), err);
             }
@@ -69,6 +71,11 @@ public class Log
     /** We dispatch our log messages through this logging shim. */
     public static final Shim log = new Shim();
 
+    /**
+     * @param message just message
+     * @param args should have even length
+     * @return message with nicely formatted args like "message [arg0=arg1, arg2=arg3, ...]
+     */
     public static String format (Object message, Object... args) {
         if (args.length < 2) return String.valueOf(message);
         StringBuilder buf = new StringBuilder(String.valueOf(message));
@@ -136,6 +143,5 @@ public class Log
         protected FieldPosition _fpos = new FieldPosition(SimpleDateFormat.DATE_FIELD);
     }
 
-    protected static final String DATE_FORMAT = "{0,date} {0,time}";
     protected static final Level[] LEVELS = {Level.FINE, Level.INFO, Level.WARNING, Level.SEVERE};
 }
