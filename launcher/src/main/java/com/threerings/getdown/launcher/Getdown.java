@@ -200,7 +200,7 @@ public abstract class Getdown extends Thread
     protected boolean detectProxy () {
   
 
-        // otherwise see if we actually need a proxy; first we have to initialize our application
+        // see if we actually need a proxy; first we have to initialize our application
         // to get some sort of interface configuration and the appbase URL
         log.info("Checking whether we need to use a proxy...");
         try {
