@@ -198,9 +198,7 @@ public abstract class Getdown extends Thread
     }
 
     protected boolean detectProxy () {
-        if (ProxyUtil.autoDetectProxy(_app)) {
-            return true;
-        }
+  
 
         // otherwise see if we actually need a proxy; first we have to initialize our application
         // to get some sort of interface configuration and the appbase URL
@@ -212,13 +210,18 @@ public abstract class Getdown extends Thread
         }
         updateStatus("m.detecting_proxy");
         if (!ProxyUtil.canLoadWithoutProxy(_app.getConfigResource().getRemote())) {
+            if (ProxyUtil.autoDetectProxy(_app)) {
+                return true;
+            }
             return false;
         }
 
         // we got through, so we appear not to require a proxy; make a blank proxy config so that
         // we don't go through this whole detection process again next time
         log.info("No proxy appears to be needed.");
-        ProxyUtil.saveProxy(_app, null, null);
+        if (SysProps.resetUnNeededProxySettings())  {
+        	ProxyUtil.saveProxy(_app, null, null);
+        }
         return true;
     }
 
