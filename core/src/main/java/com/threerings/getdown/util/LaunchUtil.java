@@ -19,7 +19,7 @@ import static com.threerings.getdown.Log.log;
  */
 public class LaunchUtil
 {
-    /** The directory into which a local VM installation should be unpacked. */
+    /** The default directory into which a local VM installation should be unpacked. */
     public static final String LOCAL_JAVA_DIR = "java_vm";
 
     /**
@@ -32,6 +32,8 @@ public class LaunchUtil
      * probably <code>getdown-pro.jar</code> or <code>getdown-retro-pro.jar</code> if you are using
      * the results of the standard build.
      * @param newVersion the new version to which Getdown will update when it is executed.
+     * @param javaLocalDir the name of the directory (inside {@code appdir}) that contains a
+     * locally installed JRE. Defaults to {@link #LOCAL_JAVA_DIR} if null is passed.
      *
      * @return true if the relaunch succeeded, false if we were unable to relaunch due to being on
      * Windows 9x where we cannot launch subprocesses without waiting around for them to exit,
@@ -45,7 +47,7 @@ public class LaunchUtil
      * resort to telling the user that it is in a bad way.
      */
     public static boolean updateVersionAndRelaunch (
-            File appdir, String getdownJarName, String newVersion)
+            File appdir, String getdownJarName, String newVersion, String javaLocalDir)
         throws IOException
     {
         // create the file that instructs Getdown to upgrade
@@ -61,9 +63,9 @@ public class LaunchUtil
         }
 
         // do the deed
-        String[] args = new String[] {
-            getJVMPath(appdir), "-jar", pro.toString(), appdir.getPath()
-        };
+        String javaDir = StringUtil.isBlank(javaLocalDir) ? LOCAL_JAVA_DIR : javaLocalDir;
+        String javaBin = getJVMBinaryPath(new File(appdir, javaDir), false);
+        String[] args = { javaBin, "-jar", pro.toString(), appdir.getPath() };
         log.info("Running " + StringUtil.join(args, "\n  "));
         try {
             Runtime.getRuntime().exec(args, null);
@@ -75,22 +77,15 @@ public class LaunchUtil
     }
 
     /**
-     * Reconstructs the path to the JVM used to launch this process.
-     */
-    public static String getJVMPath (File appdir)
-    {
-        return getJVMPath(appdir, false);
-    }
-
-    /**
-     * Reconstructs the path to the JVM used to launch this process.
-     *
+     * Resolves a path to a JVM binary.
+     * @param javaLocalDir JRE location within appdir.
      * @param windebug if true we will use java.exe instead of javaw.exe on Windows.
+     * @return the path to the JVM binary used to launch this process.
      */
-    public static String getJVMPath (File appdir, boolean windebug)
+    public static String getJVMBinaryPath (File javaLocalDir, boolean windebug)
     {
         // first look in our application directory for an installed VM
-        String vmpath = checkJVMPath(new File(appdir, LOCAL_JAVA_DIR).getAbsolutePath(), windebug);
+        String vmpath = checkJVMPath(javaLocalDir.getAbsolutePath(), windebug);
 
         // then fall back to the VM in which we're already running
         if (vmpath == null) {
@@ -99,7 +94,7 @@ public class LaunchUtil
 
         // then throw up our hands and hope for the best
         if (vmpath == null) {
-            log.warning("Unable to find java [appdir=" + appdir +
+            log.warning("Unable to find java [local=" + javaLocalDir +
                         ", java.home=" + System.getProperty("java.home") + "]!");
             vmpath = "java";
         }
@@ -150,7 +145,7 @@ public class LaunchUtil
             if (newgd.renameTo(curgd)) {
                 FileUtil.deleteHarder(oldgd); // yay!
                 try {
-                    // copy the moved file back to getdown-dop-new.jar so that we don't end up
+                    // copy the moved file back to newgd so that we don't end up
                     // downloading another copy next time
                     FileUtil.copy(curgd, newgd);
                 } catch (IOException e) {

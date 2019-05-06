@@ -1,6 +1,15 @@
 # Getdown Releases
 
-## 1.8.3 - Unreleased
+## 1.8.4 - Unreleased
+
+* Added `verify_timeout` config to allow customization of the default (60 second) timeout during
+  the resource verification process. Apparently in some pathological situations, this is needed.
+  Woe betide the users who have to stare at an unmoving progress bar for more than 60 seconds.
+
+* `messages_XX.properties` files are now all maintained in UTF-8 encoding and then converted to
+  escaped ISO-8859-1 during the build process.
+
+## 1.8.3 - Apr 10, 2019
 
 * Added support for `nresource` resources which must be jar files that contain native libraries.
   Prior to launching the application, these resources will be unpacked and their contents added to
@@ -22,6 +31,13 @@
   `com.threerings.getdown.spi.ProxyAuth` service provider interface to persist the proxy
   credentials supplied by the user. Otherwise they will be requested every time Getdown runs, which
   is not a viable user experience.
+
+* The Getdown window can be now closed by pressing the `ESC` key.
+
+* If no `appdir` is specified via the command line or system property, the current working
+  directory will be used as the `appdir`.
+
+* A basic Russian translation has been added. Thanks @sergiorussia!
 
 ## 1.8.2 - Nov 27, 2018
 

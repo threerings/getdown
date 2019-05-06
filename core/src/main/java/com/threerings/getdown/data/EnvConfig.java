@@ -139,9 +139,10 @@ public final class EnvConfig {
             }
         }
 
-        // ensure that we were able to fine an app dir
+        // if no appdir was provided, default to the current working directory
         if (appDir == null) {
-            return null; // caller will report problem to user
+            appDir = System.getProperty("user.dir");
+            appDirProv = "default (cwd)";
         }
 
         notes.add(Note.info("Using appdir from " + appDirProv + ": " + appDir));
