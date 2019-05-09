@@ -69,6 +69,13 @@ public class Log
     /** We dispatch our log messages through this logging shim. */
     public static final Shim log = new Shim();
 
+    /**
+     * Formats a message with key/value pairs. The pairs will be appended to the message as a
+     * comma separated list of {@code key=value} in square brackets.
+     * @param message the main log message.
+     * @param args the key/value pairs. Any trailing key with no value will be ignored.
+     * @return the formatted message, i.e. {@code Some log message [key=value, key=value]}.
+     */
     public static String format (Object message, Object... args) {
         if (args.length < 2) return String.valueOf(message);
         StringBuilder buf = new StringBuilder(String.valueOf(message));
@@ -76,13 +83,13 @@ public class Log
             buf.append(' ');
         }
         buf.append('[');
-        for (int ii = 0; ii < args.length; ii += 2) {
+        for (int ii = 0, ll = args.length/2; ii < ll; ii += 1) {
             if (ii > 0) {
                 buf.append(',').append(' ');
             }
-            buf.append(args[ii]).append('=');
+            buf.append(args[2*ii]).append('=');
             try {
-                buf.append(args[ii+1]);
+                buf.append(args[2*ii+1]);
             } catch (Throwable t) {
                 buf.append("<toString() failure: ").append(t).append(">");
             }
