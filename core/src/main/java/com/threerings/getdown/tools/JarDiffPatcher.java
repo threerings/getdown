@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
+
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -18,6 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
@@ -26,13 +28,13 @@ import com.threerings.getdown.util.ProgressObserver;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
- * Applies a jardiff patch to a jar file.
+ * Applies a jardiff patch to a jar/zip file.
  */
 public class JarDiffPatcher implements JarDiffCodes
 {
     /**
-     * Patches the specified jar file using the supplied patch file and writing
-     * the new jar file to the supplied target.
+     * Patches the specified jar file using the supplied patch file and writing the new jar file to
+     * the supplied target.
      *
      * @param jarPath the path to the original jar file.
      * @param diffPath the path to the jardiff patch file.
@@ -46,8 +48,8 @@ public class JarDiffPatcher implements JarDiffCodes
     {
         File oldFile = new File(jarPath), diffFile = new File(diffPath);
         try (ZipFile oldJar = new ZipFile(oldFile);
-            ZipFile jarDiff = new ZipFile(diffFile);
-            ZipOutputStream jos = new ZipOutputStream(new FileOutputStream(target))) {
+             ZipFile jarDiff = new ZipFile(diffFile);
+             ZipOutputStream jos = makeOutputStream(oldFile, target)) {
             Set<String> ignoreSet = new HashSet<>();
             Map<String, String> renameMap = new HashMap<>();
             determineNameMapping(jarDiff, ignoreSet, renameMap);
@@ -146,8 +148,8 @@ public class JarDiffPatcher implements JarDiffCodes
             for (String name : oldjarNames) {
                 ZipEntry entry = oldJar.getEntry(name);
                 if (entry == null) {
-                    // names originally retrieved from the JAR, so this should never happen
-                    throw new AssertionError("JAR entry not found: " + name);
+                    // names originally retrieved from the archive, so this should never happen
+                    throw new AssertionError("Archive entry not found: " + name);
                 }
                 updateObserver(observer, currentEntry, size);
                 currentEntry++;
@@ -273,6 +275,15 @@ public class JarDiffPatcher implements JarDiffCodes
             jos.write(newBytes, 0, size);
             size = data.read(newBytes);
         }
+    }
+
+    protected static ZipOutputStream makeOutputStream (File source, File target)
+        throws IOException
+    {
+        FileOutputStream out = new FileOutputStream(target);
+        if (source.getName().endsWith(".jar")) return new JarOutputStream(out);
+        else if (source.getName().endsWith(".zip")) return new ZipOutputStream(out);
+        else throw new AssertionError("Unsupported source file '" + source + "'. Not a .jar or .zip?");
     }
 
     protected static final int DEFAULT_READ_SIZE = 2048;
