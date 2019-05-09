@@ -11,14 +11,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Asserts the correct functionality of the {@link ResourceCache}.
@@ -28,10 +25,7 @@ public class ResourceCacheTest
 {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> data() {
-        return Arrays.asList(new Object[][] {
-                { ".jar" },
-                { ".zip" }
-        });
+        return Arrays.asList(new Object[][] {{ ".jar" }, { ".zip" }});
     }
 
     @Parameterized.Parameter

@@ -5,26 +5,10 @@
 
 package com.threerings.getdown.util;
 
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Deque;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.jar.JarFile;
-import java.util.jar.JarOutputStream;
-import java.util.jar.Pack200;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
+import java.io.*;
+import java.util.*;
+import java.util.jar.*;
+import java.util.zip.*;
 
 import com.threerings.getdown.Log;
 import static com.threerings.getdown.Log.log;
@@ -130,7 +114,8 @@ public final class FileUtil
      * @param cleanExistingDirs if true, all files in all directories contained in {@code jar} will
      * be deleted prior to unpacking the jar.
      */
-    public static void unpackJar (ZipFile jar, File target, boolean cleanExistingDirs) throws IOException
+    public static void unpackJar (ZipFile jar, File target, boolean cleanExistingDirs)
+        throws IOException
     {
         if (cleanExistingDirs) {
             Enumeration<? extends ZipEntry> entries = jar.entries();
@@ -181,10 +166,10 @@ public final class FileUtil
     }
 
     /**
-     * Unpacks a pack200 packed jar file from {@code packedJar} into {@code target}. If {@code
-     * packedJar} has a {@code .gz} extension, it will be gunzipped first.
+     * Unpacks a pack200 packed jar file from {@code packedJar} into {@code target}.
+     * If {@code packedJar} has a {@code .gz} extension, it will be gunzipped first.
      */
-    public static JarFile unpackPacked200Jar (File packedJar, File target) throws IOException
+    public static void unpackPacked200Jar (File packedJar, File target) throws IOException
     {
         try (InputStream packJarIn = new FileInputStream(packedJar);
             JarOutputStream jarOut = new JarOutputStream(new FileOutputStream(target))) {
@@ -195,7 +180,6 @@ public final class FileUtil
                 unpacker.unpack(packJarIn2, jarOut);
             }
         }
-        return new JarFile(target);
     }
 
     /**

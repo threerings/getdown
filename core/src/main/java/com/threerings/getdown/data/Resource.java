@@ -5,17 +5,10 @@
 
 package com.threerings.getdown.data;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URL;
 import java.security.MessageDigest;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -75,7 +68,8 @@ public class Resource implements Comparable<Resource>
                 if (isPacked200Jar){
                     tmpJarFile = new File(target.getPath() + ".tmp");
                     tmpJarFile.deleteOnExit();
-                    zip = FileUtil.unpackPacked200Jar(target, tmpJarFile);
+                    FileUtil.unpackPacked200Jar(target, tmpJarFile);
+                    zip = new ZipFile(tmpJarFile);
                 } else{
                     zip = new ZipFile(target);
                 }
@@ -107,7 +101,7 @@ public class Resource implements Comparable<Resource>
                     try {
                         zip.close();
                     } catch (IOException ioe) {
-                        log.warning("Error closing zip", "path", target, "zip", zip, "error", ioe);
+                        log.warning("Error closing", "path", target, "zip", zip, "error", ioe);
                     }
                 }
                 if (tmpJarFile != null) {
@@ -126,6 +120,34 @@ public class Resource implements Comparable<Resource>
             }
         }
         return StringUtil.hexlate(md.digest());
+    }
+
+    /**
+     * Returns whether {@code file} is a {@code zip} file.
+     */
+    public static boolean isZip (File file)
+    {
+        String path = file.getName();
+        return path.endsWith(".zip") || path.endsWith(".zip_new");
+    }
+
+    /**
+     * Returns whether {@code file} is a {@code jar} file.
+     */
+    public static boolean isJar (File file)
+    {
+        String path = file.getName();
+        return path.endsWith(".jar") || path.endsWith(".jar_new");
+    }
+
+    /**
+     * Returns whether {@code file} is a {@code jar.pack} file.
+     */
+    public static boolean isPacked200Jar (File file)
+    {
+        String path = file.getName();
+        return path.endsWith(".jar.pack") || path.endsWith(".jar.pack_new") ||
+            path.endsWith(".jar.pack.gz") || path.endsWith(".jar.pack.gz_new");
     }
 
     /**
@@ -365,25 +387,6 @@ public class Resource implements Comparable<Resource>
         if (obs != null) {
             obs.progress((int)(100 * pos / total));
         }
-    }
-
-    public static boolean isJar (File file)
-    {
-        String path = file.getName();
-        return path.endsWith(".jar") || path.endsWith(".jar_new");
-    }
-
-    public static boolean isPacked200Jar (File file)
-    {
-        String path = file.getName();
-        return path.endsWith(".jar.pack") || path.endsWith(".jar.pack_new") ||
-            path.endsWith(".jar.pack.gz")|| path.endsWith(".jar.pack.gz_new");
-    }
-
-    public static boolean isZip (File file)
-    {
-        String path = file.getName();
-        return path.endsWith(".zip") || path.endsWith(".zip_new");
     }
 
     protected String _path;

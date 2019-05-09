@@ -121,8 +121,7 @@ public class Patcher
         }
     }
 
-    protected void patchFile (ZipFile file, ZipEntry entry,
-                              File appdir, String path)
+    protected void patchFile (ZipFile file, ZipEntry entry, File appdir, String path)
     {
         File target = new File(appdir, path);
         File patch = new File(appdir, entry.getName());

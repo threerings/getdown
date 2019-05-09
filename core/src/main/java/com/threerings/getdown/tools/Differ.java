@@ -5,12 +5,7 @@
 
 package com.threerings.getdown.tools;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -170,9 +165,9 @@ public class Differ
     {
         File temp = File.createTempFile("differ", "jar");
         try (ZipFile jar = new ZipFile(target);
-            FileOutputStream tempFos = new FileOutputStream(temp);
-            BufferedOutputStream tempBos = new BufferedOutputStream(tempFos);
-            ZipOutputStream jout = new ZipOutputStream(tempBos)) {
+             FileOutputStream tempFos = new FileOutputStream(temp);
+             BufferedOutputStream tempBos = new BufferedOutputStream(tempFos);
+             ZipOutputStream jout = new ZipOutputStream(tempBos)) {
             byte[] buffer = new byte[4096];
             for (Enumeration<? extends ZipEntry> iter = jar.entries(); iter.hasMoreElements();) {
                 ZipEntry entry = iter.nextElement();
@@ -190,8 +185,7 @@ public class Differ
         return temp;
     }
 
-    protected void jarDiff (File ofile, File nfile, ZipOutputStream jout)
-        throws IOException
+    protected void jarDiff (File ofile, File nfile, ZipOutputStream jout) throws IOException
     {
         JarDiff.createPatch(ofile.getPath(), nfile.getPath(), jout, false);
     }
@@ -219,10 +213,10 @@ public class Differ
         }
     }
 
-    protected static void pipe (File file, ZipOutputStream jout) throws IOException
+    protected static void pipe (File file, OutputStream out) throws IOException
     {
         try (FileInputStream fin = new FileInputStream(file)) {
-            StreamUtil.copy(fin, jout);
+            StreamUtil.copy(fin, out);
         }
     }
 }
