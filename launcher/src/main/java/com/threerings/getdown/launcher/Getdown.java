@@ -525,9 +525,10 @@ public abstract class Getdown extends Thread
 
         // lastly regenerate the .jsa dump file that helps Java to start up faster
         String vmpath = LaunchUtil.getJVMBinaryPath(javaLocalDir, false);
+        String[] command = new String[]{vmpath, "-Xshare:dump"};
         try {
             log.info("Regenerating classes.jsa for " + vmpath + "...");
-            Runtime.getRuntime().exec(vmpath + " -Xshare:dump");
+            Runtime.getRuntime().exec(command);
         } catch (Exception e) {
             log.warning("Failed to regenerate .jsa dump file", "error", e);
         }
