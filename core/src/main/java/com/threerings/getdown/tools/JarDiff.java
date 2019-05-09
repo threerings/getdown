@@ -41,9 +41,17 @@
 
 package com.threerings.getdown.tools;
 
-import java.io.*;
+import java.io.Closeable;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.*;
-import java.util.jar.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -86,7 +94,7 @@ public class JarDiff implements JarDiffCodes
             // and new.jar )
             // and for files that cannot be implicitly moved, we will either
             // find out whether it is moved or new (modified)
-            for (JarEntry newEntry : newJar) {
+            for (ZipEntry newEntry : newJar) {
                 String newname = newEntry.getName();
 
                 // Return best match of contents, will return a name match if possible
@@ -154,7 +162,7 @@ public class JarDiff implements JarDiffCodes
             // SECOND PASS: <deleted files> = <oldjarnames> - <implicitmoves> -
             // <source of move commands> - <new or modified entries>
             ArrayList<String> deleted = new ArrayList<>();
-            for (JarEntry oldEntry : oldJar) {
+            for (ZipEntry oldEntry : oldJar) {
                 String oldName = oldEntry.getName();
                 if (!implicit.contains(oldName) && !moveSrc.contains(oldName)
                     && !newEntries.contains(oldName)) {
@@ -180,7 +188,7 @@ public class JarDiff implements JarDiffCodes
                 }
             }
 
-            JarOutputStream jos = new JarOutputStream(os);
+            ZipOutputStream jos = new ZipOutputStream(os);
 
             // Write out all the MOVEs and REMOVEs
             createIndex(jos, deleted, moved);
@@ -203,7 +211,7 @@ public class JarDiff implements JarDiffCodes
      * <code>oldEntries</code> gives the names of the files that were removed,
      * <code>movedMap</code> maps from the new name to the old name.
      */
-    private static void createIndex (JarOutputStream jos, List<String> oldEntries,
+    private static void createIndex (ZipOutputStream jos, List<String> oldEntries,
                                      Map<String,String> movedMap)
         throws IOException
     {
@@ -220,17 +228,17 @@ public class JarDiff implements JarDiffCodes
         }
 
         // And those that have moved
-        for (String newName : movedMap.keySet()) {
-            String oldName = movedMap.get(newName);
+        for (Map.Entry<String, String> entry : movedMap.entrySet()) {
+            String oldName = entry.getValue();
             writer.write(MOVE_COMMAND);
             writer.write(" ");
             writeEscapedString(writer, oldName);
             writer.write(" ");
-            writeEscapedString(writer, newName);
+            writeEscapedString(writer, entry.getKey());
             writer.write("\r\n");
         }
 
-        jos.putNextEntry(new JarEntry(INDEX_NAME));
+        jos.putNextEntry(new ZipEntry(INDEX_NAME));
         byte[] bytes = writer.toString().getBytes(UTF_8);
         jos.write(bytes, 0, bytes.length);
     }
@@ -264,7 +272,7 @@ public class JarDiff implements JarDiffCodes
         return writer;
     }
 
-    private static void writeEntry (JarOutputStream jos, JarEntry entry, JarFile2 file)
+    private static void writeEntry (ZipOutputStream jos, ZipEntry entry, JarFile2 file)
         throws IOException
     {
         try (InputStream data = file.getJarFile().getInputStream(entry)) {
@@ -278,31 +286,31 @@ public class JarDiff implements JarDiffCodes
     }
 
     /**
-     * JarFile2 wraps a JarFile providing some convenience methods.
+     * JarFile2 wraps a ZipFile providing some convenience methods.
      */
-    private static class JarFile2 implements Iterable<JarEntry>, Closeable
+    private static class JarFile2 implements Iterable<ZipEntry>, Closeable
     {
-        private JarFile _jar;
-        private List<JarEntry> _entries;
-        private HashMap<String,JarEntry> _nameToEntryMap;
-        private HashMap<Long,LinkedList<JarEntry>> _crcToEntryMap;
+        private ZipFile _jar;
+        private List<ZipEntry> _entries;
+        private HashMap<String,ZipEntry> _nameToEntryMap;
+        private HashMap<Long,LinkedList<ZipEntry>> _crcToEntryMap;
 
         public JarFile2 (String path) throws IOException {
-            _jar = new JarFile(new File(path));
+            _jar = new ZipFile(new File(path));
             index();
         }
 
-        public JarFile getJarFile () {
+        public ZipFile getJarFile () {
             return _jar;
         }
 
-        // from interface Iterable<JarEntry>
+        // from interface Iterable<ZipEntry>
         @Override
-        public Iterator<JarEntry> iterator () {
+        public Iterator<ZipEntry> iterator () {
             return _entries.iterator();
         }
 
-        public JarEntry getEntryByName (String name) {
+        public ZipEntry getEntryByName (String name) {
             return _nameToEntryMap.get(name);
         }
 
@@ -350,7 +358,7 @@ public class JarDiff implements JarDiffCodes
             return retVal;
         }
 
-        public String getBestMatch (JarFile2 file, JarEntry entry) throws IOException {
+        public String getBestMatch (JarFile2 file, ZipEntry entry) throws IOException {
             // check for same name and same content, return name if found
             if (contains(file, entry)) {
                 return (entry.getName());
@@ -360,9 +368,8 @@ public class JarDiff implements JarDiffCodes
             return (hasSameContent(file,entry));
         }
 
-        public boolean contains (JarFile2 f, JarEntry e) throws IOException {
-
-            JarEntry thisEntry = getEntryByName(e.getName());
+        public boolean contains (JarFile2 f, ZipEntry e) throws IOException {
+            ZipEntry thisEntry = getEntryByName(e.getName());
 
             // Look up name in 'this' Jar2File - if not exist return false
             if (thisEntry == null)
@@ -379,17 +386,17 @@ public class JarDiff implements JarDiffCodes
             }
         }
 
-        public String hasSameContent (JarFile2 file, JarEntry entry) throws IOException {
+        public String hasSameContent (JarFile2 file, ZipEntry entry) throws IOException {
             String thisName = null;
             Long crcL = Long.valueOf(entry.getCrc());
             // check if this jar contains files with the passed in entry's crc
             if (_crcToEntryMap.containsKey(crcL)) {
                 // get the Linked List with files with the crc
-                LinkedList<JarEntry> ll = _crcToEntryMap.get(crcL);
+                LinkedList<ZipEntry> ll = _crcToEntryMap.get(crcL);
                 // go through the list and check for content match
-                ListIterator<JarEntry> li = ll.listIterator(0);
+                ListIterator<ZipEntry> li = ll.listIterator(0);
                 while (li.hasNext()) {
-                    JarEntry thisEntry = li.next();
+                    ZipEntry thisEntry = li.next();
                     // check for content match
                     try (InputStream oldIS = getJarFile().getInputStream(thisEntry);
                          InputStream newIS = file.getJarFile().getInputStream(entry)) {
@@ -404,7 +411,7 @@ public class JarDiff implements JarDiffCodes
         }
 
         private void index () throws IOException {
-            Enumeration<JarEntry> entries = _jar.entries();
+            Enumeration<? extends ZipEntry> entries = _jar.entries();
 
             _nameToEntryMap = new HashMap<>();
             _crcToEntryMap = new HashMap<>();
@@ -414,7 +421,7 @@ public class JarDiff implements JarDiffCodes
             }
             if (entries != null) {
                 while (entries.hasMoreElements()) {
-                    JarEntry entry = entries.nextElement();
+                    ZipEntry entry = entries.nextElement();
                     long crc = entry.getCrc();
                     Long crcL = Long.valueOf(crc);
                     if (_debug) {
@@ -427,13 +434,13 @@ public class JarDiff implements JarDiffCodes
                     // generate the CRC to entries map
                     if (_crcToEntryMap.containsKey(crcL)) {
                         // key exist, add the entry to the correcponding linked list
-                        LinkedList<JarEntry> ll = _crcToEntryMap.get(crcL);
+                        LinkedList<ZipEntry> ll = _crcToEntryMap.get(crcL);
                         ll.add(entry);
                         _crcToEntryMap.put(crcL, ll);
 
                     } else {
                         // create a new entry in the hashmap for the new key
-                        LinkedList<JarEntry> ll = new LinkedList<JarEntry>();
+                        LinkedList<ZipEntry> ll = new LinkedList<>();
                         ll.add(entry);
                         _crcToEntryMap.put(crcL, ll);
                     }

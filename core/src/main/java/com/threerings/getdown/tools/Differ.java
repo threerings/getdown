@@ -11,15 +11,12 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
-import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
-
-import java.security.MessageDigest;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import com.threerings.getdown.data.Application;
 import com.threerings.getdown.data.Digest;
@@ -99,7 +96,7 @@ public class Differ
         MessageDigest md = Digest.getMessageDigest(version);
         try (FileOutputStream fos = new FileOutputStream(patch);
              BufferedOutputStream buffered = new BufferedOutputStream(fos);
-             JarOutputStream jout = new JarOutputStream(buffered)) {
+             ZipOutputStream jout = new ZipOutputStream(buffered)) {
 
             // for each file in the new application, it either already exists
             // in the old application, or it is new
@@ -172,13 +169,13 @@ public class Differ
         throws IOException
     {
         File temp = File.createTempFile("differ", "jar");
-        try (JarFile jar = new JarFile(target);
-             FileOutputStream tempFos = new FileOutputStream(temp);
-             BufferedOutputStream tempBos = new BufferedOutputStream(tempFos);
-             JarOutputStream jout = new JarOutputStream(tempBos)) {
+        try (ZipFile jar = new ZipFile(target);
+            FileOutputStream tempFos = new FileOutputStream(temp);
+            BufferedOutputStream tempBos = new BufferedOutputStream(tempFos);
+            ZipOutputStream jout = new ZipOutputStream(tempBos)) {
             byte[] buffer = new byte[4096];
-            for (Enumeration< JarEntry > iter = jar.entries(); iter.hasMoreElements();) {
-                JarEntry entry = iter.nextElement();
+            for (Enumeration<? extends ZipEntry> iter = jar.entries(); iter.hasMoreElements();) {
+                ZipEntry entry = iter.nextElement();
                 entry.setCompressedSize(-1);
                 jout.putNextEntry(entry);
                 try (InputStream in = jar.getInputStream(entry)) {
@@ -193,7 +190,7 @@ public class Differ
         return temp;
     }
 
-    protected void jarDiff (File ofile, File nfile, JarOutputStream jout)
+    protected void jarDiff (File ofile, File nfile, ZipOutputStream jout)
         throws IOException
     {
         JarDiff.createPatch(ofile.getPath(), nfile.getPath(), jout, false);
@@ -222,8 +219,7 @@ public class Differ
         }
     }
 
-    protected static void pipe (File file, JarOutputStream jout)
-        throws IOException
+    protected static void pipe (File file, ZipOutputStream jout) throws IOException
     {
         try (FileInputStream fin = new FileInputStream(file)) {
             StreamUtil.copy(fin, jout);
