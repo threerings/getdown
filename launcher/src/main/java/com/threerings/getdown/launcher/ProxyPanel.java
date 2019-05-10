@@ -35,14 +35,15 @@ import static com.threerings.getdown.Log.log;
  */
 public final class ProxyPanel extends JPanel implements ActionListener
 {
-    public ProxyPanel (Getdown getdown, ResourceBundle msgs)
+    public ProxyPanel (Getdown getdown, ResourceBundle msgs, boolean wrongProxyCredentials)
     {
         _getdown = getdown;
         _msgs = msgs;
+        _wrongProxyCredentials = wrongProxyCredentials;
 
         setLayout(new VGroupLayout());
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        add(new SaneLabelField(get("m.configure_proxy")));
+        add(new SaneLabelField(get(wrongProxyCredentials ? "m.resubmitProxyCredentials" : "m.configure_proxy")));
         add(new Spacer(5, 5));
 
         JPanel row = new JPanel(new GridLayout());
@@ -61,19 +62,21 @@ public final class ProxyPanel extends JPanel implements ActionListener
         row.add(new SaneLabelField(get("m.proxy_auth_required")), BorderLayout.WEST);
         _useAuth = new JCheckBox();
         row.add(_useAuth);
+        _useAuth.setSelected(wrongProxyCredentials);
         add(row);
+        	
 
         row = new JPanel(new GridLayout());
         row.add(new SaneLabelField(get("m.proxy_username")), BorderLayout.WEST);
         _username = new SaneTextField();
-        _username.setEnabled(false);
+        _username.setEnabled(wrongProxyCredentials);
         row.add(_username);
         add(row);
 
         row = new JPanel(new GridLayout());
         row.add(new SaneLabelField(get("m.proxy_password")), BorderLayout.WEST);
         _password = new SanePasswordField();
-        _password.setEnabled(false);
+        _password.setEnabled(wrongProxyCredentials);
         row.add(_password);
         add(row);
 
@@ -112,7 +115,14 @@ public final class ProxyPanel extends JPanel implements ActionListener
     public void addNotify ()
     {
         super.addNotify();
-        _host.requestFocusInWindow();
+        if (_wrongProxyCredentials) 
+        {
+        	// we got HTTP 407 Proxy authentication required albeit sending credentials
+        	// thus we can assume proxy-host/port are correcty set, we just need new credentials so set the focus there
+        	_username.requestFocusInWindow();
+        }
+        else 
+        	_host.requestFocusInWindow();
     }
 
     // documentation inherited
@@ -192,4 +202,5 @@ public final class ProxyPanel extends JPanel implements ActionListener
     protected JCheckBox _useAuth;
     protected JTextField _username;
     protected JPasswordField _password;
+    protected boolean _wrongProxyCredentials;
 }

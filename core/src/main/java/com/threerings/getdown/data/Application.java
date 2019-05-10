@@ -236,6 +236,8 @@ public class Application
       * the application instance. Yes this is a public mutable field, no I'm not going to create a
       * getter and setter just to pretend like that's not the case. */
     public Proxy proxy = Proxy.NO_PROXY;
+    
+    public boolean wrongProxyCredentials = false;
 
     /**
      * Creates an application instance which records the location of the <code>getdown.txt</code>

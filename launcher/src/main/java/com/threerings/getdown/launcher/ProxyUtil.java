@@ -16,6 +16,7 @@ import java.net.PasswordAuthentication;
 import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.Authenticator.RequestorType;
 import java.util.Iterator;
 import java.util.ServiceLoader;
 
@@ -24,6 +25,7 @@ import ca.beq.util.win32.registry.RegistryValue;
 import ca.beq.util.win32.registry.RootKey;
 
 import com.threerings.getdown.data.Application;
+import com.threerings.getdown.data.SysProps;
 import com.threerings.getdown.spi.ProxyAuth;
 import com.threerings.getdown.util.Config;
 import com.threerings.getdown.util.ConnectionUtil;
@@ -93,8 +95,7 @@ public class ProxyUtil {
         }
 
         // yay, we found a proxy configuration, configure it in the app
-        initProxy(app, host, port, null, null);
-        return true;
+        return initProxy(app, host, port, null, null);
     }
 
     public static boolean canLoadWithoutProxy (URL rurl)
@@ -102,7 +103,8 @@ public class ProxyUtil {
         log.info("Testing whether proxy is needed, via: " + rurl);
         try {
             // try to make a HEAD request for this URL (use short connect and read timeouts)
-            URLConnection conn = ConnectionUtil.open(Proxy.NO_PROXY, rurl, 5, 5);
+        	int timeoutSeconds = SysProps.alwaysTryFirstWithoutProxySettings() ? 2 : 5;
+            URLConnection conn = ConnectionUtil.open(Proxy.NO_PROXY, rurl, timeoutSeconds, timeoutSeconds);
             if (conn instanceof HttpURLConnection) {
                 HttpURLConnection hcon = (HttpURLConnection)conn;
                 try {
@@ -176,7 +178,7 @@ public class ProxyUtil {
         }
     }
 
-    public static void initProxy (Application app, String host, String port,
+    public static boolean initProxy (Application app, String host, String port,
                                   String username, String password)
     {
         // check whether we have saved proxy credentials
@@ -202,7 +204,28 @@ public class ProxyUtil {
                     return new PasswordAuthentication(fuser, fpass);
                 }
             });
+            
+	         try {
+	            // Now test if we get still a 407 then credentials are wrong/obsolete
+	            URLConnection conn = app.getRemoteURL("getdown.txt").openConnection(app.proxy);
+	            if (conn instanceof HttpURLConnection)
+	            {
+	            	HttpURLConnection hcon = (HttpURLConnection)conn;
+	            	hcon.setConnectTimeout(1000);
+	            	hcon.setInstanceFollowRedirects(false);
+					int rcode = hcon.getResponseCode();
+					if (rcode == HttpURLConnection.HTTP_PROXY_AUTH)
+					{
+						app.wrongProxyCredentials = true;
+						return false;
+					}
+	            }
+			} catch (Exception e1) {
+				e1.printStackTrace();
+				return false;
+			}
         }
+        return true;
     }
 
     protected static final String PROXY_REGISTRY =

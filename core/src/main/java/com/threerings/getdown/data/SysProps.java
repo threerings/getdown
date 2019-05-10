@@ -101,12 +101,13 @@ public class SysProps
         return Boolean.getBoolean("direct");
     }
     
-    /** If true, Getdown will reset the content of proxy.txt once it can connect without proxy settings too.
-     * Defaults to false because if a user his workstation in 2 different networks, one with proxy the other one without,
-     * it should not been asked for proxy settings again each time he switches back to the proxy-network.   
-     * Usage: {@code -DresetUnNeededProxySettings}. */
-   public static boolean resetUnNeededProxySettings () {
-       return Boolean.getBoolean("resetUnNeededProxySettings");
+    /** If true, Getdown will always try to connect without proxy settings even it a proxy is set in proxy.txt
+     * In case when direct access is possible it will not empty the proxy.txt but preserve the settings.
+     * This is to support special cases where a user uses his workstation in 2 different networks, one with proxy the other one without,
+     * he should not been asked for proxy settings again each time he switches back to the proxy-network.   
+     * Usage: {@code -DalwaysTryFirstWithoutProxySettings}. */
+   public static boolean alwaysTryFirstWithoutProxySettings () {
+       return Boolean.getBoolean("alwaysTryFirstWithoutProxySettings");
    }
 
     /** Specifies the connection timeout (in seconds) to use when downloading control files from

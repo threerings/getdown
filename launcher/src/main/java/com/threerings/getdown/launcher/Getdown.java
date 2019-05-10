@@ -151,12 +151,13 @@ public abstract class Getdown extends Thread
                 // allow them to close the window to abort the proxy configuration
                 _dead = true;
                 configureContainer();
-                ProxyPanel panel = new ProxyPanel(this, _msgs);
+                ProxyPanel panel = new ProxyPanel(this, _msgs, _app.wrongProxyCredentials);
                 // set up any existing configured proxy
                 String[] hostPort = ProxyUtil.loadProxy(_app);
                 panel.setProxy(hostPort[0], hostPort[1]);
                 _container.add(panel, BorderLayout.CENTER);
                 showContainer();
+                
             }
 
         } catch (Exception e) {
@@ -198,7 +199,9 @@ public abstract class Getdown extends Thread
     }
 
     protected boolean detectProxy () {
-  
+    	if (!SysProps.alwaysTryFirstWithoutProxySettings() && ProxyUtil.autoDetectProxy(_app)) {
+            return true;
+        }
 
         // see if we actually need a proxy; first we have to initialize our application
         // to get some sort of interface configuration and the appbase URL
@@ -216,10 +219,10 @@ public abstract class Getdown extends Thread
             return false;
         }
 
-        // we got through, so we appear not to require a proxy; make a blank proxy config so that
-        // we don't go through this whole detection process again next time
         log.info("No proxy appears to be needed.");
-        if (SysProps.resetUnNeededProxySettings())  {
+        if (!SysProps.alwaysTryFirstWithoutProxySettings())  {
+        	// we got through, so we appear not to require a proxy; make a blank proxy config so that
+            // we don't go through this whole detection process again next time
         	ProxyUtil.saveProxy(_app, null, null);
         }
         return true;
