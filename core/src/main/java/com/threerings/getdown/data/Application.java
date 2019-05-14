@@ -29,6 +29,7 @@ import com.threerings.getdown.util.*;
 import com.threerings.getdown.util.Base64;
 
 import static com.threerings.getdown.Log.log;
+import java.net.InetSocketAddress;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
@@ -961,12 +962,20 @@ public class Application
         }
 
         // pass along our proxy settings
-        String proxyHost;
-        if ((proxyHost = System.getProperty("http.proxyHost")) != null) {
-            args.add("-Dhttp.proxyHost=" + proxyHost);
-            args.add("-Dhttp.proxyPort=" + System.getProperty("http.proxyPort"));
-            args.add("-Dhttps.proxyHost=" + proxyHost);
-            args.add("-Dhttps.proxyPort=" + System.getProperty("http.proxyPort"));
+        if (proxy != Proxy.NO_PROXY && proxy.address() instanceof InetSocketAddress) {
+            InetSocketAddress proxyAddr = (InetSocketAddress) proxy.address();
+            args.add("-Dhttp.proxyHost=" + proxyAddr.getHostString());
+            args.add("-Dhttp.proxyPort=" + proxyAddr.getPort());
+            args.add("-Dhttps.proxyHost=" + proxyAddr.getHostString());
+            args.add("-Dhttps.proxyPort=" + proxyAddr.getPort());
+        } else {
+            String proxyHost;
+            if ((proxyHost = System.getProperty("http.proxyHost")) != null) {
+                args.add("-Dhttp.proxyHost=" + proxyHost);
+                args.add("-Dhttp.proxyPort=" + System.getProperty("http.proxyPort"));
+                args.add("-Dhttps.proxyHost=" + proxyHost);
+                args.add("-Dhttps.proxyPort=" + System.getProperty("http.proxyPort"));
+            }
         }
 
         // add the marker indicating the app is running in getdown
