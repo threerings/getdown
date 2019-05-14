@@ -7,6 +7,7 @@ package com.threerings.getdown.data;
 
 import java.io.*;
 import java.lang.reflect.Method;
+import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
@@ -29,7 +30,6 @@ import com.threerings.getdown.util.*;
 import com.threerings.getdown.util.Base64;
 
 import static com.threerings.getdown.Log.log;
-import java.net.InetSocketAddress;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
