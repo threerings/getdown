@@ -6,6 +6,9 @@
   the resource verification process. Apparently in some pathological situations, this is needed.
   Woe betide the users who have to stare at an unmoving progress bar for more than 60 seconds.
 
+* Added `java_local_dir` config to allow custom location for Java if `java_location` is specified.
+  See [#206](//github.com/threerings/getdown/pull/206).
+
 * `messages_XX.properties` files are now all maintained in UTF-8 encoding and then converted to
   escaped ISO-8859-1 during the build process.
 
