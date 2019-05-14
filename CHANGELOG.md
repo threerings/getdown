@@ -1,6 +1,6 @@
 # Getdown Releases
 
-## 1.8.4 - Unreleased
+## 1.8.4 - May 14, 2019
 
 * Added `verify_timeout` config to allow customization of the default (60 second) timeout during
   the resource verification process. Apparently in some pathological situations, this is needed.
