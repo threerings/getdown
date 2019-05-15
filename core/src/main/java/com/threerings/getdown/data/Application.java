@@ -962,7 +962,7 @@ public class Application
         }
 
         // pass along our proxy settings
-        if (proxy != Proxy.NO_PROXY && proxy.address() instanceof InetSocketAddress) {
+        if (proxy != Proxy.NO_PROXY && proxy.type() == Proxy.Type.HTTP && proxy.address() instanceof InetSocketAddress) {
             InetSocketAddress proxyAddr = (InetSocketAddress) proxy.address();
             args.add("-Dhttp.proxyHost=" + proxyAddr.getHostString());
             args.add("-Dhttp.proxyPort=" + proxyAddr.getPort());
