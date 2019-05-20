@@ -7,6 +7,7 @@ package com.threerings.getdown.data;
 
 import java.io.*;
 import java.lang.reflect.Method;
+import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
@@ -961,12 +962,14 @@ public class Application
         }
 
         // pass along our proxy settings
-        String proxyHost;
-        if ((proxyHost = System.getProperty("http.proxyHost")) != null) {
+        if (proxy.type() == Proxy.Type.HTTP && proxy.address() instanceof InetSocketAddress) {
+            InetSocketAddress proxyAddr = (InetSocketAddress) proxy.address();
+            String proxyHost = proxyAddr.getHostString();
+            int proxyPort = proxyAddr.getPort();
             args.add("-Dhttp.proxyHost=" + proxyHost);
-            args.add("-Dhttp.proxyPort=" + System.getProperty("http.proxyPort"));
+            args.add("-Dhttp.proxyPort=" + proxyPort);
             args.add("-Dhttps.proxyHost=" + proxyHost);
-            args.add("-Dhttps.proxyPort=" + System.getProperty("http.proxyPort"));
+            args.add("-Dhttps.proxyPort=" + proxyPort);
         }
 
         // add the marker indicating the app is running in getdown
