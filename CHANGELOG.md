@@ -1,5 +1,9 @@
 # Getdown Releases
 
+## 1.8.5 - Unreleased
+
+* Fixed issues with proxy information not getting properly passed through to app.
+
 ## 1.8.4 - May 14, 2019
 
 * Added `verify_timeout` config to allow customization of the default (60 second) timeout during
