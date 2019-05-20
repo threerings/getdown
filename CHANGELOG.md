@@ -3,7 +3,7 @@
 ## 1.8.5 - Unreleased
 
 * Fixed issues with proxy information not getting properly passed through to app.
-  Via [#216](//github.com/threerings/getdown/pull/198).
+  Via [#216](//github.com/threerings/getdown/pull/216).
 
 ## 1.8.4 - May 14, 2019
 
