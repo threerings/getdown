@@ -621,7 +621,7 @@ public class Application
 
         // make sure there's a trailing slash
         if (!_appbase.endsWith("/")) {
-            _appbase += "/";
+            _appbase = _appbase + "/";
         }
 
         // extract our version information
@@ -638,9 +638,11 @@ public class Application
         // check for a latest config URL
         String latest = config.getString("latest");
         if (latest != null) {
-            latest = latest.startsWith(_appbase)
-                ? _appbase + latest.substring(_appbase.length())
-                : SysProps.replaceDomain(latest);
+            if (latest.startsWith(_appbase)) {
+                latest = _appbase + latest.substring(_appbase.length());
+            } else {
+                latest = SysProps.replaceDomain(latest);
+            }
             try {
                 _latest = HostWhitelist.verify(new URL(latest));
             } catch (MalformedURLException mue) {
@@ -668,9 +670,6 @@ public class Application
         // check to see if we require a particular JVM version and have a supplied JVM
         _javaExactVersionRequired = config.getBoolean("java_exact_version_required");
 
-        // this is a little weird, but when we're run from the digester, we see a String[] which
-        // contains java locations for all platforms which we can't grok, but the digester doesn't
-        // need to know about that; when we're run in a real application there will be only one!
         _javaLocation = config.getString("java_location");
 
         // used only in conjunction with java_location
