@@ -7,6 +7,7 @@ package com.threerings.getdown.data;
 
 import java.io.*;
 import java.lang.reflect.Method;
+import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
@@ -32,7 +33,7 @@ import static com.threerings.getdown.Log.log;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
- * Parses and provide access to the information contained in the <code>getdown.txt</code>
+ * Parses and provide access to the information contained in the {@code getdown.txt}
  * configuration file.
  */
 public class Application
@@ -211,10 +212,10 @@ public class Application
      * Used by {@link #verifyMetadata} to communicate status in circumstances where it needs to
      * take network actions.
      */
-    public static interface StatusDisplay
+    public interface StatusDisplay
     {
         /** Requests that the specified status message be displayed. */
-        public void updateStatus (String message);
+        void updateStatus (String message);
     }
 
     /**
@@ -232,6 +233,44 @@ public class Application
         }
     }
 
+    /**
+     * Reads the {@code getdown.txt} config file into a {@code Config} object and returns it.
+     */
+    public static Config readConfig (EnvConfig envc, boolean checkPlatform) throws IOException {
+        Config config = null;
+        File cfgfile = new File(envc.appDir, CONFIG_FILE);
+        Config.ParseOpts opts = Config.createOpts(checkPlatform);
+        try {
+            // if we have a configuration file, read the data from it
+            if (cfgfile.exists()) {
+                config = Config.parseConfig(cfgfile, opts);
+            }
+            // otherwise, try reading data from our backup config file; thanks to funny windows
+            // bullshit, we have to do this backup file fiddling in case we got screwed while
+            // updating getdown.txt during normal operation
+            else if ((cfgfile = new File(envc.appDir, Application.CONFIG_FILE + "_old")).exists()) {
+                config = Config.parseConfig(cfgfile, opts);
+            }
+            // otherwise, issue a warning that we found no getdown file
+            else {
+                log.info("Found no getdown.txt file", "appdir", envc.appDir);
+            }
+        } catch (Exception e) {
+            log.warning("Failure reading config file", "file", config, e);
+        }
+
+        // if we failed to read our config file, check for an appbase specified via a system
+        // property; we can use that to bootstrap ourselves back into operation
+        if (config == null) {
+            log.info("Using 'appbase' from bootstrap config", "appbase", envc.appBase);
+            Map<String, Object> cdata = new HashMap<>();
+            cdata.put("appbase", envc.appBase);
+            config = new Config(cdata);
+        }
+
+        return config;
+    }
+
     /** The proxy that should be used to do HTTP downloads. This must be configured prior to using
       * the application instance. Yes this is a public mutable field, no I'm not going to create a
       * getter and setter just to pretend like that's not the case. */
@@ -240,13 +279,12 @@ public class Application
     public boolean wrongProxyCredentials = false;
 
     /**
-     * Creates an application instance which records the location of the <code>getdown.txt</code>
+     * Creates an application instance which records the location of the {@code getdown.txt}
      * configuration file from the supplied application directory.
      *
      */
     public Application (EnvConfig envc) {
         _envc = envc;
-        _config = new File(envc.appDir, CONFIG_FILE);
     }
 
     /**
@@ -370,8 +408,7 @@ public class Application
      */
     public List<Resource> getActiveCodeResources ()
     {
-        ArrayList<Resource> codes = new ArrayList<>();
-        codes.addAll(getCodeResources());
+        List<Resource> codes = new ArrayList<>(getCodeResources());
         for (AuxGroup aux : getAuxGroups()) {
             if (isAuxGroupActive(aux.name)) {
                 codes.addAll(aux.codes);
@@ -399,8 +436,7 @@ public class Application
      */
     public List<Resource> getActiveResources ()
     {
-        ArrayList<Resource> rsrcs = new ArrayList<>();
-        rsrcs.addAll(getResources());
+        List<Resource> rsrcs = new ArrayList<>(getResources());
         for (AuxGroup aux : getAuxGroups()) {
             if (isAuxGroupActive(aux.name)) {
                 rsrcs.addAll(aux.rsrcs);
@@ -545,41 +581,22 @@ public class Application
      * @exception IOException thrown if there is an error reading the file or an error encountered
      * during its parsing.
      */
-    public Config init (boolean checkPlatform)
-        throws IOException
+    public Config init (boolean checkPlatform) throws IOException
     {
-        Config config = null;
-        File cfgfile = _config;
-        Config.ParseOpts opts = Config.createOpts(checkPlatform);
-        try {
-            // if we have a configuration file, read the data from it
-            if (cfgfile.exists()) {
-                config = Config.parseConfig(_config, opts);
-            }
-            // otherwise, try reading data from our backup config file; thanks to funny windows
-            // bullshit, we have to do this backup file fiddling in case we got screwed while
-            // updating getdown.txt during normal operation
-            else if ((cfgfile = getLocalPath(CONFIG_FILE + "_old")).exists()) {
-                config = Config.parseConfig(cfgfile, opts);
-            }
-            // otherwise, issue a warning that we found no getdown file
-            else {
-                log.info("Found no getdown.txt file", "appdir", getAppDir());
-            }
-        } catch (Exception e) {
-            log.warning("Failure reading config file", "file", config, e);
-        }
+        Config config = readConfig(_envc, checkPlatform);
+        initBase(config);
+        initJava(config);
+        initTracking(config);
+        initResources(config);
+        initArgs(config);
+        return config;
+    }
 
-        // if we failed to read our config file, check for an appbase specified via a system
-        // property; we can use that to bootstrap ourselves back into operation
-        if (config == null) {
-            String appbase = _envc.appBase;
-            log.info("Using 'appbase' from bootstrap config", "appbase", appbase);
-            Map<String, Object> cdata = new HashMap<>();
-            cdata.put("appbase", appbase);
-            config = new Config(cdata);
-        }
-
+    /**
+     * Reads the basic config info from {@code config} into this instance. This includes things
+     * like the appbase and version.
+     */
+    public void initBase (Config config) throws IOException {
         // first determine our application base, this way if anything goes wrong later in the
         // process, our caller can use the appbase to download a new configuration file
         _appbase = config.getString("appbase");
@@ -587,12 +604,12 @@ public class Application
             throw new RuntimeException("m.missing_appbase");
         }
 
-        // check if we're overriding the domain in the appbase
-        _appbase = SysProps.overrideAppbase(_appbase);
+        // check if we're overriding the domain in the appbase, and sub envvars
+        _appbase = processArg(SysProps.overrideAppbase(_appbase));
 
         // make sure there's a trailing slash
         if (!_appbase.endsWith("/")) {
-            _appbase = _appbase + "/";
+            _appbase += "/";
         }
 
         // extract our version information
@@ -603,12 +620,13 @@ public class Application
             _vappbase = createVAppBase(_version);
         } catch (MalformedURLException mue) {
             String err = MessageUtil.tcompose("m.invalid_appbase", _appbase);
-            throw (IOException) new IOException(err).initCause(mue);
+            throw new IOException(err, mue);
         }
 
         // check for a latest config URL
         String latest = config.getString("latest");
         if (latest != null) {
+            latest = processArg(latest);
             if (latest.startsWith(_appbase)) {
                 latest = _appbase + latest.substring(_appbase.length());
             } else {
@@ -621,20 +639,28 @@ public class Application
             }
         }
 
-        String appPrefix = _envc.appId == null ? "" : (_envc.appId + ".");
-
-        // determine our application class name (use app-specific class _if_ one is provided)
-        _class = config.getString("class");
-        if (appPrefix.length() > 0) {
-            _class = config.getString(appPrefix + "class", _class);
-        }
-        if (_class == null) {
-            throw new IOException("m.missing_class");
-        }
-
         // determine whether we want strict comments
         _strictComments = config.getBoolean("strict_comments");
 
+        // determine whether we want to allow offline operation (defaults to false)
+        _allowOffline = config.getBoolean("allow_offline");
+
+        // whether to cache code resources and launch from cache
+        _useCodeCache = config.getBoolean("use_code_cache");
+        _codeCacheRetentionDays = config.getInt("code_cache_retention_days", 7);
+
+        // maximum simultaneous downloads
+        _maxConcDownloads = Math.max(1, config.getInt("max_concurrent_downloads",
+                                                      SysProps.threadPoolSize()));
+
+        _verifyTimeout = config.getInt("verify_timeout", 60);
+    }
+
+    /**
+     * Reads the JVM requirements from {@code config} into this instance. This includes things like
+     * the min and max java version, location of a locally installed JRE, etc.
+     */
+    public void initJava (Config config) {
         // check to see if we're using a custom java.version property and regex
         _javaVersionProp = config.getString("java_version_prop", _javaVersionProp);
         _javaVersionRegex = config.getString("java_version_regex", _javaVersionRegex);
@@ -649,17 +675,16 @@ public class Application
         // check to see if we require a particular JVM version and have a supplied JVM
         _javaExactVersionRequired = config.getBoolean("java_exact_version_required");
 
-        // this is a little weird, but when we're run from the digester, we see a String[] which
-        // contains java locations for all platforms which we can't grok, but the digester doesn't
-        // need to know about that; when we're run in a real application there will be only one!
-        Object javaloc = config.getRaw("java_location");
-        if (javaloc instanceof String) {
-            _javaLocation = (String)javaloc;
-        }
+        _javaLocation = config.getString("java_location");
 
         // used only in conjunction with java_location
         _javaLocalDir = getLocalPath(config.getString("java_local_dir", LaunchUtil.LOCAL_JAVA_DIR));
+    }
 
+    /**
+     * Reads the install tracking info from {@code config} into this instance.
+     */
+    public void initTracking (Config config) {
         // determine whether we have any tracking configuration
         _trackingURL = config.getString("tracking_url");
 
@@ -684,14 +709,16 @@ public class Application
 
         // Some app may need to generate google analytics code
         _trackingGAHash = config.getString("tracking_ga_hash");
+    }
 
+    /**
+     * Reads the app resource info from {@code config} into this instance.
+     */
+    public void initResources (Config config) throws IOException {
         // clear our arrays as we may be reinitializing
         _codes.clear();
         _resources.clear();
         _auxgroups.clear();
-        _jvmargs.clear();
-        _appargs.clear();
-        _txtJvmArgs.clear();
 
         // parse our code resources
         if (config.getMultiValue("code") == null &&
@@ -710,10 +737,10 @@ public class Application
 
         // parse our auxiliary resource groups
         for (String auxgroup : config.getList("auxgroups")) {
-            ArrayList<Resource> codes = new ArrayList<>();
+            List<Resource> codes = new ArrayList<>();
             parseResources(config, auxgroup + ".code", Resource.NORMAL, codes);
             parseResources(config, auxgroup + ".ucode", Resource.UNPACK, codes);
-            ArrayList<Resource> rsrcs = new ArrayList<>();
+            List<Resource> rsrcs = new ArrayList<>();
             parseResources(config, auxgroup + ".resource", Resource.NORMAL, rsrcs);
             parseResources(config, auxgroup + ".xresource", Resource.EXEC, rsrcs);
             parseResources(config, auxgroup + ".uresource", Resource.UNPACK, rsrcs);
@@ -721,21 +748,38 @@ public class Application
             parseResources(config, auxgroup + ".nresource", Resource.NATIVE, rsrcs);
             _auxgroups.put(auxgroup, new AuxGroup(auxgroup, codes, rsrcs));
         }
+    }
+
+    /**
+     * Reads the command line arg info from {@code config} into this instance.
+     */
+    public void initArgs (Config config) throws IOException {
+        _jvmargs.clear();
+        _appargs.clear();
+        _txtJvmArgs.clear();
+
+        String appPrefix = _envc.appId == null ? "" : (_envc.appId + ".");
+
+        // determine our application class name (use app-specific class _if_ one is provided)
+        _class = config.getString("class");
+        if (appPrefix.length() > 0) {
+            _class = config.getString(appPrefix + "class", _class);
+        }
+        if (_class == null) {
+            throw new IOException("m.missing_class");
+        }
 
         // transfer our JVM arguments (we include both "global" args and app_id-prefixed args)
-        String[] jvmargs = config.getMultiValue("jvmarg");
-        addAll(jvmargs, _jvmargs);
+        addAll(config.getMultiValue("jvmarg"), _jvmargs);
         if (appPrefix.length() > 0) {
-            jvmargs = config.getMultiValue(appPrefix + "jvmarg");
-            addAll(jvmargs, _jvmargs);
+            addAll(config.getMultiValue(appPrefix + "jvmarg"), _jvmargs);
         }
 
         // get the set of optimum JVM arguments
         _optimumJvmArgs = config.getMultiValue("optimum_jvmarg");
 
         // transfer our application arguments
-        String[] appargs = config.getMultiValue(appPrefix + "apparg");
-        addAll(appargs, _appargs);
+        addAll(config.getMultiValue(appPrefix + "apparg"), _appargs);
 
         // add the launch specific application arguments
         _appargs.addAll(_envc.appArgs);
@@ -743,27 +787,13 @@ public class Application
         // look for custom arguments
         fillAssignmentListFromPairs("extra.txt", _txtJvmArgs);
 
-        // determine whether we want to allow offline operation (defaults to false)
-        _allowOffline = config.getBoolean("allow_offline");
-
-        // look for a debug.txt file which causes us to run in java.exe on Windows so that we can
-        // obtain a thread dump of the running JVM
-        _windebug = getLocalPath("debug.txt").exists();
-
-        // whether to cache code resources and launch from cache
-        _useCodeCache = config.getBoolean("use_code_cache");
-        _codeCacheRetentionDays = config.getInt("code_cache_retention_days", 7);
-
-        // maximum simultaneous downloads
-        _maxConcDownloads = Math.max(1, config.getInt("max_concurrent_downloads",
-                                                      SysProps.threadPoolSize()));
-
         // extract some info used to configure our child process on macOS
         _dockName = config.getString("ui.name");
         _dockIconPath = config.getString("ui.mac_dock_icon", "../desktop.icns");
 
-        _verifyTimeout = config.getInt("verify_timeout", 60);
-        return config;
+        // look for a debug.txt file which causes us to run in java.exe on Windows so that we can
+        // obtain a thread dump of the running JVM
+        _windebug = getLocalPath("debug.txt").exists();
     }
 
     /**
@@ -792,8 +822,7 @@ public class Application
      * Returns a URL from which the specified path can be fetched. Our application base URL is
      * properly versioned and combined with the supplied path.
      */
-    public URL getRemoteURL (String path)
-        throws MalformedURLException
+    public URL getRemoteURL (String path) throws MalformedURLException
     {
         return new URL(_vappbase, encodePath(path));
     }
@@ -883,7 +912,7 @@ public class Application
     }
 
     /**
-     * Attempts to redownload the <code>getdown.txt</code> file based on information parsed from a
+     * Attempts to redownload the {@code getdown.txt} file based on information parsed from a
      * previous call to {@link #init}.
      */
     public void attemptRecovery (StatusDisplay status)
@@ -894,7 +923,7 @@ public class Application
     }
 
     /**
-     * Downloads and replaces the <code>getdown.txt</code> and <code>digest.txt</code> files with
+     * Downloads and replaces the {@code getdown.txt} and {@code digest.txt} files with
      * those for the target version of our application.
      */
     public void updateMetadata ()
@@ -905,7 +934,7 @@ public class Application
             _vappbase = createVAppBase(_targetVersion);
         } catch (MalformedURLException mue) {
             String err = MessageUtil.tcompose("m.invalid_appbase", _appbase);
-            throw (IOException) new IOException(err).initCause(mue);
+            throw new IOException(err, mue);
         }
 
         try {
@@ -963,12 +992,14 @@ public class Application
         }
 
         // pass along our proxy settings
-        String proxyHost;
-        if ((proxyHost = System.getProperty("http.proxyHost")) != null) {
+        if (proxy.type() == Proxy.Type.HTTP && proxy.address() instanceof InetSocketAddress) {
+            InetSocketAddress proxyAddr = (InetSocketAddress) proxy.address();
+            String proxyHost = proxyAddr.getHostString();
+            int proxyPort = proxyAddr.getPort();
             args.add("-Dhttp.proxyHost=" + proxyHost);
-            args.add("-Dhttp.proxyPort=" + System.getProperty("http.proxyPort"));
+            args.add("-Dhttp.proxyPort=" + proxyPort);
             args.add("-Dhttps.proxyHost=" + proxyHost);
-            args.add("-Dhttps.proxyPort=" + System.getProperty("http.proxyPort"));
+            args.add("-Dhttps.proxyPort=" + proxyPort);
         }
 
         // add the marker indicating the app is running in getdown
@@ -1079,7 +1110,7 @@ public class Application
         for (String jvmarg : _jvmargs) {
             if (jvmarg.startsWith("-D")) {
                 jvmarg = processArg(jvmarg.substring(2));
-                int eqidx = jvmarg.indexOf("=");
+                int eqidx = jvmarg.indexOf('=');
                 if (eqidx == -1) {
                     log.warning("Bogus system property: '" + jvmarg + "'?");
                 } else {
@@ -1141,8 +1172,8 @@ public class Application
     }
 
     /**
-     * Loads the <code>digest.txt</code> file and verifies the contents of both that file and the
-     * <code>getdown.text</code> file. Then it loads the <code>version.txt</code> and decides
+     * Loads the {@code digest.txt} file and verifies the contents of both that file and the
+     * {@code getdown.text} file. Then it loads the {@code version.txt} and decides
      * whether or not the application needs to be updated or whether we can proceed to verification
      * and execution.
      *
@@ -1233,7 +1264,7 @@ public class Application
                      InputStreamReader reader = new InputStreamReader(in, UTF_8);
                      BufferedReader bin = new BufferedReader(reader)) {
                     for (String[] pair : Config.parsePairs(bin, Config.createOpts(false))) {
-                        if (pair[0].equals("version")) {
+                        if ("version".equals(pair[0])) {
                             _targetVersion = Math.max(Long.parseLong(pair[1]), _targetVersion);
                             if (fileVersion != -1 && _targetVersion > fileVersion) {
                                 // replace the file with the newest version
@@ -1439,7 +1470,7 @@ public class Application
     protected URL createVAppBase (long version)
         throws MalformedURLException
     {
-        String url = version < 0 ? _appbase : _appbase.replace("%VERSION%", "" + version);
+        String url = version < 0 ? _appbase : _appbase.replace("%VERSION%", String.valueOf(version));
         return HostWhitelist.verify(new URL(url));
     }
 
@@ -1610,7 +1641,7 @@ public class Application
         } catch (Exception e) {
             log.warning("Requested to download invalid control file",
                 "appbase", _vappbase, "path", path, "error", e);
-            throw (IOException) new IOException("Invalid path '" + path + "'.").initCause(e);
+            throw new IOException("Invalid path '" + path + "'.", e);
         }
 
         log.info("Attempting to refetch '" + path + "' from '" + targetURL + "'.");
@@ -1647,9 +1678,7 @@ public class Application
     /** Helper function to add all values in {@code values} (if non-null) to {@code target}. */
     protected static void addAll (String[] values, List<String> target) {
         if (values != null) {
-            for (String value : values) {
-                target.add(value);
-            }
+            Collections.addAll(target, values);
         }
     }
 
@@ -1732,7 +1761,6 @@ public class Application
     }
 
     protected final EnvConfig _envc;
-    protected File _config;
     protected Digest _digest;
 
     protected long _version = -1;

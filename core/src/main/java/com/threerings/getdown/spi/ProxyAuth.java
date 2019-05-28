@@ -11,7 +11,7 @@ package com.threerings.getdown.spi;
 public interface ProxyAuth
 {
     /** Credentials for a proxy server. */
-    public static class Credentials {
+    class Credentials {
         public final String username;
         public final String password;
         public Credentials (String username, String password) {
@@ -23,10 +23,10 @@ public interface ProxyAuth
     /**
      * Loads the credentials for the app installed in {@code appDir}.
      */
-    public Credentials loadCredentials (String appDir);
+    Credentials loadCredentials (String appDir);
 
     /**
      * Encrypts and saves the credentials for the app installed in {@code appDir}.
      */
-    public void saveCredentials (String appDir, String username, String password);
+    void saveCredentials (String appDir, String username, String password);
 }

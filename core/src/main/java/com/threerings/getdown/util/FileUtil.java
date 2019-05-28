@@ -8,7 +8,7 @@ package com.threerings.getdown.util;
 import java.io.*;
 import java.util.*;
 import java.util.jar.*;
-import java.util.zip.GZIPInputStream;
+import java.util.zip.*;
 
 import com.threerings.getdown.Log;
 import static com.threerings.getdown.Log.log;
@@ -16,7 +16,7 @@ import static com.threerings.getdown.Log.log;
 /**
  * File related utilities.
  */
-public class FileUtil
+public final class FileUtil
 {
     /**
      * Gets the specified source file to the specified destination file by hook or crook. Windows
@@ -114,13 +114,13 @@ public class FileUtil
      * @param cleanExistingDirs if true, all files in all directories contained in {@code jar} will
      * be deleted prior to unpacking the jar.
      */
-    public static void unpackJar (JarFile jar, File target, boolean cleanExistingDirs)
+    public static void unpackJar (ZipFile jar, File target, boolean cleanExistingDirs)
         throws IOException
     {
         if (cleanExistingDirs) {
-            Enumeration<?> entries = jar.entries();
+            Enumeration<? extends ZipEntry> entries = jar.entries();
             while (entries.hasMoreElements()) {
-                JarEntry entry = (JarEntry)entries.nextElement();
+                ZipEntry entry = entries.nextElement();
                 if (entry.isDirectory()) {
                     File efile = new File(target, entry.getName());
                     if (efile.exists()) {
@@ -133,9 +133,9 @@ public class FileUtil
             }
         }
 
-        Enumeration<?> entries = jar.entries();
+        Enumeration<? extends ZipEntry> entries = jar.entries();
         while (entries.hasMoreElements()) {
-            JarEntry entry = (JarEntry)entries.nextElement();
+            ZipEntry entry = entries.nextElement();
             File efile = new File(target, entry.getName());
 
             // if we're unpacking a normal jar file, it will have special path
@@ -166,13 +166,13 @@ public class FileUtil
     }
 
     /**
-     * Unpacks a pack200 packed jar file from {@code packedJar} into {@code target}. If {@code
-     * packedJar} has a {@code .gz} extension, it will be gunzipped first.
+     * Unpacks a pack200 packed jar file from {@code packedJar} into {@code target}.
+     * If {@code packedJar} has a {@code .gz} extension, it will be gunzipped first.
      */
     public static void unpackPacked200Jar (File packedJar, File target) throws IOException
     {
         try (InputStream packJarIn = new FileInputStream(packedJar);
-             JarOutputStream jarOut = new JarOutputStream(new FileOutputStream(target))) {
+            JarOutputStream jarOut = new JarOutputStream(new FileOutputStream(target))) {
             boolean gz = (packedJar.getName().endsWith(".gz") ||
                           packedJar.getName().endsWith(".gz_new"));
             try (InputStream packJarIn2 = (gz ? new GZIPInputStream(packJarIn) : packJarIn)) {

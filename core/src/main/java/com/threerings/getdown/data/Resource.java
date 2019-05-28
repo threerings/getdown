@@ -8,18 +8,13 @@ package com.threerings.getdown.data;
 import java.io.*;
 import java.net.URL;
 import java.security.MessageDigest;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
+import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import com.threerings.getdown.util.FileUtil;
 import com.threerings.getdown.util.ProgressObserver;
 import com.threerings.getdown.util.StringUtil;
-
 import static com.threerings.getdown.Log.log;
 
 /**
@@ -28,7 +23,7 @@ import static com.threerings.getdown.Log.log;
 public class Resource implements Comparable<Resource>
 {
     /** Defines special attributes for resources. */
-    public static enum Attr {
+    public enum Attr {
         /** Indicates that the resource should be unpacked. */
         UNPACK,
         /** If present, when unpacking a resource, any directories created by the newly
@@ -40,7 +35,7 @@ public class Resource implements Comparable<Resource>
         PRELOAD,
         /** Indicates that the resource is a jar containing native libs. */
         NATIVE
-    };
+    }
 
     public static final EnumSet<Attr> NORMAL  = EnumSet.noneOf(Attr.class);
     public static final EnumSet<Attr> UNPACK  = EnumSet.of(Attr.UNPACK);
@@ -60,29 +55,30 @@ public class Resource implements Comparable<Resource>
         byte[] buffer = new byte[DIGEST_BUFFER_SIZE];
         int read;
 
-        boolean isJar = isJar(target.getPath());
-        boolean isPacked200Jar = isPacked200Jar(target.getPath());
+        boolean isZip = isJar(target) || isZip(target); // jar is a zip too
+        boolean isPacked200Jar = isPacked200Jar(target);
 
         // if this is a jar, we need to compute the digest in a "timestamp and file order" agnostic
         // manner to properly correlate jardiff patched jars with their unpatched originals
-        if (isJar || isPacked200Jar){
+        if (isPacked200Jar || isZip){
             File tmpJarFile = null;
-            JarFile jar = null;
+            ZipFile zip = null;
             try {
-                // if this is a compressed jar file, uncompress it to compute the jar file digest
+                // if this is a compressed zip file, uncompress it to compute the zip file digest
                 if (isPacked200Jar){
                     tmpJarFile = new File(target.getPath() + ".tmp");
+                    tmpJarFile.deleteOnExit();
                     FileUtil.unpackPacked200Jar(target, tmpJarFile);
-                    jar = new JarFile(tmpJarFile);
+                    zip = new ZipFile(tmpJarFile);
                 } else{
-                    jar = new JarFile(target);
+                    zip = new ZipFile(target);
                 }
 
-                List<JarEntry> entries = Collections.list(jar.entries());
+                List<? extends ZipEntry> entries = Collections.list(zip.entries());
                 Collections.sort(entries, ENTRY_COMP);
 
                 int eidx = 0;
-                for (JarEntry entry : entries) {
+                for (ZipEntry entry : entries) {
                     // old versions of the digest code skipped metadata
                     if (version < 2) {
                         if (entry.getName().startsWith("META-INF")) {
@@ -91,7 +87,7 @@ public class Resource implements Comparable<Resource>
                         }
                     }
 
-                    try (InputStream in = jar.getInputStream(entry)) {
+                    try (InputStream in = zip.getInputStream(entry)) {
                         while ((read = in.read(buffer)) != -1) {
                             md.update(buffer, 0, read);
                         }
@@ -101,11 +97,11 @@ public class Resource implements Comparable<Resource>
                 }
 
             } finally {
-                if (jar != null) {
+                if (zip != null) {
                     try {
-                        jar.close();
+                        zip.close();
                     } catch (IOException ioe) {
-                        log.warning("Error closing jar", "path", target, "jar", jar, "error", ioe);
+                        log.warning("Error closing", "path", target, "zip", zip, "error", ioe);
                     }
                 }
                 if (tmpJarFile != null) {
@@ -127,6 +123,34 @@ public class Resource implements Comparable<Resource>
     }
 
     /**
+     * Returns whether {@code file} is a {@code zip} file.
+     */
+    public static boolean isZip (File file)
+    {
+        String path = file.getName();
+        return path.endsWith(".zip") || path.endsWith(".zip_new");
+    }
+
+    /**
+     * Returns whether {@code file} is a {@code jar} file.
+     */
+    public static boolean isJar (File file)
+    {
+        String path = file.getName();
+        return path.endsWith(".jar") || path.endsWith(".jar_new");
+    }
+
+    /**
+     * Returns whether {@code file} is a {@code jar.pack} file.
+     */
+    public static boolean isPacked200Jar (File file)
+    {
+        String path = file.getName();
+        return path.endsWith(".jar.pack") || path.endsWith(".jar.pack_new") ||
+            path.endsWith(".jar.pack.gz") || path.endsWith(".jar.pack.gz_new");
+    }
+
+    /**
      * Creates a resource with the supplied remote URL and local path.
      */
     public Resource (String path, URL remote, File local, EnumSet<Attr> attrs)
@@ -135,14 +159,13 @@ public class Resource implements Comparable<Resource>
         _remote = remote;
         _local = local;
         _localNew = new File(local.toString() + "_new");
-        String lpath = _local.getPath();
-        _marker = new File(lpath + "v");
+        _marker = new File(_local.getPath() + "v");
 
         _attrs = attrs;
-        _isJar = isJar(lpath);
-        _isPacked200Jar = isPacked200Jar(lpath);
+        _isZip = isJar(local) || isZip(local);
+        _isPacked200Jar = isPacked200Jar(local);
         boolean unpack = attrs.contains(Attr.UNPACK);
-        if (unpack && _isJar) {
+        if (unpack && _isZip) {
             _unpacked = _local.getParentFile();
         } else if(unpack && _isPacked200Jar) {
             String dotJar = ".jar", lname = _local.getName();
@@ -298,11 +321,11 @@ public class Resource implements Comparable<Resource>
     public void unpack () throws IOException
     {
         // sanity check
-        if (!_isJar && !_isPacked200Jar) {
+        if (!_isZip && !_isPacked200Jar) {
             throw new IOException("Requested to unpack non-jar file '" + _local + "'.");
         }
-        if (_isJar) {
-            try (JarFile jar = new JarFile(_local)) {
+        if (_isZip) {
+            try (ZipFile jar = new ZipFile(_local)) {
                 FileUtil.unpackJar(jar, _unpacked, _attrs.contains(Attr.CLEAN));
             }
         } else {
@@ -366,26 +389,15 @@ public class Resource implements Comparable<Resource>
         }
     }
 
-    protected static boolean isJar (String path)
-    {
-        return path.endsWith(".jar") || path.endsWith(".jar_new");
-    }
-
-    protected static boolean isPacked200Jar (String path)
-    {
-        return path.endsWith(".jar.pack") || path.endsWith(".jar.pack_new") ||
-            path.endsWith(".jar.pack.gz")|| path.endsWith(".jar.pack.gz_new");
-    }
-
     protected String _path;
     protected URL _remote;
     protected File _local, _localNew, _marker, _unpacked;
     protected EnumSet<Attr> _attrs;
-    protected boolean _isJar, _isPacked200Jar;
+    protected boolean _isZip, _isPacked200Jar;
 
     /** Used to sort the entries in a jar file. */
-    protected static final Comparator<JarEntry> ENTRY_COMP = new Comparator<JarEntry>() {
-        @Override public int compare (JarEntry e1, JarEntry e2) {
+    protected static final Comparator<ZipEntry> ENTRY_COMP = new Comparator<ZipEntry>() {
+        @Override public int compare (ZipEntry e1, ZipEntry e2) {
             return e1.getName().compareTo(e2.getName());
         }
     };

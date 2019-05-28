@@ -16,7 +16,7 @@ import com.threerings.getdown.util.VersionUtil;
  * accessor so that it's easy to see all of the secret system property arguments that Getdown makes
  * use of.
  */
-public class SysProps
+public final class SysProps
 {
     /** Configures the appdir (in lieu of passing it in argv). Usage: {@code -Dappdir=foo}. */
     public static String appDir () {

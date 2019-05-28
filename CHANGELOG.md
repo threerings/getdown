@@ -1,13 +1,30 @@
 # Getdown Releases
 
-## 1.8.4 - Unreleased
+## 1.8.5 - Unreleased
+
+* Fixed issues with proxy information not getting properly passed through to app.
+  Via [#216](//github.com/threerings/getdown/pull/216).
+
+* `appbase` and `latest` properties in `getdown.txt` now process env var subtitutions.
+
+## 1.8.4 - May 14, 2019
 
 * Added `verify_timeout` config to allow customization of the default (60 second) timeout during
   the resource verification process. Apparently in some pathological situations, this is needed.
   Woe betide the users who have to stare at an unmoving progress bar for more than 60 seconds.
+  Via [#198](//github.com/threerings/getdown/pull/198)
+  and [901682d](//github.com/threerings/getdown/commit/901682d).
+
+* Added `java_local_dir` config to allow custom location for Java if `java_location` is specified.
+  Via [#206](//github.com/threerings/getdown/pull/206).
 
 * `messages_XX.properties` files are now all maintained in UTF-8 encoding and then converted to
   escaped ISO-8859-1 during the build process.
+
+* Resources and unpacked resources now support `.zip` files as well as `.jar` files.
+  Via [#210](//github.com/threerings/getdown/pull/210).
+
+* Fixed issue when path to JVM contained spaces. Via [#214](//github.com/threerings/getdown/pull/214).
 
 ## 1.8.3 - Apr 10, 2019
 
@@ -16,10 +33,11 @@
   the `java.library.path` system property.
 
 * When the app is updated to require a new version of the JVM, that JVM will be downloaded and used
-  immediately during that app invocation (instead of one invocation later). Via PR#169.
+  immediately during that app invocation (instead of one invocation later).
+  Via [#169](//github.com/threerings/getdown/pull/169).
 
-* When a custom JVM is installed, old JVM files will be deleted prior to unpacking the new JVM. Via
-  PR#170.
+* When a custom JVM is installed, old JVM files will be deleted prior to unpacking the new JVM.
+  Via [#170](//github.com/threerings/getdown/pull/170).
 
 * Number of concurrent downloads now defaults to num-cores minus one. Though downloads are I/O
   bound rather than CPU bound, this still turns out to be a decent default.
@@ -33,11 +51,12 @@
   is not a viable user experience.
 
 * The Getdown window can be now closed by pressing the `ESC` key.
+  Via [#191](//github.com/threerings/getdown/pull/191).
 
 * If no `appdir` is specified via the command line or system property, the current working
-  directory will be used as the `appdir`.
+  directory will be used as the `appdir`. Via [8d59367](//github.com/threerings/getdown/commit/8d59367)
 
-* A basic Russian translation has been added. Thanks @sergiorussia!
+* A basic Russian translation has been added. Thanks [@sergiorussia](//github.com/sergiorussia)!
 
 ## 1.8.2 - Nov 27, 2018
 

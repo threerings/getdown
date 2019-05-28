@@ -16,27 +16,25 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import com.threerings.getdown.util.ProgressObserver;
-
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
- * Applies a jardiff patch to a jar file.
+ * Applies a jardiff patch to a jar/zip file.
  */
 public class JarDiffPatcher implements JarDiffCodes
 {
     /**
-     * Patches the specified jar file using the supplied patch file and writing
-     * the new jar file to the supplied target.
+     * Patches the specified jar file using the supplied patch file and writing the new jar file to
+     * the supplied target.
      *
      * @param jarPath the path to the original jar file.
      * @param diffPath the path to the jardiff patch file.
@@ -49,11 +47,9 @@ public class JarDiffPatcher implements JarDiffCodes
         throws IOException
     {
         File oldFile = new File(jarPath), diffFile = new File(diffPath);
-
-        try (JarFile oldJar = new JarFile(oldFile);
-             JarFile jarDiff = new JarFile(diffFile);
-             JarOutputStream jos = new JarOutputStream(new FileOutputStream(target))) {
-
+        try (ZipFile oldJar = new ZipFile(oldFile);
+             ZipFile jarDiff = new ZipFile(diffFile);
+             ZipOutputStream jos = makeOutputStream(oldFile, target)) {
             Set<String> ignoreSet = new HashSet<>();
             Map<String, String> renameMap = new HashMap<>();
             determineNameMapping(jarDiff, ignoreSet, renameMap);
@@ -63,7 +59,7 @@ public class JarDiffPatcher implements JarDiffCodes
 
             // Files to implicit move
             Set<String> oldjarNames  = new HashSet<>();
-            Enumeration<JarEntry> oldEntries = oldJar.entries();
+            Enumeration<? extends ZipEntry> oldEntries = oldJar.entries();
             if (oldEntries != null) {
                 while  (oldEntries.hasMoreElements()) {
                     oldjarNames.add(oldEntries.nextElement().getName());
@@ -83,10 +79,10 @@ public class JarDiffPatcher implements JarDiffCodes
             size -= ignoreSet.size();
 
             // Add content from JARDiff
-            Enumeration<JarEntry> entries = jarDiff.entries();
+            Enumeration<? extends ZipEntry> entries = jarDiff.entries();
             if (entries != null) {
                 while (entries.hasMoreElements()) {
-                    JarEntry entry = entries.nextElement();
+                    ZipEntry entry = entries.nextElement();
                     if (!INDEX_NAME.equals(entry.getName())) {
                         updateObserver(observer, currentEntry, size);
                         currentEntry++;
@@ -114,15 +110,15 @@ public class JarDiffPatcher implements JarDiffCodes
                 // Apply move <oldName> <newName> command
                 String oldName = renameMap.get(newName);
 
-                // Get source JarEntry
-                JarEntry oldEntry = oldJar.getJarEntry(oldName);
+                // Get source ZipEntry
+                ZipEntry oldEntry = oldJar.getEntry(oldName);
                 if (oldEntry == null) {
                     String moveCmd = MOVE_COMMAND + oldName + " " + newName;
                     throw new IOException("error.badmove: " + moveCmd);
                 }
 
-                // Create dest JarEntry
-                JarEntry newEntry = new JarEntry(newName);
+                // Create dest ZipEntry
+                ZipEntry newEntry = new ZipEntry(newName);
                 newEntry.setTime(oldEntry.getTime());
                 newEntry.setSize(oldEntry.getSize());
                 newEntry.setCompressedSize(oldEntry.getCompressedSize());
@@ -149,19 +145,15 @@ public class JarDiffPatcher implements JarDiffCodes
             }
 
             // implicit move
-            Iterator<String> iEntries = oldjarNames.iterator();
-            if (iEntries != null) {
-                while (iEntries.hasNext()) {
-                    String name = iEntries.next();
-                    JarEntry entry = oldJar.getJarEntry(name);
-                    if (entry == null) {
-                        // names originally retrieved from the JAR, so this should never happen
-                        throw new AssertionError("JAR entry not found: " + name);
-                    }
-                    updateObserver(observer, currentEntry, size);
-                    currentEntry++;
-                    writeEntry(jos, entry, oldJar);
+            for (String name : oldjarNames) {
+                ZipEntry entry = oldJar.getEntry(name);
+                if (entry == null) {
+                    // names originally retrieved from the archive, so this should never happen
+                    throw new AssertionError("Archive entry not found: " + name);
                 }
+                updateObserver(observer, currentEntry, size);
+                currentEntry++;
+                writeEntry(jos, entry, oldJar);
             }
             updateObserver(observer, currentEntry, size);
         }
@@ -175,7 +167,7 @@ public class JarDiffPatcher implements JarDiffCodes
     }
 
     protected void determineNameMapping (
-        JarFile jarDiff, Set<String> ignoreSet, Map<String, String> renameMap)
+        ZipFile jarDiff, Set<String> ignoreSet, Map<String, String> renameMap)
         throws IOException
     {
         InputStream is = jarDiff.getInputStream(jarDiff.getEntry(INDEX_NAME));
@@ -223,7 +215,7 @@ public class JarDiffPatcher implements JarDiffCodes
     {
         int index = 0;
         int length = path.length();
-        ArrayList<String> sub = new ArrayList<>();
+        List<String> sub = new ArrayList<>();
 
         while (index < length) {
             while (index < length && Character.isWhitespace
@@ -231,9 +223,8 @@ public class JarDiffPatcher implements JarDiffCodes
                 index++;
             }
             if (index < length) {
-                int start = index;
-                int last = start;
-                String subString = null;
+                int last = index;
+                StringBuilder subString = null;
 
                 while (index < length) {
                     char aChar = path.charAt(index);
@@ -241,9 +232,9 @@ public class JarDiffPatcher implements JarDiffCodes
                         path.charAt(index + 1) == ' ') {
 
                         if (subString == null) {
-                            subString = path.substring(last, index);
+                            subString = new StringBuilder(path.substring(last, index));
                         } else {
-                            subString += path.substring(last, index);
+                            subString.append(path, last, index);
                         }
                         last = ++index;
                     } else if (Character.isWhitespace(aChar)) {
@@ -253,18 +244,20 @@ public class JarDiffPatcher implements JarDiffCodes
                 }
                 if (last != index) {
                     if (subString == null) {
-                        subString = path.substring(last, index);
+                        subString = new StringBuilder(path.substring(last, index));
                     } else {
-                        subString += path.substring(last, index);
+                        subString.append(path, last, index);
                     }
                 }
-                sub.add(subString);
+                if (subString != null) {
+                    sub.add(subString.toString());
+                }
             }
         }
         return sub;
     }
 
-    protected void writeEntry (JarOutputStream jos, JarEntry entry, JarFile file)
+    protected void writeEntry (ZipOutputStream jos, ZipEntry entry, ZipFile file)
         throws IOException
     {
         try (InputStream data = file.getInputStream(entry)) {
@@ -272,10 +265,10 @@ public class JarDiffPatcher implements JarDiffCodes
         }
     }
 
-    protected void writeEntry (JarOutputStream jos, JarEntry entry, InputStream data)
+    protected void writeEntry (ZipOutputStream jos, ZipEntry entry, InputStream data)
         throws IOException
     {
-        jos.putNextEntry(new JarEntry(entry.getName()));
+        jos.putNextEntry(new ZipEntry(entry.getName()));
 
         // Read the entry
         int size = data.read(newBytes);
@@ -283,6 +276,15 @@ public class JarDiffPatcher implements JarDiffCodes
             jos.write(newBytes, 0, size);
             size = data.read(newBytes);
         }
+    }
+
+    protected static ZipOutputStream makeOutputStream (File source, File target)
+        throws IOException
+    {
+        FileOutputStream out = new FileOutputStream(target);
+        if (source.getName().endsWith(".jar")) return new JarOutputStream(out);
+        else if (source.getName().endsWith(".zip")) return new ZipOutputStream(out);
+        else throw new AssertionError("Unsupported source file '" + source + "'. Not a .jar or .zip?");
     }
 
     protected static final int DEFAULT_READ_SIZE = 2048;

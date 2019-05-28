@@ -9,16 +9,13 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
 import java.util.Enumeration;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import com.threerings.getdown.util.FileUtil;
 import com.threerings.getdown.util.ProgressObserver;
 import com.threerings.getdown.util.StreamUtil;
-
 import static com.threerings.getdown.Log.log;
 
 /**
@@ -55,10 +52,10 @@ public class Patcher
         _obs = obs;
         _plength = patch.length();
 
-        try (JarFile file = new JarFile(patch)) {
-            Enumeration<JarEntry> entries = file.entries(); // old skool!
+        try (ZipFile file = new ZipFile(patch)) {
+            Enumeration<? extends ZipEntry> entries = file.entries();
             while (entries.hasMoreElements()) {
-                JarEntry entry = entries.nextElement();
+                ZipEntry entry = entries.nextElement();
                 String path = entry.getName();
                 long elength = entry.getCompressedSize();
 
@@ -96,7 +93,7 @@ public class Patcher
         return path.substring(0, path.length() - suffix.length());
     }
 
-    protected void createFile (JarFile file, ZipEntry entry, File target)
+    protected void createFile (ZipFile file, ZipEntry entry, File target)
     {
         // create our copy buffer if necessary
         if (_buffer == null) {
@@ -124,8 +121,7 @@ public class Patcher
         }
     }
 
-    protected void patchFile (JarFile file, ZipEntry entry,
-                              File appdir, String path)
+    protected void patchFile (ZipFile file, ZipEntry entry, File appdir, String path)
     {
         File target = new File(appdir, path);
         File patch = new File(appdir, entry.getName());

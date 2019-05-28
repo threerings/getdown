@@ -19,7 +19,7 @@ public final class EnvConfig {
 
     /** Used to report problems or feedback by {@link #create}. */
     public static final class Note {
-        public static enum Level { INFO, WARN, ERROR };
+        public enum Level { INFO, WARN, ERROR }
         public static Note info (String msg) { return new Note(Level.INFO, msg); }
         public static Note warn (String msg) { return new Note(Level.WARN, msg); }
         public static Note error (String msg) { return new Note(Level.ERROR, msg); }

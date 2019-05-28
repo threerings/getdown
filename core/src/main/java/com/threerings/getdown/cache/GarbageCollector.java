@@ -6,6 +6,8 @@
 package com.threerings.getdown.cache;
 
 import java.io.File;
+
+import com.threerings.getdown.data.Resource;
 import com.threerings.getdown.util.FileUtil;
 
 /**
@@ -55,9 +57,9 @@ public class GarbageCollector
         if (subdirs != null) {
             for (File dir : subdirs) {
                 if (dir.isDirectory()) {
-                    // Get all the native jars in the directory (there should only be one)
+                    // Get all the native jars or zips in the directory (there should only be one)
                     for (File file : dir.listFiles()) {
-                        if (!file.getName().endsWith(".jar")) {
+                        if (!Resource.isJar(file) && !Resource.isZip(file)) {
                             continue;
                         }
                         File cachedFile = getCachedFile(file);
@@ -94,6 +96,6 @@ public class GarbageCollector
     private static File getCachedFile (File file)
     {
         return !isLastAccessedFile(file) ? file : new File(
-            file.getParentFile(), file.getName().substring(0, file.getName().lastIndexOf(".")));
+            file.getParentFile(), file.getName().substring(0, file.getName().lastIndexOf('.')));
     }
 }

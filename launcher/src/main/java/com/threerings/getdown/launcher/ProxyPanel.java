@@ -141,7 +141,7 @@ public final class ProxyPanel extends JPanel implements ActionListener
     public void actionPerformed (ActionEvent e)
     {
         String cmd = e.getActionCommand();
-        if (cmd.equals("ok")) {
+        if ("ok".equals(cmd)) {
             String user = null, pass = null;
             if (_useAuth.isSelected()) {
                 user = _username.getText();

@@ -5,7 +5,7 @@
 
 package com.threerings.getdown.util;
 
-public class MessageUtil {
+public final class MessageUtil {
 
     /**
      * Returns whether or not the provided string is tainted. See {@link #taint}. Null strings
@@ -101,11 +101,11 @@ public class MessageUtil {
     }
 
     /**
-     * Used to escape single quotes so that they are not interpreted by <code>MessageFormat</code>.
+     * Used to escape single quotes so that they are not interpreted by {@code MessageFormat}.
      * As we assume all single quotes are to be escaped, we cannot use the characters
      * <code>{</code> and <code>}</code> in our translation strings, but this is a small price to
      * pay to have to differentiate between messages that will and won't eventually be parsed by a
-     * <code>MessageFormat</code> instance.
+     * {@code MessageFormat} instance.
      */
     public static String escape (String message)
     {

@@ -7,16 +7,13 @@ package com.threerings.getdown.tools;
 
 import java.io.File;
 import java.io.IOException;
-
 import java.security.GeneralSecurityException;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
 
-import com.threerings.getdown.data.Digest;
-
 /**
- * An ant task used to create a <code>digest.txt</code> for a Getdown
+ * An ant task used to create a {@code digest.txt} for a Getdown
  * application deployment.
  */
 public class DigesterTask extends Task

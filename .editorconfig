@@ -1,0 +1,21 @@
+[*]
+charset=utf-8
+end_of_line=lf
+indent_size=2
+indent_style=space
+insert_final_newline=true
+trim_trailing_whitespace=true
+max_line_length=100
+
+[*.java]
+indent_size=4
+
+# also configure imports order manually as follows:
+# import java.*
+# <blank line>
+# import javax.*
+# <blank line>
+# import com.samskivert.*
+# import com.threerings.*
+# import all other imports
+# import static all other imports
