@@ -587,7 +587,7 @@ public class Application
         }
 
         // check if we're overriding the domain in the appbase
-        _appbase = SysProps.overrideAppbase(_appbase);
+        _appbase = processArg(SysProps.overrideAppbase(_appbase));
 
         // make sure there's a trailing slash
         if (!_appbase.endsWith("/")) {
@@ -606,7 +606,7 @@ public class Application
         }
 
         // check for a latest config URL
-        String latest = config.getString("latest");
+        String latest = processArg(config.getString("latest"));
         if (latest != null) {
             if (latest.startsWith(_appbase)) {
                 latest = _appbase + latest.substring(_appbase.length());
@@ -1121,6 +1121,10 @@ public class Application
     /** Replaces the application directory and version in any argument. */
     protected String processArg (String arg)
     {
+        if (arg == null) {
+            return null;
+        }
+
         arg = arg.replace("%APPDIR%", getAppDir().getAbsolutePath());
         arg = arg.replace("%VERSION%", String.valueOf(_version));
 
