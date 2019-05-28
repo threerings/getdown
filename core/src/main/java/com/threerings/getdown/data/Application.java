@@ -233,6 +233,44 @@ public class Application
         }
     }
 
+    /**
+     * Reads the {@code getdown.txt} config file into a {@code Config} object and returns it.
+     */
+    public static Config readConfig (EnvConfig envc, boolean checkPlatform) throws IOException {
+        Config config = null;
+        File cfgfile = new File(envc.appDir, CONFIG_FILE);
+        Config.ParseOpts opts = Config.createOpts(checkPlatform);
+        try {
+            // if we have a configuration file, read the data from it
+            if (cfgfile.exists()) {
+                config = Config.parseConfig(cfgfile, opts);
+            }
+            // otherwise, try reading data from our backup config file; thanks to funny windows
+            // bullshit, we have to do this backup file fiddling in case we got screwed while
+            // updating getdown.txt during normal operation
+            else if ((cfgfile = new File(envc.appDir, Application.CONFIG_FILE + "_old")).exists()) {
+                config = Config.parseConfig(cfgfile, opts);
+            }
+            // otherwise, issue a warning that we found no getdown file
+            else {
+                log.info("Found no getdown.txt file", "appdir", envc.appDir);
+            }
+        } catch (Exception e) {
+            log.warning("Failure reading config file", "file", config, e);
+        }
+
+        // if we failed to read our config file, check for an appbase specified via a system
+        // property; we can use that to bootstrap ourselves back into operation
+        if (config == null) {
+            log.info("Using 'appbase' from bootstrap config", "appbase", envc.appBase);
+            Map<String, Object> cdata = new HashMap<>();
+            cdata.put("appbase", envc.appBase);
+            config = new Config(cdata);
+        }
+
+        return config;
+    }
+
     /** The proxy that should be used to do HTTP downloads. This must be configured prior to using
       * the application instance. Yes this is a public mutable field, no I'm not going to create a
       * getter and setter just to pretend like that's not the case. */
@@ -245,7 +283,6 @@ public class Application
      */
     public Application (EnvConfig envc) {
         _envc = envc;
-        _config = new File(envc.appDir, CONFIG_FILE);
     }
 
     /**
@@ -544,71 +581,22 @@ public class Application
      * @exception IOException thrown if there is an error reading the file or an error encountered
      * during its parsing.
      */
-    public Config init (boolean checkPlatform)
-        throws IOException
+    public Config init (boolean checkPlatform) throws IOException
     {
-        Config config = initConfig(checkPlatform);
-        initConfigJava(config);
-        initConfigTracking(config);
-        initConfigResources(config);
-        initConfigArgs(config);
-
-        // determine whether we want to allow offline operation (defaults to false)
-        _allowOffline = config.getBoolean("allow_offline");
-
-        // look for a debug.txt file which causes us to run in java.exe on Windows so that we can
-        // obtain a thread dump of the running JVM
-        _windebug = getLocalPath("debug.txt").exists();
-
-        // whether to cache code resources and launch from cache
-        _useCodeCache = config.getBoolean("use_code_cache");
-        _codeCacheRetentionDays = config.getInt("code_cache_retention_days", 7);
-
-        // maximum simultaneous downloads
-        _maxConcDownloads = Math.max(1, config.getInt("max_concurrent_downloads",
-                                                      SysProps.threadPoolSize()));
-
-        // extract some info used to configure our child process on macOS
-        _dockName = config.getString("ui.name");
-        _dockIconPath = config.getString("ui.mac_dock_icon", "../desktop.icns");
-
-        _verifyTimeout = config.getInt("verify_timeout", 60);
+        Config config = readConfig(_envc, checkPlatform);
+        initBase(config);
+        initJava(config);
+        initTracking(config);
+        initResources(config);
+        initArgs(config);
         return config;
     }
 
-    public Config initConfig (boolean checkPlatform) throws IOException {
-        Config config = null;
-        File cfgfile = _config;
-        Config.ParseOpts opts = Config.createOpts(checkPlatform);
-        try {
-            // if we have a configuration file, read the data from it
-            if (cfgfile.exists()) {
-                config = Config.parseConfig(_config, opts);
-            }
-            // otherwise, try reading data from our backup config file; thanks to funny windows
-            // bullshit, we have to do this backup file fiddling in case we got screwed while
-            // updating getdown.txt during normal operation
-            else if ((cfgfile = getLocalPath(CONFIG_FILE + "_old")).exists()) {
-                config = Config.parseConfig(cfgfile, opts);
-            }
-            // otherwise, issue a warning that we found no getdown file
-            else {
-                log.info("Found no getdown.txt file", "appdir", getAppDir());
-            }
-        } catch (Exception e) {
-            log.warning("Failure reading config file", "file", config, e);
-        }
-
-        // if we failed to read our config file, check for an appbase specified via a system
-        // property; we can use that to bootstrap ourselves back into operation
-        if (config == null) {
-            String appbase = _envc.appBase;
-            log.info("Using 'appbase' from bootstrap config", "appbase", appbase);
-            Map<String, Object> cdata = new HashMap<>();
-            cdata.put("appbase", appbase);
-            config = new Config(cdata);
-        }
-
+    /**
+     * Reads the basic config info from {@code config} into this instance. This includes things
+     * like the appbase and version.
+     */
+    public void initBase (Config config) throws IOException {
         // first determine our application base, this way if anything goes wrong later in the
         // process, our caller can use the appbase to download a new configuration file
         _appbase = config.getString("appbase");
@@ -653,10 +641,26 @@ public class Application
 
         // determine whether we want strict comments
         _strictComments = config.getBoolean("strict_comments");
-        return config;
+
+        // determine whether we want to allow offline operation (defaults to false)
+        _allowOffline = config.getBoolean("allow_offline");
+
+        // whether to cache code resources and launch from cache
+        _useCodeCache = config.getBoolean("use_code_cache");
+        _codeCacheRetentionDays = config.getInt("code_cache_retention_days", 7);
+
+        // maximum simultaneous downloads
+        _maxConcDownloads = Math.max(1, config.getInt("max_concurrent_downloads",
+                                                      SysProps.threadPoolSize()));
+
+        _verifyTimeout = config.getInt("verify_timeout", 60);
     }
 
-    public void initConfigJava (Config config) {
+    /**
+     * Reads the JVM requirements from {@code config} into this instance. This includes things like
+     * the min and max java version, location of a locally installed JRE, etc.
+     */
+    public void initJava (Config config) {
         // check to see if we're using a custom java.version property and regex
         _javaVersionProp = config.getString("java_version_prop", _javaVersionProp);
         _javaVersionRegex = config.getString("java_version_regex", _javaVersionRegex);
@@ -677,7 +681,10 @@ public class Application
         _javaLocalDir = getLocalPath(config.getString("java_local_dir", LaunchUtil.LOCAL_JAVA_DIR));
     }
 
-    public void initConfigTracking (Config config) {
+    /**
+     * Reads the install tracking info from {@code config} into this instance.
+     */
+    public void initTracking (Config config) {
         // determine whether we have any tracking configuration
         _trackingURL = config.getString("tracking_url");
 
@@ -704,14 +711,14 @@ public class Application
         _trackingGAHash = config.getString("tracking_ga_hash");
     }
 
-    public void initConfigResources (Config config) throws IOException {
+    /**
+     * Reads the app resource info from {@code config} into this instance.
+     */
+    public void initResources (Config config) throws IOException {
         // clear our arrays as we may be reinitializing
         _codes.clear();
         _resources.clear();
         _auxgroups.clear();
-        _jvmargs.clear();
-        _appargs.clear();
-        _txtJvmArgs.clear();
 
         // parse our code resources
         if (config.getMultiValue("code") == null &&
@@ -743,7 +750,14 @@ public class Application
         }
     }
 
-    private void initConfigArgs (Config config) throws IOException {
+    /**
+     * Reads the command line arg info from {@code config} into this instance.
+     */
+    public void initArgs (Config config) throws IOException {
+        _jvmargs.clear();
+        _appargs.clear();
+        _txtJvmArgs.clear();
+
         String appPrefix = _envc.appId == null ? "" : (_envc.appId + ".");
 
         // determine our application class name (use app-specific class _if_ one is provided)
@@ -756,25 +770,30 @@ public class Application
         }
 
         // transfer our JVM arguments (we include both "global" args and app_id-prefixed args)
-        String[] jvmargs = config.getMultiValue("jvmarg");
-        addAll(jvmargs, _jvmargs);
+        addAll(config.getMultiValue("jvmarg"), _jvmargs);
         if (appPrefix.length() > 0) {
-            jvmargs = config.getMultiValue(appPrefix + "jvmarg");
-            addAll(jvmargs, _jvmargs);
+            addAll(config.getMultiValue(appPrefix + "jvmarg"), _jvmargs);
         }
 
         // get the set of optimum JVM arguments
         _optimumJvmArgs = config.getMultiValue("optimum_jvmarg");
 
         // transfer our application arguments
-        String[] appargs = config.getMultiValue(appPrefix + "apparg");
-        addAll(appargs, _appargs);
+        addAll(config.getMultiValue(appPrefix + "apparg"), _appargs);
 
         // add the launch specific application arguments
         _appargs.addAll(_envc.appArgs);
 
         // look for custom arguments
         fillAssignmentListFromPairs("extra.txt", _txtJvmArgs);
+
+        // extract some info used to configure our child process on macOS
+        _dockName = config.getString("ui.name");
+        _dockIconPath = config.getString("ui.mac_dock_icon", "../desktop.icns");
+
+        // look for a debug.txt file which causes us to run in java.exe on Windows so that we can
+        // obtain a thread dump of the running JVM
+        _windebug = getLocalPath("debug.txt").exists();
     }
 
     /**
@@ -1745,7 +1764,6 @@ public class Application
     }
 
     protected final EnvConfig _envc;
-    protected File _config;
     protected Digest _digest;
 
     protected long _version = -1;

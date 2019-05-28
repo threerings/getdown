@@ -75,9 +75,11 @@ public class Digester
         System.out.println("Generating digest file '" + target + "'...");
 
         // create our application and instruct it to parse its business
-        Application app = new Application(new EnvConfig(appdir));
-        Config config = app.initConfig(false);
-        app.initConfigResources(config);
+        EnvConfig envc = new EnvConfig(appdir);
+        Application app = new Application(envc);
+        Config config = Application.readConfig(envc, false);
+        app.initBase(config);
+        app.initResources(config);
 
         List<Resource> rsrcs = new ArrayList<>();
         rsrcs.add(app.getConfigResource());
