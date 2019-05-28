@@ -16,7 +16,7 @@ import com.threerings.getdown.data.SysProps;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public class ConnectionUtil
+public final class ConnectionUtil
 {
     /**
      * Opens a connection to a URL, setting the authentication header if user info is present.

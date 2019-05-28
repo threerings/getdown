@@ -22,7 +22,15 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.ResourceBundle;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
@@ -31,13 +39,24 @@ import javax.swing.JFrame;
 import javax.swing.JLayeredPane;
 
 import com.samskivert.swing.util.SwingUtil;
-import com.threerings.getdown.data.*;
+import com.threerings.getdown.data.Application;
 import com.threerings.getdown.data.Application.UpdateInterface.Step;
+import com.threerings.getdown.data.Build;
+import com.threerings.getdown.data.EnvConfig;
+import com.threerings.getdown.data.Resource;
+import com.threerings.getdown.data.SysProps;
 import com.threerings.getdown.net.Downloader;
 import com.threerings.getdown.net.HTTPDownloader;
 import com.threerings.getdown.tools.Patcher;
-import com.threerings.getdown.util.*;
-
+import com.threerings.getdown.util.Config;
+import com.threerings.getdown.util.ConnectionUtil;
+import com.threerings.getdown.util.FileUtil;
+import com.threerings.getdown.util.LaunchUtil;
+import com.threerings.getdown.util.MessageUtil;
+import com.threerings.getdown.util.ProgressAggregator;
+import com.threerings.getdown.util.ProgressObserver;
+import com.threerings.getdown.util.StringUtil;
+import com.threerings.getdown.util.VersionUtil;
 import static com.threerings.getdown.Log.log;
 
 /**
@@ -75,7 +94,7 @@ public abstract class Getdown extends Thread
             // welcome to hell, where java can't cope with a classpath that contains jars that live
             // in a directory that contains a !, at least the same bug happens on all platforms
             String dir = envc.appDir.toString();
-            if (dir.equals(".")) {
+            if (".".equals(dir)) {
                 dir = System.getProperty("user.dir");
             }
             String errmsg = "The directory in which this application is installed:\n" + dir +
@@ -130,7 +149,7 @@ public abstract class Getdown extends Thread
         File instdir = _app.getLocalPath("");
         if (!instdir.canWrite()) {
             String path = instdir.getPath();
-            if (path.equals(".")) {
+            if (".".equals(path)) {
                 path = System.getProperty("user.dir");
             }
             fail(MessageUtil.tcompose("m.readonly_error", path));
@@ -161,20 +180,7 @@ public abstract class Getdown extends Thread
 
         } catch (Exception e) {
             log.warning("run() failed.", e);
-            String msg = e.getMessage();
-            if (msg == null) {
-                msg = MessageUtil.compose("m.unknown_error", _ifc.installError);
-            } else if (!msg.startsWith("m.")) {
-                // try to do something sensible based on the type of error
-                if (e instanceof FileNotFoundException) {
-                    msg = MessageUtil.compose(
-                        "m.missing_resource", MessageUtil.taint(msg), _ifc.installError);
-                } else {
-                    msg = MessageUtil.compose(
-                        "m.init_error", MessageUtil.taint(msg), _ifc.installError);
-                }
-            }
-            fail(msg);
+            fail(e);
         }
     }
 
@@ -285,7 +291,7 @@ public abstract class Getdown extends Thread
                 // Store the config modtime before waiting the delay amount of time
                 long lastConfigModtime = config.lastModified();
                 log.info("Waiting " + _delay + " minutes before beginning actual work.");
-                Thread.sleep(_delay * 60 * 1000);
+                TimeUnit.MINUTES.sleep(_delay);
                 if (lastConfigModtime < config.lastModified()) {
                     log.warning("getdown.txt was modified while getdown was waiting.");
                     throw new MultipleGetdownRunning();
@@ -334,11 +340,7 @@ public abstract class Getdown extends Thread
 
                 if (toDownload.size() > 0) {
                     // we have resources to download, also note them as to-be-installed
-                    for (Resource r : toDownload) {
-                        if (!_toInstallResources.contains(r)) {
-                            _toInstallResources.add(r);
-                        }
-                    }
+                    _toInstallResources.addAll(toDownload);
 
                     try {
                         // if any of our resources have already been marked valid this is not a
@@ -423,22 +425,7 @@ public abstract class Getdown extends Thread
 
         } catch (Exception e) {
             log.warning("getdown() failed.", e);
-            String msg = e.getMessage();
-            if (msg == null) {
-                msg = MessageUtil.compose("m.unknown_error", _ifc.installError);
-            } else if (!msg.startsWith("m.")) {
-                // try to do something sensible based on the type of error
-                if (e instanceof FileNotFoundException) {
-                    msg = MessageUtil.compose(
-                        "m.missing_resource", MessageUtil.taint(msg), _ifc.installError);
-                } else {
-                    msg = MessageUtil.compose(
-                        "m.init_error", MessageUtil.taint(msg), _ifc.installError);
-                }
-            }
-            // Since we're dead, clear off the 'time remaining' label along with displaying the
-            // error message
-            fail(msg);
+            fail(e);
             _app.releaseLock();
         }
     }
@@ -525,7 +512,7 @@ public abstract class Getdown extends Thread
 
         // lastly regenerate the .jsa dump file that helps Java to start up faster
         String vmpath = LaunchUtil.getJVMBinaryPath(javaLocalDir, false);
-        String[] command = new String[] { vmpath, "-Xshare:dump" };
+        String[] command = { vmpath, "-Xshare:dump" };
         try {
             log.info("Regenerating classes.jsa for " + vmpath + "...");
             Runtime.getRuntime().exec(command);
@@ -732,7 +719,7 @@ public abstract class Getdown extends Thread
             long minshow = _ifc.minShowSeconds * 1000L;
             if (_container != null && uptime < minshow) {
                 try {
-                    Thread.sleep(minshow - uptime);
+                    TimeUnit.MILLISECONDS.sleep(minshow - uptime);
                 } catch (Exception e) {
                 }
             }
@@ -848,8 +835,22 @@ public abstract class Getdown extends Thread
         }
     }
 
+    private void fail (Exception e) {
+        String msg = e.getMessage();
+        if (msg == null) {
+            msg = MessageUtil.compose("m.unknown_error", _ifc.installError);
+        } else if (!msg.startsWith("m.")) {
+            // try to do something sensible based on the type of error
+            msg = e instanceof FileNotFoundException
+                ? MessageUtil.compose("m.missing_resource", MessageUtil.taint(msg), _ifc.installError)
+                : MessageUtil.compose("m.init_error", MessageUtil.taint(msg), _ifc.installError);
+        }
+        // Since we're dead, clear off the 'time remaining' label along with displaying the error message
+        fail(msg);
+    }
+
     /**
-     * Update the status to indicate getdown has failed for the reason in <code>message</code>.
+     * Update the status to indicate getdown has failed for the reason in {@code message}.
      */
     protected void fail (String message)
     {

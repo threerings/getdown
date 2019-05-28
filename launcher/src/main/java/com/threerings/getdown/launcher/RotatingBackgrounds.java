@@ -14,7 +14,7 @@ public final class RotatingBackgrounds
 {
     public interface ImageLoader {
         /** Loads and returns the image with the supplied path. */
-        public Image loadImage (String path);
+        Image loadImage (String path);
     }
 
     /**
@@ -35,7 +35,7 @@ public final class RotatingBackgrounds
     }
 
     /**
-     * Create a sequence of images to be rotated through from <code>backgrounds</code>.
+     * Create a sequence of images to be rotated through from {@code backgrounds}.
      *
      * Each String in backgrounds should be the path to the image, a semicolon, and the minimum
      * amount of time to display the image in seconds. Each image will be active for an equal

@@ -72,7 +72,7 @@ public final class AbortPanel extends JFrame
     public void actionPerformed (ActionEvent e)
     {
         String cmd = e.getActionCommand();
-        if (cmd.equals("ok")) {
+        if ("ok".equals(cmd)) {
             System.exit(0);
         } else {
             setVisible(false);

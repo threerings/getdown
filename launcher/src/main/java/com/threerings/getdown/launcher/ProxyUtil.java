@@ -42,7 +42,7 @@ import com.threerings.getdown.util.StringUtil;
 
 import static com.threerings.getdown.Log.log;
 
-public class ProxyUtil {
+public final class ProxyUtil {
 
     public static boolean autoDetectProxy (Application app)
     {
@@ -67,8 +67,8 @@ public class ProxyUtil {
                 RegistryKey r = new RegistryKey(RootKey.HKEY_CURRENT_USER, PROXY_REGISTRY);
                 for (Iterator<?> iter = r.values(); iter.hasNext(); ) {
                     RegistryValue value = (RegistryValue)iter.next();
-                    if (value.getName().equals("ProxyEnable")) {
-                        enabled = value.getStringValue().equals("1");
+                    if ("ProxyEnable".equals(value.getName())) {
+                        enabled = "1".equals(value.getStringValue());
                     }
                     if (value.getName().equals("ProxyServer")) {
                         String[] hostPort = splitHostPort(value.getStringValue());

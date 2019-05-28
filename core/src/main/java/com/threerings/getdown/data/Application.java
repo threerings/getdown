@@ -33,7 +33,7 @@ import static com.threerings.getdown.Log.log;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
- * Parses and provide access to the information contained in the <code>getdown.txt</code>
+ * Parses and provide access to the information contained in the {@code getdown.txt}
  * configuration file.
  */
 public class Application
@@ -212,10 +212,10 @@ public class Application
      * Used by {@link #verifyMetadata} to communicate status in circumstances where it needs to
      * take network actions.
      */
-    public static interface StatusDisplay
+    public interface StatusDisplay
     {
         /** Requests that the specified status message be displayed. */
-        public void updateStatus (String message);
+        void updateStatus (String message);
     }
 
     /**
@@ -277,7 +277,7 @@ public class Application
     public Proxy proxy = Proxy.NO_PROXY;
 
     /**
-     * Creates an application instance which records the location of the <code>getdown.txt</code>
+     * Creates an application instance which records the location of the {@code getdown.txt}
      * configuration file from the supplied application directory.
      *
      */
@@ -406,8 +406,7 @@ public class Application
      */
     public List<Resource> getActiveCodeResources ()
     {
-        ArrayList<Resource> codes = new ArrayList<>();
-        codes.addAll(getCodeResources());
+        List<Resource> codes = new ArrayList<>(getCodeResources());
         for (AuxGroup aux : getAuxGroups()) {
             if (isAuxGroupActive(aux.name)) {
                 codes.addAll(aux.codes);
@@ -435,8 +434,7 @@ public class Application
      */
     public List<Resource> getActiveResources ()
     {
-        ArrayList<Resource> rsrcs = new ArrayList<>();
-        rsrcs.addAll(getResources());
+        List<Resource> rsrcs = new ArrayList<>(getResources());
         for (AuxGroup aux : getAuxGroups()) {
             if (isAuxGroupActive(aux.name)) {
                 rsrcs.addAll(aux.rsrcs);
@@ -609,7 +607,7 @@ public class Application
 
         // make sure there's a trailing slash
         if (!_appbase.endsWith("/")) {
-            _appbase = _appbase + "/";
+            _appbase += "/";
         }
 
         // extract our version information
@@ -912,7 +910,7 @@ public class Application
     }
 
     /**
-     * Attempts to redownload the <code>getdown.txt</code> file based on information parsed from a
+     * Attempts to redownload the {@code getdown.txt} file based on information parsed from a
      * previous call to {@link #init}.
      */
     public void attemptRecovery (StatusDisplay status)
@@ -923,7 +921,7 @@ public class Application
     }
 
     /**
-     * Downloads and replaces the <code>getdown.txt</code> and <code>digest.txt</code> files with
+     * Downloads and replaces the {@code getdown.txt} and {@code digest.txt} files with
      * those for the target version of our application.
      */
     public void updateMetadata ()
@@ -934,7 +932,7 @@ public class Application
             _vappbase = createVAppBase(_targetVersion);
         } catch (MalformedURLException mue) {
             String err = MessageUtil.tcompose("m.invalid_appbase", _appbase);
-            throw (IOException) new IOException(err).initCause(mue);
+            throw new IOException(err, mue);
         }
 
         try {
@@ -1110,7 +1108,7 @@ public class Application
         for (String jvmarg : _jvmargs) {
             if (jvmarg.startsWith("-D")) {
                 jvmarg = processArg(jvmarg.substring(2));
-                int eqidx = jvmarg.indexOf("=");
+                int eqidx = jvmarg.indexOf('=');
                 if (eqidx == -1) {
                     log.warning("Bogus system property: '" + jvmarg + "'?");
                 } else {
@@ -1172,8 +1170,8 @@ public class Application
     }
 
     /**
-     * Loads the <code>digest.txt</code> file and verifies the contents of both that file and the
-     * <code>getdown.text</code> file. Then it loads the <code>version.txt</code> and decides
+     * Loads the {@code digest.txt} file and verifies the contents of both that file and the
+     * {@code getdown.text} file. Then it loads the {@code version.txt} and decides
      * whether or not the application needs to be updated or whether we can proceed to verification
      * and execution.
      *
@@ -1264,7 +1262,7 @@ public class Application
                      InputStreamReader reader = new InputStreamReader(in, UTF_8);
                      BufferedReader bin = new BufferedReader(reader)) {
                     for (String[] pair : Config.parsePairs(bin, Config.createOpts(false))) {
-                        if (pair[0].equals("version")) {
+                        if ("version".equals(pair[0])) {
                             _targetVersion = Math.max(Long.parseLong(pair[1]), _targetVersion);
                             if (fileVersion != -1 && _targetVersion > fileVersion) {
                                 // replace the file with the newest version
@@ -1470,7 +1468,7 @@ public class Application
     protected URL createVAppBase (long version)
         throws MalformedURLException
     {
-        String url = version < 0 ? _appbase : _appbase.replace("%VERSION%", "" + version);
+        String url = version < 0 ? _appbase : _appbase.replace("%VERSION%", String.valueOf(version));
         return HostWhitelist.verify(new URL(url));
     }
 
@@ -1641,7 +1639,7 @@ public class Application
         } catch (Exception e) {
             log.warning("Requested to download invalid control file",
                 "appbase", _vappbase, "path", path, "error", e);
-            throw (IOException) new IOException("Invalid path '" + path + "'.").initCause(e);
+            throw new IOException("Invalid path '" + path + "'.", e);
         }
 
         log.info("Attempting to refetch '" + path + "' from '" + targetURL + "'.");
@@ -1678,9 +1676,7 @@ public class Application
     /** Helper function to add all values in {@code values} (if non-null) to {@code target}. */
     protected static void addAll (String[] values, List<String> target) {
         if (values != null) {
-            for (String value : values) {
-                target.add(value);
-            }
+            Collections.addAll(target, values);
         }
     }
 

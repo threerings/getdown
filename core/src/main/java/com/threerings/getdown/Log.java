@@ -15,7 +15,7 @@ import java.util.logging.*;
 /**
  * A placeholder class that contains a reference to the log object used by the Getdown code.
  */
-public class Log
+public final class Log
 {
     public static class Shim {
         /**
@@ -143,6 +143,5 @@ public class Log
         protected FieldPosition _fpos = new FieldPosition(SimpleDateFormat.DATE_FIELD);
     }
 
-    protected static final String DATE_FORMAT = "{0,date} {0,time}";
     protected static final Level[] LEVELS = {Level.FINE, Level.INFO, Level.WARNING, Level.SEVERE};
 }

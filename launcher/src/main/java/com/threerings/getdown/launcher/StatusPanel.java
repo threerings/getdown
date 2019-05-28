@@ -26,12 +26,9 @@ import com.samskivert.swing.Label;
 import com.samskivert.swing.LabelStyleConstants;
 import com.samskivert.swing.util.SwingUtil;
 import com.samskivert.util.Throttle;
-
 import com.threerings.getdown.data.Application.UpdateInterface;
 import com.threerings.getdown.util.MessageUtil;
 import com.threerings.getdown.util.Rectangle;
-import com.threerings.getdown.util.StringUtil;
-
 import static com.threerings.getdown.Log.log;
 
 /**
@@ -344,7 +341,7 @@ public final class StatusPanel extends JComponent
     {
         String msg = get(key);
         if (msg != null) return MessageFormat.format(MessageUtil.escape(msg), (Object[])args);
-        return key + String.valueOf(Arrays.asList(args));
+        return key + Arrays.asList(args);
     }
 
     /** Used by {@link #setStatus}, and {@link #setProgress}. */

@@ -96,6 +96,6 @@ public class GarbageCollector
     private static File getCachedFile (File file)
     {
         return !isLastAccessedFile(file) ? file : new File(
-            file.getParentFile(), file.getName().substring(0, file.getName().lastIndexOf(".")));
+            file.getParentFile(), file.getName().substring(0, file.getName().lastIndexOf('.')));
     }
 }

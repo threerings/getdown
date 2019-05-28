@@ -21,7 +21,7 @@ import static com.threerings.getdown.Log.log;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
- * Manages the <code>digest.txt</code> file and the computing and processing of digests for an
+ * Manages the {@code digest.txt} file and the computing and processing of digests for an
  * application.
  */
 public class Digest
@@ -72,8 +72,7 @@ public class Digest
                         digests.put(rsrc, rsrc.computeDigest(fversion, md, null));
                         completed.add(rsrc);
                     } catch (Throwable t) {
-                        completed.add(new IOException("Error computing digest for: " + rsrc).
-                                      initCause(t));
+                        completed.add(new IOException("Error computing digest for: " + rsrc, t));
                     }
                 }
             });
@@ -88,7 +87,7 @@ public class Digest
                 if (done instanceof IOException) {
                     throw (IOException)done;
                 } else if (done instanceof Resource) {
-                    pending.remove((Resource)done);
+                    pending.remove(done);
                 } else {
                     throw new AssertionError("What is this? " + done);
                 }

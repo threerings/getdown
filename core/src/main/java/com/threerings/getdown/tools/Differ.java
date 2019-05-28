@@ -5,10 +5,17 @@
 
 package com.threerings.getdown.tools;
 
-import java.io.*;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
@@ -31,8 +38,8 @@ public class Differ
     /**
      * Creates a single patch file that contains the differences between
      * the two specified application directories. The patch file will be
-     * created in the <code>nvdir</code> directory with name
-     * <code>patchV.dat</code> where V is the old application version.
+     * created in the {@code nvdir} directory with name
+     * {@code patchV.dat} where V is the old application version.
      */
     public void createDiff (File nvdir, File ovdir, boolean verbose)
         throws IOException
@@ -53,13 +60,13 @@ public class Differ
 
         Application oapp = new Application(new EnvConfig(ovdir));
         oapp.init(false);
-        ArrayList<Resource> orsrcs = new ArrayList<>();
+        List<Resource> orsrcs = new ArrayList<>();
         orsrcs.addAll(oapp.getCodeResources());
         orsrcs.addAll(oapp.getResources());
 
         Application napp = new Application(new EnvConfig(nvdir));
         napp.init(false);
-        ArrayList<Resource> nrsrcs = new ArrayList<>();
+        List<Resource> nrsrcs = new ArrayList<>();
         nrsrcs.addAll(napp.getCodeResources());
         nrsrcs.addAll(napp.getResources());
 
@@ -83,8 +90,8 @@ public class Differ
         }
     }
 
-    protected void createPatch (File patch, ArrayList<Resource> orsrcs,
-                                ArrayList<Resource> nrsrcs, boolean verbose)
+    protected void createPatch (File patch, List<Resource> orsrcs,
+                                List<Resource> nrsrcs, boolean verbose)
         throws IOException
     {
         int version = Digest.VERSION;
@@ -200,7 +207,7 @@ public class Differ
         Differ differ = new Differ();
         boolean verbose = false;
         int aidx = 0;
-        if (args[0].equals("-verbose")) {
+        if ("-verbose".equals(args[0])) {
             verbose = true;
             aidx++;
         }
