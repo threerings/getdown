@@ -7,6 +7,9 @@
 
 * `appbase` and `latest` properties in `getdown.txt` now process env var subtitutions.
 
+* Added support for [Proxy Auto-config](https://en.wikipedia.org/wiki/Proxy_auto-config) via PAC
+  files.
+
 ## 1.8.4 - May 14, 2019
 
 * Added `verify_timeout` config to allow customization of the default (60 second) timeout during
