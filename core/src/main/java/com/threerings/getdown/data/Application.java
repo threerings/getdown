@@ -820,8 +820,7 @@ public class Application
      * Returns a URL from which the specified path can be fetched. Our application base URL is
      * properly versioned and combined with the supplied path.
      */
-    public URL getRemoteURL (String path)
-        throws MalformedURLException
+    public URL getRemoteURL (String path) throws MalformedURLException
     {
         return new URL(_vappbase, encodePath(path));
     }
