@@ -146,7 +146,7 @@ public class GetdownApp
                 }
 
                 if (_ifc.iconImages != null) {
-                    ArrayList<Image> icons = new ArrayList<>();
+                    List<Image> icons = new ArrayList<>();
                     for (String path : _ifc.iconImages) {
                         Image img = loadImage(path);
                         if (img == null) {
@@ -190,7 +190,7 @@ public class GetdownApp
                 String[] cmdarray;
                 if (LaunchUtil.isWindows()) {
                     String osName = System.getProperty("os.name", "");
-                    if (osName.indexOf("9") != -1 || osName.indexOf("Me") != -1) {
+                    if (osName.contains("9") || osName.contains("Me")) {
                         cmdarray = new String[] {
                             "command.com", "/c", "start", "\"" + url + "\"" };
                     } else {

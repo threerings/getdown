@@ -7,14 +7,14 @@ package com.threerings.getdown.util;
 
 import java.util.StringTokenizer;
 
-public class StringUtil {
+public final class StringUtil {
 
     /**
      * @return true if the specified string could be a valid URL (contains no illegal characters)
      */
     public static boolean couldBeValidUrl (String url)
     {
-        return url.matches("[A-Za-z0-9\\-\\._~:/\\?#\\[\\]@!$&'\\(\\)\\*\\+,;=%]+");
+        return url.matches("[A-Za-z0-9\\-._~:/?#\\[\\]@!$&'()*+,;=%]+");
     }
 
     /**
@@ -84,7 +84,7 @@ public class StringUtil {
         source = source.replace(",,", "%COMMA%");
 
         // count up the number of tokens
-        while ((tpos = source.indexOf(",", tpos+1)) != -1) {
+        while ((tpos = source.indexOf(',', tpos+1)) != -1) {
             tcount++;
         }
 
@@ -92,7 +92,7 @@ public class StringUtil {
         tpos = -1; tcount = 0;
 
         // do the split
-        while ((tpos = source.indexOf(",", tpos+1)) != -1) {
+        while ((tpos = source.indexOf(',', tpos+1)) != -1) {
             tokens[tcount] = source.substring(tstart, tpos);
             tokens[tcount] = tokens[tcount].trim().replace("%COMMA%", ",");
             if (intern) {
@@ -119,7 +119,7 @@ public class StringUtil {
 
     /**
      * Generates a string from the supplied bytes that is the HEX encoded representation of those
-     * bytes.  Returns the empty string for a <code>null</code> or empty byte array.
+     * bytes.  Returns the empty string for a {@code null} or empty byte array.
      *
      * @param bytes the bytes for which we want a string representation.
      * @param count the number of bytes to stop at (which will be coerced into being {@code <=} the
@@ -185,7 +185,7 @@ public class StringUtil {
     }
 
     /**
-     * Helper function for the various <code>join</code> methods.
+     * Helper function for the various {@code join} methods.
      */
     protected static String join (Object[] values, String separator, boolean escape)
     {
@@ -201,6 +201,6 @@ public class StringUtil {
         return buf.toString();
     }
 
-    /** Used by {@link #hexlate} and {@link #unhexlate}. */
+    /** Used by {@link #hexlate}. */
     protected static final String XLATE = "0123456789abcdef";
 }

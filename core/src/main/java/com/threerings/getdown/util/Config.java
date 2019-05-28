@@ -62,7 +62,7 @@ public class Config
      *
      * @param opts options that influence the parsing. See {@link #createOpts}.
      *
-     * @return a list of <code>String[]</code> instances containing the key/value pairs in the
+     * @return a list of {@code String[]} instances containing the key/value pairs in the
      * order they were parsed from the file.
      */
     public static List<String[]> parsePairs (File source, ParseOpts opts)
@@ -83,7 +83,7 @@ public class Config
         List<String[]> pairs = new ArrayList<>();
         for (String line : FileUtil.readLines(source)) {
             // nix comments
-            int cidx = line.indexOf("#");
+            int cidx = line.indexOf('#');
             if (opts.strictComments ? cidx == 0 : cidx != -1) {
                 line = line.substring(0, cidx);
             }
@@ -97,7 +97,7 @@ public class Config
             // parse our key/value pair
             String[] pair = new String[2];
             // if we're biasing toward key, put all the extra = in the key rather than the value
-            int eidx = opts.biasToKey ? line.lastIndexOf("=") : line.indexOf("=");
+            int eidx = opts.biasToKey ? line.lastIndexOf('=') : line.indexOf('=');
             if (eidx != -1) {
                 pair[0] = line.substring(0, eidx).trim();
                 pair[1] = line.substring(eidx+1).trim();
@@ -108,7 +108,7 @@ public class Config
 
             // if the pair has an os qualifier, we need to process it
             if (pair[1].startsWith("[")) {
-                int qidx = pair[1].indexOf("]");
+                int qidx = pair[1].indexOf(']');
                 if (qidx == -1) {
                     log.warning("Bogus platform specifier", "key", pair[0], "value", pair[1]);
                     continue; // omit the pair entirely
@@ -351,7 +351,7 @@ public class Config
     protected static boolean checkQualifiers (String quals, String osname, String osarch)
     {
         if (quals.startsWith("!")) {
-            if (quals.indexOf(",") != -1) { // sanity check
+            if (quals.contains(",")) { // sanity check
                 log.warning("Multiple qualifiers cannot be used when one of the qualifiers " +
                             "is negative", "quals", quals);
                 return false;
@@ -371,7 +371,7 @@ public class Config
     {
         String[] bits = qual.trim().toLowerCase(Locale.ROOT).split("-");
         String os = bits[0], arch = (bits.length > 1) ? bits[1] : "";
-        return (osname.indexOf(os) != -1) && (osarch.indexOf(arch) != -1);
+        return (osname.contains(os)) && (osarch.contains(arch));
     }
 
     private final Map<String, Object> _data;

@@ -19,20 +19,18 @@ import java.net.URLConnection;
 import java.util.Iterator;
 import java.util.ServiceLoader;
 
-import ca.beq.util.win32.registry.RegistryKey;
-import ca.beq.util.win32.registry.RegistryValue;
-import ca.beq.util.win32.registry.RootKey;
-
 import com.threerings.getdown.data.Application;
 import com.threerings.getdown.spi.ProxyAuth;
 import com.threerings.getdown.util.Config;
 import com.threerings.getdown.util.ConnectionUtil;
 import com.threerings.getdown.util.LaunchUtil;
 import com.threerings.getdown.util.StringUtil;
-
+import ca.beq.util.win32.registry.RegistryKey;
+import ca.beq.util.win32.registry.RegistryValue;
+import ca.beq.util.win32.registry.RootKey;
 import static com.threerings.getdown.Log.log;
 
-public class ProxyUtil {
+public final class ProxyUtil {
 
     public static boolean autoDetectProxy (Application app)
     {
@@ -57,12 +55,12 @@ public class ProxyUtil {
                 RegistryKey r = new RegistryKey(RootKey.HKEY_CURRENT_USER, PROXY_REGISTRY);
                 for (Iterator<?> iter = r.values(); iter.hasNext(); ) {
                     RegistryValue value = (RegistryValue)iter.next();
-                    if (value.getName().equals("ProxyEnable")) {
-                        enabled = value.getStringValue().equals("1");
+                    if ("ProxyEnable".equals(value.getName())) {
+                        enabled = "1".equals(value.getStringValue());
                     }
-                    if (value.getName().equals("ProxyServer")) {
+                    if ("ProxyServer".equals(value.getName())) {
                         String strval = value.getStringValue();
-                        int cidx = strval.indexOf(":");
+                        int cidx = strval.indexOf(':');
                         if (cidx != -1) {
                             rport = strval.substring(cidx+1);
                             strval = strval.substring(0, cidx);

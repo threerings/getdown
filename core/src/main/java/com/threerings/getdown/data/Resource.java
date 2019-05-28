@@ -23,7 +23,7 @@ import static com.threerings.getdown.Log.log;
 public class Resource implements Comparable<Resource>
 {
     /** Defines special attributes for resources. */
-    public static enum Attr {
+    public enum Attr {
         /** Indicates that the resource should be unpacked. */
         UNPACK,
         /** If present, when unpacking a resource, any directories created by the newly
@@ -35,7 +35,7 @@ public class Resource implements Comparable<Resource>
         PRELOAD,
         /** Indicates that the resource is a jar containing native libs. */
         NATIVE
-    };
+    }
 
     public static final EnumSet<Attr> NORMAL  = EnumSet.noneOf(Attr.class);
     public static final EnumSet<Attr> UNPACK  = EnumSet.of(Attr.UNPACK);

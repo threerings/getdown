@@ -11,11 +11,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
-import java.nio.charset.Charset;
 
 import static com.threerings.getdown.Log.log;
 
-public class StreamUtil {
+public final class StreamUtil {
     /**
      * Convenient close for a stream. Use in a finally clause and love life.
      */

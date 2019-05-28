@@ -8,11 +8,11 @@ package com.threerings.getdown.util;
 /**
  * Utilities for handling ARGB colors.
  */
-public class Color
+public final class Color
 {
-    public final static int CLEAR = 0x00000000;
-    public final static int WHITE = 0xFFFFFFFF;
-    public final static int BLACK = 0xFF000000;
+    public static final int CLEAR = 0x00000000;
+    public static final int WHITE = 0xFFFFFFFF;
+    public static final int BLACK = 0xFF000000;
 
     public static float brightness (int argb) {
         // TODO: we're ignoring alpha here...

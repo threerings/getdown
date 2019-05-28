@@ -69,7 +69,7 @@ public class ResourceCache
 
     private String getFileSuffix (File fileToCache) {
         String fileName = fileToCache.getName();
-        int index = fileName.lastIndexOf(".");
+        int index = fileName.lastIndexOf('.');
 
         return index > -1 ? fileName.substring(index) : "";
     }

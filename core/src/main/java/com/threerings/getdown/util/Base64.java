@@ -24,7 +24,7 @@ import static java.nio.charset.StandardCharsets.US_ASCII;
  * href="http://www.ietf.org/rfc/rfc2045.txt">2045</a> and <a
  * href="http://www.ietf.org/rfc/rfc3548.txt">3548</a>.
  */
-public class Base64 {
+public final class Base64 {
     /**
      * Default values for encoder/decoder flags.
      */
@@ -68,7 +68,7 @@ public class Base64 {
     //  shared code
     //  --------------------------------------------------------
 
-    /* package */ static abstract class Coder {
+    /* package */ abstract static class Coder {
         public byte[] output;
         public int op;
 
@@ -178,7 +178,7 @@ public class Base64 {
          * Lookup table for turning bytes into their position in the
          * Base64 alphabet.
          */
-        private static final int DECODE[] = {
+        private static final int[] DECODE = {
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63,
@@ -201,7 +201,7 @@ public class Base64 {
          * Decode lookup table for the "web safe" variant (RFC 3548
          * sec. 4) where - and _ replace + and /.
          */
-        private static final int DECODE_WEBSAFE[] = {
+        private static final int[] DECODE_WEBSAFE = {
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1,
@@ -236,7 +236,7 @@ public class Base64 {
         private int state;   // state number (0 to 6)
         private int value;
 
-        final private int[] alphabet;
+        private final int[] alphabet;
 
         public Decoder(int flags, byte[] output) {
             this.output = output;
@@ -541,7 +541,7 @@ public class Base64 {
          * Lookup table for turning Base64 alphabet positions (6 bits)
          * into output bytes.
          */
-        private static final byte ENCODE[] = {
+        private static final byte[] ENCODE = {
             'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
             'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
             'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
@@ -552,21 +552,21 @@ public class Base64 {
          * Lookup table for turning Base64 alphabet positions (6 bits)
          * into output bytes.
          */
-        private static final byte ENCODE_WEBSAFE[] = {
+        private static final byte[] ENCODE_WEBSAFE = {
             'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
             'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
             'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
             'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_',
         };
 
-        final private byte[] tail;
+        private final byte[] tail;
         /* package */ int tailLen;
         private int count;
 
-        final public boolean do_padding;
-        final public boolean do_newline;
-        final public boolean do_cr;
-        final private byte[] alphabet;
+        public final boolean do_padding;
+        public final boolean do_newline;
+        public final boolean do_cr;
+        private final byte[] alphabet;
 
         public Encoder(int flags, byte[] output) {
             this.output = output;
@@ -618,7 +618,7 @@ public class Base64 {
                             ((input[p++] & 0xff) << 8) |
                             (input[p++] & 0xff);
                         tailLen = 0;
-                    };
+                    }
                     break;
 
                 case 2:

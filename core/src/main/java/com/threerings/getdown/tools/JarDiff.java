@@ -67,15 +67,15 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public class JarDiff implements JarDiffCodes
 {
     private static final int DEFAULT_READ_SIZE = 2048;
-    private static byte[] newBytes = new byte[DEFAULT_READ_SIZE];
-    private static byte[] oldBytes = new byte[DEFAULT_READ_SIZE];
+    private static final byte[] newBytes = new byte[DEFAULT_READ_SIZE];
+    private static final byte[] oldBytes = new byte[DEFAULT_READ_SIZE];
 
     // The JARDiff.java is the stand-alone jardiff.jar tool. Thus, we do not depend on Globals.java
     // and other stuff here. Instead, we use an explicit _debug flag.
     private static boolean _debug;
 
     /**
-     * Creates a patch from the two passed in files, writing the result to <code>os</code>.
+     * Creates a patch from the two passed in files, writing the result to {@code os}.
      */
     public static void createPatch (String oldPath, String newPath,
                                     OutputStream os, boolean minimal) throws IOException
@@ -83,10 +83,10 @@ public class JarDiff implements JarDiffCodes
         try (ZipFile2 oldArchive = new ZipFile2(oldPath);
              ZipFile2 newArchive = new ZipFile2(newPath)) {
 
-            HashMap<String,String> moved = new HashMap<>();
-            HashSet<String> implicit = new HashSet<>();
-            HashSet<String> moveSrc = new HashSet<>();
-            HashSet<String> newEntries = new HashSet<>();
+            Map<String,String> moved = new HashMap<>();
+            Set<String> implicit = new HashSet<>();
+            Set<String> moveSrc = new HashSet<>();
+            Set<String> newEntries = new HashSet<>();
 
             // FIRST PASS
             // Go through the entries in new archive and determine which files are candidates for
@@ -157,7 +157,7 @@ public class JarDiff implements JarDiffCodes
 
             // SECOND PASS: <deleted files> = <oldjarnames> - <implicitmoves> -
             // <source of move commands> - <new or modified entries>
-            ArrayList<String> deleted = new ArrayList<>();
+            List<String> deleted = new ArrayList<>();
             for (ZipEntry oldEntry : oldArchive) {
                 String oldName = oldEntry.getName();
                 if (!implicit.contains(oldName) && !moveSrc.contains(oldName)
@@ -203,9 +203,9 @@ public class JarDiff implements JarDiffCodes
     }
 
     /**
-     * Writes the index file out to <code>jos</code>.
-     * <code>oldEntries</code> gives the names of the files that were removed,
-     * <code>movedMap</code> maps from the new name to the old name.
+     * Writes the index file out to {@code jos}.
+     * {@code oldEntries} gives the names of the files that were removed,
+     * {@code movedMap} maps from the new name to the old name.
      */
     private static void createIndex (ZipOutputStream jos, List<String> oldEntries,
                                      Map<String,String> movedMap)
@@ -286,7 +286,7 @@ public class JarDiff implements JarDiffCodes
      */
     private static class ZipFile2 implements Iterable<ZipEntry>, Closeable
     {
-        private ZipFile _archive;
+        private final ZipFile _archive;
         private List<ZipEntry> _entries;
         private HashMap<String,ZipEntry> _nameToEntryMap;
         private HashMap<Long,LinkedList<ZipEntry>> _crcToEntryMap;
@@ -384,7 +384,7 @@ public class JarDiff implements JarDiffCodes
 
         public String hasSameContent (ZipFile2 file, ZipEntry entry) throws IOException {
             String thisName = null;
-            Long crcL = Long.valueOf(entry.getCrc());
+            Long crcL = entry.getCrc();
             // check if this archive contains files with the passed in entry's crc
             if (_crcToEntryMap.containsKey(crcL)) {
                 // get the Linked List with files with the crc
@@ -419,7 +419,7 @@ public class JarDiff implements JarDiffCodes
                 while (entries.hasMoreElements()) {
                     ZipEntry entry = entries.nextElement();
                     long crc = entry.getCrc();
-                    Long crcL = Long.valueOf(crc);
+                    Long crcL = crc;
                     if (_debug) {
                         System.out.println("\t" + entry.getName() + " CRC " + crc);
                     }
