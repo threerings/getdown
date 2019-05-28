@@ -8,16 +8,26 @@ package com.threerings.getdown.launcher;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.io.Reader;
 import java.net.Authenticator;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.PasswordAuthentication;
 import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.ServiceLoader;
+
+import javax.script.Bindings;
+import javax.script.Invocable;
+import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 
 import ca.beq.util.win32.registry.RegistryKey;
 import ca.beq.util.win32.registry.RegistryValue;
@@ -61,21 +71,35 @@ public class ProxyUtil {
                         enabled = value.getStringValue().equals("1");
                     }
                     if (value.getName().equals("ProxyServer")) {
-                        String strval = value.getStringValue();
-                        int cidx = strval.indexOf(":");
-                        if (cidx != -1) {
-                            rport = strval.substring(cidx+1);
-                            strval = strval.substring(0, cidx);
+                        String[] hostPort = splitHostPort(value.getStringValue());
+                        rhost = hostPort[0];
+                        rport = hostPort[1];
+                    }
+                    if (value.getName().equals("AutoConfigURL")) {
+                        String acurl = value.getStringValue();
+                        Reader acjs = new InputStreamReader(new URL(acurl).openStream());
+                        // technically we should be returning all this info and trying each proxy
+                        // in succession, but that's complexity we'll leave for another day
+                        for (String proxy : findPACProxiesForURL(acjs, app.getRemoteURL(""))) {
+                            if (proxy.startsWith("PROXY ")) {
+                                String[] hostPort = splitHostPort(proxy.substring(6));
+                                rhost = hostPort[0];
+                                rport = hostPort[1];
+                                // TODO: is this valid? Does AutoConfigURL imply proxy enabled?
+                                enabled = true;
+                                break;
+                            }
                         }
-                        rhost = strval;
                     }
                 }
+
                 if (enabled) {
                     host = rhost;
                     port = rport;
                 } else {
                     log.info("Detected no proxy settings in the registry.");
                 }
+
             } catch (Throwable t) {
                 log.info("Failed to find proxy settings in Windows registry", "error", t);
             }
@@ -202,6 +226,54 @@ public class ProxyUtil {
                     return new PasswordAuthentication(fuser, fpass);
                 }
             });
+        }
+    }
+
+    public static class Resolver {
+        public String dnsResolve (String host) {
+            try {
+                return InetAddress.getByName(host).toString();
+            } catch (UnknownHostException uhe) {
+                return null;
+            }
+        }
+    }
+
+    public static String[] findPACProxiesForURL (Reader pac, URL url) {
+        ScriptEngineManager manager = new ScriptEngineManager();
+        ScriptEngine engine = manager.getEngineByName("javascript");
+        Bindings globals = engine.createBindings();
+        globals.put("resolver", new Resolver());
+        engine.setBindings(globals, ScriptContext.GLOBAL_SCOPE);
+        try {
+            URL utils = ProxyUtil.class.getResource("PacUtils.js");
+            if (utils == null) {
+                log.error("Unable to load PacUtils.js");
+                return new String[0];
+            }
+            engine.eval(new InputStreamReader(utils.openStream()));
+            Object res = engine.eval(pac);
+            if (engine instanceof Invocable) {
+                Object[] args = new Object[] { url.toString(), url.getHost() };
+                res = ((Invocable) engine).invokeFunction("FindProxyForURL", args);
+            }
+            String[] proxies = res.toString().split(";");
+            for (int ii = 0; ii < proxies.length; ii += 1) {
+                proxies[ii] = proxies[ii].trim();
+            }
+            return proxies;
+        } catch (Exception e) {
+            log.warning("Failed to resolve PAC proxy", e);
+        }
+        return new String[0];
+    }
+
+    private static String[] splitHostPort (String hostPort) {
+        int cidx = hostPort.indexOf(":");
+        if (cidx == -1) {
+            return new String[] { hostPort, null};
+        } else {
+            return new String[] { hostPort.substring(0, cidx), hostPort.substring(cidx+1) };
         }
     }
 
