@@ -547,6 +547,36 @@ public class Application
     public Config init (boolean checkPlatform)
         throws IOException
     {
+        Config config = initConfig(checkPlatform);
+        initConfigJava(config);
+        initConfigTracking(config);
+        initConfigResources(config);
+        initConfigArgs(config);
+
+        // determine whether we want to allow offline operation (defaults to false)
+        _allowOffline = config.getBoolean("allow_offline");
+
+        // look for a debug.txt file which causes us to run in java.exe on Windows so that we can
+        // obtain a thread dump of the running JVM
+        _windebug = getLocalPath("debug.txt").exists();
+
+        // whether to cache code resources and launch from cache
+        _useCodeCache = config.getBoolean("use_code_cache");
+        _codeCacheRetentionDays = config.getInt("code_cache_retention_days", 7);
+
+        // maximum simultaneous downloads
+        _maxConcDownloads = Math.max(1, config.getInt("max_concurrent_downloads",
+                                                      SysProps.threadPoolSize()));
+
+        // extract some info used to configure our child process on macOS
+        _dockName = config.getString("ui.name");
+        _dockIconPath = config.getString("ui.mac_dock_icon", "../desktop.icns");
+
+        _verifyTimeout = config.getInt("verify_timeout", 60);
+        return config;
+    }
+
+    public Config initConfig (boolean checkPlatform) throws IOException {
         Config config = null;
         File cfgfile = _config;
         Config.ParseOpts opts = Config.createOpts(checkPlatform);
@@ -602,7 +632,7 @@ public class Application
             _vappbase = createVAppBase(_version);
         } catch (MalformedURLException mue) {
             String err = MessageUtil.tcompose("m.invalid_appbase", _appbase);
-            throw (IOException) new IOException(err).initCause(mue);
+            throw new IOException(err, mue);
         }
 
         // check for a latest config URL
@@ -621,20 +651,12 @@ public class Application
             }
         }
 
-        String appPrefix = _envc.appId == null ? "" : (_envc.appId + ".");
-
-        // determine our application class name (use app-specific class _if_ one is provided)
-        _class = config.getString("class");
-        if (appPrefix.length() > 0) {
-            _class = config.getString(appPrefix + "class", _class);
-        }
-        if (_class == null) {
-            throw new IOException("m.missing_class");
-        }
-
         // determine whether we want strict comments
         _strictComments = config.getBoolean("strict_comments");
+        return config;
+    }
 
+    public void initConfigJava (Config config) {
         // check to see if we're using a custom java.version property and regex
         _javaVersionProp = config.getString("java_version_prop", _javaVersionProp);
         _javaVersionRegex = config.getString("java_version_regex", _javaVersionRegex);
@@ -649,17 +671,13 @@ public class Application
         // check to see if we require a particular JVM version and have a supplied JVM
         _javaExactVersionRequired = config.getBoolean("java_exact_version_required");
 
-        // this is a little weird, but when we're run from the digester, we see a String[] which
-        // contains java locations for all platforms which we can't grok, but the digester doesn't
-        // need to know about that; when we're run in a real application there will be only one!
-        Object javaloc = config.getRaw("java_location");
-        if (javaloc instanceof String) {
-            _javaLocation = (String)javaloc;
-        }
+        _javaLocation = config.getString("java_location");
 
         // used only in conjunction with java_location
         _javaLocalDir = getLocalPath(config.getString("java_local_dir", LaunchUtil.LOCAL_JAVA_DIR));
+    }
 
+    public void initConfigTracking (Config config) {
         // determine whether we have any tracking configuration
         _trackingURL = config.getString("tracking_url");
 
@@ -684,7 +702,9 @@ public class Application
 
         // Some app may need to generate google analytics code
         _trackingGAHash = config.getString("tracking_ga_hash");
+    }
 
+    public void initConfigResources (Config config) throws IOException {
         // clear our arrays as we may be reinitializing
         _codes.clear();
         _resources.clear();
@@ -710,16 +730,29 @@ public class Application
 
         // parse our auxiliary resource groups
         for (String auxgroup : config.getList("auxgroups")) {
-            ArrayList<Resource> codes = new ArrayList<>();
+            List<Resource> codes = new ArrayList<>();
             parseResources(config, auxgroup + ".code", Resource.NORMAL, codes);
             parseResources(config, auxgroup + ".ucode", Resource.UNPACK, codes);
-            ArrayList<Resource> rsrcs = new ArrayList<>();
+            List<Resource> rsrcs = new ArrayList<>();
             parseResources(config, auxgroup + ".resource", Resource.NORMAL, rsrcs);
             parseResources(config, auxgroup + ".xresource", Resource.EXEC, rsrcs);
             parseResources(config, auxgroup + ".uresource", Resource.UNPACK, rsrcs);
             parseResources(config, auxgroup + ".presource", Resource.PRELOAD, rsrcs);
             parseResources(config, auxgroup + ".nresource", Resource.NATIVE, rsrcs);
             _auxgroups.put(auxgroup, new AuxGroup(auxgroup, codes, rsrcs));
+        }
+    }
+
+    private void initConfigArgs (Config config) throws IOException {
+        String appPrefix = _envc.appId == null ? "" : (_envc.appId + ".");
+
+        // determine our application class name (use app-specific class _if_ one is provided)
+        _class = config.getString("class");
+        if (appPrefix.length() > 0) {
+            _class = config.getString(appPrefix + "class", _class);
+        }
+        if (_class == null) {
+            throw new IOException("m.missing_class");
         }
 
         // transfer our JVM arguments (we include both "global" args and app_id-prefixed args)
@@ -742,28 +775,6 @@ public class Application
 
         // look for custom arguments
         fillAssignmentListFromPairs("extra.txt", _txtJvmArgs);
-
-        // determine whether we want to allow offline operation (defaults to false)
-        _allowOffline = config.getBoolean("allow_offline");
-
-        // look for a debug.txt file which causes us to run in java.exe on Windows so that we can
-        // obtain a thread dump of the running JVM
-        _windebug = getLocalPath("debug.txt").exists();
-
-        // whether to cache code resources and launch from cache
-        _useCodeCache = config.getBoolean("use_code_cache");
-        _codeCacheRetentionDays = config.getInt("code_cache_retention_days", 7);
-
-        // maximum simultaneous downloads
-        _maxConcDownloads = Math.max(1, config.getInt("max_concurrent_downloads",
-                                                      SysProps.threadPoolSize()));
-
-        // extract some info used to configure our child process on macOS
-        _dockName = config.getString("ui.name");
-        _dockIconPath = config.getString("ui.mac_dock_icon", "../desktop.icns");
-
-        _verifyTimeout = config.getInt("verify_timeout", 60);
-        return config;
     }
 
     /**

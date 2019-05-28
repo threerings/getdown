@@ -13,6 +13,18 @@ apparg = %APPDIR%
 # test the %env% mechanism
 jvmarg = -Dusername=\%ENV.USER%
 
+# test various java_*** configs, they are not interesting for digester
+java_local_dir = jre
+java_max_version = 1089999
+java_min_version = [windows] 1080111
+java_min_version = [!windows] 1080192
+java_exact_version_required = [linux] true
+java_location = [linux-amd64] /files/java/java_linux_64.zip
+java_location = [linux-i386] /files/java/java_linux_32.zip
+java_location = [mac] /files/java/java_mac_64.zip
+java_location = [windows-amd64] /files/java/java_windows_64.zip
+java_location = [windows-x86] /files/java/java_windows_32.zip
+
 strict_comments = true
 resource = funny%test dir/some=file.txt
 resource = crazyhashfile#txt
