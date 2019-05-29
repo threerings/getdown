@@ -129,7 +129,7 @@ public abstract class Getdown
     {
         if (SysProps.noInstall()) {
             log.info("Skipping install due to 'no_install' sysprop.");
-        } else if (_readyToInstall) {
+        } else if (isUpdateAvailable()) {
             log.info("Installing " + _toInstallResources.size() + " downloaded resources:");
             for (Resource resource : _toInstallResources) {
                 resource.install(true);
@@ -260,13 +260,15 @@ public abstract class Getdown
             }
         }
 
-        try {
-            download(predownloads);
-            for (Resource rsrc : predownloads) {
-                rsrc.install(false); // install but don't validate yet
+        if (!predownloads.isEmpty()) {
+            try {
+                download(predownloads);
+                for (Resource rsrc : predownloads) {
+                    rsrc.install(false); // install but don't validate yet
+                }
+            } catch (IOException ioe) {
+                log.warning("Failed to predownload resources. Continuing...", ioe);
             }
-        } catch (IOException ioe) {
-            log.warning("Failed to predownload resources. Continuing...", ioe);
         }
     }
 

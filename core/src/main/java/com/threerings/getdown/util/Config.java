@@ -248,6 +248,20 @@ public class Config
     }
 
     /**
+     * Returns the specified config value as an enum value. The string value of the config is
+     * converted to all upper case and then turned into an enum via {@link Enum#valueOf}.
+     */
+    public <T extends Enum<T>> T getEnum (String name, Class<T> eclass, T defval) {
+        String value = getString(name, defval.toString());
+        try {
+            return Enum.valueOf(eclass, value.toUpperCase());
+        } catch (Exception e) {
+            log.warning("Invalid value for '" + name + "' config: '" + value + "'.");
+            return defval;
+        }
+    }
+
+    /**
      * Massages a single string into an array and leaves existing array values as is. Simplifies
      * access to parameters that are expected to be arrays.
      */

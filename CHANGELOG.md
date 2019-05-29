@@ -18,6 +18,11 @@
   without a proxy, it does so for that session, but retains the proxy config for future sessions in
   which the proxy may again be needed.
 
+* Added `revalidate_policy` config to control when Getdown revalidates resources (by hashing them
+  and comparing that hash to the values in `digest.txt`). The default, `after_update`, only
+  validates resources after the app is updated. A new mode, `always`, validates resources prior to
+  every application launch.
+
 ## 1.8.4 - May 14, 2019
 
 * Added `verify_timeout` config to allow customization of the default (60 second) timeout during

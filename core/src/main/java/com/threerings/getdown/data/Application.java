@@ -636,21 +636,18 @@ public class Application
             }
         }
 
-        // determine whether we want strict comments
+        // read some miscellaneous configurations
         _strictComments = config.getBoolean("strict_comments");
-
-        // determine whether we want to allow offline operation (defaults to false)
         _allowOffline = config.getBoolean("allow_offline");
+        _revalidatePolicy = config.getEnum(
+            "revalidate_policy", RevalidatePolicy.class, RevalidatePolicy.AFTER_UPDATE);
+        int tpSize = SysProps.threadPoolSize();
+        _maxConcDownloads = Math.max(1, config.getInt("max_concurrent_downloads", tpSize));
+        _verifyTimeout = config.getInt("verify_timeout", 60);
 
         // whether to cache code resources and launch from cache
         _useCodeCache = config.getBoolean("use_code_cache");
         _codeCacheRetentionDays = config.getInt("code_cache_retention_days", 7);
-
-        // maximum simultaneous downloads
-        _maxConcDownloads = Math.max(1, config.getInt("max_concurrent_downloads",
-                                                      SysProps.threadPoolSize()));
-
-        _verifyTimeout = config.getInt("verify_timeout", 60);
     }
 
     /**
@@ -1361,14 +1358,14 @@ public class Application
         unpacked.addAll(unpackedAsync);
 
         long complete = System.currentTimeMillis();
-        log.info("Verified resources", "count", rsrcs.size(), "size", (totalSize/1024) + "k",
-                 "duration", (complete-start) + "ms");
+        log.info("Verified resources", "count", rsrcs.size(), "alreadyValid", alreadyValid[0],
+                 "size", (totalSize/1024) + "k", "duration", (complete-start) + "ms");
     }
 
     private void verifyResource (Resource rsrc, ProgressObserver obs, int[] alreadyValid,
                                  Set<Resource> unpacked,
                                  Set<Resource> toInstall, Set<Resource> toDownload) {
-        if (rsrc.isMarkedValid()) {
+        if (_revalidatePolicy != RevalidatePolicy.ALWAYS && rsrc.isMarkedValid()) {
             if (alreadyValid != null) {
                 alreadyValid[0]++;
             }
@@ -1765,6 +1762,7 @@ public class Application
 
     protected int _verifyTimeout = 60;
 
+    protected RevalidatePolicy _revalidatePolicy = RevalidatePolicy.AFTER_UPDATE;
     protected boolean _useCodeCache;
     protected int _codeCacheRetentionDays;
 
@@ -1790,4 +1788,6 @@ public class Application
 
     protected static final String ENV_VAR_PREFIX = "%ENV.";
     protected static final Pattern ENV_VAR_PATTERN = Pattern.compile("%ENV\\.(.*?)%");
+
+    protected static enum RevalidatePolicy { ALWAYS, AFTER_UPDATE }
 }
