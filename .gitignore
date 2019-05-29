@@ -1,4 +1,6 @@
+# NOTE: do not add ignores for IDE files. You can put those in .git/info/excludes in your
+# personal checkout of this code, I do not want this file to contain the union of all
+# possible ignores for all possible IDEs.
 /*/target/
 /target/
 core/src/main/java/com/threerings/getdown/data/Build.java
-*.iml
