@@ -1,4 +1,4 @@
-# NOTE: do not add ignores for IDE files. You can put those in .git/info/excludes in your
+# NOTE: do not add ignores for IDE files. You can put those in .git/info/exclude in your
 # personal checkout of this code, I do not want this file to contain the union of all
 # possible ignores for all possible IDEs.
 /*/target/
