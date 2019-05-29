@@ -4,7 +4,7 @@
   <parent>
     <groupId>com.threerings.getdown</groupId>
     <artifactId>getdown</artifactId>
-    <version>1.8.5-SNAPSHOT</version>
+    <version>1.8.5</version>
   </parent>
 
   <artifactId>getdown-core</artifactId>
