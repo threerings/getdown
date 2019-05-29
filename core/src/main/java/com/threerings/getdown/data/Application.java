@@ -594,7 +594,10 @@ public class Application
      * like the appbase and version.
      */
     public void initBase (Config config) throws IOException {
-        // first determine our application base, this way if anything goes wrong later in the
+        // first extract our version information
+        _version = config.getLong("version", -1L);
+
+        // determine our application base, this way if anything goes wrong later in the
         // process, our caller can use the appbase to download a new configuration file
         _appbase = config.getString("appbase");
         if (_appbase == null) {
@@ -608,9 +611,6 @@ public class Application
         if (!_appbase.endsWith("/")) {
             _appbase += "/";
         }
-
-        // extract our version information
-        _version = config.getLong("version", -1L);
 
         // if we are a versioned deployment, create a versioned appbase
         try {

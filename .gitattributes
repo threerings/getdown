@@ -1,0 +1,3 @@
+*.txt eol=lf
+*#txt eol=lf
+*.sh eol=lf
