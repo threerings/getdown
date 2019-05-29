@@ -579,6 +579,9 @@ public class Application
             config = new Config(cdata);
         }
 
+        // extract our version information
+        _version = config.getLong("version", -1L);
+
         // first determine our application base, this way if anything goes wrong later in the
         // process, our caller can use the appbase to download a new configuration file
         _appbase = config.getString("appbase");
@@ -593,9 +596,6 @@ public class Application
         if (!_appbase.endsWith("/")) {
             _appbase = _appbase + "/";
         }
-
-        // extract our version information
-        _version = config.getLong("version", -1L);
 
         // if we are a versioned deployment, create a versioned appbase
         try {
