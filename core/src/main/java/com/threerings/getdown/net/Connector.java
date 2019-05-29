@@ -50,7 +50,6 @@ public class Connector {
 
     /**
      * Opens a connection to a URL, setting the authentication header if user info is present.
-     * @param proxy the proxy via which to perform HTTP connections.
      * @param url the URL to which to open a connection.
      * @param connectTimeout if {@code > 0} then a timeout, in seconds, to use when opening the
      * connection. If {@code 0} is supplied, the connection timeout specified via system properties
