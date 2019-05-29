@@ -76,7 +76,6 @@
           <additionalOptions>
             <additionalOption>-Xdoclint:all</additionalOption>
             <additionalOption>-Xdoclint:-missing</additionalOption>
-            <additionalOption>-html5</additionalOption>
           </additionalOptions>
         </configuration>
       </plugin>
