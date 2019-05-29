@@ -52,7 +52,7 @@ public class GetdownApp
 
     /**
      * Runs Getdown as an application, using the arguments supplie as {@code argv}.
-     * @return the {@code Getdown} instance that is running. {@link Getdown#start} will have been
+     * @return the {@code Getdown} instance that is running. {@link Getdown#run} will have been
      * called on it.
      * @throws Exception if anything goes wrong starting Getdown.
      */
