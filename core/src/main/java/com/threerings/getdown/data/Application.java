@@ -784,10 +784,6 @@ public class Application
         // extract some info used to configure our child process on macOS
         _dockName = config.getString("ui.name");
         _dockIconPath = config.getString("ui.mac_dock_icon", "../desktop.icns");
-
-        // look for a debug.txt file which causes us to run in java.exe on Windows so that we can
-        // obtain a thread dump of the running JVM
-        _windebug = getLocalPath("debug.txt").exists();
     }
 
     /**
@@ -967,7 +963,7 @@ public class Application
         ArrayList<String> args = new ArrayList<>();
 
         // reconstruct the path to the JVM
-        args.add(LaunchUtil.getJVMBinaryPath(_javaLocalDir, _windebug || optimum));
+        args.add(LaunchUtil.getJVMBinaryPath(_javaLocalDir, SysProps.debug() || optimum));
 
         // check whether we're using -jar mode or -classpath mode
         boolean dashJarMode = MANIFEST_CLASS.equals(_class);
@@ -1737,7 +1733,6 @@ public class Application
     protected String _dockName;
     protected String _dockIconPath;
     protected boolean _strictComments;
-    protected boolean _windebug;
     protected boolean _allowOffline;
     protected int _maxConcDownloads;
 

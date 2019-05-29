@@ -66,7 +66,7 @@ public class GetdownApp
         }
 
         // pipe our output into a file in the application directory
-        if (!SysProps.noLogRedir()) {
+        if (!SysProps.noLogRedir() && !SysProps.debug()) {
             File logFile = new File(envc.appDir, "launcher.log");
             try {
                 PrintStream logOut = new PrintStream(

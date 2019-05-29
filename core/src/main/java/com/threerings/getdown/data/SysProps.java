@@ -40,6 +40,14 @@ public final class SysProps
         return System.getProperty("no_log_redir") != null;
     }
 
+    /** Used to debug Getdown's launching of an app. When set, it disables redirection of stdout
+      * and stderr into a log file, and on Windows it uses {@code java.exe} to launch the app so
+      * that its console output can be observed.
+      * Usage: {@code -Ddebug}. */
+    public static boolean debug () {
+        return System.getProperty("debug") != null;
+    }
+
     /** Overrides the domain on {@code appbase}. Usage: {@code -Dappbase_domain=foo}. */
     public static String appbaseDomain () {
         return System.getProperty("appbase_domain");
