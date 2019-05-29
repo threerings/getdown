@@ -39,17 +39,16 @@ import javax.swing.JFrame;
 import javax.swing.JLayeredPane;
 
 import com.samskivert.swing.util.SwingUtil;
-import com.threerings.getdown.data.Application;
 import com.threerings.getdown.data.Application.UpdateInterface.Step;
+import com.threerings.getdown.data.Application;
 import com.threerings.getdown.data.Build;
 import com.threerings.getdown.data.EnvConfig;
 import com.threerings.getdown.data.Resource;
 import com.threerings.getdown.data.SysProps;
+import com.threerings.getdown.net.Connector;
 import com.threerings.getdown.net.Downloader;
-import com.threerings.getdown.net.HTTPDownloader;
 import com.threerings.getdown.tools.Patcher;
 import com.threerings.getdown.util.Config;
-import com.threerings.getdown.util.ConnectionUtil;
 import com.threerings.getdown.util.FileUtil;
 import com.threerings.getdown.util.LaunchUtil;
 import com.threerings.getdown.util.MessageUtil;
@@ -62,12 +61,22 @@ import static com.threerings.getdown.Log.log;
 /**
  * Manages the main control for the Getdown application updater and deployment system.
  */
-public abstract class Getdown extends Thread
+public abstract class Getdown
     implements Application.StatusDisplay, RotatingBackgrounds.ImageLoader
 {
+    /**
+     * Starts a thread to run Getdown and ultimately (hopefully) launch the target app.
+     */
+    public static void run (final Getdown getdown) {
+        new Thread("Getdown") {
+            @Override public void run () {
+                getdown.run();
+            }
+        }.start();
+    }
+
     public Getdown (EnvConfig envc)
     {
-        super("Getdown");
         try {
             // If the silent property exists, install without bringing up any gui. If it equals
             // launch, start the application after installing. Otherwise, just install and exit.
@@ -134,8 +143,28 @@ public abstract class Getdown extends Thread
         }
     }
 
-    @Override
-    public void run ()
+    /**
+     * Configures our proxy settings (called by {@link ProxyPanel}) and fires up the launcher.
+     */
+    public void configProxy (String host, String port, String username, String password)
+    {
+        log.info("User configured proxy", "host", host, "port", port);
+        ProxyUtil.configProxy(_app, host, port, username, password);
+
+        // clear out our UI
+        disposeContainer();
+        _container = null;
+
+        // fire up a new thread
+        run(this);
+    }
+
+    /**
+     * The main entry point of Getdown: does some sanity checks and preparation, then delegates the
+     * actual getting down to {@link #getdown}. This is not called directly, but rather via the
+     * static {@code run} method as Getdown does its main work on a separate thread.
+     */
+    protected void run ()
     {
         // if we have no messages, just bail because we're hosed; the error message will be
         // displayed to the user already
@@ -156,59 +185,20 @@ public abstract class Getdown extends Thread
             return;
         }
 
-        try {
-            _dead = false;
-            // if we fail to detect a proxy, but we're allowed to run offline, then go ahead and
-            // run the app anyway because we're prepared to cope with not being able to update
-            if (detectProxy() || _app.allowOffline()) {
-                getdown();
-            } else if (_silent) {
-                log.warning("Need a proxy, but we don't want to bother anyone.  Exiting.");
-            } else {
-                // create a panel they can use to configure the proxy settings
-                _container = createContainer();
-                // allow them to close the window to abort the proxy configuration
-                _dead = true;
-                configureContainer();
-                ProxyPanel panel = new ProxyPanel(this, _msgs);
-                // set up any existing configured proxy
-                String[] hostPort = ProxyUtil.loadProxy(_app);
-                panel.setProxy(hostPort[0], hostPort[1]);
-                _container.add(panel, BorderLayout.CENTER);
-                showContainer();
-            }
-
-        } catch (Exception e) {
-            log.warning("run() failed.", e);
-            fail(e);
-        }
-    }
-
-    /**
-     * Configures our proxy settings (called by {@link ProxyPanel}) and fires up the launcher.
-     */
-    public void configProxy (String host, String port, String username, String password)
-    {
-        log.info("User configured proxy", "host", host, "port", port);
-
-        if (!StringUtil.isBlank(host)) {
-            ProxyUtil.configProxy(_app, host, port, username, password);
-        }
-
-        // clear out our UI
-        disposeContainer();
-        _container = null;
-
-        // fire up a new thread
-        new Thread(this).start();
+        _dead = false;
+        // if we fail to detect a proxy, but we're allowed to run offline, then go ahead and
+        // run the app anyway because we're prepared to cope with not being able to update
+        if (detectProxy() || _app.allowOffline()) getdown();
+        else requestProxyInfo(false);
     }
 
     protected boolean detectProxy () {
-        if (ProxyUtil.autoDetectProxy(_app)) {
+        boolean tryNoProxy = SysProps.tryNoProxyFirst();
+        if (!tryNoProxy && ProxyUtil.autoDetectProxy(_app)) {
             return true;
         }
 
-        // otherwise see if we actually need a proxy; first we have to initialize our application
+        // see if we actually need a proxy; first we have to initialize our application
         // to get some sort of interface configuration and the appbase URL
         log.info("Checking whether we need to use a proxy...");
         try {
@@ -217,14 +207,18 @@ public abstract class Getdown extends Thread
             // no worries
         }
         updateStatus("m.detecting_proxy");
-        if (!ProxyUtil.canLoadWithoutProxy(_app.getConfigResource().getRemote())) {
-            return false;
+        URL configURL = _app.getConfigResource().getRemote();
+        if (!ProxyUtil.canLoadWithoutProxy(configURL, tryNoProxy ? 2 : 5)) {
+            // if we didn't auto-detect proxy first thing, do auto-detect now
+            return tryNoProxy ? ProxyUtil.autoDetectProxy(_app) : false;
         }
 
-        // we got through, so we appear not to require a proxy; make a blank proxy config so that
-        // we don't go through this whole detection process again next time
         log.info("No proxy appears to be needed.");
-        ProxyUtil.saveProxy(_app, null, null);
+        if (!tryNoProxy)  {
+            // we got through, so we appear not to require a proxy; make a blank proxy config so
+            // that we don't go through this whole detection process again next time
+            ProxyUtil.saveProxy(_app, null, null);
+        }
         return true;
     }
 
@@ -232,6 +226,25 @@ public abstract class Getdown extends Thread
         Config config = _app.init(true);
         if (preloads) doPredownloads(_app.getResources());
         _ifc = new Application.UpdateInterface(config);
+    }
+
+    protected void requestProxyInfo (boolean reinitAuth) {
+        if (_silent) {
+            log.warning("Need a proxy, but we don't want to bother anyone. Exiting.");
+            return;
+        }
+
+        // create a panel they can use to configure the proxy settings
+        _container = createContainer();
+        // allow them to close the window to abort the proxy configuration
+        _dead = true;
+        configureContainer();
+        ProxyPanel panel = new ProxyPanel(this, _msgs, reinitAuth);
+        // set up any existing configured proxy
+        String[] hostPort = ProxyUtil.loadProxy(_app);
+        panel.setProxy(hostPort[0], hostPort[1]);
+        _container.add(panel, BorderLayout.CENTER);
+        showContainer();
     }
 
     /**
@@ -264,7 +277,7 @@ public abstract class Getdown extends Thread
     protected void getdown ()
     {
         try {
-            // first parses our application deployment file
+            // first parse our application deployment file
             try {
                 readConfig(true);
             } catch (IOException ioe) {
@@ -279,7 +292,7 @@ public abstract class Getdown extends Thread
                 throw new MultipleGetdownRunning();
             }
 
-            // Update the config modtime so a sleeping getdown will notice the change.
+            // update the config modtime so a sleeping getdown will notice the change
             File config = _app.getLocalPath(Application.CONFIG_FILE);
             if (!config.setLastModified(System.currentTimeMillis())) {
                 log.warning("Unable to set modtime on config file, will be unable to check for " +
@@ -424,9 +437,20 @@ public abstract class Getdown extends Thread
             throw new IOException("m.unable_to_repair");
 
         } catch (Exception e) {
-            log.warning("getdown() failed.", e);
-            fail(e);
-            _app.releaseLock();
+            // if we failed due to proxy errors, ask for proxy info
+            switch (_app.conn.state) {
+            case NEED_PROXY:
+                requestProxyInfo(false);
+                break;
+            case NEED_PROXY_AUTH:
+                requestProxyInfo(true);
+                break;
+            default:
+                log.warning("getdown() failed.", e);
+                fail(e);
+                _app.releaseLock();
+                break;
+            }
         }
     }
 
@@ -607,7 +631,7 @@ public abstract class Getdown extends Thread
         // create our user interface
         createInterfaceAsync(false);
 
-        Downloader dl = new HTTPDownloader(_app.proxy) {
+        Downloader dl = new Downloader(_app.conn) {
             @Override protected void resolvingDownloads () {
                 updateStatus("m.resolving");
             }
@@ -841,11 +865,12 @@ public abstract class Getdown extends Thread
             msg = MessageUtil.compose("m.unknown_error", _ifc.installError);
         } else if (!msg.startsWith("m.")) {
             // try to do something sensible based on the type of error
-            msg = e instanceof FileNotFoundException
-                ? MessageUtil.compose("m.missing_resource", MessageUtil.taint(msg), _ifc.installError)
-                : MessageUtil.compose("m.init_error", MessageUtil.taint(msg), _ifc.installError);
+            msg = MessageUtil.taint(msg);
+            msg = e instanceof FileNotFoundException ?
+                MessageUtil.compose("m.missing_resource", msg, _ifc.installError) :
+                MessageUtil.compose("m.init_error", msg, _ifc.installError);
         }
-        // Since we're dead, clear off the 'time remaining' label along with displaying the error message
+        // since we're dead, clear off the 'time remaining' label along with displaying the error
         fail(msg);
     }
 
@@ -931,14 +956,14 @@ public abstract class Getdown extends Thread
             do {
                 URL url = _app.getTrackingProgressURL(++_reportedProgress);
                 if (url != null) {
-                    new ProgressReporter(url).start();
+                    reportProgress(url);
                 }
             } while (_reportedProgress <= progress);
 
         } else {
             URL url = _app.getTrackingURL(event);
             if (url != null) {
-                new ProgressReporter(url).start();
+                reportProgress(url);
             }
         }
     }
@@ -1001,44 +1026,40 @@ public abstract class Getdown extends Thread
     }
 
     /** Used to fetch a progress report URL. */
-    protected class ProgressReporter extends Thread
-    {
-        public ProgressReporter (URL url) {
-            setDaemon(true);
-            _url = url;
-        }
-
-        @Override
-        public void run () {
-            try {
-                HttpURLConnection ucon = ConnectionUtil.openHttp(_app.proxy, _url, 0, 0);
-
-                // if we have a tracking cookie configured, configure the request with it
-                if (_app.getTrackingCookieName() != null &&
-                    _app.getTrackingCookieProperty() != null) {
-                    String val = System.getProperty(_app.getTrackingCookieProperty());
-                    if (val != null) {
-                        ucon.setRequestProperty("Cookie", _app.getTrackingCookieName() + "=" + val);
-                    }
-                }
-
-                // now request our tracking URL and ensure that we get a non-error response
-                ucon.connect();
+    protected void reportProgress (final URL url) {
+        Thread reporter = new Thread("Progress reporter") {
+            public void run () {
                 try {
-                    if (ucon.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                        log.warning("Failed to report tracking event",
-                            "url", _url, "rcode", ucon.getResponseCode());
+                    HttpURLConnection ucon = _app.conn.openHttp(url, 0, 0);
+
+                    // if we have a tracking cookie configured, configure the request with it
+                    if (_app.getTrackingCookieName() != null &&
+                        _app.getTrackingCookieProperty() != null) {
+                        String val = System.getProperty(_app.getTrackingCookieProperty());
+                        if (val != null) {
+                            ucon.setRequestProperty(
+                                "Cookie", _app.getTrackingCookieName() + "=" + val);
+                        }
                     }
-                } finally {
-                    ucon.disconnect();
+
+                    // now request our tracking URL and ensure that we get a non-error response
+                    ucon.connect();
+                    try {
+                        if (ucon.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                            log.warning("Failed to report tracking event",
+                                        "url", url, "rcode", ucon.getResponseCode());
+                        }
+                    } finally {
+                        ucon.disconnect();
+                    }
+
+                } catch (IOException ioe) {
+                    log.warning("Failed to report tracking event", "url", url, "error", ioe);
                 }
-
-            } catch (IOException ioe) {
-                log.warning("Failed to report tracking event", "url", _url, "error", ioe);
             }
-        }
-
-        protected URL _url;
+        };
+        reporter.setDaemon(true);
+        reporter.start();
     }
 
     /** Used to pass progress on to our user interface. */

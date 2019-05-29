@@ -101,7 +101,7 @@ public class GetdownApp
         log.info("-- Cur dir: " + System.getProperty("user.dir"));
         log.info("---------------------------------------------");
 
-        Getdown app = new Getdown(envc) {
+        Getdown getdown = new Getdown(envc) {
             @Override
             protected Container createContainer () {
                 // create our user interface, and display it
@@ -226,8 +226,7 @@ public class GetdownApp
                 // super.fail causes the UI to be created (if needed) on the next UI tick, so we
                 // want to wait until that happens before we attempt to redecorate the window
                 EventQueue.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
+                    @Override public void run () {
                         // if the frame was set to be undecorated, make window decoration available
                         // to allow the user to close the window
                         if (_frame != null && _frame.isUndecorated()) {
@@ -247,7 +246,7 @@ public class GetdownApp
 
             protected JFrame _frame;
         };
-        app.start();
-        return app;
+        Getdown.run(getdown);
+        return getdown;
     }
 }

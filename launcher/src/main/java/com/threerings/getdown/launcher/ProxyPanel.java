@@ -35,14 +35,16 @@ import static com.threerings.getdown.Log.log;
  */
 public final class ProxyPanel extends JPanel implements ActionListener
 {
-    public ProxyPanel (Getdown getdown, ResourceBundle msgs)
+    public ProxyPanel (Getdown getdown, ResourceBundle msgs, boolean updateAuth)
     {
         _getdown = getdown;
         _msgs = msgs;
+        _updateAuth = updateAuth;
 
         setLayout(new VGroupLayout());
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        add(new SaneLabelField(get("m.configure_proxy")));
+        String title = get(updateAuth ? "m.update_proxy_auth" : "m.configure_proxy");
+        add(new SaneLabelField(title));
         add(new Spacer(5, 5));
 
         JPanel row = new JPanel(new GridLayout());
@@ -61,19 +63,20 @@ public final class ProxyPanel extends JPanel implements ActionListener
         row.add(new SaneLabelField(get("m.proxy_auth_required")), BorderLayout.WEST);
         _useAuth = new JCheckBox();
         row.add(_useAuth);
+        _useAuth.setSelected(updateAuth);
         add(row);
 
         row = new JPanel(new GridLayout());
         row.add(new SaneLabelField(get("m.proxy_username")), BorderLayout.WEST);
         _username = new SaneTextField();
-        _username.setEnabled(false);
+        _username.setEnabled(updateAuth);
         row.add(_username);
         add(row);
 
         row = new JPanel(new GridLayout());
         row.add(new SaneLabelField(get("m.proxy_password")), BorderLayout.WEST);
         _password = new SanePasswordField();
-        _password.setEnabled(false);
+        _password.setEnabled(updateAuth);
         row.add(_password);
         add(row);
 
@@ -112,7 +115,13 @@ public final class ProxyPanel extends JPanel implements ActionListener
     public void addNotify ()
     {
         super.addNotify();
-        _host.requestFocusInWindow();
+        if (_updateAuth) {
+            // we are asking the user to update the credentials for an existing proxy
+            // configuration, so focus that instead of the proxy host config
+            _username.requestFocusInWindow();
+        } else {
+            _host.requestFocusInWindow();
+        }
     }
 
     // documentation inherited
@@ -184,8 +193,9 @@ public final class ProxyPanel extends JPanel implements ActionListener
         return dim;
     }
 
-    protected Getdown _getdown;
-    protected ResourceBundle _msgs;
+    protected final Getdown _getdown;
+    protected final ResourceBundle _msgs;
+    protected final boolean _updateAuth;
 
     protected JTextField _host;
     protected JTextField _port;

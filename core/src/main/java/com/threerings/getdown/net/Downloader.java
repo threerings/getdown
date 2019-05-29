@@ -6,7 +6,13 @@
 package com.threerings.getdown.net;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URLConnection;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -26,8 +32,13 @@ import static com.threerings.getdown.Log.log;
  * implementors must take care to only execute thread-safe code or simply pass a message to the AWT
  * thread, for example.
  */
-public abstract class Downloader
+public class Downloader
 {
+    public Downloader (Connector conn)
+    {
+        _conn = conn;
+    }
+
     /**
      * Start the downloading process.
      * @param resources the resources to download.
@@ -132,7 +143,22 @@ public abstract class Downloader
     /**
      * Performs the protocol-specific portion of checking download size.
      */
-    protected abstract long checkSize (Resource rsrc) throws IOException;
+    protected long checkSize (Resource rsrc) throws IOException {
+        URLConnection conn = _conn.open(rsrc.getRemote(), 0, 0);
+        try {
+            // if we're accessing our data via HTTP, we only need a HEAD request
+            if (conn instanceof HttpURLConnection) {
+                ((HttpURLConnection)conn).setRequestMethod("HEAD");
+            }
+            // make sure we got a satisfactory response code
+            _conn.checkConnectOK(conn, "Unable to check up-to-date for " + rsrc.getRemote());
+            return conn.getContentLength();
+
+        } finally {
+            // let it be known that we're done with this connection
+            conn.getInputStream().close();
+        }
+    }
 
     /**
      * Periodically called by the protocol-specific downloaders to update their progress. This
@@ -203,13 +229,62 @@ public abstract class Downloader
      * protocol-specific code. This method should periodically check whether {@code _state} is set
      * to aborted and abort any in-progress download if so.
      */
-    protected abstract void download (Resource rsrc) throws IOException;
+    protected void download (Resource rsrc) throws IOException {
+        URLConnection conn = _conn.open(rsrc.getRemote(), 0, 0);
+        // make sure we got a satisfactory response code
+        _conn.checkConnectOK(conn, "Unable to download resource " + rsrc.getRemote());
+
+        // TODO: make FileChannel download impl (below) robust and allow apps to opt-into it via a
+        // system property
+        if (true) {
+            // download the resource from the specified URL
+            long actualSize = conn.getContentLength();
+            log.info("Downloading resource", "url", rsrc.getRemote(), "size", actualSize);
+            long currentSize = 0L;
+            byte[] buffer = new byte[4*4096];
+            try (InputStream in = conn.getInputStream();
+                 FileOutputStream out = new FileOutputStream(rsrc.getLocalNew())) {
+
+                // TODO: look to see if we have a download info file
+                // containing info on potentially partially downloaded data;
+                // if so, use a "Range: bytes=HAVE-" header.
+
+                // read in the file data
+                int read;
+                while ((read = in.read(buffer)) != -1) {
+                    // abort the download if the downloader is aborted
+                    if (_state == State.ABORTED) {
+                        break;
+                    }
+                    // write it out to our local copy
+                    out.write(buffer, 0, read);
+                    // note that we've downloaded some data
+                    currentSize += read;
+                    reportProgress(rsrc, currentSize, actualSize);
+                }
+            }
+
+        } else {
+            log.info("Downloading resource", "url", rsrc.getRemote(), "size", "unknown");
+            File localNew = rsrc.getLocalNew();
+            try (ReadableByteChannel rbc = Channels.newChannel(conn.getInputStream());
+                 FileOutputStream fos = new FileOutputStream(localNew)) {
+                // TODO: more work is needed here, transferFrom can fail to transfer the entire
+                // file, in which case it's not clear what we're supposed to do.. call it again?
+                // will it repeatedly fail?
+                fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+                reportProgress(rsrc, localNew.length(), localNew.length());
+            }
+        }
+    }
+
+    protected final Connector _conn;
 
     /** The reported sizes of our resources. */
-    protected Map<Resource, Long> _sizes = new HashMap<>();
+    protected final Map<Resource, Long> _sizes = new HashMap<>();
 
     /** The bytes downloaded for each resource. */
-    protected Map<Resource, Long> _downloaded = new HashMap<>();
+    protected final Map<Resource, Long> _downloaded = new HashMap<>();
 
     /** The time at which the file transfer began. */
     protected long _start;

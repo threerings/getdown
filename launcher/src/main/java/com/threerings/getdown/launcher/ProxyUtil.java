@@ -34,9 +34,9 @@ import ca.beq.util.win32.registry.RegistryValue;
 import ca.beq.util.win32.registry.RootKey;
 
 import com.threerings.getdown.data.Application;
+import com.threerings.getdown.net.Connector;
 import com.threerings.getdown.spi.ProxyAuth;
 import com.threerings.getdown.util.Config;
-import com.threerings.getdown.util.ConnectionUtil;
 import com.threerings.getdown.util.LaunchUtil;
 import com.threerings.getdown.util.StringUtil;
 
@@ -121,31 +121,30 @@ public final class ProxyUtil {
         return true;
     }
 
-    public static boolean canLoadWithoutProxy (URL rurl)
+    public static boolean canLoadWithoutProxy (URL rurl, int timeoutSeconds)
     {
-        log.info("Testing whether proxy is needed, via: " + rurl);
+        log.info("Attempting to fetch without proxy: " + rurl);
         try {
-            // try to make a HEAD request for this URL (use short connect and read timeouts)
-            URLConnection conn = ConnectionUtil.open(Proxy.NO_PROXY, rurl, 5, 5);
-            if (conn instanceof HttpURLConnection) {
-                HttpURLConnection hcon = (HttpURLConnection)conn;
-                try {
-                    hcon.setRequestMethod("HEAD");
-                    hcon.connect();
-                    // make sure we got a satisfactory response code
-                    int rcode = hcon.getResponseCode();
-                    if (rcode == HttpURLConnection.HTTP_PROXY_AUTH ||
-                        rcode == HttpURLConnection.HTTP_FORBIDDEN) {
-                        log.warning("Got an 'HTTP credentials needed' response", "code", rcode);
-                    } else {
-                        return true;
-                    }
-                } finally {
-                    hcon.disconnect();
-                }
-            } else {
-                // if the appbase is not an HTTP/S URL (like file:), then we don't need a proxy
+            URLConnection conn = Connector.DEFAULT.open(rurl, timeoutSeconds, timeoutSeconds);
+            // if the appbase is not an HTTP/S URL (like file:), then we don't need a proxy
+            if (!(conn instanceof HttpURLConnection)) {
                 return true;
+            }
+            // otherwise, try to make a HEAD request for this URL
+            HttpURLConnection hcon = (HttpURLConnection)conn;
+            try {
+                hcon.setRequestMethod("HEAD");
+                hcon.connect();
+                // make sure we got a satisfactory response code
+                int rcode = hcon.getResponseCode();
+                if (rcode == HttpURLConnection.HTTP_PROXY_AUTH ||
+                    rcode == HttpURLConnection.HTTP_FORBIDDEN) {
+                    log.warning("Got an 'HTTP credentials needed' response", "code", rcode);
+                } else {
+                    return true;
+                }
+            } finally {
+                hcon.disconnect();
             }
         } catch (IOException ioe) {
             log.info("Failed to HEAD " + rurl + ": " + ioe);
@@ -214,9 +213,14 @@ public final class ProxyUtil {
         }
         boolean haveCreds = !StringUtil.isBlank(username) && !StringUtil.isBlank(password);
 
-        int pport = StringUtil.isBlank(port) ? 80 : Integer.valueOf(port);
-        log.info("Using proxy", "host", host, "port", pport, "haveCreds", haveCreds);
-        app.proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(host, pport));
+        if (StringUtil.isBlank(host)) {
+            log.info("Using no proxy");
+            app.conn = new Connector(Proxy.NO_PROXY);
+        } else {
+            int pp = StringUtil.isBlank(port) ? 80 : Integer.valueOf(port);
+            log.info("Using proxy", "host", host, "port", pp, "haveCreds", haveCreds);
+            app.conn = new Connector(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(host, pp)));
+        }
 
         if (haveCreds) {
             final String fuser = username;

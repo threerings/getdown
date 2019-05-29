@@ -7,7 +7,6 @@ package com.threerings.getdown.data;
 
 import java.io.*;
 import java.lang.reflect.Method;
-import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
@@ -23,8 +22,8 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.zip.GZIPInputStream;
 
+import com.threerings.getdown.net.Connector;
 import com.threerings.getdown.util.*;
 // avoid ambiguity with java.util.Base64 which we can't use as it's 1.8+
 import com.threerings.getdown.util.Base64;
@@ -271,10 +270,10 @@ public class Application
         return config;
     }
 
-    /** The proxy that should be used to do HTTP downloads. This must be configured prior to using
-      * the application instance. Yes this is a public mutable field, no I'm not going to create a
+    /** A helper that is used to do HTTP downloads. This must be configured prior to using the
+      * application instance. Yes this is a public mutable field, no I'm not going to create a
       * getter and setter just to pretend like that's not the case. */
-    public Proxy proxy = Proxy.NO_PROXY;
+    public Connector conn = Connector.DEFAULT;
 
     /**
      * Creates an application instance which records the location of the {@code getdown.txt}
@@ -989,16 +988,8 @@ public class Application
             args.add("-Xdock:name=" + _dockName);
         }
 
-        // pass along our proxy settings
-        if (proxy.type() == Proxy.Type.HTTP && proxy.address() instanceof InetSocketAddress) {
-            InetSocketAddress proxyAddr = (InetSocketAddress) proxy.address();
-            String proxyHost = proxyAddr.getHostString();
-            int proxyPort = proxyAddr.getPort();
-            args.add("-Dhttp.proxyHost=" + proxyHost);
-            args.add("-Dhttp.proxyPort=" + proxyPort);
-            args.add("-Dhttps.proxyHost=" + proxyHost);
-            args.add("-Dhttps.proxyPort=" + proxyPort);
-        }
+        // forward our proxy settings
+        conn.addProxyArgs(args);
 
         // add the marker indicating the app is running in getdown
         args.add("-D" + Properties.GETDOWN + "=true");
@@ -1258,10 +1249,10 @@ public class Application
             }
 
             if (_latest != null) {
-                try (InputStream in = ConnectionUtil.open(proxy, _latest, 0, 0).getInputStream();
-                     InputStreamReader reader = new InputStreamReader(in, UTF_8);
-                     BufferedReader bin = new BufferedReader(reader)) {
-                    for (String[] pair : Config.parsePairs(bin, Config.createOpts(false))) {
+                try {
+                    List<String[]> vdata = Config.parsePairs(
+                        new StringReader(conn.fetch(_latest)), Config.createOpts(false));
+                    for (String[] pair : vdata) {
                         if ("version".equals(pair[0])) {
                             _targetVersion = Math.max(Long.parseLong(pair[1]), _targetVersion);
                             if (fileVersion != -1 && _targetVersion > fileVersion) {
@@ -1485,8 +1476,7 @@ public class Application
     /**
      * Downloads a new copy of CONFIG_FILE.
      */
-    protected void downloadConfigFile ()
-        throws IOException
+    protected void downloadConfigFile () throws IOException
     {
         downloadControlFile(CONFIG_FILE, 0);
     }
@@ -1628,8 +1618,7 @@ public class Application
      * Download a path to a temporary file, returning a {@link File} instance with the path
      * contents.
      */
-    protected File downloadFile (String path)
-        throws IOException
+    protected File downloadFile (String path) throws IOException
     {
         File target = getLocalPath(path + "_new");
 
@@ -1643,26 +1632,7 @@ public class Application
         }
 
         log.info("Attempting to refetch '" + path + "' from '" + targetURL + "'.");
-
-        // stream the URL into our temporary file
-        URLConnection uconn = ConnectionUtil.open(proxy, targetURL, 0, 0);
-        // we have to tell Java not to use caches here, otherwise it will cache any request for
-        // same URL for the lifetime of this JVM (based on the URL string, not the URL object);
-        // if the getdown.txt file, for example, changes in the meanwhile, we would never hear
-        // about it; turning off caches is not a performance concern, because when Getdown asks
-        // to download a file, it expects it to come over the wire, not from a cache
-        uconn.setUseCaches(false);
-        uconn.setRequestProperty("Accept-Encoding", "gzip");
-        try (InputStream fin = uconn.getInputStream()) {
-            String encoding = uconn.getContentEncoding();
-            boolean gzip = "gzip".equalsIgnoreCase(encoding);
-            try (InputStream fin2 = (gzip ? new GZIPInputStream(fin) : fin)) {
-                try (FileOutputStream fout = new FileOutputStream(target)) {
-                    StreamUtil.copy(fin2, fout);
-                }
-            }
-        }
-
+        conn.download(targetURL, target); // stream the URL into our temporary file
         return target;
     }
 
