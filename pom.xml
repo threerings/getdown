@@ -65,6 +65,21 @@
           <stagingProfileId>aa555c46fc37d0</stagingProfileId>
         </configuration>
       </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.1.0</version>
+        <configuration>
+          <quiet>true</quiet>
+          <show>public</show>
+          <additionalOptions>
+            <additionalOption>-Xdoclint:all</additionalOption>
+            <additionalOption>-Xdoclint:-missing</additionalOption>
+            <additionalOption>-html5</additionalOption>
+          </additionalOptions>
+        </configuration>
+      </plugin>
     </plugins>
 
     <!-- Common plugin configuration for all children -->
@@ -92,21 +107,6 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-resources-plugin</artifactId>
           <version>3.0.2</version>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-javadoc-plugin</artifactId>
-          <version>3.1.0</version>
-          <configuration>
-            <quiet>true</quiet>
-            <show>public</show>
-            <additionalOptions>
-              <additionalOption>-Xdoclint:all</additionalOption>
-              <additionalOption>-Xdoclint:-missing</additionalOption>
-              <additionalOption>-html5</additionalOption>
-            </additionalOptions>
-          </configuration>
         </plugin>
       </plugins>
     </pluginManagement>
