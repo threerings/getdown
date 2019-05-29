@@ -101,7 +101,7 @@ public class GetdownApp
         log.info("-- Cur dir: " + System.getProperty("user.dir"));
         log.info("---------------------------------------------");
 
-        Getdown app = new Getdown(envc) {
+        Getdown getdown = new Getdown(envc) {
             @Override
             protected Container createContainer () {
                 // create our user interface, and display it
@@ -146,7 +146,7 @@ public class GetdownApp
                 }
 
                 if (_ifc.iconImages != null) {
-                    ArrayList<Image> icons = new ArrayList<>();
+                    List<Image> icons = new ArrayList<>();
                     for (String path : _ifc.iconImages) {
                         Image img = loadImage(path);
                         if (img == null) {
@@ -190,7 +190,7 @@ public class GetdownApp
                 String[] cmdarray;
                 if (LaunchUtil.isWindows()) {
                     String osName = System.getProperty("os.name", "");
-                    if (osName.indexOf("9") != -1 || osName.indexOf("Me") != -1) {
+                    if (osName.contains("9") || osName.contains("Me")) {
                         cmdarray = new String[] {
                             "command.com", "/c", "start", "\"" + url + "\"" };
                     } else {
@@ -226,8 +226,7 @@ public class GetdownApp
                 // super.fail causes the UI to be created (if needed) on the next UI tick, so we
                 // want to wait until that happens before we attempt to redecorate the window
                 EventQueue.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
+                    @Override public void run () {
                         // if the frame was set to be undecorated, make window decoration available
                         // to allow the user to close the window
                         if (_frame != null && _frame.isUndecorated()) {
@@ -247,7 +246,7 @@ public class GetdownApp
 
             protected JFrame _frame;
         };
-        app.start();
-        return app;
+        Getdown.run(getdown);
+        return getdown;
     }
 }

@@ -16,7 +16,7 @@ import com.threerings.getdown.util.VersionUtil;
  * accessor so that it's easy to see all of the secret system property arguments that Getdown makes
  * use of.
  */
-public class SysProps
+public final class SysProps
 {
     /** Configures the appdir (in lieu of passing it in argv). Usage: {@code -Dappdir=foo}. */
     public static String appDir () {
@@ -99,6 +99,16 @@ public class SysProps
       * Usage: {@code -Ddirect}. */
     public static boolean direct () {
         return Boolean.getBoolean("direct");
+    }
+
+    /** If true, Getdown will always try to connect without proxy settings even it a proxy is set
+      * in {@code proxy.txt}. If direct access is possible it will not clear {@code proxy.txt}, it
+      * will preserve the settings. This is to support cases where a user uses a workstation in two
+      * different networks, one with proxy the other one without. They should not be asked for
+      * proxy settings again each time they switch back to the proxy network.
+      * Usage: {@code -Dtry_no_proxy}. */
+    public static boolean tryNoProxyFirst () {
+        return Boolean.getBoolean("try_no_proxy");
     }
 
     /** Specifies the connection timeout (in seconds) to use when downloading control files from

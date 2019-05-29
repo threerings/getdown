@@ -5,6 +5,19 @@
 * Fixed issues with proxy information not getting properly passed through to app.
   Via [#216](//github.com/threerings/getdown/pull/216).
 
+* `appbase` and `latest` properties in `getdown.txt` now process env var subtitutions.
+
+* Added support for [Proxy Auto-config](https://en.wikipedia.org/wiki/Proxy_auto-config) via PAC
+  files.
+
+* Proxy handling can now recover from credentials going out of date. It will detect the error and
+  ask for updated credentials.
+
+* Added `try_no_proxy` system property. This instructs Getdown to always first try to run without a
+  proxy, regardless of whether it has been configured to use a proxy in the past. And if it can run
+  without a proxy, it does so for that session, but retains the proxy config for future sessions in
+  which the proxy may again be needed.
+
 ## 1.8.4 - May 14, 2019
 
 * Added `verify_timeout` config to allow customization of the default (60 second) timeout during

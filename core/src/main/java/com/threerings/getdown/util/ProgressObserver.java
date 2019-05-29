@@ -14,5 +14,5 @@ public interface ProgressObserver
      * Informs the observer that we have completed the specified
      * percentage of the process.
      */
-    public void progress (int percent);
+    void progress (int percent);
 }

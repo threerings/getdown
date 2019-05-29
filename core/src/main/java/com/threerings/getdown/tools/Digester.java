@@ -23,6 +23,7 @@ import com.threerings.getdown.data.Digest;
 import com.threerings.getdown.data.EnvConfig;
 import com.threerings.getdown.data.Resource;
 import com.threerings.getdown.util.Base64;
+import com.threerings.getdown.util.Config;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -74,8 +75,11 @@ public class Digester
         System.out.println("Generating digest file '" + target + "'...");
 
         // create our application and instruct it to parse its business
-        Application app = new Application(new EnvConfig(appdir));
-        app.init(false);
+        EnvConfig envc = new EnvConfig(appdir);
+        Application app = new Application(envc);
+        Config config = Application.readConfig(envc, false);
+        app.initBase(config);
+        app.initResources(config);
 
         List<Resource> rsrcs = new ArrayList<>();
         rsrcs.add(app.getConfigResource());
@@ -85,6 +89,9 @@ public class Digester
             rsrcs.addAll(ag.codes);
             rsrcs.addAll(ag.rsrcs);
         }
+
+        // reinit app just to verify that getdown.txt has valid format
+        app.init(true);
 
         // now generate the digest file
         Digest.createDigest(version, rsrcs, target);

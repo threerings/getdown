@@ -38,6 +38,12 @@
       <version>1.0</version>
       <optional>true</optional>
     </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.12</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -189,6 +195,7 @@
                 <lib>${java.home}/jmods/java.base.jmod</lib>
                 <lib>${java.home}/jmods/java.desktop.jmod</lib>
                 <lib>${java.home}/jmods/java.logging.jmod</lib>
+                <lib>${java.home}/jmods/java.scripting.jmod</lib>
                 <lib>${java.home}/jmods/jdk.jsobject.jmod</lib>
               </libs>
             </configuration>

@@ -215,7 +215,7 @@ public class JarDiffPatcher implements JarDiffCodes
     {
         int index = 0;
         int length = path.length();
-        ArrayList<String> sub = new ArrayList<>();
+        List<String> sub = new ArrayList<>();
 
         while (index < length) {
             while (index < length && Character.isWhitespace
@@ -223,9 +223,8 @@ public class JarDiffPatcher implements JarDiffCodes
                 index++;
             }
             if (index < length) {
-                int start = index;
-                int last = start;
-                String subString = null;
+                int last = index;
+                StringBuilder subString = null;
 
                 while (index < length) {
                     char aChar = path.charAt(index);
@@ -233,9 +232,9 @@ public class JarDiffPatcher implements JarDiffCodes
                         path.charAt(index + 1) == ' ') {
 
                         if (subString == null) {
-                            subString = path.substring(last, index);
+                            subString = new StringBuilder(path.substring(last, index));
                         } else {
-                            subString += path.substring(last, index);
+                            subString.append(path, last, index);
                         }
                         last = ++index;
                     } else if (Character.isWhitespace(aChar)) {
@@ -245,12 +244,14 @@ public class JarDiffPatcher implements JarDiffCodes
                 }
                 if (last != index) {
                     if (subString == null) {
-                        subString = path.substring(last, index);
+                        subString = new StringBuilder(path.substring(last, index));
                     } else {
-                        subString += path.substring(last, index);
+                        subString.append(path, last, index);
                     }
                 }
-                sub.add(subString);
+                if (subString != null) {
+                    sub.add(subString.toString());
+                }
             }
         }
         return sub;

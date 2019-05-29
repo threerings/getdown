@@ -22,7 +22,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 /**
  * Version related utilities.
  */
-public class VersionUtil
+public final class VersionUtil
 {
     /**
      * Reads a version number from a file.

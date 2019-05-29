@@ -8,31 +8,41 @@ package com.threerings.getdown.launcher;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.io.Reader;
 import java.net.Authenticator;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.PasswordAuthentication;
 import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.ServiceLoader;
+
+import javax.script.Bindings;
+import javax.script.Invocable;
+import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 
 import ca.beq.util.win32.registry.RegistryKey;
 import ca.beq.util.win32.registry.RegistryValue;
 import ca.beq.util.win32.registry.RootKey;
 
 import com.threerings.getdown.data.Application;
+import com.threerings.getdown.net.Connector;
 import com.threerings.getdown.spi.ProxyAuth;
 import com.threerings.getdown.util.Config;
-import com.threerings.getdown.util.ConnectionUtil;
 import com.threerings.getdown.util.LaunchUtil;
 import com.threerings.getdown.util.StringUtil;
 
 import static com.threerings.getdown.Log.log;
 
-public class ProxyUtil {
+public final class ProxyUtil {
 
     public static boolean autoDetectProxy (Application app)
     {
@@ -57,25 +67,39 @@ public class ProxyUtil {
                 RegistryKey r = new RegistryKey(RootKey.HKEY_CURRENT_USER, PROXY_REGISTRY);
                 for (Iterator<?> iter = r.values(); iter.hasNext(); ) {
                     RegistryValue value = (RegistryValue)iter.next();
-                    if (value.getName().equals("ProxyEnable")) {
-                        enabled = value.getStringValue().equals("1");
+                    if ("ProxyEnable".equals(value.getName())) {
+                        enabled = "1".equals(value.getStringValue());
                     }
                     if (value.getName().equals("ProxyServer")) {
-                        String strval = value.getStringValue();
-                        int cidx = strval.indexOf(":");
-                        if (cidx != -1) {
-                            rport = strval.substring(cidx+1);
-                            strval = strval.substring(0, cidx);
+                        String[] hostPort = splitHostPort(value.getStringValue());
+                        rhost = hostPort[0];
+                        rport = hostPort[1];
+                    }
+                    if (value.getName().equals("AutoConfigURL")) {
+                        String acurl = value.getStringValue();
+                        Reader acjs = new InputStreamReader(new URL(acurl).openStream());
+                        // technically we should be returning all this info and trying each proxy
+                        // in succession, but that's complexity we'll leave for another day
+                        for (String proxy : findPACProxiesForURL(acjs, app.getRemoteURL(""))) {
+                            if (proxy.startsWith("PROXY ")) {
+                                String[] hostPort = splitHostPort(proxy.substring(6));
+                                rhost = hostPort[0];
+                                rport = hostPort[1];
+                                // TODO: is this valid? Does AutoConfigURL imply proxy enabled?
+                                enabled = true;
+                                break;
+                            }
                         }
-                        rhost = strval;
                     }
                 }
+
                 if (enabled) {
                     host = rhost;
                     port = rport;
                 } else {
                     log.info("Detected no proxy settings in the registry.");
                 }
+
             } catch (Throwable t) {
                 log.info("Failed to find proxy settings in Windows registry", "error", t);
             }
@@ -97,31 +121,30 @@ public class ProxyUtil {
         return true;
     }
 
-    public static boolean canLoadWithoutProxy (URL rurl)
+    public static boolean canLoadWithoutProxy (URL rurl, int timeoutSeconds)
     {
-        log.info("Testing whether proxy is needed, via: " + rurl);
+        log.info("Attempting to fetch without proxy: " + rurl);
         try {
-            // try to make a HEAD request for this URL (use short connect and read timeouts)
-            URLConnection conn = ConnectionUtil.open(Proxy.NO_PROXY, rurl, 5, 5);
-            if (conn instanceof HttpURLConnection) {
-                HttpURLConnection hcon = (HttpURLConnection)conn;
-                try {
-                    hcon.setRequestMethod("HEAD");
-                    hcon.connect();
-                    // make sure we got a satisfactory response code
-                    int rcode = hcon.getResponseCode();
-                    if (rcode == HttpURLConnection.HTTP_PROXY_AUTH ||
-                        rcode == HttpURLConnection.HTTP_FORBIDDEN) {
-                        log.warning("Got an 'HTTP credentials needed' response", "code", rcode);
-                    } else {
-                        return true;
-                    }
-                } finally {
-                    hcon.disconnect();
-                }
-            } else {
-                // if the appbase is not an HTTP/S URL (like file:), then we don't need a proxy
+            URLConnection conn = Connector.DEFAULT.open(rurl, timeoutSeconds, timeoutSeconds);
+            // if the appbase is not an HTTP/S URL (like file:), then we don't need a proxy
+            if (!(conn instanceof HttpURLConnection)) {
                 return true;
+            }
+            // otherwise, try to make a HEAD request for this URL
+            HttpURLConnection hcon = (HttpURLConnection)conn;
+            try {
+                hcon.setRequestMethod("HEAD");
+                hcon.connect();
+                // make sure we got a satisfactory response code
+                int rcode = hcon.getResponseCode();
+                if (rcode == HttpURLConnection.HTTP_PROXY_AUTH ||
+                    rcode == HttpURLConnection.HTTP_FORBIDDEN) {
+                    log.warning("Got an 'HTTP credentials needed' response", "code", rcode);
+                } else {
+                    return true;
+                }
+            } finally {
+                hcon.disconnect();
             }
         } catch (IOException ioe) {
             log.info("Failed to HEAD " + rurl + ": " + ioe);
@@ -190,9 +213,14 @@ public class ProxyUtil {
         }
         boolean haveCreds = !StringUtil.isBlank(username) && !StringUtil.isBlank(password);
 
-        int pport = StringUtil.isBlank(port) ? 80 : Integer.valueOf(port);
-        log.info("Using proxy", "host", host, "port", pport, "haveCreds", haveCreds);
-        app.proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(host, pport));
+        if (StringUtil.isBlank(host)) {
+            log.info("Using no proxy");
+            app.conn = new Connector(Proxy.NO_PROXY);
+        } else {
+            int pp = StringUtil.isBlank(port) ? 80 : Integer.valueOf(port);
+            log.info("Using proxy", "host", host, "port", pp, "haveCreds", haveCreds);
+            app.conn = new Connector(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(host, pp)));
+        }
 
         if (haveCreds) {
             final String fuser = username;
@@ -202,6 +230,54 @@ public class ProxyUtil {
                     return new PasswordAuthentication(fuser, fpass);
                 }
             });
+        }
+    }
+
+    public static class Resolver {
+        public String dnsResolve (String host) {
+            try {
+                return InetAddress.getByName(host).toString();
+            } catch (UnknownHostException uhe) {
+                return null;
+            }
+        }
+    }
+
+    public static String[] findPACProxiesForURL (Reader pac, URL url) {
+        ScriptEngineManager manager = new ScriptEngineManager();
+        ScriptEngine engine = manager.getEngineByName("javascript");
+        Bindings globals = engine.createBindings();
+        globals.put("resolver", new Resolver());
+        engine.setBindings(globals, ScriptContext.GLOBAL_SCOPE);
+        try {
+            URL utils = ProxyUtil.class.getResource("PacUtils.js");
+            if (utils == null) {
+                log.error("Unable to load PacUtils.js");
+                return new String[0];
+            }
+            engine.eval(new InputStreamReader(utils.openStream()));
+            Object res = engine.eval(pac);
+            if (engine instanceof Invocable) {
+                Object[] args = new Object[] { url.toString(), url.getHost() };
+                res = ((Invocable) engine).invokeFunction("FindProxyForURL", args);
+            }
+            String[] proxies = res.toString().split(";");
+            for (int ii = 0; ii < proxies.length; ii += 1) {
+                proxies[ii] = proxies[ii].trim();
+            }
+            return proxies;
+        } catch (Exception e) {
+            log.warning("Failed to resolve PAC proxy", e);
+        }
+        return new String[0];
+    }
+
+    private static String[] splitHostPort (String hostPort) {
+        int cidx = hostPort.indexOf(":");
+        if (cidx == -1) {
+            return new String[] { hostPort, null};
+        } else {
+            return new String[] { hostPort.substring(0, cidx), hostPort.substring(cidx+1) };
         }
     }
 

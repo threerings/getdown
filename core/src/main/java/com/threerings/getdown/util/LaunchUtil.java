@@ -17,19 +17,19 @@ import static com.threerings.getdown.Log.log;
  * Useful routines for launching Java applications from within other Java
  * applications.
  */
-public class LaunchUtil
+public final class LaunchUtil
 {
     /** The default directory into which a local VM installation should be unpacked. */
     public static final String LOCAL_JAVA_DIR = "java_vm";
 
     /**
-     * Writes a <code>version.txt</code> file into the specified application directory and
+     * Writes a {@code version.txt} file into the specified application directory and
      * attempts to relaunch Getdown in that directory which will cause it to upgrade to the newly
      * specified version and relaunch the application.
      *
      * @param appdir the directory in which the application is installed.
      * @param getdownJarName the name of the getdown jar file in the application directory. This is
-     * probably <code>getdown-pro.jar</code> or <code>getdown-retro-pro.jar</code> if you are using
+     * probably {@code getdown-pro.jar} or {@code getdown-retro-pro.jar} if you are using
      * the results of the standard build.
      * @param newVersion the new version to which Getdown will update when it is executed.
      * @param javaLocalDir the name of the directory (inside {@code appdir}) that contains a
@@ -41,7 +41,7 @@ public class LaunchUtil
      * after making this call as it will be upgraded and restarted. If false is returned, the
      * application should tell the user that they must restart the application manually.
      *
-     * @exception IOException thrown if we were unable to create the <code>version.txt</code> file
+     * @exception IOException thrown if we were unable to create the {@code version.txt} file
      * in the supplied application directory. If the version.txt file cannot be created, restarting
      * Getdown will not cause the application to be upgraded, so the application will have to
      * resort to telling the user that it is in a bad way.
@@ -177,23 +177,23 @@ public class LaunchUtil
     public static boolean mustMonitorChildren ()
     {
         String osname = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
-        return (osname.indexOf("windows 98") != -1 || osname.indexOf("windows me") != -1);
+        return (osname.contains("windows 98") || osname.contains("windows me"));
     }
 
     /**
      * Returns true if we're running in a JVM that identifies its operating system as Windows.
      */
-    public static final boolean isWindows () { return _isWindows; }
+    public static boolean isWindows () { return _isWindows; }
 
     /**
      * Returns true if we're running in a JVM that identifies its operating system as MacOS.
      */
-    public static final boolean isMacOS () { return _isMacOS; }
+    public static boolean isMacOS () { return _isMacOS; }
 
     /**
      * Returns true if we're running in a JVM that identifies its operating system as Linux.
      */
-    public static final boolean isLinux () { return _isLinux; }
+    public static boolean isLinux () { return _isLinux; }
 
     /**
      * Checks whether a Java Virtual Machine can be located in the supplied path.
@@ -232,10 +232,9 @@ public class LaunchUtil
         try {
             String osname = System.getProperty("os.name");
             osname = (osname == null) ? "" : osname;
-            _isWindows = (osname.indexOf("Windows") != -1);
-            _isMacOS = (osname.indexOf("Mac OS") != -1 ||
-                        osname.indexOf("MacOS") != -1);
-            _isLinux = (osname.indexOf("Linux") != -1);
+            _isWindows = (osname.contains("Windows"));
+            _isMacOS = (osname.contains("Mac OS") || osname.contains("MacOS"));
+            _isLinux = (osname.contains("Linux"));
         } catch (Exception e) {
             // can't grab system properties; we'll just pretend we're not on any of these OSes
         }
