@@ -39,13 +39,12 @@ import javax.swing.JFrame;
 import javax.swing.JLayeredPane;
 
 import com.samskivert.swing.util.SwingUtil;
-import com.threerings.getdown.data.Application.UpdateInterface.Step;
 import com.threerings.getdown.data.Application;
+import com.threerings.getdown.data.Application.UpdateInterface.Step;
 import com.threerings.getdown.data.Build;
 import com.threerings.getdown.data.EnvConfig;
 import com.threerings.getdown.data.Resource;
 import com.threerings.getdown.data.SysProps;
-import com.threerings.getdown.net.Connector;
 import com.threerings.getdown.net.Downloader;
 import com.threerings.getdown.tools.Patcher;
 import com.threerings.getdown.util.Config;
@@ -525,9 +524,12 @@ public abstract class Getdown
         download(list);
 
         reportTrackingEvent("jvm_unpack", -1);
-
         updateStatus("m.unpacking_java");
-        vmjar.install(true);
+        try {
+            vmjar.install(true);
+        } catch (IOException ioe) {
+            throw new IOException("m.java_unpack_failed", ioe);
+        }
 
         // these only run on non-Windows platforms, so we use Unix file separators
         FileUtil.makeExecutable(new File(javaLocalDir, "bin/java"));
