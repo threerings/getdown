@@ -80,7 +80,8 @@ public final class ProxyUtil {
                         Reader acjs = new InputStreamReader(new URL(acurl).openStream());
                         // technically we should be returning all this info and trying each proxy
                         // in succession, but that's complexity we'll leave for another day
-                        for (String proxy : findPACProxiesForURL(acjs, app.getRemoteURL(""))) {
+                        URL configURL = app.getConfigResource().getRemote();
+                        for (String proxy : findPACProxiesForURL(acjs, configURL)) {
                             if (proxy.startsWith("PROXY ")) {
                                 String[] hostPort = splitHostPort(proxy.substring(6));
                                 rhost = hostPort[0];
