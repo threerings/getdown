@@ -1,6 +1,6 @@
 # Getdown Releases
 
-## 1.8.5 - Unreleased
+## 1.8.5 - May 29, 2019
 
 * Fixed issues with proxy information not getting properly passed through to app.
   Via [#216](//github.com/threerings/getdown/pull/216).
