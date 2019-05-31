@@ -192,11 +192,6 @@ public abstract class Getdown
     }
 
     protected boolean detectProxy () {
-        boolean tryNoProxy = SysProps.tryNoProxyFirst();
-        if (!tryNoProxy && ProxyUtil.autoDetectProxy(_app)) {
-            return true;
-        }
-
         // see if we actually need a proxy; first we have to initialize our application
         // to get some sort of interface configuration and the appbase URL
         log.info("Checking whether we need to use a proxy...");
@@ -205,6 +200,12 @@ public abstract class Getdown
         } catch (IOException ioe) {
             // no worries
         }
+        
+        boolean tryNoProxy = SysProps.tryNoProxyFirst();
+        if (!tryNoProxy && ProxyUtil.autoDetectProxy(_app)) {
+            return true;
+        }
+        
         updateStatus("m.detecting_proxy");
         URL configURL = _app.getConfigResource().getRemote();
         if (!ProxyUtil.canLoadWithoutProxy(configURL, tryNoProxy ? 2 : 5)) {
