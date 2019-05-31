@@ -1,5 +1,10 @@
 # Getdown Releases
 
+## 1.8.6 - Unreleased
+
+* Fixed issues with PAC proxy support: added `myIpAddress()`, fixed `dnsResolve()`, fixed crash
+  when detecting PAC proxy.
+
 ## 1.8.5 - May 29, 2019
 
 * Fixed issues with proxy information not getting properly passed through to app.

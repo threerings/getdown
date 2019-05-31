@@ -237,7 +237,14 @@ public final class ProxyUtil {
     public static class Resolver {
         public String dnsResolve (String host) {
             try {
-                return InetAddress.getByName(host).toString();
+                return InetAddress.getByName(host).getHostAddress();
+            } catch (UnknownHostException uhe) {
+                return null;
+            }
+        }
+        public String myIpAddress () {
+            try {
+                return InetAddress.getLocalHost().getHostAddress();
             } catch (UnknownHostException uhe) {
                 return null;
             }
