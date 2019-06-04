@@ -605,7 +605,7 @@ public class Application
         }
 
         // check if we're overriding the domain in the appbase, and sub envvars
-        _appbase = processArg(SysProps.overrideAppbase(_appbase));
+        _appbase = SysProps.overrideAppbase(_appbase);
 
         // make sure there's a trailing slash
         if (!_appbase.endsWith("/")) {
