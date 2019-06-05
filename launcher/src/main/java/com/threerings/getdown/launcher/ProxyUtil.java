@@ -121,7 +121,7 @@ public final class ProxyUtil {
 						String rpac = result.substring(p + REGSTR_TOKEN.length()).trim();
 
 						URL configURL = app.getConfigResource().getRemote();
-						log.info("PAC-ConfigURL: " + configURL);
+						log.info("PAC-ConfigURL: " + rpac);
 						Reader acjs = new InputStreamReader(new URL(rpac).openStream());
 						// technically we should be returning all this info and trying each proxy
 						// in succession, but that's complexity we'll leave for another day
