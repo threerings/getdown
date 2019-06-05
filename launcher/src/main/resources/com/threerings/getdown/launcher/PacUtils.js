@@ -49,6 +49,21 @@ function isResolvable (host) {
   return (ip != null);
 }
 
+
+
+/**
+ *  The myIpAddress() function is inconsistently implemented across the major web browsers and doesn’t support IPv6
+ *  this may result in either an IPv6 address being returned unexpectedly, 127.0.0.1 being returned, or the IP address of an unexpected network adapter being returned. As such it’s recommended to avoid use of this function completely. Windows has implemented a new FindProxyForURLEx() function to support IPv6
+ *  however, the implementation is complex and support across the major browsers is lacking.
+ *  Since myIpAddress() function is widely used in pac-files although it should not, and since jdk's Nashorn engine does not implement it, return address 127.0.0.1 
+ */
+function myIpAddress()
+{
+    return '127.0.0.1';
+}
+
+
+
 function localHostOrDomainIs (host, hostdom) {
   return (host == hostdom) || (hostdom.lastIndexOf(host + '.', 0) == 0);
 }
