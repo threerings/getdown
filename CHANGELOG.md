@@ -4,6 +4,8 @@
 
 * Reinstated env var support in `appbase` property.
 
+* Fixed issue with `myIpAddress()` in PAC proxy support.
+
 ## 1.8.6 - June 4, 2019
 
 * Fixed issues with PAC proxy support: added `myIpAddress()`, fixed `dnsResolve()`, fixed crash
