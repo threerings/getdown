@@ -57,26 +57,10 @@ public class Config
     }
 
     /**
-     * Parses a configuration file containing key/value pairs. The file must be in the UTF-8
-     * encoding.
-     *
+     * Parses configuration text containing key/value pairs.
      * @param opts options that influence the parsing. See {@link #createOpts}.
-     *
      * @return a list of {@code String[]} instances containing the key/value pairs in the
      * order they were parsed from the file.
-     */
-    public static List<String[]> parsePairs (File source, ParseOpts opts)
-        throws IOException
-    {
-        // annoyingly FileReader does not allow encoding to be specified (uses platform default)
-        try (FileInputStream fis = new FileInputStream(source);
-             InputStreamReader input = new InputStreamReader(fis, StandardCharsets.UTF_8)) {
-            return parsePairs(input, opts);
-        }
-    }
-
-    /**
-     * See {@link #parsePairs(File,ParseOpts)}.
      */
     public static List<String[]> parsePairs (Reader source, ParseOpts opts) throws IOException
     {
@@ -132,6 +116,21 @@ public class Config
     }
 
     /**
+     * Parses configuration file containing key/value pairs.
+     * @param source the file containing the config text. Must be in the UTF-8 encoding.
+     * @param opts options that influence the parsing. See {@link #createOpts}.
+     */
+    public static List<String[]> parsePairs (File source, ParseOpts opts)
+        throws IOException
+    {
+        // annoyingly FileReader does not allow encoding to be specified (uses platform default)
+        try (FileInputStream fis = new FileInputStream(source);
+             InputStreamReader input = new InputStreamReader(fis, StandardCharsets.UTF_8)) {
+            return parsePairs(input, opts);
+        }
+    }
+
+    /**
      * Takes a comma-separated String of four integers and returns a rectangle using those ints as
      * the its x, y, width, and height.
      */
@@ -166,13 +165,10 @@ public class Config
     }
 
     /**
-     * Parses a configuration file containing key/value pairs. The file must be in the UTF-8
-     * encoding.
-     *
-     * @return a map from keys to values, where a value will be an array of strings if more than
-     * one key/value pair in the config file was associated with the same key.
+     * Parses the data for a config instance from the supplied {@code source} reader.
+     * @return a map that can be used to create a {@link #Config}.
      */
-    public static Config parseConfig (File source, ParseOpts opts)
+    public static Map<String, Object> parseData (Reader source, ParseOpts opts)
         throws IOException
     {
         Map<String, Object> data = new HashMap<>();
@@ -195,15 +191,34 @@ public class Config
             }
         }
 
-        // special magic for the getdown.txt config: if the parsed data contains 'strict_comments =
-        // true' then we reparse the file with strict comments (i.e. # is only assumed to start a
-        // comment in column 0)
-        if (!opts.strictComments && Boolean.parseBoolean((String)data.get("strict_comments"))) {
-            opts.strictComments = true;
-            return parseConfig(source, opts);
-        }
+        return data;
+    }
 
-        return new Config(data);
+    /**
+     * Parses a configuration file containing key/value pairs. The file must be in the UTF-8
+     * encoding.
+     *
+     * @return a map from keys to values, where a value will be an array of strings if more than
+     * one key/value pair in the config file was associated with the same key.
+     */
+    public static Config parseConfig (File source, ParseOpts opts)
+        throws IOException
+    {
+        // annoyingly FileReader does not allow encoding to be specified (uses platform default)
+        try (FileInputStream fis = new FileInputStream(source);
+             InputStreamReader input = new InputStreamReader(fis, StandardCharsets.UTF_8)) {
+            Map<String, Object> data = parseData(input, opts);
+
+            // special magic for the getdown.txt config: if the parsed data contains
+            // 'strict_comments = true' then we reparse the file with strict comments (i.e. # is
+            // only assumed to start a comment in column 0)
+            if (!opts.strictComments && Boolean.parseBoolean((String)data.get("strict_comments"))) {
+                opts.strictComments = true;
+                return parseConfig(source, opts);
+            }
+
+            return new Config(data);
+        }
     }
 
     public Config (Map<String,  Object> data) {

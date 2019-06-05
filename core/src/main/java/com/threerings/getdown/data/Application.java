@@ -605,7 +605,7 @@ public class Application
         }
 
         // check if we're overriding the domain in the appbase, and sub envvars
-        _appbase = SysProps.overrideAppbase(_appbase);
+        _appbase = resolveEnvVars(SysProps.overrideAppbase(_appbase));
 
         // make sure there's a trailing slash
         if (!_appbase.endsWith("/")) {
@@ -1130,27 +1130,31 @@ public class Application
         }
     }
 
-    /** Replaces the application directory and version in any argument. */
+    /** Replaces the application directory, version and env vars in any argument. */
     protected String processArg (String arg)
     {
         arg = arg.replace("%APPDIR%", getAppDir().getAbsolutePath());
         arg = arg.replace("%VERSION%", String.valueOf(_version));
+        arg = resolveEnvVars(arg);
+        return arg;
+    }
 
-        // if this argument contains %ENV.FOO% replace those with the associated values looked up
-        // from the environment
-        if (arg.contains(ENV_VAR_PREFIX)) {
+    /** Resolves env var substitutions in {@code text}. */
+    protected String resolveEnvVars (String text) {
+        // if the text contains %ENV.FOO% replace it with FOO looked up in the environment
+        if (text.contains(ENV_VAR_PREFIX)) {
             StringBuffer sb = new StringBuffer();
-            Matcher matcher = ENV_VAR_PATTERN.matcher(arg);
+            Matcher matcher = ENV_VAR_PATTERN.matcher(text);
             while (matcher.find()) {
                 String varName = matcher.group(1), varValue = System.getenv(varName);
                 String repValue = varValue == null ? "MISSING:"+varName : varValue;
                 matcher.appendReplacement(sb, Matcher.quoteReplacement(repValue));
             }
             matcher.appendTail(sb);
-            arg = sb.toString();
+            return sb.toString();
+        } else {
+            return text;
         }
-
-        return arg;
     }
 
     /**
