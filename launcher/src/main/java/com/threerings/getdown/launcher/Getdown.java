@@ -601,6 +601,8 @@ public abstract class Getdown
             int ii = 0; for (Resource prsrc : list) {
                 ProgressObserver pobs = pragg.startElement(ii++);
                 try {
+                    // if this patch file failed to download, skip it
+                    if (!prsrc.getLocalNew().exists()) continue;
                     // install the patch file (renaming them from _new)
                     prsrc.install(false);
                     // now apply the patch
@@ -661,6 +663,10 @@ public abstract class Getdown
             @Override protected void downloadFailed (Resource rsrc, Exception e) {
                 updateStatus(MessageUtil.tcompose("m.failure", e.getMessage()));
                 log.warning("Download failed", "rsrc", rsrc, e);
+            }
+
+            @Override protected void resourceMissing (Resource rsrc) {
+                log.warning("Resource missing (got 404)", "rsrc", rsrc);
             }
 
             /** The last percentage at which we checked for another getdown running, or -1 for not

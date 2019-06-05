@@ -141,6 +141,11 @@ public class Downloader
     protected void downloadFailed (Resource rsrc, Exception cause) {}
 
     /**
+     * Called when a to-be-downloaded resource returns a 404 not found.
+     */
+    protected void resourceMissing (Resource rsrc) {}
+
+    /**
      * Performs the protocol-specific portion of checking download size.
      */
     protected long checkSize (Resource rsrc) throws IOException {
@@ -150,9 +155,10 @@ public class Downloader
             if (conn instanceof HttpURLConnection) {
                 ((HttpURLConnection)conn).setRequestMethod("HEAD");
             }
-            // make sure we got a satisfactory response code
-            _conn.checkConnectOK(conn, "Unable to check up-to-date for " + rsrc.getRemote());
-            return conn.getContentLength();
+            // if we get a satisfactory response code, return a size; ignore errors as we'll report
+            // those when we actually attempt to download the resource
+            int code = _conn.checkConnectStatus(conn);
+            return code == HttpURLConnection.HTTP_OK ? conn.getContentLength() : 0;
 
         } finally {
             // let it be known that we're done with this connection
@@ -232,7 +238,13 @@ public class Downloader
     protected void download (Resource rsrc) throws IOException {
         URLConnection conn = _conn.open(rsrc.getRemote(), 0, 0);
         // make sure we got a satisfactory response code
-        _conn.checkConnectOK(conn, "Unable to download resource " + rsrc.getRemote());
+        int code = _conn.checkConnectStatus(conn);
+        if (code == HttpURLConnection.HTTP_NOT_FOUND) {
+            resourceMissing(rsrc);
+        } else if (code != HttpURLConnection.HTTP_OK) {
+            throw new IOException(
+                "Resource returned HTTP error " + rsrc.getRemote() + " [code=" + code + "]");
+        }
 
         // TODO: make FileChannel download impl (below) robust and allow apps to opt-into it via a
         // system property
