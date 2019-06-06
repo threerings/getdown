@@ -6,6 +6,7 @@
 package com.threerings.getdown.launcher;
 
 import java.io.StringReader;
+import java.net.InetAddress;
 import java.net.URL;
 
 import org.junit.Test;
@@ -133,5 +134,12 @@ public class ProxyUtilTest {
         //         return 'DIRECT';
         //     }
         // }
+
+        String MYIP =
+            "function FindProxyForURL(url, host) {\n" +
+            "   return 'PROXY ' + myIpAddress() + ':8080';\n" +
+            "}";
+        String myIp = InetAddress.getLocalHost().getHostAddress();
+        testPAC(MYIP, "http://testurl.com/", "PROXY " + myIp + ":8080");
     }
 }

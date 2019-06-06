@@ -19,13 +19,13 @@ public class EnvConfigTest {
     static String TESTID = "testid";
     static String TESTBASE = "https://test.com/test";
 
-    private void debugNotes(List<EnvConfig.Note> notes) {
+    private void debugNotes (List<EnvConfig.Note> notes) {
         for (EnvConfig.Note note : notes) {
             System.out.println(note.message);
         }
     }
 
-    private void checkNoNotes (List<EnvConfig.Note> notes) {
+    static void checkNoNotes (List<EnvConfig.Note> notes) {
         StringBuilder msg = new StringBuilder();
         for (EnvConfig.Note note : notes) {
             if (note.level != EnvConfig.Note.Level.INFO) {

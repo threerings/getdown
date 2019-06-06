@@ -143,15 +143,23 @@ public class Connector {
      * If the connection failed for proxy related reasons, this changes the state of this connector
      * to reflect the needed proxy information.
      */
-    public void checkConnectOK (URLConnection conn, String errpre) throws IOException
-    {
-        // if it's not an HTTP connection, there's nothing to check
-        if (!(conn instanceof HttpURLConnection)) return;
+    public void checkConnectOK (URLConnection conn, String errpre) throws IOException {
+        int code = checkConnectStatus(conn);
+        if (code != HttpURLConnection.HTTP_OK) {
+            throw new IOException(errpre + " [code=" + code + "]");
+        }
+    }
+
+    /**
+     * Returns the connection status of {@code conn}. If the connection failed for proxy related
+     * reasons, this changes the state of this connector to reflect the needed proxy information.
+     */
+    public int checkConnectStatus (URLConnection conn) throws IOException {
+        // if it's not an HTTP connection, we assume it's OK
+        if (!(conn instanceof HttpURLConnection)) return HttpURLConnection.HTTP_OK;
 
         int code = ((HttpURLConnection)conn).getResponseCode();
         switch (code) {
-        case HttpURLConnection.HTTP_OK:
-            return;
         case HttpURLConnection.HTTP_FORBIDDEN:
         case HttpURLConnection.HTTP_USE_PROXY:
             state = State.NEED_PROXY;
@@ -160,7 +168,7 @@ public class Connector {
             state = State.NEED_PROXY_AUTH;
             break;
         }
-        throw new IOException(errpre + " [code=" + code + "]");
+        return code;
     }
 
     /**

@@ -23,6 +23,10 @@ function dnsResolve (host) {
   return resolver.dnsResolve(host)
 }
 
+function myIpAddress () {
+  return resolver.myIpAddress()
+}
+
 function isInNet (addrOrHost, pattern, maskstr) {
   var testRE = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
   var test = testRE.exec(addrOrHost);
