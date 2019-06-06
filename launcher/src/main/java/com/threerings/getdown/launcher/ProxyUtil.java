@@ -252,12 +252,12 @@ public final class ProxyUtil {
     }
 
     public static String[] findPACProxiesForURL (Reader pac, URL url) {
-        ScriptEngineManager manager = new ScriptEngineManager();
-        ScriptEngine engine = manager.getEngineByName("javascript");
-        Bindings globals = engine.createBindings();
-        globals.put("resolver", new Resolver());
-        engine.setBindings(globals, ScriptContext.GLOBAL_SCOPE);
         try {
+        	ScriptEngineManager manager = new ScriptEngineManager();
+            ScriptEngine engine = manager.getEngineByName("javascript");
+            Bindings globals = engine.createBindings();
+            globals.put("resolver", new Resolver());
+            engine.setBindings(globals, ScriptContext.GLOBAL_SCOPE);
             URL utils = ProxyUtil.class.getResource("PacUtils.js");
             if (utils == null) {
                 log.error("Unable to load PacUtils.js");
