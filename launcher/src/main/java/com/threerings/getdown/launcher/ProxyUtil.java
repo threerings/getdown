@@ -274,7 +274,7 @@ public final class ProxyUtil {
                 proxies[ii] = proxies[ii].trim();
             }
             return proxies;
-        } catch (Exception e) {
+        } catch (Exception | NoClassDefFoundError e) {
             log.warning("Failed to resolve PAC proxy", e);
         }
         return new String[0];
