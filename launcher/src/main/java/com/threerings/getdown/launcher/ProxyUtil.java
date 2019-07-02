@@ -253,7 +253,7 @@ public final class ProxyUtil {
 
     public static String[] findPACProxiesForURL (Reader pac, URL url) {
         try {
-        	ScriptEngineManager manager = new ScriptEngineManager();
+            ScriptEngineManager manager = new ScriptEngineManager();
             ScriptEngine engine = manager.getEngineByName("javascript");
             Bindings globals = engine.createBindings();
             globals.put("resolver", new Resolver());
