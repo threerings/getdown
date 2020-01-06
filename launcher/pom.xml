@@ -84,12 +84,12 @@
           <dependency>
             <groupId>net.sf.proguard</groupId>
             <artifactId>proguard-base</artifactId>
-            <version>6.0.3</version>
+            <version>6.1.0</version>
             <scope>runtime</scope>
           </dependency>
         </dependencies>
         <configuration>
-          <proguardVersion>6.0.3</proguardVersion>
+          <proguardVersion>6.1.0</proguardVersion>
           <outputDirectory>${project.build.directory}</outputDirectory>
           <outjar>${project.build.finalName}.jar</outjar>
           <injar>${project.build.finalName}.jar</injar>
