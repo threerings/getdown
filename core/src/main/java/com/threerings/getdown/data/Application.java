@@ -346,6 +346,15 @@ public class Application
     }
 
     /**
+     * Returns a list of strings (usually file paths relative to the app root dir) to add to the
+     * classpath.
+     */
+    public List<String> getClassPathDirectories ()
+    {
+        return _cpdirs;
+    }
+
+    /**
      * Returns the digest of the given {@code resource}.
      */
     public String getDigest (Resource resource)
@@ -751,6 +760,7 @@ public class Application
         _jvmargs.clear();
         _appargs.clear();
         _txtJvmArgs.clear();
+        _cpdirs.clear();
 
         String appPrefix = _envc.appId == null ? "" : (_envc.appId + ".");
 
@@ -780,6 +790,9 @@ public class Application
 
         // look for custom arguments
         fillAssignmentListFromPairs("extra.txt", _txtJvmArgs);
+
+        // add any extra classpath entries
+        addAll(config.getMultiValue(appPrefix + "classpath"), _cpdirs);
 
         // extract some info used to configure our child process on macOS
         _dockName = config.getString("ui.name");
@@ -1758,6 +1771,7 @@ public class Application
 
     protected List<Resource> _codes = new ArrayList<>();
     protected List<Resource> _resources = new ArrayList<>();
+    protected List<String> _cpdirs = new ArrayList<>();
 
     protected int _verifyTimeout = 60;
 

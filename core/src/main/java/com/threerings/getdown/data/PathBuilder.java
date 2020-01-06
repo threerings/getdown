@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipFile;
 
@@ -40,9 +41,10 @@ public class PathBuilder
     public static ClassPath buildDefaultClassPath (Application app)
     {
         LinkedHashSet<File> classPathEntries = new LinkedHashSet<File>();
-        for (Resource resource: app.getActiveCodeResources()) {
+        for (Resource resource : app.getActiveCodeResources()) {
             classPathEntries.add(resource.getFinalTarget());
         }
+        addClassPathDirectories(app, classPathEntries);
         return new ClassPath(classPathEntries);
     }
 
@@ -64,13 +66,25 @@ public class PathBuilder
 
         ResourceCache cache = new ResourceCache(codeCacheDir);
         LinkedHashSet<File> classPathEntries = new LinkedHashSet<>();
-        for (Resource resource: app.getActiveCodeResources()) {
+        for (Resource resource : app.getActiveCodeResources()) {
             String digest = app.getDigest(resource);
             File entry = cache.cacheFile(resource.getFinalTarget(), digest.substring(0, 2), digest);
             classPathEntries.add(entry);
         }
 
+        addClassPathDirectories(app, classPathEntries);
+
         return new ClassPath(classPathEntries);
+    }
+
+    private static void addClassPathDirectories (Application app, Set<File> classPathEntries) {
+        for (String cpdir : app.getClassPathDirectories()) {
+            File cpfile = new File(cpdir);
+            if (!cpfile.isAbsolute()) {
+                cpfile = new File(app.getAppDir(), cpdir);
+            }
+            classPathEntries.add(cpfile);
+        }
     }
 
     /**
