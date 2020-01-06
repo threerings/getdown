@@ -7,5 +7,5 @@ cache:
     - '$HOME/.m2/repository'
 
 jdk:
-  - openjdk7
-  - oraclejdk8
+  - openjdk9
+  - oraclejdk9
