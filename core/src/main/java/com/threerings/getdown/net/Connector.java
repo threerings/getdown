@@ -32,7 +32,7 @@ import com.threerings.getdown.util.StreamUtil;
 public class Connector {
 
     /** The default connector uses no proxy. */
-    public static final Connector DEFAULT = new Connector(Proxy.NO_PROXY);
+    public static final Connector DEFAULT = new Connector();
 
     /** Tracks the state of a connector. If it fails for proxy-related reasons, it may transition
       * to a need_proxy or need_proxy_auth state. */
@@ -44,7 +44,14 @@ public class Connector {
     /** The current state of this connector. */
     public State state = State.ACTIVE;
 
+    public Connector(){
+        this(null);
+    }
+
     public Connector (Proxy proxy) {
+        if (proxy == Proxy.NO_PROXY){
+            throw new IllegalArgumentException("The passed Proxy cannot be " + Proxy.NO_PROXY + ". Use the empty constructor instead");
+        }
         this.proxy = proxy;
     }
 
@@ -61,7 +68,12 @@ public class Connector {
     public URLConnection open (URL url, int connectTimeout, int readTimeout)
         throws IOException
     {
-        URLConnection conn = url.openConnection(proxy);
+        URLConnection conn;
+        if (proxy == null) {
+            conn = url.openConnection();
+        } else {
+            conn = url.openConnection(proxy);
+        }
 
         // configure a connect timeout, if requested
         int ctimeout = connectTimeout > 0 ? connectTimeout : SysProps.connectTimeout();
@@ -176,7 +188,7 @@ public class Connector {
      * command line args that will be used to launch the app.
      */
     public void addProxyArgs (List<String> args) {
-        if (proxy.type() == Proxy.Type.HTTP && proxy.address() instanceof InetSocketAddress) {
+        if (proxy != null && proxy.type() == Proxy.Type.HTTP && proxy.address() instanceof InetSocketAddress) {
             InetSocketAddress proxyAddr = (InetSocketAddress) proxy.address();
             String proxyHost = proxyAddr.getHostString();
             int proxyPort = proxyAddr.getPort();
