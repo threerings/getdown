@@ -22,6 +22,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -424,6 +425,12 @@ public abstract class Getdown
                 _readyToInstall = true;
                 install();
 
+                // do resource cleanup
+                final List<String> cleanupPatterns = _app.cleanupPatterns();
+                if (!cleanupPatterns.isEmpty()) {
+                    cleanupResources(cleanupPatterns);
+                }
+
                 // Only launch if we aren't in silent mode. Some mystery program starting out
                 // of the blue would be disconcerting.
                 if (!_silent || _launchInSilent) {
@@ -676,6 +683,37 @@ public abstract class Getdown
         if (!dl.download(resources, _app.maxConcurrentDownloads())) {
             // if we aborted due to detecting another getdown running, we want to report here
             throw new MultipleGetdownRunning();
+        }
+    }
+
+    /**
+     * Removes files/resources by glob pattern with exclusion of resources defined in Getdown.txt
+     */
+    void cleanupResources(List<String> cleanupPatterns) {
+        //get list of files from glob patterns
+        final String applicationPath = _app.getAppDir().getAbsolutePath();
+        final Set<Path> filesFromGlob = new HashSet<>();
+        for (String cleanupPattern : cleanupPatterns) {
+            filesFromGlob.addAll(FileUtil.getFilePathsByGlob(applicationPath, cleanupPattern));
+        }
+
+        //filter out files contained in resources
+        Set<Path> rsrcs = new HashSet<>();
+        for (Resource resource : _app.getAllActiveResources()) {
+            rsrcs.add(resource.getLocal().toPath().toAbsolutePath());
+        }
+
+        final Set<Path> cleanupSet = new HashSet<>();
+        for (Path path : filesFromGlob) {
+            if (!rsrcs.contains(path)) {
+                cleanupSet.add(path);
+            }
+        }
+
+        if (!cleanupSet.isEmpty()) {
+            for (Path path : cleanupSet) {
+                path.toFile().delete();
+            }
         }
     }
 
