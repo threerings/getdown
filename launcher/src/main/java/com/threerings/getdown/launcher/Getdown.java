@@ -343,6 +343,13 @@ public abstract class Getdown
                 if (_app.verifyMetadata(this)) {
                     log.info("Application requires update.");
                     update();
+
+                    // do resource cleanup
+                    final List<String> cleanupPatterns = _app.cleanupPatterns();
+                    if (!cleanupPatterns.isEmpty()) {
+                        cleanupResources(cleanupPatterns);
+                    }
+
                     // loop back again and reverify the metadata
                     continue;
                 }
@@ -424,12 +431,6 @@ public abstract class Getdown
                 // assuming we're not doing anything funny, install the update
                 _readyToInstall = true;
                 install();
-
-                // do resource cleanup
-                final List<String> cleanupPatterns = _app.cleanupPatterns();
-                if (!cleanupPatterns.isEmpty()) {
-                    cleanupResources(cleanupPatterns);
-                }
 
                 // Only launch if we aren't in silent mode. Some mystery program starting out
                 // of the blue would be disconcerting.
