@@ -25,6 +25,10 @@ public class ProxyUtilTest {
     }
 
     @Test public void testPACProxy () throws Exception {
+        // we use the Graal JavaScrip VM for testing, because JDK15 no longer bundles Nashorn, but
+        // it does not support calling back into Java unless we set this compatibility property
+        System.setProperty("polyglot.js.nashorn-compat", "true");
+
         String EXAMPLE0 =
             "function FindProxyForURL(url, host) {\n" +
             "  if (shExpMatch(host, '*.example.com')) { return 'DIRECT'; }\n" +
