@@ -6,6 +6,8 @@
 package com.threerings.getdown.util;
 
 import java.io.*;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.jar.*;
 import java.util.zip.*;
@@ -235,5 +237,45 @@ public final class FileUtil
                 }
             }
         }
+    }
+
+    /**
+     * Returns files as Paths from path {@code basePath}, filtered Glob pattern {@code globPattern}.
+     */
+    public static Set<Path> getFilePathsByGlob(String basePath, String globPattern) {
+
+        //massaging glob pattern
+        final String globPatternUnixSeparator = globPattern.replace("\\", "/");
+        final String glob = String.format("glob:%s%s%s",
+            basePath.replace("\\", "/"),
+            globPatternUnixSeparator.startsWith("/") ? "" : "/",
+            globPatternUnixSeparator);
+
+        final PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher(glob);
+        final Set<Path> foundFilePaths = new HashSet<>();
+
+        try {
+            Files.walkFileTree(Paths.get(basePath), new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(Path path,
+                    BasicFileAttributes attrs) {
+                    if (pathMatcher.matches(path) && !Files.isDirectory(path)) {
+                        foundFilePaths.add(path);
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFileFailed(Path file, IOException exc) {
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (Exception e) {
+            log.warning(String.format("Failed to get file list with path %s with glob %s",
+                basePath, globPattern), "error", e);
+            return Collections.emptySet();
+        }
+
+        return foundFilePaths;
     }
 }

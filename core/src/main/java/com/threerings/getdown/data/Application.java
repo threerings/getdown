@@ -363,6 +363,13 @@ public class Application
     }
 
     /**
+     * Returns a list of the cleanup patterns used by application.
+     */
+    public List<String> cleanupPatterns() {
+        return _cleanupPatterns;
+    }
+
+    /**
      * Returns a list of all the active {@link Resource} objects used by this application (code and
      * non-code).
      */
@@ -594,6 +601,7 @@ public class Application
         initJava(config);
         initTracking(config);
         initResources(config);
+        initCleanupPatterns(config);
         initArgs(config);
         return config;
     }
@@ -751,6 +759,22 @@ public class Application
             parseResources(config, auxgroup + ".nresource", Resource.NATIVE, rsrcs);
             _auxgroups.put(auxgroup, new AuxGroup(auxgroup, codes, rsrcs));
         }
+    }
+
+    /**
+     * Reads the cleanup patterns from {@code config} into this instance.
+     */
+    public void initCleanupPatterns (Config config) {
+        // clear our arrays as we may be reinitializing
+        _cleanupPatterns.clear();
+
+        // parse cleanup patterns
+        String[] patterns = config.getMultiValue("cleanup_pattern");
+        if (patterns == null) {
+            return;
+        }
+
+        _cleanupPatterns.addAll(Arrays.asList(patterns));
     }
 
     /**
@@ -1771,6 +1795,7 @@ public class Application
 
     protected List<Resource> _codes = new ArrayList<>();
     protected List<Resource> _resources = new ArrayList<>();
+    protected List<String> _cleanupPatterns = new ArrayList<>();
     protected List<String> _cpdirs = new ArrayList<>();
 
     protected int _verifyTimeout = 60;
