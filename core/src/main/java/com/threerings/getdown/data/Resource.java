@@ -56,23 +56,15 @@ public class Resource implements Comparable<Resource>
         int read;
 
         boolean isZip = isJar(target) || isZip(target); // jar is a zip too
-        boolean isPacked200Jar = isPacked200Jar(target);
 
         // if this is a jar, we need to compute the digest in a "timestamp and file order" agnostic
         // manner to properly correlate jardiff patched jars with their unpatched originals
-        if (isPacked200Jar || isZip){
+        if (isZip){
             File tmpJarFile = null;
             ZipFile zip = null;
             try {
                 // if this is a compressed zip file, uncompress it to compute the zip file digest
-                if (isPacked200Jar){
-                    tmpJarFile = new File(target.getPath() + ".tmp");
-                    tmpJarFile.deleteOnExit();
-                    FileUtil.unpackPacked200Jar(target, tmpJarFile);
-                    zip = new ZipFile(tmpJarFile);
-                } else{
-                    zip = new ZipFile(target);
-                }
+                zip = new ZipFile(target);
 
                 List<? extends ZipEntry> entries = Collections.list(zip.entries());
                 Collections.sort(entries, ENTRY_COMP);
@@ -141,16 +133,6 @@ public class Resource implements Comparable<Resource>
     }
 
     /**
-     * Returns whether {@code file} is a {@code jar.pack} file.
-     */
-    public static boolean isPacked200Jar (File file)
-    {
-        String path = file.getName();
-        return path.endsWith(".jar.pack") || path.endsWith(".jar.pack_new") ||
-            path.endsWith(".jar.pack.gz") || path.endsWith(".jar.pack.gz_new");
-    }
-
-    /**
      * Creates a resource with the supplied remote URL and local path.
      */
     public Resource (String path, URL remote, File local, EnumSet<Attr> attrs)
@@ -163,14 +145,9 @@ public class Resource implements Comparable<Resource>
 
         _attrs = attrs;
         _isZip = isJar(local) || isZip(local);
-        _isPacked200Jar = isPacked200Jar(local);
         boolean unpack = attrs.contains(Attr.UNPACK);
         if (unpack && _isZip) {
             _unpacked = _local.getParentFile();
-        } else if(unpack && _isPacked200Jar) {
-            String dotJar = ".jar", lname = _local.getName();
-            String uname = lname.substring(0, lname.lastIndexOf(dotJar) + dotJar.length());
-            _unpacked = new File(_local.getParent(), uname);
         }
     }
 
@@ -321,15 +298,11 @@ public class Resource implements Comparable<Resource>
     public void unpack () throws IOException
     {
         // sanity check
-        if (!_isZip && !_isPacked200Jar) {
+        if (!_isZip) {
             throw new IOException("Requested to unpack non-jar file '" + _local + "'.");
         }
-        if (_isZip) {
-            try (ZipFile jar = new ZipFile(_local)) {
-                FileUtil.unpackJar(jar, _unpacked, _attrs.contains(Attr.CLEAN));
-            }
-        } else {
-            FileUtil.unpackPacked200Jar(_local, _unpacked);
+        try (ZipFile jar = new ZipFile(_local)) {
+            FileUtil.unpackJar(jar, _unpacked, _attrs.contains(Attr.CLEAN));
         }
     }
 
@@ -393,7 +366,7 @@ public class Resource implements Comparable<Resource>
     protected URL _remote;
     protected File _local, _localNew, _marker, _unpacked;
     protected EnumSet<Attr> _attrs;
-    protected boolean _isZip, _isPacked200Jar;
+    protected boolean _isZip;
 
     /** Used to sort the entries in a jar file. */
     protected static final Comparator<ZipEntry> ENTRY_COMP = new Comparator<ZipEntry>() {
