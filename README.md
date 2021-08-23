@@ -56,11 +56,11 @@ Getdown will likely need to be integrated into your build. We have separate inst
 Getdown is comprised of three Maven artifacts (jar files), though you probably only need the first
 one:
 
-  * [getdown-launcher](http://repo2.maven.org/maven2/com/threerings/getdown/getdown-launcher)
+  * [getdown-launcher](https://repo1.maven.org/maven2/com/threerings/getdown/getdown-launcher)
     contains minified (via Proguard) code that you actually run to update and launch your app. It
     also contains the tools needed to build a Getdown app distribution.
 
-  * [getdown-core](http://repo2.maven.org/maven2/com/threerings/getdown/getdown-core) contains the
+  * [getdown-core](https://repo1.maven.org/maven2/com/threerings/getdown/getdown-core) contains the
     core logic for downloading, verifying, patching and launching an app as well as the core logic
     for creating an app distribution. It does not contain any user interface code. You would only
     use this artifact if you were planning to integrate Getdown directly into your app.
