@@ -6,6 +6,8 @@
 
 * Fixed issue with `myIpAddress()` in PAC proxy support.
 
+* Pack200 support removed. It is no longer supported by the JVM.
+
 ## 1.8.6 - June 4, 2019
 
 * Fixed issues with PAC proxy support: added `myIpAddress()`, fixed `dnsResolve()`, fixed crash
