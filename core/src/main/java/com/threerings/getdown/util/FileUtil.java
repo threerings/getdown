@@ -113,7 +113,7 @@ public final class FileUtil
 
     /**
      * Unpacks the specified jar file into the specified target directory.
-     * @param cleanExistingDirs if true, all files in all directories contained in {@code jar} will
+     * @param cleanExistingDirs if true, all files and subdirectories in all directories contained in {@code jar} will
      * be deleted prior to unpacking the jar.
      */
     public static void unpackJar (ZipFile jar, File target, boolean cleanExistingDirs)
@@ -126,10 +126,7 @@ public final class FileUtil
                 if (entry.isDirectory()) {
                     File efile = new File(target, entry.getName());
                     if (efile.exists()) {
-                        for (File f : efile.listFiles()) {
-                            if (!f.isDirectory())
-                            f.delete();
-                        }
+                        deleteDirHarder(efile);
                     }
                 }
             }
