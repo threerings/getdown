@@ -282,8 +282,11 @@ public class JarDiffPatcher implements JarDiffCodes
         throws IOException
     {
         FileOutputStream out = new FileOutputStream(target);
-        if (source.getName().endsWith(".jar")) return new JarOutputStream(out);
-        else if (source.getName().endsWith(".zip")) return new ZipOutputStream(out);
+        String sourceName = source.getName();
+        if (sourceName.endsWith(".jar") ||
+            sourceName.endsWith(".jar.old")) return new JarOutputStream(out);
+        else if (sourceName.endsWith(".zip") ||
+                 sourceName.endsWith(".zip.old")) return new ZipOutputStream(out);
         else throw new AssertionError("Unsupported source file '" + source + "'. Not a .jar or .zip?");
     }
 
