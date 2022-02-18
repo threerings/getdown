@@ -36,8 +36,8 @@ public class ClassPathTest
     @Test public void shouldCreateValidArgumentString ()
     {
         assertEquals(
-            _firstJar.getAbsolutePath() + File.pathSeparator + _secondJar.getAbsolutePath(),
-            _classPath.asArgumentString());
+            "a.jar:b.jar",
+            _classPath.asArgumentString(_folder.getRoot()));
     }
 
     @Test public void shouldProvideJarUrls () throws MalformedURLException, URISyntaxException
