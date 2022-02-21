@@ -10,7 +10,7 @@
   <groupId>de.lvm.deploy.jads</groupId>
   <artifactId>lvm-deploy-jads-getdown</artifactId>	  
   <packaging>pom</packaging>
-  <version>1.8.7-SNAPSHOT</version>
+  <version>1.8.6.1-SNAPSHOT</version>
 
   <name>lvm-deploy-jads-getdown</name>
   <description>An application installer and updater.</description>

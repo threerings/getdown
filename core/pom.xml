@@ -4,7 +4,7 @@
   <parent>
     <groupId>de.lvm.deploy.jads</groupId>
     <artifactId>lvm-deploy-jads-getdown</artifactId>
-    <version>1.8.7-SNAPSHOT</version>
+    <version>1.8.6.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>lvm-deploy-jads-getdown-core</artifactId>
