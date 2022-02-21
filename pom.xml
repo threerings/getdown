@@ -2,9 +2,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.sonatype.oss</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>7</version>
+    <artifactId>LVM_POM</artifactId>
+    <groupId>de.lvm.global</groupId>
+    <version>3.0.4</version>
   </parent>
 
   <groupId>de.lvm.deploy.jads</groupId>
@@ -40,9 +40,10 @@
   </properties>
 
   <scm>
-    <connection>scm:git:git://github.com/threerings/getdown.git</connection>
-    <developerConnection>scm:git:git@github.com:threerings/getdown.git</developerConnection>
-    <url>https://github.com/threerings/getdown</url>
+    <url>https://bitbucket.lvm.de/bitbucket/projects/LARA/repos/lvm-deploy-jads-getdown</url>
+    <connection>scm:git:ssh://git@bitbucket.lvm.de:7999/lara/lvm-deploy-jads-getdown.git</connection>
+    <developerConnection>scm:git:ssh://git@bitbucket.lvm.de:7999/lara/lvm-deploy-jads-getdown.git</developerConnection>
+    <tag>master</tag>  
   </scm>
 
   <modules>
