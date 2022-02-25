@@ -34,7 +34,7 @@
        Wildcards can be used (*.mycompany.com) and multiple values can be
        separated by commas (app1.foo.com,app2.bar.com,app3.baz.com). -->
   <properties>
-    <getdown.host.whitelist />
+    <getdown.host.whitelist>localhost,deploy*.lvm.de</getdown.host.whitelist>
   </properties>
 
   <build>
