@@ -138,6 +138,12 @@ public abstract class Getdown
             _toInstallResources.clear();
             _readyToInstall = false;
             log.info("Install completed.");
+
+            // do resource cleanup
+            final List<String> cleanupPatterns = _app.cleanupPatterns();
+            if (!cleanupPatterns.isEmpty()) {
+                cleanupResources(cleanupPatterns);
+            }
         } else {
             log.info("Nothing to install.");
         }
@@ -343,12 +349,6 @@ public abstract class Getdown
                 if (_app.verifyMetadata(this)) {
                     log.info("Application requires update.");
                     update();
-
-                    // do resource cleanup
-                    final List<String> cleanupPatterns = _app.cleanupPatterns();
-                    if (!cleanupPatterns.isEmpty()) {
-                        cleanupResources(cleanupPatterns);
-                    }
 
                     // loop back again and reverify the metadata
                     continue;
