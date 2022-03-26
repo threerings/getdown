@@ -31,13 +31,17 @@ public class ClassPath
      * <pre>
      *   /path/to/a.jar:/path/to/b.jar
      * </pre>
+     *
+     * The paths are relativized to dir.
+     *
+     * @param dir the working directory of the process
      */
-    public String asArgumentString ()
+    public String asArgumentString (File dir)
     {
         StringBuilder builder = new StringBuilder();
         String delimiter = "";
         for (File entry: _classPathEntries) {
-            builder.append(delimiter).append(entry.getAbsolutePath());
+            builder.append(delimiter).append(dir.toPath().relativize(entry.toPath()));
             delimiter = File.pathSeparator;
         }
         return builder.toString();

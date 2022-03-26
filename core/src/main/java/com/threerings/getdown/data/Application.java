@@ -1009,7 +1009,7 @@ public class Application
         ClassPath classPath = PathBuilder.buildClassPath(this);
         if (!dashJarMode) {
             args.add("-classpath");
-            args.add(classPath.asArgumentString());
+            args.add(classPath.asArgumentString(getAppDir()));
         }
 
         // we love our Mac users, so we do nice things to preserve our application identity
@@ -1028,7 +1028,7 @@ public class Application
         // @TODO optional getdown.txt parameter to set addCurrentLibraryPath to true or false?
         ClassPath javaLibPath = PathBuilder.buildLibsPath(this, true);
         if (javaLibPath != null) {
-            args.add("-Djava.library.path=" + javaLibPath.asArgumentString());
+            args.add("-Djava.library.path=" + javaLibPath.asArgumentString(getAppDir()));
         }
 
         // pass along any pass-through arguments
@@ -1060,7 +1060,7 @@ public class Application
         // if we're in -jar mode add those arguments, otherwise add the app class name
         if (dashJarMode) {
             args.add("-jar");
-            args.add(classPath.asArgumentString());
+            args.add(classPath.asArgumentString(getAppDir()));
         } else {
             args.add(_class);
         }

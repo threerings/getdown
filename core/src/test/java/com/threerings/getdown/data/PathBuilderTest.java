@@ -36,9 +36,7 @@ public class PathBuilderTest
     @Test public void shouldBuildDefaultClassPath () throws IOException
     {
         ClassPath classPath = PathBuilder.buildDefaultClassPath(_application);
-        String expectedClassPath = _firstJarFile.getAbsolutePath() + File.pathSeparator +
-            _secondJarFile.getAbsolutePath();
-        assertEquals(expectedClassPath, classPath.asArgumentString());
+        assertEquals("a.jar:b.jar", classPath.asArgumentString(_appdir.getRoot()));
     }
 
     @Test public void shouldBuildCachedClassPath () throws IOException
@@ -47,17 +45,8 @@ public class PathBuilderTest
         when(_application.getDigest(_secondJar)).thenReturn("second");
         when(_application.getCodeCacheRetentionDays()).thenReturn(1);
 
-        Path firstCachedJarFile = _appdir.getRoot().toPath().
-            resolve(PathBuilder.CODE_CACHE_DIR).resolve("fi").resolve("first.jar");
-
-        Path secondCachedJarFile = _appdir.getRoot().toPath().
-            resolve(PathBuilder.CODE_CACHE_DIR).resolve("se").resolve("second.jar");
-
-        String expectedClassPath = firstCachedJarFile.toAbsolutePath() + File.pathSeparator +
-            secondCachedJarFile.toAbsolutePath();
-
         ClassPath classPath = PathBuilder.buildCachedClassPath(_application);
-        assertEquals(expectedClassPath, classPath.asArgumentString());
+        assertEquals(".cache/fi/first.jar:.cache/se/second.jar", classPath.asArgumentString(_appdir.getRoot()));
     }
 
     @Mock protected Application _application;
