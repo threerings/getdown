@@ -15,8 +15,8 @@ import java.util.Set;
 
 /**
  * Represents the class path and it's elements of the application to be launched. The class path
- * can either be represented as an {@link #asArgumentString() argument string} for the java command
- * line or as an {@link #asUrls() array of URLs} to be used by a {@link URLClassLoader}.
+ * can either be represented as an {@link #asArgumentString argument string} for the java command
+ * line or as an {@link #asUrls array of URLs} to be used by a {@link URLClassLoader}.
  */
 public class ClassPath
 {
