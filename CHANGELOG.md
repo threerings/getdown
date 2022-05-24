@@ -1,6 +1,13 @@
 # Getdown Releases
 
-## 1.8.7 - Unreleased
+## 1.8.7 - May 24, 2022
+
+* Paths in classpath are specified relative to appdir to avoid excessively long command lines.
+
+* When updating unpacked jar archives, the old unpacked archive is deleted more robustly to avoid
+  issues when the new archive does not contain subdirectories that the old archive once contained.
+
+* Added support for manual addition of classpath entries via the `classpath` directive.
 
 * Reinstated env var support in `appbase` property.
 
