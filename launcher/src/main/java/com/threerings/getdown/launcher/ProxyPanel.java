@@ -156,7 +156,7 @@ public final class ProxyPanel extends JPanel implements ActionListener
     }
 
     /** Used to look up localized messages. */
-    protected String get (String key)
+    private String get(String key)
     {
         // if this string is tainted, we don't translate it, instead we
         // simply remove the taint character and return it to the caller
@@ -188,18 +188,18 @@ public final class ProxyPanel extends JPanel implements ActionListener
         }
     }
 
-    protected static Dimension clampWidth (Dimension dim, int minWidth) {
+    private static Dimension clampWidth(Dimension dim, int minWidth) {
         dim.width = Math.max(dim.width, minWidth);
         return dim;
     }
 
-    protected final Getdown _getdown;
-    protected final ResourceBundle _msgs;
-    protected final boolean _updateAuth;
+    private final Getdown _getdown;
+    private final ResourceBundle _msgs;
+    private final boolean _updateAuth;
 
-    protected final JTextField _host;
-    protected final JTextField _port;
-    protected final JCheckBox _useAuth;
-    protected final JTextField _username;
-    protected final JPasswordField _password;
+    private final JTextField _host;
+    private final JTextField _port;
+    private final JCheckBox _useAuth;
+    private final JTextField _username;
+    private final JPasswordField _password;
 }

@@ -679,7 +679,7 @@ public abstract class Getdown
 
             /** The last percentage at which we checked for another getdown running, or -1 for not
              * having checked at all. */
-            protected int _lastCheck = -1;
+            private int _lastCheck = -1;
         };
         if (!dl.download(resources, _app.maxConcurrentDownloads())) {
             // if we aborted due to detecting another getdown running, we want to report here

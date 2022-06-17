@@ -75,7 +75,7 @@ public class ResourceCacheTest
         assertTrue(lastAccessedFile.lastModified() > lastAccessed);
     }
 
-    @Rule public TemporaryFolder _folder = new TemporaryFolder();
+    @Rule public final TemporaryFolder _folder = new TemporaryFolder();
 
     private File _fileToCache;
     private ResourceCache _cache;

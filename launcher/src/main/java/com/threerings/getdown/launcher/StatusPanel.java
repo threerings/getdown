@@ -372,7 +372,7 @@ public final class StatusPanel extends JComponent
     protected RotatingBackgrounds _bg;
     protected Dimension _psize;
 
-    protected ResourceBundle _msgs;
+    protected final ResourceBundle _msgs;
 
     protected int _progress = -1;
     protected String _status;
@@ -383,9 +383,9 @@ public final class StatusPanel extends JComponent
     protected Label _rlabel, _newrlab;
 
     protected UpdateInterface _ifc;
-    protected Timer _timer;
+    protected final Timer _timer;
 
-    protected long[] _remain = new long[4];
+    protected final long[] _remain = new long[4];
     protected int _ridx;
     protected Throttle _rthrottle = new Throttle(1, 1000L);
 

@@ -198,7 +198,7 @@ public final class LaunchUtil
     /**
      * Checks whether a Java Virtual Machine can be located in the supplied path.
      */
-    protected static String checkJVMPath (String vmhome, boolean windebug)
+    private static String checkJVMPath(String vmhome, boolean windebug)
     {
         String vmbase = vmhome + File.separator + "bin" + File.separator;
         String vmpath = vmbase + "java";
@@ -222,11 +222,11 @@ public final class LaunchUtil
     }
 
     /** Flag indicating that we're on Windows; initialized when this class is first loaded. */
-    protected static boolean _isWindows;
+    private static boolean _isWindows;
     /** Flag indicating that we're on MacOS; initialized when this class is first loaded. */
-    protected static boolean _isMacOS;
+    private static boolean _isMacOS;
     /** Flag indicating that we're on Linux; initialized when this class is first loaded. */
-    protected static boolean _isLinux;
+    private static boolean _isLinux;
 
     static {
         try {

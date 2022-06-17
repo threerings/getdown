@@ -143,5 +143,5 @@ public final class Log
         protected final FieldPosition _fpos = new FieldPosition(SimpleDateFormat.DATE_FIELD);
     }
 
-    protected static final Level[] LEVELS = {Level.FINE, Level.INFO, Level.WARNING, Level.SEVERE};
+    private static final Level[] LEVELS = {Level.FINE, Level.INFO, Level.WARNING, Level.SEVERE};
 }

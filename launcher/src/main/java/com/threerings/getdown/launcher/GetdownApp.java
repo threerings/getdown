@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -70,7 +71,7 @@ public class GetdownApp
             File logFile = new File(envc.appDir, "launcher.log");
             try {
                 PrintStream logOut = new PrintStream(
-                    new BufferedOutputStream(new FileOutputStream(logFile)), true);
+                    new BufferedOutputStream(Files.newOutputStream(logFile.toPath())), true);
                 System.setOut(logOut);
                 System.setErr(logOut);
             } catch (IOException ioe) {
@@ -244,7 +245,7 @@ public class GetdownApp
                 });
             }
 
-            protected JFrame _frame;
+            private JFrame _frame;
         };
         Getdown.run(getdown);
         return getdown;

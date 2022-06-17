@@ -140,5 +140,5 @@ public final class MessageUtil {
 
     /** Text prefixed by this character will be considered tainted when doing recursive
      * translations and won't be translated. */
-    protected static final String TAINT_CHAR = "~";
+    private static final String TAINT_CHAR = "~";
 }
