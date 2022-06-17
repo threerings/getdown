@@ -56,5 +56,5 @@ public class FileUtilTest
         assertEquals(3, visitor.fileCount);
     }
 
-    @Rule public TemporaryFolder _folder = new TemporaryFolder();
+    @Rule public final TemporaryFolder _folder = new TemporaryFolder();
 }

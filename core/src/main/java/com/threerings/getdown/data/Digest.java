@@ -219,7 +219,7 @@ public class Digest
         data.append(path).append(" = ").append(digest).append("\n");
     }
 
-    protected HashMap<String, String> _digests = new HashMap<>();
+    protected final HashMap<String, String> _digests = new HashMap<>();
     protected String _metaDigest = "";
 
     protected static final String FILE_NAME = "digest";

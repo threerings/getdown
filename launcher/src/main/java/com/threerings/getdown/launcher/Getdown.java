@@ -1113,13 +1113,13 @@ public abstract class Getdown
     }
 
     /** Used to pass progress on to our user interface. */
-    protected ProgressObserver _progobs = new ProgressObserver() {
+    protected final ProgressObserver _progobs = new ProgressObserver() {
         public void progress (int percent) {
             setStatusAsync(null, stepToGlobalPercent(percent), -1L, false);
         }
     };
 
-    protected Application _app;
+    protected final Application _app;
     protected Application.UpdateInterface _ifc = new Application.UpdateInterface(Config.EMPTY);
 
     protected ResourceBundle _msgs;
@@ -1134,7 +1134,7 @@ public abstract class Getdown
     protected boolean _silent;
     protected boolean _launchInSilent;
     protected boolean _noUpdate;
-    protected long _startup;
+    protected final long _startup;
 
     protected Set<Resource> _toInstallResources;
     protected boolean _readyToInstall;

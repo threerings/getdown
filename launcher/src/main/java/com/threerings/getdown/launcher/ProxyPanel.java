@@ -197,9 +197,9 @@ public final class ProxyPanel extends JPanel implements ActionListener
     protected final ResourceBundle _msgs;
     protected final boolean _updateAuth;
 
-    protected JTextField _host;
-    protected JTextField _port;
-    protected JCheckBox _useAuth;
-    protected JTextField _username;
-    protected JPasswordField _password;
+    protected final JTextField _host;
+    protected final JTextField _port;
+    protected final JCheckBox _useAuth;
+    protected final JTextField _username;
+    protected final JPasswordField _password;
 }

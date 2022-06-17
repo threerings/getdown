@@ -15,9 +15,9 @@ import static org.junit.Assert.*;
 
 public class EnvConfigTest {
 
-    static String CWD = System.getProperty("user.dir");
-    static String TESTID = "testid";
-    static String TESTBASE = "https://test.com/test";
+    static final String CWD = System.getProperty("user.dir");
+    static final String TESTID = "testid";
+    static final String TESTBASE = "https://test.com/test";
 
     private void debugNotes (List<EnvConfig.Note> notes) {
         for (EnvConfig.Note note : notes) {
@@ -33,7 +33,7 @@ public class EnvConfigTest {
             }
         }
         if (msg.length() > 0) {
-            fail("Unexpected notes:" + msg.toString());
+            fail("Unexpected notes:" + msg);
         }
     }
     private void checkDir (EnvConfig cfg) {

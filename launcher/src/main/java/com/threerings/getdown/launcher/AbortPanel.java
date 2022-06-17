@@ -80,7 +80,7 @@ public final class AbortPanel extends JFrame
     }
 
     /** Used to look up localized messages. */
-    protected String get (String key)
+    private String get(String key)
     {
         // if this string is tainted, we don't translate it, instead we
         // simply remove the taint character and return it to the caller
@@ -95,6 +95,6 @@ public final class AbortPanel extends JFrame
         }
     }
 
-    protected Getdown _getdown;
-    protected ResourceBundle _msgs;
+    private final Getdown _getdown;
+    private final ResourceBundle _msgs;
 }

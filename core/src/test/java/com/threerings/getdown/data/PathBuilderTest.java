@@ -55,5 +55,5 @@ public class PathBuilderTest
 
     protected File _firstJarFile, _secondJarFile;
 
-    @Rule public TemporaryFolder _appdir = new TemporaryFolder();
+    @Rule public final TemporaryFolder _appdir = new TemporaryFolder();
 }

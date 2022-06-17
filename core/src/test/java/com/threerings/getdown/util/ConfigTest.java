@@ -167,5 +167,5 @@ public class ConfigTest
         return _rando.nextBoolean() ? " " : "";
     }
 
-    protected static Random _rando = new Random();
+    protected static final Random _rando = new Random();
 }

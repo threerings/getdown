@@ -1793,10 +1793,10 @@ public class Application
     protected String _javaLocation;
     protected File _javaLocalDir;
 
-    protected List<Resource> _codes = new ArrayList<>();
-    protected List<Resource> _resources = new ArrayList<>();
-    protected List<String> _cleanupPatterns = new ArrayList<>();
-    protected List<String> _cpdirs = new ArrayList<>();
+    protected final List<Resource> _codes = new ArrayList<>();
+    protected final List<Resource> _resources = new ArrayList<>();
+    protected final List<String> _cleanupPatterns = new ArrayList<>();
+    protected final List<String> _cpdirs = new ArrayList<>();
 
     protected int _verifyTimeout = 60;
 
@@ -1804,15 +1804,15 @@ public class Application
     protected boolean _useCodeCache;
     protected int _codeCacheRetentionDays;
 
-    protected Map<String,AuxGroup> _auxgroups = new HashMap<>();
-    protected Map<String,Boolean> _auxactive = new HashMap<>();
+    protected final Map<String,AuxGroup> _auxgroups = new HashMap<>();
+    protected final Map<String,Boolean> _auxactive = new HashMap<>();
 
-    protected List<String> _jvmargs = new ArrayList<>();
-    protected List<String> _appargs = new ArrayList<>();
+    protected final List<String> _jvmargs = new ArrayList<>();
+    protected final List<String> _appargs = new ArrayList<>();
 
     protected String[] _optimumJvmArgs;
 
-    protected List<String> _txtJvmArgs = new ArrayList<>();
+    protected final List<String> _txtJvmArgs = new ArrayList<>();
 
     /** Locks gettingdown.lock in the app dir. Held the entire time updating is going on.*/
     protected FileLock _lock;
@@ -1820,7 +1820,7 @@ public class Application
     /** Channel to the file underlying _lock.  Kept around solely so the lock doesn't close. */
     protected FileChannel _lockChannel;
 
-    protected Random _rando = new Random();
+    protected final Random _rando = new Random();
 
     protected static final String[] EMPTY_STRING_ARRAY = new String[0];
 

@@ -47,7 +47,7 @@ public class ClassPathTest
         assertEquals(_secondJar, new File(actualUrls[1].toURI()));
     }
 
-    @Rule public TemporaryFolder _folder = new TemporaryFolder();
+    @Rule public final TemporaryFolder _folder = new TemporaryFolder();
 
     private File _firstJar, _secondJar;
     private ClassPath _classPath;
