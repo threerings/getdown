@@ -1332,7 +1332,7 @@ public class Application
         // is reported by posting runnable actions to the actions queue which is processed by the
         // main (UI) thread
         ExecutorService exec = Executors.newFixedThreadPool(SysProps.threadPoolSize());
-        final BlockingQueue<Runnable> actions = new LinkedBlockingQueue<Runnable>();
+        final BlockingQueue<Runnable> actions = new LinkedBlockingQueue<>();
         final int[] completed = new int[1];
 
         long start = System.currentTimeMillis();

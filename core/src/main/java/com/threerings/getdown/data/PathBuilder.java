@@ -40,7 +40,7 @@ public class PathBuilder
      */
     public static ClassPath buildDefaultClassPath (Application app)
     {
-        LinkedHashSet<File> classPathEntries = new LinkedHashSet<File>();
+        LinkedHashSet<File> classPathEntries = new LinkedHashSet<>();
         for (Resource resource : app.getActiveCodeResources()) {
             classPathEntries.add(resource.getFinalTarget());
         }

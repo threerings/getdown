@@ -27,7 +27,7 @@ public class ClassPathTest
         _firstJar = _folder.newFile("a.jar");
         _secondJar = _folder.newFile("b.jar");
 
-        LinkedHashSet<File> classPathEntries = new LinkedHashSet<File>();
+        LinkedHashSet<File> classPathEntries = new LinkedHashSet<>();
         classPathEntries.add(_firstJar);
         classPathEntries.add(_secondJar);
         _classPath = new ClassPath(classPathEntries);

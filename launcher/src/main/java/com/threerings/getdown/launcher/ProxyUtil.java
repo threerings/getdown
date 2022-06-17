@@ -218,7 +218,7 @@ public final class ProxyUtil {
             log.info("Using no proxy");
             app.conn = new Connector();
         } else {
-            int pp = StringUtil.isBlank(port) ? 80 : Integer.valueOf(port);
+            int pp = StringUtil.isBlank(port) ? 80 : Integer.parseInt(port);
             log.info("Using proxy", "host", host, "port", pp, "haveCreds", haveCreds);
             app.conn = new Connector(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(host, pp)));
         }
