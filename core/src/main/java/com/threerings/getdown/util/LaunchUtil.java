@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Files;
 import java.util.Locale;
 
 import static com.threerings.getdown.Log.log;
@@ -52,7 +53,7 @@ public final class LaunchUtil
     {
         // create the file that instructs Getdown to upgrade
         File vfile = new File(appdir, "version.txt");
-        try (PrintStream ps = new PrintStream(new FileOutputStream(vfile))) {
+        try (PrintStream ps = new PrintStream(Files.newOutputStream(vfile.toPath()))) {
             ps.println(newVersion);
         }
 

@@ -20,6 +20,7 @@ import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
 import java.util.Iterator;
 import java.util.ServiceLoader;
 
@@ -188,7 +189,7 @@ public final class ProxyUtil {
 
     public static void saveProxy (Application app, String host, String port) {
         File pfile = app.getLocalPath("proxy.txt");
-        try (PrintStream pout = new PrintStream(new FileOutputStream(pfile))) {
+        try (PrintStream pout = new PrintStream(Files.newOutputStream(pfile.toPath()))) {
             if (!StringUtil.isBlank(host)) {
                 pout.println("host = " + host);
             }

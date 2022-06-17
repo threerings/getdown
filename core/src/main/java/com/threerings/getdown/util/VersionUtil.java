@@ -32,7 +32,7 @@ public final class VersionUtil
     {
         long fileVersion = -1;
         try (BufferedReader bin =
-             new BufferedReader(new InputStreamReader(new FileInputStream(vfile), UTF_8))) {
+             new BufferedReader(new InputStreamReader(Files.newInputStream(vfile.toPath()), UTF_8))) {
             String vstr = bin.readLine();
             if (!StringUtil.isBlank(vstr)) {
                 fileVersion = Long.parseLong(vstr);
@@ -81,7 +81,7 @@ public final class VersionUtil
     public static long readReleaseVersion (File relfile, String versRegex)
     {
         try (BufferedReader in =
-             new BufferedReader(new InputStreamReader(new FileInputStream(relfile), UTF_8))) {
+             new BufferedReader(new InputStreamReader(Files.newInputStream(relfile.toPath()), UTF_8))) {
             String line = null, relvers = null;
             while ((line = in.readLine()) != null) {
                 if (line.startsWith("JAVA_VERSION=")) {
