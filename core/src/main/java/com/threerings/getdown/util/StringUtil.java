@@ -187,7 +187,7 @@ public final class StringUtil {
     /**
      * Helper function for the various {@code join} methods.
      */
-    protected static String join (Object[] values, String separator, boolean escape)
+    private static String join(Object[] values, String separator, boolean escape)
     {
         StringBuilder buf = new StringBuilder();
         int vlength = values.length;
@@ -202,5 +202,5 @@ public final class StringUtil {
     }
 
     /** Used by {@link #hexlate}. */
-    protected static final String XLATE = "0123456789abcdef";
+    private static final String XLATE = "0123456789abcdef";
 }

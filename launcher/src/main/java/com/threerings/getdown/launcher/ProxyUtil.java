@@ -289,6 +289,6 @@ public final class ProxyUtil {
         }
     }
 
-    protected static final String PROXY_REGISTRY =
+    private static final String PROXY_REGISTRY =
         "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings";
 }

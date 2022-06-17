@@ -260,7 +260,7 @@ public final class StatusPanel extends JComponent
     /**
      * Update the status label.
      */
-    protected void updateStatusLabel ()
+    private void updateStatusLabel()
     {
         String status = _status;
         if (!_displayError) {
@@ -285,7 +285,7 @@ public final class StatusPanel extends JComponent
     /**
      * Get the y coordinate of a label in the status area.
      */
-    protected int getStatusY (Label label)
+    private int getStatusY(Label label)
     {
         // if the status region is higher than the progress region, we
         // want to align the label with the bottom of its region
@@ -299,7 +299,7 @@ public final class StatusPanel extends JComponent
     /**
      * Create a label, taking care of adding the shadow if needed.
      */
-    protected Label createLabel (String text, Color color)
+    private Label createLabel(String text, Color color)
     {
         Label label = new Label(text, color, FONT);
         if (_ifc.textShadow != 0) {
@@ -310,7 +310,7 @@ public final class StatusPanel extends JComponent
     }
 
     /** Used by {@link #setStatus}. */
-    protected String xlate (String compoundKey)
+    private String xlate(String compoundKey)
     {
         // to be more efficient about creating unnecessary objects, we
         // do some checking before splitting
@@ -337,7 +337,7 @@ public final class StatusPanel extends JComponent
     }
 
     /** Used by {@link #setStatus}. */
-    protected String get (String key, String[] args)
+    private String get(String key, String[] args)
     {
         String msg = get(key);
         if (msg != null) return MessageFormat.format(MessageUtil.escape(msg), (Object[])args);
@@ -345,7 +345,7 @@ public final class StatusPanel extends JComponent
     }
 
     /** Used by {@link #setStatus}, and {@link #setProgress}. */
-    protected String get (String key)
+    private String get(String key)
     {
         // if we have no _msgs that means we're probably recovering from a
         // failure to load the translation messages in the first place, so
@@ -368,26 +368,26 @@ public final class StatusPanel extends JComponent
         }
     }
 
-    protected Image _barimg;
-    protected RotatingBackgrounds _bg;
-    protected Dimension _psize;
+    private Image _barimg;
+    private RotatingBackgrounds _bg;
+    private Dimension _psize;
 
-    protected final ResourceBundle _msgs;
+    private final ResourceBundle _msgs;
 
-    protected int _progress = -1;
-    protected String _status;
-    protected int _statusDots = 1;
-    protected boolean _displayError;
-    protected Label _label, _newlab;
-    protected Label _plabel, _newplab;
-    protected Label _rlabel, _newrlab;
+    private int _progress = -1;
+    private String _status;
+    private int _statusDots = 1;
+    private boolean _displayError;
+    private Label _label, _newlab;
+    private Label _plabel, _newplab;
+    private Label _rlabel, _newrlab;
 
-    protected UpdateInterface _ifc;
-    protected final Timer _timer;
+    private UpdateInterface _ifc;
+    private final Timer _timer;
 
-    protected final long[] _remain = new long[4];
-    protected int _ridx;
-    protected Throttle _rthrottle = new Throttle(1, 1000L);
+    private final long[] _remain = new long[4];
+    private int _ridx;
+    private Throttle _rthrottle = new Throttle(1, 1000L);
 
-    protected static final Font FONT = new Font("SansSerif", Font.BOLD, 12);
+    static final Font FONT = new Font("SansSerif", Font.BOLD, 12);
 }
