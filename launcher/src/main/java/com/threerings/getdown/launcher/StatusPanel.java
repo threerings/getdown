@@ -262,13 +262,13 @@ public final class StatusPanel extends JComponent
      */
     private void updateStatusLabel()
     {
-        String status = _status;
+        StringBuilder status = new StringBuilder(_status);
         if (!_displayError) {
             for (int ii = 0; ii < _statusDots; ii++) {
-                status += " .";
+                status.append(" .");
             }
         }
-        _newlab = createLabel(status, new Color(_ifc.statusText, true));
+        _newlab = createLabel(status.toString(), new Color(_ifc.statusText, true));
         // set the width of the label to the width specified
         int width = _ifc.status.width;
         if (width == 0) {
