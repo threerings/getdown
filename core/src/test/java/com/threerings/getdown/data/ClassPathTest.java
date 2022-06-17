@@ -40,7 +40,7 @@ public class ClassPathTest
             _classPath.asArgumentString(_folder.getRoot()));
     }
 
-    @Test public void shouldProvideJarUrls () throws MalformedURLException, URISyntaxException
+    @Test public void shouldProvideJarUrls () throws URISyntaxException
     {
         URL[] actualUrls = _classPath.asUrls();
         assertEquals(_firstJar, new File(actualUrls[0].toURI()));

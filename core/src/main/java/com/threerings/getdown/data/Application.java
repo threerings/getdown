@@ -235,7 +235,7 @@ public class Application
     /**
      * Reads the {@code getdown.txt} config file into a {@code Config} object and returns it.
      */
-    public static Config readConfig (EnvConfig envc, boolean checkPlatform) throws IOException {
+    public static Config readConfig (EnvConfig envc, boolean checkPlatform) {
         Config config = null;
         File cfgfile = new File(envc.appDir, CONFIG_FILE);
         Config.ParseOpts opts = Config.createOpts(checkPlatform);
@@ -1438,9 +1438,7 @@ public class Application
      *
      * @param unpacked a set of resources to skip because they're already unpacked.
      */
-    public void unpackResources (ProgressObserver obs, Set<Resource> unpacked)
-        throws InterruptedException
-    {
+    public void unpackResources (ProgressObserver obs, Set<Resource> unpacked) {
         List<Resource> rsrcs = getActiveResources();
 
         // remove resources that we don't want to unpack

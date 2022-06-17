@@ -12,6 +12,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.nio.file.Files;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,7 +49,7 @@ public final class VersionUtil
      */
     public static void writeVersion (File vfile, long version) throws IOException
     {
-        try (PrintStream out = new PrintStream(new FileOutputStream(vfile))) {
+        try (PrintStream out = new PrintStream(Files.newOutputStream(vfile.toPath()))) {
             out.println(version);
         } catch (Exception e) {
             log.warning("Unable to write version file: " + e.getMessage());

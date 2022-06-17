@@ -406,7 +406,7 @@ public class JarDiff implements JarDiffCodes
             return thisName;
         }
 
-        private void index () throws IOException {
+        private void index () {
             Enumeration<? extends ZipEntry> entries = _archive.entries();
 
             _nameToEntryMap = new HashMap<>();
