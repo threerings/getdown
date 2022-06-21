@@ -62,81 +62,81 @@ public class ConfigTest
         opts.osarch = "i386";
         List<String[]> parsed = Config.parsePairs(toReader(pairs), opts);
         assertTrue(exists(parsed, linux.key));
-        assertTrue(!exists(parsed, mac.key));
+        assertFalse(exists(parsed, mac.key));
         assertTrue(exists(parsed, linuxAndMac.key));
-        assertTrue(!exists(parsed, linux64.key));
-        assertTrue(!exists(parsed, linux64s.key));
-        assertTrue(!exists(parsed, mac64.key));
-        assertTrue(!exists(parsed, win64.key));
+        assertFalse(exists(parsed, linux64.key));
+        assertFalse(exists(parsed, linux64s.key));
+        assertFalse(exists(parsed, mac64.key));
+        assertFalse(exists(parsed, win64.key));
         assertTrue(exists(parsed, notWin.key));
 
         opts.osarch = "x86_64";
         parsed = Config.parsePairs(toReader(pairs), opts);
         assertTrue(exists(parsed, linux.key));
-        assertTrue(!exists(parsed, mac.key));
+        assertFalse(exists(parsed, mac.key));
         assertTrue(exists(parsed, linuxAndMac.key));
         assertTrue(exists(parsed, linux64.key));
         assertTrue(exists(parsed, linux64s.key));
-        assertTrue(!exists(parsed, mac64.key));
-        assertTrue(!exists(parsed, win64.key));
+        assertFalse(exists(parsed, mac64.key));
+        assertFalse(exists(parsed, win64.key));
         assertTrue(exists(parsed, notWin.key));
 
         opts.osarch = "amd64";
         parsed = Config.parsePairs(toReader(pairs), opts);
         assertTrue(exists(parsed, linux.key));
-        assertTrue(!exists(parsed, mac.key));
+        assertFalse(exists(parsed, mac.key));
         assertTrue(exists(parsed, linuxAndMac.key));
-        assertTrue(!exists(parsed, linux64.key));
+        assertFalse(exists(parsed, linux64.key));
         assertTrue(exists(parsed, linux64s.key));
-        assertTrue(!exists(parsed, mac64.key));
-        assertTrue(!exists(parsed, win64.key));
+        assertFalse(exists(parsed, mac64.key));
+        assertFalse(exists(parsed, win64.key));
         assertTrue(exists(parsed, notWin.key));
 
         opts.osname = "mac os x";
         opts.osarch = "x86_64";
         parsed = Config.parsePairs(toReader(pairs), opts);
-        assertTrue(!exists(parsed, linux.key));
+        assertFalse(exists(parsed, linux.key));
         assertTrue(exists(parsed, mac.key));
         assertTrue(exists(parsed, linuxAndMac.key));
-        assertTrue(!exists(parsed, linux64.key));
-        assertTrue(!exists(parsed, linux64s.key));
+        assertFalse(exists(parsed, linux64.key));
+        assertFalse(exists(parsed, linux64s.key));
         assertTrue(exists(parsed, mac64.key));
-        assertTrue(!exists(parsed, win64.key));
+        assertFalse(exists(parsed, win64.key));
         assertTrue(exists(parsed, notWin.key));
 
         opts.osname = "windows";
         opts.osarch = "i386";
         parsed = Config.parsePairs(toReader(pairs), opts);
-        assertTrue(!exists(parsed, linux.key));
-        assertTrue(!exists(parsed, mac.key));
-        assertTrue(!exists(parsed, linuxAndMac.key));
-        assertTrue(!exists(parsed, linux64.key));
-        assertTrue(!exists(parsed, linux64s.key));
-        assertTrue(!exists(parsed, mac64.key));
-        assertTrue(!exists(parsed, win64.key));
-        assertTrue(!exists(parsed, notWin.key));
+        assertFalse(exists(parsed, linux.key));
+        assertFalse(exists(parsed, mac.key));
+        assertFalse(exists(parsed, linuxAndMac.key));
+        assertFalse(exists(parsed, linux64.key));
+        assertFalse(exists(parsed, linux64s.key));
+        assertFalse(exists(parsed, mac64.key));
+        assertFalse(exists(parsed, win64.key));
+        assertFalse(exists(parsed, notWin.key));
 
         opts.osarch = "x86_64";
         parsed = Config.parsePairs(toReader(pairs), opts);
-        assertTrue(!exists(parsed, linux.key));
-        assertTrue(!exists(parsed, mac.key));
-        assertTrue(!exists(parsed, linuxAndMac.key));
-        assertTrue(!exists(parsed, linux64.key));
-        assertTrue(!exists(parsed, linux64s.key));
-        assertTrue(!exists(parsed, mac64.key));
+        assertFalse(exists(parsed, linux.key));
+        assertFalse(exists(parsed, mac.key));
+        assertFalse(exists(parsed, linuxAndMac.key));
+        assertFalse(exists(parsed, linux64.key));
+        assertFalse(exists(parsed, linux64s.key));
+        assertFalse(exists(parsed, mac64.key));
         assertTrue(exists(parsed, win64.key));
-        assertTrue(!exists(parsed, notWin.key));
+        assertFalse(exists(parsed, notWin.key));
 
         opts.osarch = "amd64";
         parsed = Config.parsePairs(toReader(pairs), opts);
-        assertTrue(!exists(parsed, linux.key));
-        assertTrue(!exists(parsed, mac.key));
-        assertTrue(!exists(parsed, linuxAndMac.key));
-        assertTrue(!exists(parsed, linux64.key));
-        assertTrue(!exists(parsed, linux64s.key));
-        assertTrue(!exists(parsed, mac64.key));
-        assertTrue(!exists(parsed, win64.key));
-        assertTrue(!exists(parsed, notWin.key));
+        assertFalse(exists(parsed, linux.key));
+        assertFalse(exists(parsed, mac.key));
+        assertFalse(exists(parsed, linuxAndMac.key));
+        assertFalse(exists(parsed, linux64.key));
+        assertFalse(exists(parsed, linux64s.key));
+        assertFalse(exists(parsed, mac64.key));
+        assertFalse(exists(parsed, win64.key));
+        assertFalse(exists(parsed, notWin.key));
     }
 
     protected static boolean exists (List<String[]> pairs, String key)
@@ -167,5 +167,5 @@ public class ConfigTest
         return _rando.nextBoolean() ? " " : "";
     }
 
-    protected static Random _rando = new Random();
+    protected static final Random _rando = new Random();
 }

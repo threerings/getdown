@@ -44,7 +44,7 @@ public class ProgressAggregator
         return totalSize;
     }
 
-    protected ProgressObserver _target;
-    protected long[] _sizes;
-    protected int[] _progress;
+    protected final ProgressObserver _target;
+    protected final long[] _sizes;
+    protected final int[] _progress;
 }

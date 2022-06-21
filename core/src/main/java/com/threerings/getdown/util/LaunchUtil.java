@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Files;
 import java.util.Locale;
 
 import static com.threerings.getdown.Log.log;
@@ -52,7 +53,7 @@ public final class LaunchUtil
     {
         // create the file that instructs Getdown to upgrade
         File vfile = new File(appdir, "version.txt");
-        try (PrintStream ps = new PrintStream(new FileOutputStream(vfile))) {
+        try (PrintStream ps = new PrintStream(Files.newOutputStream(vfile.toPath()))) {
             ps.println(newVersion);
         }
 
@@ -198,7 +199,7 @@ public final class LaunchUtil
     /**
      * Checks whether a Java Virtual Machine can be located in the supplied path.
      */
-    protected static String checkJVMPath (String vmhome, boolean windebug)
+    private static String checkJVMPath(String vmhome, boolean windebug)
     {
         String vmbase = vmhome + File.separator + "bin" + File.separator;
         String vmpath = vmbase + "java";
@@ -222,11 +223,11 @@ public final class LaunchUtil
     }
 
     /** Flag indicating that we're on Windows; initialized when this class is first loaded. */
-    protected static boolean _isWindows;
+    private static boolean _isWindows;
     /** Flag indicating that we're on MacOS; initialized when this class is first loaded. */
-    protected static boolean _isMacOS;
+    private static boolean _isMacOS;
     /** Flag indicating that we're on Linux; initialized when this class is first loaded. */
-    protected static boolean _isLinux;
+    private static boolean _isLinux;
 
     static {
         try {

@@ -12,6 +12,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.nio.file.Files;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,7 +32,7 @@ public final class VersionUtil
     {
         long fileVersion = -1;
         try (BufferedReader bin =
-             new BufferedReader(new InputStreamReader(new FileInputStream(vfile), UTF_8))) {
+             new BufferedReader(new InputStreamReader(Files.newInputStream(vfile.toPath()), UTF_8))) {
             String vstr = bin.readLine();
             if (!StringUtil.isBlank(vstr)) {
                 fileVersion = Long.parseLong(vstr);
@@ -48,7 +49,7 @@ public final class VersionUtil
      */
     public static void writeVersion (File vfile, long version) throws IOException
     {
-        try (PrintStream out = new PrintStream(new FileOutputStream(vfile))) {
+        try (PrintStream out = new PrintStream(Files.newOutputStream(vfile.toPath()))) {
             out.println(version);
         } catch (Exception e) {
             log.warning("Unable to write version file: " + e.getMessage());
@@ -80,7 +81,7 @@ public final class VersionUtil
     public static long readReleaseVersion (File relfile, String versRegex)
     {
         try (BufferedReader in =
-             new BufferedReader(new InputStreamReader(new FileInputStream(relfile), UTF_8))) {
+             new BufferedReader(new InputStreamReader(Files.newInputStream(relfile.toPath()), UTF_8))) {
             String line = null, relvers = null;
             while ((line = in.readLine()) != null) {
                 if (line.startsWith("JAVA_VERSION=")) {

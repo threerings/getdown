@@ -129,7 +129,7 @@ public final class Log
                     PrintWriter pw = new PrintWriter(sw);
                     record.getThrown().printStackTrace(pw);
                     pw.close();
-                    buf.append(sw.toString());
+                    buf.append(sw);
                 } catch (Exception ex) {
                     buf.append("Format failure:").append(ex);
                 }
@@ -138,10 +138,10 @@ public final class Log
             return buf.toString();
         }
 
-        protected Date _date = new Date();
-        protected SimpleDateFormat _format = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss:SSS");
-        protected FieldPosition _fpos = new FieldPosition(SimpleDateFormat.DATE_FIELD);
+        protected final Date _date = new Date();
+        protected final SimpleDateFormat _format = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss:SSS");
+        protected final FieldPosition _fpos = new FieldPosition(SimpleDateFormat.DATE_FIELD);
     }
 
-    protected static final Level[] LEVELS = {Level.FINE, Level.INFO, Level.WARNING, Level.SEVERE};
+    private static final Level[] LEVELS = {Level.FINE, Level.INFO, Level.WARNING, Level.SEVERE};
 }

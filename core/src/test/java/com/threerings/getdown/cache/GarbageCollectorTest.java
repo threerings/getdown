@@ -77,7 +77,7 @@ public class GarbageCollectorTest
         assertFalse(_lastAccessedFile.exists());
     }
 
-    @Rule public TemporaryFolder _folder = new TemporaryFolder();
+    @Rule public final TemporaryFolder _folder = new TemporaryFolder();
 
     private File _cachedFile;
     private File _lastAccessedFile;

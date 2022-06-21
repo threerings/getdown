@@ -27,7 +27,7 @@ public class ClassPathTest
         _firstJar = _folder.newFile("a.jar");
         _secondJar = _folder.newFile("b.jar");
 
-        LinkedHashSet<File> classPathEntries = new LinkedHashSet<File>();
+        LinkedHashSet<File> classPathEntries = new LinkedHashSet<>();
         classPathEntries.add(_firstJar);
         classPathEntries.add(_secondJar);
         _classPath = new ClassPath(classPathEntries);
@@ -40,14 +40,14 @@ public class ClassPathTest
             _classPath.asArgumentString(_folder.getRoot()));
     }
 
-    @Test public void shouldProvideJarUrls () throws MalformedURLException, URISyntaxException
+    @Test public void shouldProvideJarUrls () throws URISyntaxException
     {
         URL[] actualUrls = _classPath.asUrls();
         assertEquals(_firstJar, new File(actualUrls[0].toURI()));
         assertEquals(_secondJar, new File(actualUrls[1].toURI()));
     }
 
-    @Rule public TemporaryFolder _folder = new TemporaryFolder();
+    @Rule public final TemporaryFolder _folder = new TemporaryFolder();
 
     private File _firstJar, _secondJar;
     private ClassPath _classPath;

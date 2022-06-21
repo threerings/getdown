@@ -154,7 +154,7 @@ public final class FileUtil
                 continue;
             }
 
-            try (BufferedOutputStream fout = new BufferedOutputStream(new FileOutputStream(efile));
+            try (BufferedOutputStream fout = new BufferedOutputStream(Files.newOutputStream(efile.toPath()));
                  InputStream jin = jar.getInputStream(entry)) {
                 StreamUtil.copy(jin, fout);
             } catch (Exception e) {

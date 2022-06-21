@@ -292,6 +292,6 @@ public class JarDiffPatcher implements JarDiffCodes
 
     protected static final int DEFAULT_READ_SIZE = 2048;
 
-    protected static byte[] newBytes = new byte[DEFAULT_READ_SIZE];
+    protected static final byte[] newBytes = new byte[DEFAULT_READ_SIZE];
     protected static byte[] oldBytes = new byte[DEFAULT_READ_SIZE];
 }

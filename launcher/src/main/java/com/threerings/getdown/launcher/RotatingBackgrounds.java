@@ -106,7 +106,7 @@ public final class RotatingBackgrounds
         return images.length;
     }
 
-    protected void makeEmpty ()
+    private void makeEmpty()
     {
         percentages = new int[] {};
         minDisplayTime = new int[] {};
@@ -114,19 +114,19 @@ public final class RotatingBackgrounds
     }
 
     /** Time at which the currently displayed image was first displayed in millis. */
-    protected long currentDisplayStart;
+    private long currentDisplayStart;
 
     /** The index of the currently displayed image or -1 if we haven't displayed any. */
-    protected int current = -1;
+    private int current = -1;
 
-    protected Image[] images;
+    private Image[] images;
 
     /** The image to display if getdown has failed due to an error. */
-    protected Image errorImage;
+    private Image errorImage;
 
     /** Percentage at which each image should be displayed. */
-    protected int[] percentages;
+    private int[] percentages;
 
     /** Time to show each image in seconds. */
-    protected int[] minDisplayTime;
+    private int[] minDisplayTime;
 }

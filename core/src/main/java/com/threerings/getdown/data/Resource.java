@@ -362,11 +362,14 @@ public class Resource implements Comparable<Resource>
         }
     }
 
-    protected String _path;
-    protected URL _remote;
-    protected File _local, _localNew, _marker, _unpacked;
-    protected EnumSet<Attr> _attrs;
-    protected boolean _isZip;
+    protected final String _path;
+    protected final URL _remote;
+    protected final File _local;
+    protected final File _localNew;
+    protected final File _marker;
+    protected File _unpacked;
+    protected final EnumSet<Attr> _attrs;
+    protected final boolean _isZip;
 
     /** Used to sort the entries in a jar file. */
     protected static final Comparator<ZipEntry> ENTRY_COMP = new Comparator<ZipEntry>() {
