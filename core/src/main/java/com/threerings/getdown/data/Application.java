@@ -1785,7 +1785,7 @@ public class Application
     protected int _trackingId;
 
     protected String _javaVersionProp = "java.version";
-    protected String _javaVersionRegex = "(\\d+)(?:\\.(\\d+)(?:\\.(\\d+)(_\\d+)?)?)?";
+    protected String _javaVersionRegex = "(\\d+)(?:\\.(\\d+)(?:\\.(\\d+)([_.]\\d+)?)?)?";
     protected long _javaMinVersion, _javaMaxVersion;
     protected boolean _javaExactVersionRequired;
     protected String _javaLocation;
