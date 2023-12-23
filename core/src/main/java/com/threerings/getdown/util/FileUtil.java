@@ -136,6 +136,9 @@ public final class FileUtil
         while (entries.hasMoreElements()) {
             ZipEntry entry = entries.nextElement();
             File efile = new File(target, entry.getName());
+            if (!efile.toPath().normalize().startsWith(target.toPath().normalize())) {
+                throw new IOException("Bad zip entry");
+            }
 
             // if we're unpacking a normal jar file, it will have special path
             // entries that allow us to create our directories first
