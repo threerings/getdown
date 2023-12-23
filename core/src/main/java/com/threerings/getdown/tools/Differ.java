@@ -12,6 +12,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -170,7 +171,7 @@ public class Differ
     protected File rebuildJar (File target)
         throws IOException
     {
-        File temp = File.createTempFile("differ", "jar");
+        File temp = Files.createTempFile("differ", "jar").toFile();
         try (ZipFile jar = new ZipFile(target);
              FileOutputStream tempFos = new FileOutputStream(temp);
              BufferedOutputStream tempBos = new BufferedOutputStream(tempFos);
