@@ -8,9 +8,11 @@ package com.threerings.getdown.launcher;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.net.Authenticator;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
@@ -102,7 +104,43 @@ public final class ProxyUtil {
                     log.info("Detected no proxy settings in the registry.");
                 }
 
-            } catch (Throwable t) {
+            } 
+            catch (UnsatisfiedLinkError ul) {
+            	log.info("Now trying to read windows registry using reg query tool..");
+				try {
+					Process process = Runtime.getRuntime().exec(AUTO_CONFIG_URL);
+					StreamReader reader = new StreamReader(process.getInputStream());
+
+					reader.start();
+					process.waitFor();
+					reader.join();
+
+					String result = reader.getResult();
+					int p = result.indexOf(REGSTR_TOKEN);
+
+					if (p >= 0) {
+						String rpac = result.substring(p + REGSTR_TOKEN.length()).trim();
+
+						URL configURL = app.getConfigResource().getRemote();
+						log.info("PAC-ConfigURL: " + rpac);
+						Reader acjs = new InputStreamReader(new URL(rpac).openStream());
+						// technically we should be returning all this info and trying each proxy
+						// in succession, but that's complexity we'll leave for another day
+
+						for (String proxy : findPACProxiesForURL(acjs, configURL)) {
+							if (proxy.startsWith("PROXY ")) {
+								String[] hostPort = splitHostPort(proxy.substring(6));
+								host = hostPort[0];
+								port = hostPort[1];
+								break;
+							}
+						}
+					}
+				} catch (Exception ex) {
+					log.info("Failed to find proxy settings in Windows registry", "error", ex);
+				}
+            }
+            catch (Throwable t) {
                 log.info("Failed to find proxy settings in Windows registry", "error", t);
             }
         }
@@ -122,6 +160,29 @@ public final class ProxyUtil {
         initProxy(app, host, port, null, null);
         return true;
     }
+        
+    static class StreamReader extends Thread {
+        private InputStream is;
+        private StringWriter sw;
+
+        StreamReader(InputStream is) {
+          this.is = is;
+          sw = new StringWriter();
+        }
+
+        public void run() {
+          try {
+            int c;
+            while ((c = is.read()) != -1)
+              sw.write(c);
+            }
+            catch (IOException e) { ; }
+          }
+
+        String getResult() {
+          return sw.toString();
+        }
+      }
 
     public static boolean canLoadWithoutProxy (URL rurl, int timeoutSeconds)
     {
@@ -292,4 +353,10 @@ public final class ProxyUtil {
 
     private static final String PROXY_REGISTRY =
         "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings";
+    protected static final String REGQUERY_UTIL = "reg query ";
+    protected static final String REGSTR_TOKEN = "REG_SZ";
+    protected static final String REGDWORD_TOKEN = "REG_DWORD";
+    protected static final String AUTO_CONFIG_URL = REGQUERY_UTIL +
+			    "\"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\"
+			     + "Internet Settings\" /v AutoconfigURL";
 }
