@@ -1,3 +1,12 @@
+## Use the fork, Luke!
+
+This original Getdown project is not actively maintained, but there is a fork by `bekoenig` that is
+actively maintined here:
+
+[bekoenig Getdown](https://github.com/bekoenig/getdown)
+
+I recommend using that fork if you can.
+
 ## What is it?
 
 Getdown (yes, it's the funky stuff) is a system for deploying Java applications to end-user
