@@ -199,12 +199,16 @@ public final class EnvConfig {
             }
         }
 
-        if (appDir != null && appDir.startsWith(GETDOWN_URL)) {
+        if (appDir != null && (appDir.startsWith(GETDOWN_URL) || appDir.startsWith(GETDOWNQ_URL))) {
             // Wait a minute this is not an appDir this is an appBase ...
             // Lets set the appDir to a folder under the home directory which is based on the appBase
             // and get the getdown.txt from the appBase and start from there.
+            if (appDir.startsWith(GETDOWN_URL)) {
+                appBase = appDir.substring(GETDOWN_URL.length());
+            } else if (appDir.startsWith(GETDOWNQ_URL)) {
+                appBase = appDir.substring(GETDOWNQ_URL.length());
+            }
 
-            appBase = appDir.substring(GETDOWN_URL.length());
             appBase = fixAppBaseProtocol(appBase, notes);
 
             String cacheDir;
@@ -305,4 +309,5 @@ public final class EnvConfig {
 
     private static final String USER_HOME_KEY = "${user.home}";
     private static final String GETDOWN_URL = "getdown://";
+    private static final String GETDOWNQ_URL = "getdownq://";
 }
