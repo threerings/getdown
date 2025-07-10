@@ -37,6 +37,8 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <proguard.version>7.8.2</proguard.version>
+    <proguard-core.version>9.3.0</proguard-core.version>
   </properties>
 
   <scm>
