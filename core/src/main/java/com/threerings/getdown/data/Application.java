@@ -686,7 +686,10 @@ public class Application
         // check to see if we require a particular JVM version and have a supplied JVM
         _javaExactVersionRequired = config.getBoolean("java_exact_version_required");
 
-        _javaLocation = config.getString("java_location");
+        Object javaloc = config.getRaw("java_location");
+        if (javaloc instanceof String) {
+            _javaLocation = (String)javaloc;
+        }
 
         // used only in conjunction with java_location
         _javaLocalDir = getLocalPath(config.getString("java_local_dir", LaunchUtil.LOCAL_JAVA_DIR));
