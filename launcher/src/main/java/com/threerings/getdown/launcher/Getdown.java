@@ -75,6 +75,14 @@ public abstract class Getdown
         }.start();
     }
 
+    // This is just a compatibility shim. Way back in the day Getdown was launched via
+    // com.threerings.getdown.launcher.Getdown but now it's launched via
+    // com.threerings.getdown.launcher.GetdownApp. We want those old jpackage clients to work, so we
+    // need a main() on this class to keep them functioning.
+    public static void main (String[] args) {
+        GetdownApp.main(args);
+    }
+
     public Getdown (EnvConfig envc)
     {
         try {
