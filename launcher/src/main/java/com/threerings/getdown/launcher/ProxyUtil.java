@@ -124,35 +124,31 @@ public final class ProxyUtil {
     }
 
     public static boolean canLoadWithoutProxy (URL rurl, int timeoutSeconds)
+      throws IOException
     {
         log.info("Attempting to fetch without proxy: " + rurl);
+        URLConnection conn = Connector.DEFAULT.open(rurl, timeoutSeconds, timeoutSeconds);
+        // if the appbase is not an HTTP/S URL (like file:), then we don't need a proxy
+        if (!(conn instanceof HttpURLConnection)) {
+            return true;
+        }
+        // otherwise, try to make a HEAD request for this URL
+        HttpURLConnection hcon = (HttpURLConnection)conn;
         try {
-            URLConnection conn = Connector.DEFAULT.open(rurl, timeoutSeconds, timeoutSeconds);
-            // if the appbase is not an HTTP/S URL (like file:), then we don't need a proxy
-            if (!(conn instanceof HttpURLConnection)) {
+            hcon.setRequestMethod("HEAD");
+            hcon.connect();
+            // make sure we got a satisfactory response code
+            int rcode = hcon.getResponseCode();
+            if (rcode == HttpURLConnection.HTTP_PROXY_AUTH ||
+                rcode == HttpURLConnection.HTTP_FORBIDDEN) {
+                log.warning("Got an 'HTTP credentials needed' response", "code", rcode);
+                return false;
+            } else {
                 return true;
             }
-            // otherwise, try to make a HEAD request for this URL
-            HttpURLConnection hcon = (HttpURLConnection)conn;
-            try {
-                hcon.setRequestMethod("HEAD");
-                hcon.connect();
-                // make sure we got a satisfactory response code
-                int rcode = hcon.getResponseCode();
-                if (rcode == HttpURLConnection.HTTP_PROXY_AUTH ||
-                    rcode == HttpURLConnection.HTTP_FORBIDDEN) {
-                    log.warning("Got an 'HTTP credentials needed' response", "code", rcode);
-                } else {
-                    return true;
-                }
-            } finally {
-                hcon.disconnect();
-            }
-        } catch (IOException ioe) {
-            log.info("Failed to HEAD " + rurl + ": " + ioe);
-            log.info("We probably need a proxy, but auto-detection failed.");
+        } finally {
+            hcon.disconnect();
         }
-        return false;
     }
 
     public static void configProxy (Application app, String host, String port,

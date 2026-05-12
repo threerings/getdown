@@ -38,6 +38,7 @@ import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLayeredPane;
+import javax.swing.JOptionPane;
 
 import com.samskivert.swing.util.SwingUtil;
 import com.threerings.getdown.data.Application;
@@ -202,11 +203,17 @@ public abstract class Getdown
         _dead = false;
         // if we fail to detect a proxy, but we're allowed to run offline, then go ahead and
         // run the app anyway because we're prepared to cope with not being able to update
-        if (detectProxy() || _app.allowOffline()) getdown();
-        else requestProxyInfo(false);
+        try {
+            if (detectProxy() || _app.allowOffline()) getdown();
+            else requestProxyInfo(false);
+        } catch (IOException ioe) {
+            log.info("Failed to detect if proxy is needed", "error", ioe);
+            log.info("We may need a proxy, or maybe their network is down.");
+            showConnectionFailedDialog();
+        }
     }
 
-    protected boolean detectProxy () {
+    protected boolean detectProxy () throws IOException {
         // first we have to initialize our application to get the appbase URL, etc.
         log.info("Checking whether we need to use a proxy...");
         try {
@@ -223,6 +230,7 @@ public abstract class Getdown
         // see if we actually need a proxy
         updateStatus("m.detecting_proxy");
         URL configURL = _app.getConfigResource().getRemote();
+        // if this detection fails to connect, we'll let the IOException propagate out
         if (!ProxyUtil.canLoadWithoutProxy(configURL, tryNoProxy ? 2 : 5)) {
             // if we didn't auto-detect proxy first thing, do auto-detect now
             return tryNoProxy ? ProxyUtil.autoDetectProxy(_app) : false;
@@ -260,6 +268,33 @@ public abstract class Getdown
         panel.setProxy(hostPort[0], hostPort[1]);
         _container.add(panel, BorderLayout.CENTER);
         showContainer();
+    }
+
+    /**
+     * Shows a dialog informing the user that we could not connect to the download servers,
+     * with buttons to try again or configure a proxy.
+     */
+    protected void showConnectionFailedDialog () {
+        if (_silent) {
+            log.warning("Unable to connect to download servers. Exiting.");
+            return;
+        }
+
+        String message = _msgs.getString("m.proxy_connect_failed");
+        String tryAgain = _msgs.getString("m.try_again");
+        String configureProxy = _msgs.getString("m.configure_proxy_button");
+        Object[] options = { tryAgain, configureProxy };
+        int choice = JOptionPane.showOptionDialog(
+            null, message, "",
+            JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE,
+            null, options, options[0]);
+        if (choice == JOptionPane.YES_OPTION) {
+            // "Try again" — re-run the update/launch sequence
+            run();
+        } else if (choice == JOptionPane.NO_OPTION) {
+            // "Configure proxy" — show the proxy configuration panel
+            requestProxyInfo(false);
+        }
     }
 
     /**
