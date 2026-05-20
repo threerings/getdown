@@ -1,8 +1,3 @@
-//
-// Getdown - application installer, patcher and launcher
-// Copyright (C) 2004-2018 Getdown authors
-// https://github.com/threerings/getdown/blob/master/LICENSE
-
 package com.threerings.getdown.util;
 
 /**
@@ -15,8 +10,18 @@ public class Rectangle
     public final int width;
     public final int height;
 
-    public Rectangle (int x, int y, int width, int height)
-    {
+    // New: zero-argument constructor
+    public Rectangle() {
+        this(0, 0, 0, 0);
+    }
+
+    // New: width & height only constructor
+    public Rectangle(int width, int height) {
+        this(0, 0, width, height);
+    }
+
+    // Existing: full constructor
+    public Rectangle(int x, int y, int width, int height) {
         this.x = x;
         this.y = y;
         this.width = width;
