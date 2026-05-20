@@ -125,6 +125,9 @@ public class Patcher
     {
         File target = new File(appdir, path);
         File patch = new File(appdir, entry.getName());
+        if (!patch.toPath().normalize().startsWith(appdir.toPath().normalize())) {
+            throw new RuntimeException("Bad zip entry");
+        }
         File otarget = new File(appdir, path + ".old");
         JarDiffPatcher patcher = null;
 
