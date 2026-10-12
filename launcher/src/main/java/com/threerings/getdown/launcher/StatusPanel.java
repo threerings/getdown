@@ -217,6 +217,24 @@ public final class StatusPanel extends JComponent
             _newrlab = null;
         }
 
+        // an error replaces the progress display: the error background may well have no room
+        // for it, and its "0% complete" would only clutter the message
+        if (!_displayError) {
+            paintProgress(gfx);
+        }
+
+        if (_label != null) {
+            _label.render(gfx, _ifc.status.x, getStatusY(_label));
+        }
+
+        SwingUtil.restoreAntiAliasing(gfx, oalias);
+    }
+
+    /**
+     * Paints the progress bar, its label, and the time remaining.
+     */
+    protected void paintProgress (Graphics2D gfx)
+    {
         if (_barimg != null) {
             gfx.setClip(_ifc.progress.x, _ifc.progress.y,
                         _progress * _ifc.progress.width / 100,
@@ -236,18 +254,12 @@ public final class StatusPanel extends JComponent
             _plabel.render(gfx, _ifc.progress.x + xmarg, _ifc.progress.y + ymarg);
         }
 
-        if (_label != null) {
-            _label.render(gfx, _ifc.status.x, getStatusY(_label));
-        }
-
         if (_rlabel != null) {
             // put the remaining label at the end of the status area. This could be dangerous
             // but I think the only time we would display it is with small statuses.
             int x = _ifc.status.x + _ifc.status.width - _rlabel.getSize().width;
             _rlabel.render(gfx, x, getStatusY(_rlabel));
         }
-
-        SwingUtil.restoreAntiAliasing(gfx, oalias);
     }
 
     // documentation inherited

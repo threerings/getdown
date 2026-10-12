@@ -28,10 +28,19 @@ public final class RotatingBackgrounds
     /** Creates a single image background. */
     public RotatingBackgrounds (Image background)
     {
+        this(background, null);
+    }
+
+    /**
+     * Creates a single image background, with {@code errorImage} to show on failure, or the
+     * background again if that's null.
+     */
+    public RotatingBackgrounds (Image background, Image errorImage)
+    {
         percentages = new int[] { 0 };
         minDisplayTime = new int[] { 0 };
         images = new Image[] { background };
-        errorImage = images[0];
+        this.errorImage = (errorImage == null) ? background : errorImage;
     }
 
     /**

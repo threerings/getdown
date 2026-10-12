@@ -925,7 +925,9 @@ public abstract class Getdown
             return new RotatingBackgrounds(_ifc.rotatingBackgrounds, _ifc.errorBackground,
                 Getdown.this);
         } else if (_ifc.backgroundImage != null) {
-            return new RotatingBackgrounds(loadImage(_ifc.backgroundImage));
+            // ui.error_background serves a lone background as well as rotating ones
+            return new RotatingBackgrounds(loadImage(_ifc.backgroundImage),
+                                           loadImage(_ifc.errorBackground));
         } else {
             return new RotatingBackgrounds();
         }
