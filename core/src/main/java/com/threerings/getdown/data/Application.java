@@ -114,6 +114,10 @@ public class Application
         /** The dimensions of the status display. */
         public final Rectangle status;
 
+        /** The dimensions of the status display while it shows an error, in which the error is
+         * centered vertically; or null, in which case errors use {@link #status}. */
+        public final Rectangle errorStatus;
+
         /** The color of the status text. */
         public final int statusText;
 
@@ -150,7 +154,8 @@ public class Application
         {
             return "[name=" + name + ", bg=" + background + ", bg=" + backgroundImage +
                 ", pi=" + progressImage + ", prect=" + progress + ", pt=" + progressText +
-                ", pb=" + progressBar + ", srect=" + status + ", st=" + statusText +
+                ", pb=" + progressBar + ", srect=" + status + ", esrect=" + errorStatus +
+                ", st=" + statusText +
                 ", shadow=" + textShadow + ", err=" + installError + ", nrect=" + patchNotes +
                 ", notes=" + patchNotesUrl + ", stepPercentages=" + stepPercentages +
                 ", hideProgressText" + hideProgressText + ", minShow=" + minShowSeconds + "]";
@@ -165,6 +170,7 @@ public class Application
             this.minShowSeconds = config.getInt("ui.min_show_seconds", 5);
             this.progressBar = config.getColor("ui.progress_bar", 0x6699CC);
             this.status = config.getRect("ui.status", new Rectangle(5, 25, 500, 100));
+            this.errorStatus = config.getRect("ui.error_status", null);
             this.statusText = config.getColor("ui.status_text", Color.BLACK);
             this.textShadow = config.getColor("ui.text_shadow", Color.CLEAR);
             this.hideDecorations = config.getBoolean("ui.hide_decorations");

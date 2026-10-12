@@ -224,7 +224,7 @@ public final class StatusPanel extends JComponent
         }
 
         if (_label != null) {
-            _label.render(gfx, _ifc.status.x, getStatusY(_label));
+            _label.render(gfx, statusArea().x, getStatusY(_label));
         }
 
         SwingUtil.restoreAntiAliasing(gfx, oalias);
@@ -282,7 +282,7 @@ public final class StatusPanel extends JComponent
         }
         _newlab = createLabel(status.toString(), new Color(_ifc.statusText, true));
         // set the width of the label to the width specified
-        int width = _ifc.status.width;
+        int width = statusArea().width;
         if (width == 0) {
             // unless we had trouble reading that width, in which case use the entire window
             width = getWidth();
@@ -295,10 +295,24 @@ public final class StatusPanel extends JComponent
     }
 
     /**
+     * Returns the area in which the status is shown: {@code ui.error_status} while showing an
+     * error, if it's configured, otherwise {@code ui.status}.
+     */
+    protected Rectangle statusArea ()
+    {
+        return (_displayError && _ifc.errorStatus != null) ? _ifc.errorStatus : _ifc.status;
+    }
+
+    /**
      * Get the y coordinate of a label in the status area.
      */
     private int getStatusY(Label label)
     {
+        // an error in its own area is centered in it
+        if (_displayError && _ifc.errorStatus != null) {
+            Rectangle area = _ifc.errorStatus;
+            return area.y + (area.height - label.getSize().height) / 2;
+        }
         // if the status region is higher than the progress region, we
         // want to align the label with the bottom of its region
         // rather than the top
