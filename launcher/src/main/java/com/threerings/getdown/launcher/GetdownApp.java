@@ -29,6 +29,7 @@ import javax.swing.KeyStroke;
 import javax.swing.WindowConstants;
 
 import com.samskivert.swing.util.SwingUtil;
+import com.threerings.getdown.Log;
 import com.threerings.getdown.data.EnvConfig;
 import com.threerings.getdown.data.SysProps;
 import com.threerings.getdown.util.LaunchUtil;
@@ -77,6 +78,8 @@ public class GetdownApp
                 log.warning("Unable to redirect output to '" + logFile + "': " + ioe);
             }
         }
+        // after the redirect, which the console log handler (made on first use) must pick up
+        Log.useOneLineFormat();
 
         // report any notes from reading our env config, and abort if necessary
         boolean abort = false;

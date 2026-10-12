@@ -26,6 +26,7 @@ import com.threerings.getdown.util.Base64;
 import com.threerings.getdown.util.Config;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import com.threerings.getdown.Log;
 
 /**
  * Handles the generation of the digest.txt file.
@@ -38,6 +39,7 @@ public class Digester
     public static void main (String[] args)
         throws IOException, GeneralSecurityException
     {
+        Log.useOneLineFormat();
         switch (args.length) {
         case 1:
             createDigests(new File(args[0]), null, null, null);

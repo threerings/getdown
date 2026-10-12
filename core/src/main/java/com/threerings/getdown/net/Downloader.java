@@ -14,9 +14,12 @@ import java.net.URLConnection;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -47,17 +50,42 @@ public class Downloader
      */
     public boolean download (Collection<Resource> resources, int maxConcurrent)
     {
-        // first compute the total size of our download
+        // first compute the total size of our download, checking every resource's size at once
+        // on the download pool: one at a time, a request apiece, took minutes for an app with
+        // many resources
         resolvingDownloads();
-        for (Resource rsrc : resources) {
-            try {
-                _sizes.put(rsrc, Math.max(checkSize(rsrc), 0L));
-            } catch (IOException ioe) {
-                downloadFailed(rsrc, ioe);
-            }
+        ExecutorService checks = Executors.newFixedThreadPool(maxConcurrent);
+        List<Callable<Void>> sizeChecks = new ArrayList<>();
+        for (final Resource rsrc : resources) {
+            sizeChecks.add(() -> {
+                long size;
+                try {
+                    size = Math.max(checkSize(rsrc), 0L);
+                } catch (IOException ioe) {
+                    // count it as empty for now: the download learns its real size as it goes,
+                    // and reports any failure of its own
+                    size = 0L;
+                    downloadFailed(rsrc, ioe);
+                }
+                synchronized (Downloader.this) {
+                    _sizes.put(rsrc, size);
+                }
+                return null;
+            });
         }
+        try {
+            checks.invokeAll(sizeChecks);
+        } catch (InterruptedException ie) {
+            checks.shutdownNow();
+            downloadFailed(null, ie);
+            return _state != State.ABORTED;
+        }
+        checks.shutdown();
 
-        long totalSize = sum(_sizes.values());
+        long totalSize;
+        synchronized (this) {
+            totalSize = sum(_sizes.values());
+        }
         log.info("Downloading " + resources.size() + " resources",
                  "totalBytes", totalSize, "maxConcurrent", maxConcurrent);
 

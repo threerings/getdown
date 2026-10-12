@@ -213,7 +213,19 @@ public final class EnvConfig {
     public final List<String> appArgs;
 
     public EnvConfig (File appDir) {
-        this(appDir, null, null, Collections.<Certificate>emptyList(),
+        this(appDir, null, null);
+    }
+
+    /**
+     * Creates a config for the app in {@code appDir}, from those arguments alone: unlike {@link
+     * #create}, this consults no {@code bootstrap.properties} and no system properties, so it
+     * suits a program that drives Getdown as a library, and may have such things of its own.
+     *
+     * @param appId the id of a secondary app to launch (see {@link #appId}), or null.
+     * @param appBase the appbase to use if the app dir has no {@code getdown.txt} yet, or null.
+     */
+    public EnvConfig (File appDir, String appId, String appBase) {
+        this(appDir, appId, appBase, Collections.<Certificate>emptyList(),
              Collections.<String>emptyList());
     }
 

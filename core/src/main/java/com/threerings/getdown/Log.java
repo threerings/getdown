@@ -97,7 +97,12 @@ public final class Log
         return buf.append(']').toString();
     }
 
-    static {
+    /**
+     * Gives the root logger's handlers Getdown's one-line format. Getdown's own programs call this
+     * at startup; a program that uses Getdown as a library keeps its logging as it set it up.
+     */
+    public static void useOneLineFormat ()
+    {
         Formatter formatter = new OneLineFormatter();
         Logger logger = LogManager.getLogManager().getLogger("");
         for (Handler handler : logger.getHandlers()) {

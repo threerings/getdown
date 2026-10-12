@@ -16,6 +16,8 @@ import java.util.zip.ZipFile;
 import com.threerings.getdown.util.FileUtil;
 import com.threerings.getdown.util.ProgressObserver;
 import com.threerings.getdown.util.StreamUtil;
+import com.threerings.getdown.Log;
+
 import static com.threerings.getdown.Log.log;
 
 /**
@@ -179,6 +181,7 @@ public class Patcher
 
     public static void main (String[] args)
     {
+        Log.useOneLineFormat();
         if (args.length != 2) {
             System.err.println("Usage: Patcher appdir patch_file");
             System.exit(-1);

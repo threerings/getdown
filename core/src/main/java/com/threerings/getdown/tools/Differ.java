@@ -26,6 +26,7 @@ import com.threerings.getdown.data.EnvConfig;
 import com.threerings.getdown.data.Resource;
 import com.threerings.getdown.util.FileUtil;
 import com.threerings.getdown.util.StreamUtil;
+import com.threerings.getdown.Log;
 
 /**
  * Generates patch files between two particular revisions of an
@@ -199,6 +200,7 @@ public class Differ
 
     public static void main (String[] args)
     {
+        Log.useOneLineFormat();
         if (args.length < 2) {
             System.err.println(
                 "Usage: Differ [-verbose] new_vers_dir old_vers_dir");
